@@ -19,17 +19,17 @@ export default function CategoryEdit() {
         autoComplete="off"
       >
         <TextField
-          {...register("title", {
+          {...register("nome", {
             required: "This field is required",
           })}
-          error={!!(errors as any)?.title}
-          helperText={(errors as any)?.title?.message}
+          error={!!(errors as any)?.nome}
+          helperText={(errors as any)?.nome?.message}
           margin="normal"
           fullWidth
           InputLabelProps={{ shrink: true }}
           type="text"
           label={"Title"}
-          name="title"
+          name="nome"
         />
       </Box>
     </Edit>

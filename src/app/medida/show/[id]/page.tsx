@@ -9,10 +9,10 @@ import {
   TextFieldComponent as TextField,
 } from "@refinedev/mui";
 
-export default function BlogPostShow() {
+export default function AuxMedidaShow() {
   const { queryResult } = useShow({
     meta: {
-      select: "*, categories(id,title)",
+      select: "*, controle(id,nome)",
     },
   });
 
@@ -21,8 +21,8 @@ export default function BlogPostShow() {
   const record = data?.data;
 
   const { data: categoryData, isLoading: categoryIsLoading } = useOne({
-    resource: "categories",
-    id: record?.categories?.id || "",
+    resource: "controle",
+    id: record?.controle?.id || "",
     queryOptions: {
       enabled: !!record,
     },
@@ -49,7 +49,7 @@ export default function BlogPostShow() {
         <Typography variant="body1" fontWeight="bold">
           {"Category"}
         </Typography>
-        {categoryIsLoading ? <>Loading...</> : <>{categoryData?.data?.title}</>}
+        {categoryIsLoading ? <>Carregando...</> : <>{categoryData?.data?.title}</>}
 
         <Typography variant="body1" fontWeight="bold">
           {"Status"}

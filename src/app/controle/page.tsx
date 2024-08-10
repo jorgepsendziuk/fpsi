@@ -10,7 +10,7 @@ import {
 } from "@refinedev/mui";
 import React from "react";
 
-export default function CategoryList() {
+export default function ControleList() {
   const { dataGridProps } = useDataGrid({});
 
   const columns = React.useMemo<GridColDef[]>(
@@ -22,9 +22,9 @@ export default function CategoryList() {
         minWidth: 50,
       },
       {
-        field: "title",
+        field: "nome",
         flex: 1,
-        headerName: "Title",
+        headerName: "Nome",
         minWidth: 200,
       },
       {

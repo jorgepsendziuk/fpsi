@@ -13,19 +13,19 @@ import {
 } from "@refinedev/mui";
 import React from "react";
 
-export default function BlogPostList() {
+export default function ProgramaList() {
   const { dataGridProps } = useDataGrid({
     syncWithLocation: true,
     meta: {
-      select: "*, categories(id,title)",
+      select: "*, orgao(id,nome)",
     },
   });
 
-  const { data: categoryData, isLoading: categoryIsLoading } = useMany({
-    resource: "categories",
+  const { data: orgaoData, isLoading: orgaoIsLoading } = useMany({
+    resource: "orgao",
     ids:
       dataGridProps?.rows
-        ?.map((item: any) => item?.categories?.id)
+        ?.map((item: any) => item?.orgao?.id)
         .filter(Boolean) ?? [],
     queryOptions: {
       enabled: !!dataGridProps?.rows,
@@ -37,62 +37,40 @@ export default function BlogPostList() {
       {
         field: "id",
         headerName: "ID",
-        type: "number",
-        minWidth: 50,
+        type: "number"
       },
       {
-        field: "title",
-        flex: 1,
-        headerName: "Title",
+        field: "criado_em",
+        headerName: "Criado Em",
+        
         minWidth: 200,
-      },
-      {
-        field: "content",
-        flex: 1,
-        headerName: "content",
-        minWidth: 250,
-        renderCell: function render({ value }) {
-          if (!value) return "-";
-          return <MarkdownField value={value?.slice(0, 80) + "..." || ""} />;
-        },
-      },
-      {
-        field: "categories",
-        flex: 1,
-        headerName: "Category",
-        minWidth: 300,
-        valueGetter: ({ row }) => {
-          const value = row?.categories;
-          return value;
-        },
-        renderCell: function render({ value }) {
-          return categoryIsLoading ? (
-            <>Loading...</>
-          ) : (
-            categoryData?.data?.find((item) => item.id === value?.id)?.title
+        cell: function render({ getValue }) {
+          return (
+            <DateField format="LLL" value={getValue()} />
           );
         },
       },
       {
-        field: "status",
+        field: "orgao",
         flex: 1,
-        headerName: "Status",
-        minWidth: 200,
-      },
-      {
-        field: "createdAt",
-        flex: 1,
-        headerName: "Created at",
-        minWidth: 250,
+        headerName: "Órgão",
+        valueGetter: ({ row }) => {
+          const value = row?.orgao;
+          return value;
+        },
         renderCell: function render({ value }) {
-          return <DateField value={value} />;
+          return orgaoIsLoading ? (
+            <>Carregando...</>
+          ) : (
+            orgaoData?.data?.find((item) => item.id === value?.id)?.nome
+          );
         },
       },
       {
         field: "actions",
-        headerName: "Actions",
+        headerName: "Ações",
         sortable: false,
-        renderCell: function render({ row }) {
+        renderCell: function render({ row })  {
           return (
             <>
               <EditButton hideText recordItemId={row.id} />
@@ -106,7 +84,7 @@ export default function BlogPostList() {
         minWidth: 80,
       },
     ],
-    [categoryData]
+    [orgaoData]
   );
 
   return (

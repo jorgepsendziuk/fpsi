@@ -5,7 +5,7 @@ import { Create, useAutocomplete } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
 import { Controller } from "react-hook-form";
 
-export default function BlogPostCreate() {
+export default function ProgramaCreate() {
   const {
     saveButtonProps,
     refineCore: { formLoading, onFinish },
@@ -16,7 +16,7 @@ export default function BlogPostCreate() {
   } = useForm({});
 
   const { autocompleteProps: categoryAutocompleteProps } = useAutocomplete({
-    resource: "categories",
+    resource: "programa",
   });
 
   return (
@@ -91,8 +91,8 @@ export default function BlogPostCreate() {
                   label={"Category"}
                   margin="normal"
                   variant="outlined"
-                  error={!!(errors as any)?.categories?.id}
-                  helperText={(errors as any)?.categories?.id?.message}
+                  error={!!(errors as any)?.controle?.id}
+                  helperText={(errors as any)?.controle?.id?.message}
                   required
                 />
               )}

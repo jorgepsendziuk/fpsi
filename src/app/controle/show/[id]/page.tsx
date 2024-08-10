@@ -20,7 +20,7 @@ export default function CategoryShow() {
         <Typography variant="body1" fontWeight="bold">
           {"Title"}
         </Typography>
-        <TextField value={record?.title} />
+        <TextField value={record?.nome} />
       </Stack>
     </Show>
   );

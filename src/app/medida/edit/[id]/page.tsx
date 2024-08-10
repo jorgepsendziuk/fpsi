@@ -6,7 +6,7 @@ import { Edit, useAutocomplete } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
 import { Controller } from "react-hook-form";
 
-export default function BlogPostEdit() {
+export default function AuxMedidaEdit() {
   const {
     saveButtonProps,
     refineCore: { queryResult, formLoading, onFinish },
@@ -17,16 +17,16 @@ export default function BlogPostEdit() {
   } = useForm({
     refineCoreProps: {
       meta: {
-        select: "*, categories(id,title)",
+        select: "*, controle(id,title)",
       },
     },
   });
 
-  const blogPostsData = queryResult?.data?.data;
+  const AuxMedidasData = queryResult?.data?.data;
 
   const { autocompleteProps: categoryAutocompleteProps } = useAutocomplete({
-    resource: "categories",
-    defaultValue: blogPostsData?.categories?.id,
+    resource: "controle",
+    defaultValue: AuxMedidasData?.controle?.id,
   });
 
   return (
@@ -88,8 +88,8 @@ export default function BlogPostEdit() {
                   label={"Category"}
                   margin="normal"
                   variant="outlined"
-                  error={!!(errors as any)?.categories?.id}
-                  helperText={(errors as any)?.categories?.id?.message}
+                  error={!!(errors as any)?.controle?.id}
+                  helperText={(errors as any)?.controle?.id?.message}
                   required
                 />
               )}

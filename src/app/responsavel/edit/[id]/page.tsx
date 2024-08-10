@@ -1,38 +1,37 @@
 "use client";
 
 import { Box, TextField } from "@mui/material";
-import { Create } from "@refinedev/mui";
+import { Edit } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
 
-export default function CategoryCreate() {
+export default function CategoryEdit() {
   const {
     saveButtonProps,
-    refineCore: { formLoading },
     register,
     formState: { errors },
   } = useForm({});
 
   return (
-    <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
+    <Edit saveButtonProps={saveButtonProps}>
       <Box
         component="form"
         sx={{ display: "flex", flexDirection: "column" }}
         autoComplete="off"
       >
         <TextField
-          {...register("title", {
+          {...register("nome", {
             required: "This field is required",
           })}
-          error={!!(errors as any)?.title}
-          helperText={(errors as any)?.title?.message}
+          error={!!(errors as any)?.nome}
+          helperText={(errors as any)?.nome?.message}
           margin="normal"
           fullWidth
           InputLabelProps={{ shrink: true }}
           type="text"
           label={"Title"}
-          name="title"
+          name="nome"
         />
       </Box>
-    </Create>
+    </Edit>
   );
 }
