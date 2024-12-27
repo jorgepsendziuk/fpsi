@@ -10,7 +10,7 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { useGetIdentity } from "@refinedev/core";
-import { HamburgerMenu, RefineThemedLayoutV2HeaderProps } from "@refinedev/mui";
+import { HamburgerMenu, RefineThemedLayoutV2HeaderProps, ThemedTitleV2, Title } from "@refinedev/mui";
 import React, { useContext } from "react";
 
 type IUser = {

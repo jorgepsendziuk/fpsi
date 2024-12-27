@@ -41,7 +41,7 @@ export default function RootLayout({
                     authProvider={authProviderClient}
                     dataProvider={dataProvider}
                     notificationProvider={notificationProvider}
-                    resources={[
+                    resources={[ 
                       {
                         name: "programa",
                         list: "/programa",
@@ -53,18 +53,16 @@ export default function RootLayout({
                         },
                       },
                       {
-                        name: "controle",
+                        name: "diagnostico",
                         identifier: "diagnostico",
                         list: "/diagnostico",
+                        // create: "/diagnostico/create",
                         meta: {
                           canDelete: false,
                           label: "Diagnóstico" 
 
                         },
                       },
-                      {
-                        name: "Tabelas Auxiliares",
-                      },        
                       {
                         name: "medida",
                         list: "/medida",
@@ -73,7 +71,6 @@ export default function RootLayout({
                         show: "/medida/show/:id",
                         meta: {
                           canDelete: true,
-                          parent: "Tabelas Auxiliares",
                           label: "Medidas" 
                         },
                       },
@@ -85,28 +82,32 @@ export default function RootLayout({
                         show: "/controle/show/:id",
                         meta: {
                           canDelete: false,
-                          parent: "Tabelas Auxiliares",
+                          //parent: "Manutenção",
                           label: "Controles" 
                         },
                       },
-                      {
-                        name: "responsavel",
-                        list: "/responsavel",
-                        create: "/responsavel/create",
-                        edit: "/responsavel/edit/:id",
-                        show: "/responsavel/show/:id",
-                        meta: {
-                          canDelete: false,
-                          parent: "Tabelas Auxiliares",
-                          label: "Responsáveis" 
-                        },
-                      },
+                      // {
+                      //   name: "responsavel",
+                      //   list: "/responsavel",
+                      //   create: "/responsavel/create",
+                      //   edit: "/responsavel/edit/:id",
+                      //   show: "/responsavel/show/:id",
+                      //   meta: {
+                      //     canDelete: false,
+                      //     parent: "Tabelas Auxiliares",
+                      //     label: "Responsáveis" 
+                      //   },
+                      // },
                     ]}
                     options={{
                       syncWithLocation: true,
                       warnWhenUnsavedChanges: true,
                       useNewQueryKeys: true,
                       projectId: "PRGNCh-Vt1Pdr-jpCKmI",
+                      title: {  
+                        //icon: ,  // Replace with your custom icon component
+                        text: "FPSI",  // Replace with your custom app name
+                      },  
                     }}
                   >
                     {children}

@@ -35,31 +35,24 @@ export default function AuxMedidaList() {
   const columns = React.useMemo<GridColDef[]>(
     () => [
       {
+        width: 100,
         field: "id",
         headerName: "ID",
         type: "number"
       },
       {
+        width: 100,
         field:"id_medida",
         headerName: "ID Medida",
       },
+
       {
-        field: "controle",
-        flex: 1,
-        headerName: "Controle",
-        valueGetter: ({ row }) => {
-          const value = row?.controle;
-          return value;
-        },
-        renderCell: function render({ value }) {
-          return medidaIsLoading ? (
-            <>Carregando...</>
-          ) : (
-            medidaData?.data?.find((item) => item.id === value?.id)?.nome
-          );
-        },
+        width: 400,
+        field:"medida",
+        headerName: "Medida",
       },
       {
+        width: 200,
         field: "actions",
         headerName: "Actions",
         sortable: false,
@@ -74,7 +67,6 @@ export default function AuxMedidaList() {
         },
         align: "center",
         headerAlign: "center",
-        minWidth: 80,
       },
     ],
     [medidaData]

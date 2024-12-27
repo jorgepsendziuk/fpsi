@@ -11,7 +11,9 @@ export default async function Layout({ children }: React.PropsWithChildren) {
     return redirect(data?.redirectTo || "/login");
   }
 
-  return <ThemedLayoutV2 Header={Header}>{children}</ThemedLayoutV2>;
+  //return <ThemedLayoutV2 Header={Header}>{children}</ThemedLayoutV2>;
+  return <ThemedLayoutV2 initialSiderCollapsed Header={Header}>{children}</ThemedLayoutV2>;
+
 }
 
 async function getData() {

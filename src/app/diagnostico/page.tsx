@@ -1,84 +1,137 @@
 "use client";
-import React, { useEffect, useState } from 'react'
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { createBrowserClient } from "@supabase/ssr";
+import React, { useState, useEffect } from 'react';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Table, TableBody, TableCell, TableRow, Autocomplete } from '@mui/material';
+import { supabaseBrowserClient } from "@utils/supabase/client";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-export const SUPABASE_URL="https://jfyetcjogzbuwcpsiglc.supabase.co";
-export const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeWV0Y2pvZ3pidXdjcHNpZ2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk0MjMyNDksImV4cCI6MjAzNDk5OTI0OX0.cwDSSyS6-pp4_e7Pe_LcWMtcOfzHYRa1ksTIorJ__qg"
-export const supabaseBrowserClient = createBrowserClient(
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  {
-    db: {
-      schema: "public",
-    },
-  }
-);
-
-const MyAccordionPage = () => {
-  const [controleData, setControleData] = useState([])
-  const [medidaData, setMedidaData] = useState({});
+const MyComponent = () => {
+  const [diagnosticos, setDiagnosticos] = useState([]);
+  const [controles, setControles] = useState({});
+  const [medidas, setMedidas] = useState({});
+  const [respostas] = useState([
+    { id: 1, label: 'Resposta 1', peso: 10 },
+    { id: 2, label: 'Resposta 2', peso: 20 },
+    { id: 3, label: 'Resposta 3', peso: 30 },
+  ]);
+  const [totalPesos, setTotalPesos] = useState({});
 
   useEffect(() => {
-    const fetchControleData = async () => {
-      const { data, error } = await supabaseBrowserClient.from('controle').select('*')
-      if (error) {console.error(error)} 
-      else {setControleData(data)}
-    }
-    fetchControleData()
-  }, [])
-  
-  const handleAccordionChange = async (panel) => {
-    if (!medidaData[panel.id]) {
-      const { data, error } = await supabaseBrowserClient
-        .from('medida')
-        .select('*')
-        .eq('id_controle', panel)
+    fetchDiagnosticos();
+  }, []);
 
-      if (error) {
-        console.error(error)
-      } else {
-        console.log("Medidas:", data); // Verifique o formato dos dados
-        setMedidaData((prevState) => ({
-          ...prevState,
-          [panel]: data
-        }))
-      }
-    }
-  }
+  const fetchDiagnosticos = async () => {
+    const { data, error } = await supabaseBrowserClient.from('diagnostico').select('*');
+    if (error) console.error(error);
+    else setDiagnosticos(data);
+  };
+
+  const fetchControles = async (diagnosticoId) => {
+    const { data, error } = await supabaseBrowserClient
+      .from('controle')
+      .select('*')
+      .eq('diagnostico', diagnosticoId);
+    if (error) console.error(error);
+    else setControles((prev) => ({ ...prev, [diagnosticoId]: data }));
+  };
+
+  const fetchMedidas = async (controleId) => {
+    const { data, error } = await supabaseBrowserClient
+      .from('medida')
+      .select('*')
+      .eq('id_controle', controleId);
+    if (error) console.error(error);
+    else setMedidas((prev) => ({ ...prev, [controleId]: data }));
+  };
+
+  const updateResposta = async (medidaId, newValue) => {
+    const { error } = await supabaseBrowserClient
+      .from('medida')
+      .update({ resposta: newValue.id })
+      .eq('id', medidaId);
+    if (error) console.error(error);
+  };
+
+  const updateJustificativa = async (medidaId, newValue) => {
+    const { error } = await supabaseBrowserClient
+      .from('medida')
+      .update({ justificativa: newValue })
+      .eq('id', medidaId);
+    if (error) console.error(error);
+  };
+
+  const handleRespostaChange = (controleId, medidaId, newValue) => {
+    updateResposta(medidaId, newValue);
+    setMedidas((prev) => ({
+      ...prev,
+      [controleId]: prev[controleId].map((medida) =>
+        medida.id === medidaId ? { ...medida, resposta: newValue.id } : medida
+      ),
+    }));
+    setTotalPesos((prev) => ({
+      ...prev,
+      [controleId]: prev[controleId] + newValue.peso,
+    }));
+  };
+
+  const handleJustificativaChange = (controleId, medidaId, event) => {
+    const newValue = event.target.value;
+    updateJustificativa(medidaId, newValue);
+    setMedidas((prev) => ({
+      ...prev,
+      [controleId]: prev[controleId].map((medida) =>
+        medida.id === medidaId ? { ...medida, justificativa: newValue } : medida
+      ),
+    }));
+  };
 
   return (
     <div>
-      {controleData.map((controle) => (
-        <Accordion key={controle.id} onChange={() => handleAccordionChange(controle.id)}>
+      {diagnosticos.map((diagnostico) => (
+        <Accordion key={diagnostico.id} onChange={() => fetchControles(diagnostico.id)}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>{controle.nome}</Typography>
+            <Typography>{diagnostico.nome}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Medida</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                {medidaData[controle.id] && medidaData[controle.id].map((medida) => (
-                    <TableRow key={medida.id}>
-                      <TableCell>{medida.id_medida}</TableCell>
-                      <TableCell>{medida.medida}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            {controles[diagnostico.id] && controles[diagnostico.id].map((controle) => (
+              <Accordion key={controle.id} onChange={() => fetchMedidas(controle.id)}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>{controle.nome} (Total Peso: {totalPesos[controle.id] || 0})</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {medidas[controle.id] && (
+                    <Table>
+                      <TableBody>
+                        {medidas[controle.id].map((medida) => (
+                          <TableRow key={medida.id}>
+                            <TableCell>
+                              <Autocomplete
+                                options={respostas}
+                                getOptionLabel={(option) => option.label}
+                                value={respostas.find((r) => r.id === medida.resposta) || null}
+                                onChange={(_, newValue) => handleRespostaChange(controle.id, medida.id, newValue)}
+                                renderInput={(params) => <TextField {...params} label="Resposta" />}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                label="Justificativa"
+                                value={medida.justificativa || ''}
+                                onChange={(event) => handleJustificativaChange(controle.id, medida.id, event)}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+            ))}
           </AccordionDetails>
         </Accordion>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default MyAccordionPage
+export default MyComponent;

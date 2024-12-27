@@ -9,7 +9,13 @@ export default async function Login() {
     redirect(data?.redirectTo || "/");
   }
 
-  return <AuthPage type="login" />;
+  return (
+    <AuthPage type="login"
+      
+    />
+  );
+
+
 }
 
 async function getData() {

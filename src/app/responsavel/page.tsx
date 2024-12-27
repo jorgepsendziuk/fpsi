@@ -2,6 +2,7 @@
 
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import {
+  CreateButton,
   DeleteButton,
   EditButton,
   List,
@@ -9,19 +10,19 @@ import {
   useDataGrid,
 } from "@refinedev/mui";
 import React from "react";
+import { text } from "stream/consumers";
 
-export default function ResponsavelList() {
-  const { dataGridProps } = useDataGrid({});
+export const ResponsavelList = () => {
+  const { dataGridProps } = useDataGrid({
+    resource: "responsavel"
+    
+  });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
+      
       {
-        field: "id",
-        headerName: "ID",
-        type: "number"
-      },
-      {
-        field: "responsavel",
+        field: "nome",
         flex: 1,
         headerName: "Responsável"
       },
@@ -57,8 +58,29 @@ export default function ResponsavelList() {
   );
 
   return (
-    <List>
-      <DataGrid {...dataGridProps} columns={columns} autoHeight />
-    </List>
+      <List
+        breadcrumb
+        headerButtons={<CreateButton 
+          resource="responsavel"
+          color="primary"
+          style={{ backgroundColor: "#ccc" }}
+        >CADASTRAR</CreateButton>}
+        title="Áreas de Domínio - Plano de Trabalho"
+        wrapperProps={{
+          sx: {
+            backgroundColor: "#e6ecf2",
+            textAlign: "center",
+          },
+        }}
+      >
+        <DataGrid 
+        {...dataGridProps} 
+        columns={columns}
+        hideFooterPagination
+        hideFooter
+        autoHeight 
+        style={{ backgroundColor: "white" }}
+        />
+      </List>
   );
 }

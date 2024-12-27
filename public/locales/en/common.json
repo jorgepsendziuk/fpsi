@@ -1,0 +1,69 @@
+{
+    "pages": {
+      "login": {
+        "title": "Faça login na sua conta",
+        "signin": "Entrar",
+        "signup": "Inscrever-se",
+        "divider": "ou",
+        "fields": {
+          "email": "Email",
+          "password": "Senha"
+        },
+        "errors": {
+          "validEmail": "Endereço de email inválido",
+          "requiredEmail": "Email é obrigatório",
+          "requiredPassword": "Senha é obrigatória"
+        },
+        "buttons": {
+          "submit": "Login",
+          "forgotPassword": "Esqueceu a senha?",
+          "noAccount": "Não tem uma conta?",
+          "rememberMe": "Lembrar-me"
+        }
+      },
+      "forgotPassword": {
+        "title": "Esqueceu sua senha?",
+        "fields": {
+          "email": "Email"
+        },
+        "errors": {
+          "validEmail": "Endereço de email inválido",
+          "requiredEmail": "Email é obrigatório"
+        },
+        "buttons": {
+          "submit": "Enviar instruções de redefinição"
+        }
+      },
+      "register": {
+        "title": "Inscreva-se na sua conta",
+        "fields": {
+          "email": "Email",
+          "password": "Senha"
+        },
+        "errors": {
+          "validEmail": "Endereço de email inválido",
+          "requiredEmail": "Email é obrigatório",
+          "requiredPassword": "Senha é obrigatória"
+        },
+        "buttons": {
+          "submit": "Registrar",
+          "haveAccount": "Já tem uma conta?"
+        }
+      },
+      "updatePassword": {
+        "title": "Atualizar senha",
+        "fields": {
+          "password": "Nova Senha",
+          "confirmPassword": "Confirmar nova senha"
+        },
+        "errors": {
+          "confirmPasswordNotMatch": "As senhas não coincidem",
+          "requiredPassword": "Senha é obrigatória",
+          "requiredConfirmPassword": "Confirmar senha é obrigatório"
+        },
+        "buttons": {
+          "submit": "Atualizar"
+        }
+      }
+    }
+  }
