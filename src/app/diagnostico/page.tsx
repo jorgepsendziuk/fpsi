@@ -1,132 +1,604 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Table, TableBody, TableCell, TableRow, Autocomplete } from '@mui/material';
-import { supabaseBrowserClient } from "@utils/supabase/client";
+import React, { useReducer, useEffect } from "react";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  Typography,
+  Paper,
+  TableContainer,
+  Chip,
+  Box,
+  Select,
+  ListItemText,
+  MenuItem,
+} from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { supabaseBrowserClient } from "@utils/supabase/client";
 
-const MyComponent = () => {
-  const [diagnosticos, setDiagnosticos] = useState([]);
-  const [controles, setControles] = useState({});
-  const [medidas, setMedidas] = useState({});
-  const [respostas] = useState([
-    { id: 1, label: 'Resposta 1', peso: 10 },
-    { id: 2, label: 'Resposta 2', peso: 20 },
-    { id: 3, label: 'Resposta 3', peso: 30 },
-  ]);
-  const [totalPesos, setTotalPesos] = useState({});
+const initialState = {
+  diagnosticos: [],
+  controles: {},
+  medidas: {},
+  respostas: [],
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_DIAGNOSTICOS":
+      return { ...state, diagnosticos: action.payload };
+    case "SET_CONTROLES":
+      return {
+        ...state,
+        controles: {
+          ...state.controles,
+          [action.diagnosticoId]: action.payload,
+        },
+      };
+    case "SET_MEDIDAS":
+      return {
+        ...state,
+        medidas: { ...state.medidas, [action.controleId]: action.payload },
+      };
+    case "SET_RESPOSTAS":
+      return { ...state, respostas: action.payload };
+    case "UPDATE_MEDIDA":
+      return {
+        ...state,
+        medidas: {
+          ...state.medidas,
+          [action.controleId]: state.medidas[action.controleId].map((medida) =>
+            medida.id === action.medidaId
+              ? { ...medida, [action.field]: action.value }
+              : medida
+          ),
+        },
+      };
+    case "UPDATE_CONTROLE":
+      return {
+        ...state,
+        controles: {
+          ...state.controles,
+          [action.diagnosticoId]: state.controles[action.diagnosticoId].map((controle) =>
+            controle.id === action.controleId
+              ? { ...controle, [action.field]: action.value }
+              : controle
+          ),
+        },
+      };
+    default:
+      return state;
+  }
+}
+
+const maturidade = [
+  {id: 1, min: 0,   max: 0.29, label: "Inicial"},
+  {id: 2, min: 0.3, max: 0.49, label: "Básico"},
+  {id: 3, min: 0.5, max: 0.69, label: "Intermediário"},
+  {id: 4, min: 0.7, max: 0.89, label: "Em Aprimoramento"},
+  {id: 5, min: 0.9, max: 1,    label: "Aprimorado"}
+];
+
+const respostas = [
+  { id: 1, peso: 1,     label: "Adota em maior parte ou totalmente" },
+  { id: 2, peso: 0.75,  label: "Adota em menor parte" },
+  { id: 3, peso: 0.5,   label: "Adota parcialmente" },
+  { id: 4, peso: 0.25,  label: "Há decisão formal ou plano aprovado para implementar"},
+  { id: 5, peso: 0,     label: "A organização não adota essa medida" },
+  { id: 6, peso: null,  label: "Não se aplica" },
+];
+
+const incc = [
+  { id: 0, indice: 0,   label: "Ausência de capacidade para a implementação das medidas do controle, ou desconhecimento sobre o atendimento das medidas." },
+  { id: 1, indice: 20,  label: "O controle atinge mais ou menos seu objetivo, por meio da aplicação de um conjunto incompleto de atividades que podem ser caracterizadas como iniciais ou intuitivas (pouco organizadas)." },
+  { id: 2, indice: 40,  label: "O controle atinge seu objetivo por meio da aplicação de um conjunto básico, porém completo, de atividades que podem ser caracterizadas como realizadas." },
+  { id: 3, indice: 60,  label: "O controle atinge seu objetivo de forma muito mais organizada utilizando os recursos organizacionais. Além disso, o controle é formalizado por meio de uma política institucional, específica ou como parte de outra maior." },
+  { id: 4, indice: 80,  label: "O controle atinge seu objetivo, é bem definido e suas medidas são implementadas continuamente por meio de um processo decorrente da política formalizada." },
+  { id: 5, indice: 100, label: "O controle atinge seu objetivo, é bem definido, suas medidas são implementadas continuamente por meio de um processo e seu desempenho é mensurado quantitativamente por meio de indicadores." },
+];
+
+const respostasimnao = [
+  { id: 1, peso: 1,  label: "Sim" },
+  { id: 2, peso: 0,  label: "Não" },
+];
+
+const calculateSumOfResponses = (medidas, diagnostico) => {
+  return medidas.reduce((sum, medida) => {
+    let resposta;
+    if (diagnostico === 1) {
+      resposta = respostasimnao.find((resposta) => resposta.id === medida.resposta);
+    } else if (diagnostico === 2 || diagnostico === 3) {
+      resposta = respostas.find((resposta) => resposta.id === medida.resposta);
+    }
+    return sum + (resposta?.peso || 0);
+  }, 0);
+};
+
+const calculateSumOfResponsesForDiagnostico = (diagnosticoId, state) => {
+  const controles = state.controles[diagnosticoId] || [];
+  const controleZero = controles.find(controle => controle.numero === 0);
+  const maturityIndexControleZero = controleZero ? parseFloat(calculateMaturityIndexForControle(controleZero, state)) : 0;
+
+  if (diagnosticoId === 1) {
+    return maturityIndexControleZero;
+  } else if (diagnosticoId === 2 || diagnosticoId === 3) {
+    const maturityIndices = controles
+      .filter(controle => controle.numero === diagnosticoId)
+      .map(controle => parseFloat(calculateMaturityIndexForControle(controle, state)));
+
+    const sumOfMaturityIndices = maturityIndices.reduce((sum, index) => sum + index, 0);
+    const numberOfControles = maturityIndices.length;
+
+    return numberOfControles > 0
+      ? (
+          ((maturityIndexControleZero * 4) 
+          + sumOfMaturityIndices) 
+          / numberOfControles
+        ).toFixed(2)
+      : 0;
+  }
+  return 0;
+};
+
+const calculateMaturityIndexForControle = (controle, state) => {
+  const medidas = state.medidas[controle.id] || [];
+  const sumOfResponses = calculateSumOfResponses(medidas, controle.diagnostico);
+  const numberOfMedidas = medidas.length;
+  return numberOfMedidas > 0 ? 
+    (
+      ((sumOfResponses / numberOfMedidas)/2)
+      *
+      (1+((controle.nivel)*1/5))
+    )
+    .toFixed(2) 
+    : "0";
+};
+
+const DiagnosticoPage = () => {
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
+    const fetchDiagnosticos = async () => {
+      const { data } = await supabaseBrowserClient
+        .from("diagnostico")
+        .select("*")
+        .order("id", { ascending: true });
+      dispatch({ type: "SET_DIAGNOSTICOS", payload: data });
+    };
+
+    const fetchRespostas = async () => {
+      const { data } = await supabaseBrowserClient
+        .from("resposta")
+        .select("*")
+        .order("id", { ascending: true });
+      dispatch({ type: "SET_RESPOSTAS", payload: data });
+    };
+
+    const fetchControlesAndMedidas = async () => {
+      const diagnosticos = await supabaseBrowserClient
+        .from("diagnostico")
+        .select("id");
+      for (const diagnostico of diagnosticos.data) {
+        const controles = await supabaseBrowserClient
+          .from("controle")
+          .select("id")
+          .eq("diagnostico", diagnostico.id);
+        for (const controle of controles.data) {
+          await handleMedidaFetch(controle.id);
+        }
+        await handleControleFetch(diagnostico.id);
+      }
+    };
+
     fetchDiagnosticos();
+    fetchRespostas();
+    fetchControlesAndMedidas();
   }, []);
 
-  const fetchDiagnosticos = async () => {
-    const { data, error } = await supabaseBrowserClient.from('diagnostico').select('*');
-    if (error) console.error(error);
-    else setDiagnosticos(data);
+  const handleControleFetch = async (diagnosticoId) => {
+    const { data } = await supabaseBrowserClient
+      .from("controle")
+      .select("*")
+      .eq("diagnostico", diagnosticoId)
+      .order("id", { ascending: true });
+    dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
   };
 
-  const fetchControles = async (diagnosticoId) => {
-    const { data, error } = await supabaseBrowserClient
-      .from('controle')
-      .select('*')
-      .eq('diagnostico', diagnosticoId);
-    if (error) console.error(error);
-    else setControles((prev) => ({ ...prev, [diagnosticoId]: data }));
+  const handleMedidaFetch = async (controleId) => {
+    const { data } = await supabaseBrowserClient
+      .from("medida")
+      .select("*")
+      .eq("id_controle", controleId)
+      .order("id", { ascending: true });
+    dispatch({ type: "SET_MEDIDAS", controleId, payload: data });
   };
 
-  const fetchMedidas = async (controleId) => {
-    const { data, error } = await supabaseBrowserClient
-      .from('medida')
-      .select('*')
-      .eq('id_controle', controleId);
-    if (error) console.error(error);
-    else setMedidas((prev) => ({ ...prev, [controleId]: data }));
+  const handleRespostaChange = async (medidaId, controleId, newValue) => {
+    await supabaseBrowserClient
+      .from("medida")
+      .update({ resposta: newValue })
+      .eq("id", medidaId);
+    dispatch({
+      type: "UPDATE_MEDIDA",
+      medidaId,
+      controleId,
+      field: "resposta",
+      value: newValue,
+    });
   };
 
-  const updateResposta = async (medidaId, newValue) => {
-    const { error } = await supabaseBrowserClient
-      .from('medida')
-      .update({ resposta: newValue.id })
-      .eq('id', medidaId);
-    if (error) console.error(error);
-  };
-
-  const updateJustificativa = async (medidaId, newValue) => {
-    const { error } = await supabaseBrowserClient
-      .from('medida')
+  const handleJustificativaChange = async (medidaId, controleId, newValue) => {
+    await supabaseBrowserClient
+      .from("medida")
       .update({ justificativa: newValue })
-      .eq('id', medidaId);
-    if (error) console.error(error);
+      .eq("id", medidaId);
+    dispatch({
+      type: "UPDATE_MEDIDA",
+      medidaId,
+      controleId,
+      field: "justificativa",
+      value: newValue,
+    });
   };
 
-  const handleRespostaChange = (controleId, medidaId, newValue) => {
-    updateResposta(medidaId, newValue);
-    setMedidas((prev) => ({
-      ...prev,
-      [controleId]: prev[controleId].map((medida) =>
-        medida.id === medidaId ? { ...medida, resposta: newValue.id } : medida
-      ),
-    }));
-    setTotalPesos((prev) => ({
-      ...prev,
-      [controleId]: prev[controleId] + newValue.peso,
-    }));
-  };
-
-  const handleJustificativaChange = (controleId, medidaId, event) => {
-    const newValue = event.target.value;
-    updateJustificativa(medidaId, newValue);
-    setMedidas((prev) => ({
-      ...prev,
-      [controleId]: prev[controleId].map((medida) =>
-        medida.id === medidaId ? { ...medida, justificativa: newValue } : medida
-      ),
-    }));
+  const handleINCCChange = async (controleId, diagnosticoId, newValue) => {
+    await supabaseBrowserClient
+      .from("controle")
+      .update({ nivel: newValue })
+      .eq("id", controleId);
+    dispatch({
+      type: "UPDATE_CONTROLE",
+      diagnosticoId,
+      controleId,
+      field: "nivel",
+      value: newValue,
+    });
   };
 
   return (
     <div>
-      {diagnosticos.map((diagnostico) => (
-        <Accordion key={diagnostico.id} onChange={() => fetchControles(diagnostico.id)}>
+
+      {state.diagnosticos.map((diagnostico: any) => (
+        <Accordion
+          slotProps={{ transition: { unmountOnExit: true } }}
+          //component={Paper}
+          //elevation={10}
+          style={{
+            backgroundColor: diagnostico.cor,
+            //margin: "0px",
+            
+          }}
+          key={diagnostico.id}
+          onChange={() => handleControleFetch(diagnostico.id)}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>{diagnostico.nome}</Typography>
+            <Box style={{ width: "70%" }}>
+              <Typography
+                variant="h6"
+                style={{ width: "80%", fontWeight: "800", padding: "10px", fontWeight: "800" }}
+                
+              >
+                {diagnostico.descricao}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                width: 130,
+                padding: 3,
+                borderRadius: 2,
+                //bgcolor: "#ffffff",
+              }}
+            >
+              <Typography
+                align="center"
+                style={{ fontWeight: "400",  }}
+              >
+                MATURIDADE
+              </Typography>
+              <Typography
+                align="center"
+                variant="h5"
+                style={{ fontWeight: "800", padding: "" }}
+              >
+                {diagnostico.indice}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                width: "auto",
+                minWidth: 130,
+                padding: 2,
+                borderRadius: 2,
+                bgcolor: "#ffffff",
+              }}
+            >
+              <Typography
+                variant="h4"
+                align="center"
+                style={{ color: "red", fontWeight: "800", padding: "" }}
+              >
+                {calculateSumOfResponsesForDiagnostico(diagnostico.id, state)}
+              </Typography>
+              <Typography
+                variant="h6"
+                align="center"
+                style={{ fontWeight: "800", padding: "" }}
+              >
+                {diagnostico.maturidade}
+              </Typography>
+            </Box>
           </AccordionSummary>
           <AccordionDetails>
-            {controles[diagnostico.id] && controles[diagnostico.id].map((controle) => (
-              <Accordion key={controle.id} onChange={() => fetchMedidas(controle.id)}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>{controle.nome} (Total Peso: {totalPesos[controle.id] || 0})</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {medidas[controle.id] && (
-                    <Table>
-                      <TableBody>
-                        {medidas[controle.id].map((medida) => (
-                          <TableRow key={medida.id}>
-                            <TableCell>
-                              <Autocomplete
-                                options={respostas}
-                                getOptionLabel={(option) => option.label}
-                                value={respostas.find((r) => r.id === medida.resposta) || null}
-                                onChange={(_, newValue) => handleRespostaChange(controle.id, medida.id, newValue)}
-                                renderInput={(params) => <TextField {...params} label="Resposta" />}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <TextField
-                                label="Justificativa"
-                                value={medida.justificativa || ''}
-                                onChange={(event) => handleJustificativaChange(controle.id, medida.id, event)}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </AccordionDetails>
-              </Accordion>
-            ))}
+            <TableContainer
+              component={Paper}
+              elevation={10}
+             //style={{ backgroundColor: "#dadada", margin: "0px" }}
+            >
+              <Table>
+                <TableBody>
+                  {state.controles[diagnostico.id]?.map((controle) => (
+                    <TableRow key={controle.id}>
+                      <TableCell
+                        align="center"
+                        style={{ verticalAlign: "top", padding: 10 }}
+                      >
+                        <Typography variant="caption" align="center">
+                          ID
+                        </Typography>
+                        <Typography variant="h5" align="center">
+                          {controle.numero}
+                        </Typography>
+                      </TableCell>
+                      <TableCell >
+                        <Accordion
+                          slotProps={{ transition: { unmountOnExit: true } }}
+                          key={controle.id}
+                          onChange={() => handleMedidaFetch(controle.id)}
+                        >
+                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Box style={{ width: "50%" }}>
+                              <Typography
+                                style={{ fontWeight: "600", padding: "10px" }}
+                              >
+                                {controle.nome}
+                              </Typography>
+                            </Box>
+
+                            <Box
+                              sx={{
+                                width: "50%",
+                                padding: 1,
+                                borderRadius: 2,
+                                bgcolor: "#cccccc50",
+                              }}
+                            >
+                              <Box sx={{}}>
+                                <Box sx={{}}>
+                                  <Typography
+                                    variant="caption"
+                                    style={{ fontWeight: "800", padding: "" }}
+                                  >
+                                    NCC - NÍVEIS DE CAPACIDADE DO CONTROLE
+                                  </Typography>
+                                </Box>
+                                <Box sx={{}}>
+                                  <Typography variant="caption">
+                                  <Select
+                                    value={controle.nivel}
+                                    onClick={(event) => event.stopPropagation()}
+                                    onChange={(event) =>
+                                      handleINCCChange(controle.id, diagnostico.id, event.target.value)
+                                    }
+                                  >
+                                    {incc.map((incc) => (
+                                      <MenuItem key={incc.id} value={incc.id}>
+                                        <Typography sx={{ whiteSpace: "normal" }}>
+                                          <b>{incc.id}</b> - {incc.label}
+                                        </Typography>
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
+                            <Box
+                              sx={{
+                                width: "10%",
+                                padding: 1,
+                                borderRadius: 2,
+                                bgcolor: "#cccccc50",
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                style={{ fontWeight: "800", padding: "" }}
+                              >
+                                Índice de Maturidade
+                              </Typography>
+                              <Typography variant="h6" align="center">
+                                {calculateMaturityIndexForControle(controle, state)}
+                              </Typography>
+                            </Box>
+                          </AccordionSummary>
+                          <AccordionDetails>
+                            {state.medidas[controle.id]?.map((medida) => (
+                              <Accordion
+                                slotProps={{
+                                  transition: { unmountOnExit: true },
+                                }}
+                                key={medida.id}
+                                component={Paper}
+                                elevation={10}
+                              >
+                                <AccordionSummary
+                                  expandIcon={<ExpandMoreIcon />}
+                                  aria-label={medida.id_medida}
+                                  aria-controls={medida.id_medida}
+                                  id={medida.id_medida}
+                                >
+                                  <Typography
+                                    sx={{
+                                      marginTop: 2,
+                                      width: "5%",
+                                    }}
+                                    variant="h6"
+                                    align="center"
+                                  >
+                                    {medida.id_medida}
+                                  </Typography>
+
+                                  <Typography sx={{ width: "40%", padding: 1 }}>
+                                    {medida.medida}
+                                  </Typography>
+
+                                  <Select
+                                    sx={{
+                                      width: "40%",
+                                      margin: 1
+                                    }}
+                                    value={medida.resposta}
+                                    aria-label={medida.id_medida}
+                                    onClick={(event) => event.stopPropagation()}
+                                    onChange={(event, newValue) =>
+                                      handleRespostaChange(
+                                        medida.id,
+                                        controle.id,
+                                        event.target.value
+                                      )
+                                    }
+                                    
+                                  >
+                                    {(controle.diagnostico === 1 ? respostasimnao : respostas).map((respostas) => (
+                                      <MenuItem key={respostas.id} value={respostas.id}>
+                                        <ListItemText 
+                                        primary={respostas.label} 
+                                        sx={{
+                                          whiteSpace: "normal"
+                                        }}/>
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+
+                                  <Typography sx={{ width: 50, color: "#999" }}>
+                                    <br />
+                                    {(controle.diagnostico === 1 ? respostasimnao : respostas).find(
+                                      (resposta) =>
+                                        resposta.id === medida.resposta
+                                    )?.peso || "-"}
+                                  </Typography>
+                                  <Chip
+                                    color="error"
+                                    sx={{
+                                      height: 40,
+                                      marginTop: 2,
+                                      opacity: 0.9,
+                                      "& .MuiChip-label": {
+                                        display: "block",
+                                        whiteSpace: "normal",
+                                      },
+                                      width: "15%",
+                                      padding: 1,
+                                      verticalAlign: "center",
+                                      align: "center",
+                                    }}
+                                    label="ATRASADO"
+                                  />
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                  <Typography
+                                    align="justify"
+                                    style={{
+                                      fontWeight: "60",
+                                      paddingBottom: 20,
+                                      paddingTop: 0,
+                                    }}
+                                  >
+                                    <i>"{medida.descricao}"</i>
+                                  </Typography>
+
+                                  <TextField
+                                    style={{ width: "100%", padding: 10 }}
+                                    label="Justificativa"
+                                    color="grey"
+                                    value={medida.justificativa}
+                                    multiline
+                                    focused
+                                    onChange={(event) =>
+                                      handleJustificativaChange(
+                                        medida.id,
+                                        controle.id,
+                                        event.target.value
+                                      )
+                                    }
+                                  />
+                                  <TextField
+                                    style={{ width: "40%", padding: 10 }}
+                                    label="Encaminhamento interno (para uso do órgão )"
+                                    color="grey"
+                                    multiline
+                                    focused
+                                  />
+                                  <TextField
+                                    style={{ width: "30%", padding: 10 }}
+                                    label="Observação do Órgão para SGD"
+                                    color="grey"
+                                    multiline
+                                    focused
+                                  />
+
+                                  <TextField
+                                    style={{ width: "30%", padding: 10 }}
+                                    color="grey"
+                                    //select
+                                    focused
+                                    label="Responsável"
+                                  />
+
+                                  <TextField
+                                    style={{ width: "20%", padding: 10 }}
+                                    label="Previsão de Inicio"
+                                    color="grey"
+                                    multiline
+                                    focused
+                                  />
+                                  <TextField
+                                    style={{ width: "20%", padding: 10 }}
+                                    label="Previsão de Fim"
+                                    color="grey"
+                                    multiline
+                                    focused
+                                  />
+                                  <TextField
+                                    style={{ width: "20%", padding: 10 }}
+                                    label="Status Medida"
+                                    color="grey"
+                                    multiline
+                                    focused
+                                  />
+                                  <TextField
+                                    style={{ width: "40%", padding: 10 }}
+                                    label="Nova resposta"
+                                    color="grey"
+                                    multiline
+                                    focused
+                                  />
+                                </AccordionDetails>
+                              </Accordion>
+                            ))}
+                          </AccordionDetails>
+                        </Accordion>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </AccordionDetails>
         </Accordion>
       ))}
@@ -134,4 +606,4 @@ const MyComponent = () => {
   );
 };
 
-export default MyComponent;
+export default DiagnosticoPage;

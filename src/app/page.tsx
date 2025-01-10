@@ -7,7 +7,7 @@ import { NavigateToResource } from "@refinedev/nextjs-router";
 
 export default function IndexPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<div>loading...</div>}>
       <Authenticated key="home-page">
         <NavigateToResource />
       </Authenticated>
