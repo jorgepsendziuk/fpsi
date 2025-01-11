@@ -44,7 +44,7 @@ export default function ProgramaList() {
         headerName: "Criado Em",
         
         minWidth: 200,
-        cell: function render({ getValue }) {
+        cell: function render({ getValue }: { getValue: () => any }) {
           return (
             <DateField format="LLL" value={getValue()} />
           );
