@@ -577,7 +577,7 @@ const DiagnosticoPage = () => {
                                       paddingTop: 0,
                                     }}
                                   >
-                                    <i>"{medida.descricao}"</i>
+                                    <i>&quot;{medida.descricao}&quot;</i>
                                   </Typography>
 
                                   <TextField
