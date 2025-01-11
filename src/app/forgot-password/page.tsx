@@ -1,6 +1,7 @@
-import { AuthPage } from "@components/auth-page";
+import { AuthPage } from "@refinedev/mui";
 import { authProviderServer } from "@providers/auth-provider";
 import { redirect } from "next/navigation";
+import { AuthPageProps } from "@refinedev/core";
 
 export default async function ForgotPassword() {
   const data = await getData();
@@ -8,7 +9,9 @@ export default async function ForgotPassword() {
   if (data.authenticated) {
     redirect(data?.redirectTo || "/");
   }
-  //return <AuthPage type="forgotPassword" />;
+  return <AuthPage type="forgotPassword" {...({} as AuthPageProps)} />;
+  
+
 
 }
 

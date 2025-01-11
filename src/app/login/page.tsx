@@ -1,4 +1,4 @@
-import { AuthPage } from "@components/auth-page";
+import { AuthPage } from "@refinedev/mui";
 import { authProviderServer } from "@providers/auth-provider";
 import { redirect } from "next/navigation";
 
