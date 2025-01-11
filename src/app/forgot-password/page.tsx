@@ -8,8 +8,8 @@ export default async function ForgotPassword() {
   if (data.authenticated) {
     redirect(data?.redirectTo || "/");
   }
+  //return <AuthPage type="forgotPassword" />;
 
-  return <AuthPage type="forgotPassword" />;
 }
 
 async function getData() {
