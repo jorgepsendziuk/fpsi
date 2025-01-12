@@ -49,7 +49,7 @@ export default function RootLayout({
                         edit: "/programa/edit/:id",
                         show: "/programa/show/:id",
                         meta: {
-                          canDelete: true
+                          canDelete: false
                         },
                       },
                       {
@@ -63,29 +63,29 @@ export default function RootLayout({
 
                         },
                       },
-                      {
-                        name: "medida",
-                        list: "/medida",
-                        create: "/medida/create",
-                        edit: "/medida/edit/:id",
-                        show: "/medida/show/:id",
-                        meta: {
-                          canDelete: true,
-                          label: "Medidas" 
-                        },
-                      },
-                      {
-                        name: "controle",
-                        list: "/controle",
-                        create: "/controle/create",
-                        edit: "/controle/edit/:id",
-                        show: "/controle/show/:id",
-                        meta: {
-                          canDelete: false,
-                          //parent: "Manutenção",
-                          label: "Controles" 
-                        },
-                      },
+                      // {
+                      //   name: "medida",
+                      //   list: "/medida",
+                      //   create: "/medida/create",
+                      //   edit: "/medida/edit/:id",
+                      //   show: "/medida/show/:id",
+                      //   meta: {
+                      //     canDelete: false,
+                      //     label: "Medidas" 
+                      //   },
+                      // },
+                      // {
+                      //   name: "controle",
+                      //   list: "/controle",
+                      //   create: "/controle/create",
+                      //   edit: "/controle/edit/:id",
+                      //   show: "/controle/show/:id",
+                      //   meta: {
+                      //     canDelete: false,
+                      //     //parent: "Manutenção",
+                      //     label: "Controles" 
+                      //   },
+                      // },
                       // {
                       //   name: "responsavel",
                       //   list: "/responsavel",
