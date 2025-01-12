@@ -12,7 +12,7 @@ import {
 import React from "react";
 import { text } from "stream/consumers";
 
-const ResponsavelList = () => {
+export const ResponsavelList = () => {
   const { dataGridProps } = useDataGrid({
     resource: "responsavel"
     
@@ -84,4 +84,3 @@ const ResponsavelList = () => {
       </List>
   );
 }
-export default ResponsavelList;

@@ -1,5 +1,5 @@
 "use client";
-import React, { useReducer, useEffect } from "react";
+import React, { useReducer, useEffect, useState } from "react";
 import {
   Accordion,
   AccordionSummary,
@@ -33,7 +33,7 @@ interface Diagnostico {
   descricao: string;
   cor: string;
   indice: number;
-  maturidade: string;
+  maturidade: number;
 }
 
 interface Controle {
@@ -47,10 +47,14 @@ interface Controle {
 interface Medida {
   id: number;
   id_medida: string;
+  id_controle: number;
+  id_cisv8: string;
+  grupo_imple: string;
+  funcao_nist_csf: string;
   medida: string;
+  descricao: string;
   resposta: number;
   justificativa: string;
-  descricao: string;
 }
 
 interface Resposta {
@@ -231,7 +235,8 @@ const DiagnosticoPage = () => {
     const fetchControlesAndMedidas = async () => {
       const diagnosticos = await supabaseBrowserClient
         .from("diagnostico")
-        .select("id");
+        .select("id")
+        .order("id", { ascending: true });
       for (const diagnostico of diagnosticos.data || []) {
         const controles = await supabaseBrowserClient
           .from("controle")
@@ -246,7 +251,7 @@ const DiagnosticoPage = () => {
     };
 
     fetchDiagnosticos();
-    fetchRespostas();
+    //fetchRespostas();
     fetchControlesAndMedidas();
   }, []);
 
@@ -264,7 +269,7 @@ const DiagnosticoPage = () => {
       .from("medida")
       .select("*")
       .eq("id_controle", controleId)
-      .order("id", { ascending: true });
+      .order("id_medida", { ascending: true });
     dispatch({ type: "SET_MEDIDAS", controleId, payload: data });
   };
 
@@ -282,19 +287,19 @@ const DiagnosticoPage = () => {
     });
   };
 
-  const handleJustificativaChange = async (medidaId: number, controleId: number, newValue: string): Promise<void> => {
-    await supabaseBrowserClient
-      .from("medida")
-      .update({ justificativa: newValue })
-      .eq("id", medidaId);
-    dispatch({
-      type: "UPDATE_MEDIDA",
-      medidaId,
-      controleId,
-      field: "justificativa",
-      value: newValue,
-    });
-  };
+  // const handleJustificativaChange = async (medidaId: number, controleId: number, newValue: string): Promise<void> => {
+  //   await supabaseBrowserClient
+  //     .from("medida")
+  //     .update({ justificativa: newValue })
+  //     .eq("id", medidaId);
+  //   dispatch({
+  //     type: "UPDATE_MEDIDA",
+  //     medidaId,
+  //     controleId,
+  //     field: "justificativa",
+  //     value: newValue,
+  //   });
+  // };
 
   const handleINCCChange = async (controleId: number, diagnosticoId: number, newValue: number): Promise<void> => {
     await supabaseBrowserClient
@@ -586,14 +591,14 @@ const DiagnosticoPage = () => {
                                     color="primary"
                                     value={medida.justificativa || ""}
                                     multiline
-                                    focused
-                                    onChange={(event) =>
-                                      handleJustificativaChange(
-                                        medida.id,
-                                        controle.id,
-                                        event.target.value
-                                      )
-                                    }
+                                    //focused
+                                    // onChange={(event) =>
+                                    //   handleJustificativaChange(
+                                    //     medida.id,
+                                    //     controle.id,
+                                    //     event.target.value
+                                    //   )
+                                    // }
                                   />
                                   <TextField
                                     style={{ width: "40%", padding: 10 }}
