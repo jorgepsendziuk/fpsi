@@ -24,12 +24,12 @@
     "@refinedev/core": "^4.57.5",
     "@refinedev/devtools": "^1.2.12",
     "@refinedev/kbar": "^1.3.14",
-    "@refinedev/mui": "^5.22.0",
+    "@refinedev/mui": "^6.0.3",
     "@refinedev/nextjs-router": "^6.2.1",
     "@refinedev/react-hook-form": "^4.9.3",
     "@refinedev/react-table": "^5.6.15",
     "@refinedev/supabase": "^5.9.6",
-    "@supabase/ssr": "^0.3.0",
+    "@supabase/ssr": "^0.5.2",
     "@tanstack/react-table": "^8.20.1",
     "@uiw/react-md-editor": "^4.0.4",
     "dayjs": "^1.11.13",
@@ -48,7 +48,7 @@
     "eslint": "^8",
     "eslint-config-next": "^14.1.0",
     "typescript": "^5.4.2",
-    "vercel": "^39.2.6"
+    "vercel": "^28.18.5"
   },
   "refine": {
     "projectId": "PRGNCh-Vt1Pdr-jpCKmI"
