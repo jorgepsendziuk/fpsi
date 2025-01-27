@@ -1,6 +1,6 @@
 "use client";
 
-import ResponsavelList from "@app/responsavel/page";
+import { ResponsavelList } from "@app/responsavel/page";
 import {
   Autocomplete,
   Box,
