@@ -17,14 +17,17 @@ import {
   Select,
   ListItemText,
   MenuItem,
+  Snackbar,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { initialState, reducer, State, Action } from "./state";
 import { calculateSumOfResponsesForDiagnostico, getMaturityLabel, incc, respostas, respostasimnao, calculateMaturityIndexForControle } from "./utils";
+import SaveIcon from "@mui/icons-material/Save";
 
 const DiagnosticoPage = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDiagnosticos = async () => {
@@ -96,20 +99,7 @@ const DiagnosticoPage = () => {
       field: "resposta",
       value: newValue,
     });
-  };
-
-  const handleJustificativaChange = async (medidaId: number, controleId: number, newValue: string): Promise<void> => {
-    await supabaseBrowserClient
-      .from("medida")
-      .update({ justificativa: newValue })
-      .eq("id", medidaId);
-    dispatch({
-      type: "UPDATE_MEDIDA",
-      medidaId,
-      controleId,
-      field: "justificativa",
-      value: newValue,
-    });
+    setToastMessage("Field updated successfully");
   };
 
   const handleINCCChange = async (controleId: number, diagnosticoId: number, newValue: number): Promise<void> => {
@@ -124,6 +114,28 @@ const DiagnosticoPage = () => {
       field: "nivel",
       value: newValue,
     });
+    setToastMessage("Field updated successfully");
+  };
+
+  const handleSaveField = async (medidaId: number, controleId: number, field: string, value: any) => {
+    const updatePayload = { [field]: value };
+    const { error } = await supabaseBrowserClient
+      .from("medida")
+      .update(updatePayload)
+      .eq("id", medidaId);
+
+    if (!error) {
+      dispatch({
+        type: "UPDATE_MEDIDA",
+        medidaId,
+        controleId,
+        field,
+        value,
+      });
+      setToastMessage("Field updated successfully");
+    } else {
+      setToastMessage(`Error updating field: ${error.message}`);
+    }
   };
 
   return (
@@ -385,6 +397,7 @@ const DiagnosticoPage = () => {
                                   </Typography>
 
                                   <TextField
+                                    id={`justificativa-${medida.id}`}
                                     style={{ width: "100%", padding: 10 }}
                                     label="Justificativa"
                                     color="primary"
@@ -392,63 +405,219 @@ const DiagnosticoPage = () => {
                                     multiline
                                     focused
                                     onChange={(event) =>
-                                      handleJustificativaChange(
-                                        medida.id,
-                                        controle.id,
-                                        event.target.value
-                                      )
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "justificativa",
+                                        value: event.target.value,
+                                      })
                                     }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "justificativa", medida.justificativa)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
                                   <TextField
+                                    id={`encaminhamento_interno-${medida.id}`}
                                     style={{ width: "40%", padding: 10 }}
                                     label="Encaminhamento interno (para uso do órgão )"
                                     color="primary"
+                                    value={medida.encaminhamento_interno || ""}
                                     multiline
                                     focused
+                                    onChange={(event) =>
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "encaminhamento_interno",
+                                        value: event.target.value,
+                                      })
+                                    }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "encaminhamento_interno", medida.encaminhamento_interno)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
                                   <TextField
+                                    id={`observacao_orgao-${medida.id}`}
                                     style={{ width: "30%", padding: 10 }}
                                     label="Observação do Órgão para SGD"
                                     color="primary"
+                                    value={medida.observacao_orgao || ""}
                                     multiline
                                     focused
+                                    onChange={(event) =>
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "observacao_orgao",
+                                        value: event.target.value,
+                                      })
+                                    }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "observacao_orgao", medida.observacao_orgao)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
-
                                   <TextField
+                                    id={`responsavel-${medida.id}`}
                                     style={{ width: "30%", padding: 10 }}
                                     color="primary"
-                                    //select
-                                    focused
                                     label="Responsável"
+                                    value={medida.responsavel || ""}
+                                    focused
+                                    onChange={(event) =>
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "responsavel",
+                                        value: event.target.value,
+                                      })
+                                    }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "responsavel", medida.responsavel)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
-
                                   <TextField
+                                    id={`previsao_inicio-${medida.id}`}
                                     style={{ width: "20%", padding: 10 }}
                                     label="Previsão de Inicio"
                                     color="primary"
+                                    value={medida.previsao_inicio || ""}
                                     multiline
                                     focused
+                                    onChange={(event) =>
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "previsao_inicio",
+                                        value: event.target.value,
+                                      })
+                                    }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "previsao_inicio", medida.previsao_inicio)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
                                   <TextField
+                                    id={`previsao_fim-${medida.id}`}
                                     style={{ width: "20%", padding: 10 }}
                                     label="Previsão de Fim"
                                     color="primary"
+                                    value={medida.previsao_fim || ""}
                                     multiline
                                     focused
+                                    onChange={(event) =>
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "previsao_fim",
+                                        value: event.target.value,
+                                      })
+                                    }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "previsao_fim", medida.previsao_fim)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
                                   <TextField
+                                    id={`status_medida-${medida.id}`}
                                     style={{ width: "20%", padding: 10 }}
                                     label="Status Medida"
                                     color="primary"
+                                    value={medida.status_medida || ""}
                                     multiline
                                     focused
+                                    onChange={(event) =>
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "status_medida",
+                                        value: event.target.value,
+                                      })
+                                    }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "status_medida", medida.status_medida)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
                                   <TextField
+                                    id={`nova_resposta-${medida.id}`}
                                     style={{ width: "40%", padding: 10 }}
                                     label="Nova resposta"
                                     color="primary"
+                                    value={medida.nova_resposta || ""}
                                     multiline
                                     focused
+                                    onChange={(event) =>
+                                      dispatch({
+                                        type: "UPDATE_MEDIDA",
+                                        medidaId: medida.id,
+                                        controleId: controle.id,
+                                        field: "nova_resposta",
+                                        value: event.target.value,
+                                      })
+                                    }
+                                    slotProps={{
+                                      input: {
+                                        endAdornment: (
+                                          <SaveIcon
+                                            onClick={() => handleSaveField(medida.id, controle.id, "nova_resposta", medida.nova_resposta)}
+                                            style={{ cursor: "pointer", color: "grey" }}
+                                          />
+                                        ),
+                                      },
+                                    }}
                                   />
                                 </AccordionDetails>
                               </Accordion>
@@ -464,6 +633,12 @@ const DiagnosticoPage = () => {
           </AccordionDetails>
         </Accordion>
       ))}
+      <Snackbar
+        open={!!toastMessage}
+        autoHideDuration={6000}
+        onClose={() => setToastMessage(null)}
+        message={toastMessage}
+      />
     </div>
   );
 };

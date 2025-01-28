@@ -25,7 +25,13 @@ export interface Medida {
   descricao: string;
   resposta: number;
   justificativa: string;
-  prazo: string;
+  encaminhamento_interno: string;
+  observacao_orgao: string;
+  responsavel: number;
+  previsao_inicio: Date;
+  previsao_fim: Date;
+  status_medida: number;
+  nova_resposta: string;
 }
 
 export interface Resposta {
