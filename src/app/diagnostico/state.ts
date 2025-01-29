@@ -1,3 +1,5 @@
+import { text } from "stream/consumers";
+
 export interface Diagnostico {
   id: number;
   descricao: string;
@@ -12,6 +14,14 @@ export interface Controle {
   numero: number;
   nome: string;
   nivel: number;
+}
+export interface Responsavel {
+  id: number;
+  programa: number;
+  departamento: string;
+  numero: number;
+  email: string ;
+  nome: string;
 }
 
 export interface Medida {

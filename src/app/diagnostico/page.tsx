@@ -28,6 +28,7 @@ import SaveIcon from "@mui/icons-material/Save";
 const DiagnosticoPage = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [responsaveis, setResponsaveis] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDiagnosticos = async () => {
@@ -44,6 +45,14 @@ const DiagnosticoPage = () => {
         .select("*")
         .order("id", { ascending: true });
       dispatch({ type: "SET_RESPOSTAS", payload: data });
+    };
+
+    const fetchResponsaveis = async () => {
+      const { data } = await supabaseBrowserClient
+        .from("responsavel")
+        .select("id, nome, departamento, email")
+        .order("nome", { ascending: true });
+      setResponsaveis(data || []);
     };
 
     const fetchControlesAndMedidas = async () => {
@@ -66,6 +75,7 @@ const DiagnosticoPage = () => {
 
     fetchDiagnosticos();
     fetchRespostas();
+    fetchResponsaveis();
     fetchControlesAndMedidas();
   }, []);
 
@@ -480,13 +490,13 @@ const DiagnosticoPage = () => {
                                       },
                                     }}
                                   />
-                                  <TextField
+                                  <Select
                                     id={`responsavel-${medida.id}`}
-                                    style={{ width: "30%", padding: 10 }}
-                                    color="primary"
-                                    label="Responsável"
+                                    style={{ width: "30%", padding: 2 }}
                                     value={medida.responsavel || ""}
-                                    focused
+                                    label="Responsável"
+                                    color="primary"
+                                    
                                     onChange={(event) =>
                                       dispatch({
                                         type: "UPDATE_MEDIDA",
@@ -496,17 +506,14 @@ const DiagnosticoPage = () => {
                                         value: event.target.value,
                                       })
                                     }
-                                    slotProps={{
-                                      input: {
-                                        endAdornment: (
-                                          <SaveIcon
-                                            onClick={() => handleSaveField(medida.id, controle.id, "responsavel", medida.responsavel)}
-                                            style={{ cursor: "pointer", color: "grey" }}
-                                          />
-                                        ),
-                                      },
-                                    }}
-                                  />
+                                    
+                                  >
+                                    {responsaveis.map((responsavel) => (
+                                      <MenuItem key={responsavel.id} value={responsavel.id}>
+                                        {responsavel.nome} ({responsavel.departamento}) [{responsavel.email}]
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
                                   <TextField
                                     id={`previsao_inicio-${medida.id}`}
                                     style={{ width: "20%", padding: 10 }}
