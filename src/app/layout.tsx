@@ -1,8 +1,7 @@
 import { DevtoolsProvider } from "@providers/devtools";
 import { Refine } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-//import { notificationProvider, RefineSnackbarProvider } from "@refinedev/mui";
-import { RefineSnackbarProvider } from "@refinedev/mui";
+import { useNotificationProvider, RefineSnackbarProvider } from "@refinedev/mui";
 import routerProvider from "@refinedev/nextjs-router";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -41,7 +40,7 @@ export default function RootLayout({
                     routerProvider={routerProvider}
                     authProvider={authProviderClient}
                     dataProvider={dataProvider}
-                    //notificationProvider={notificationProvider}
+                    notificationProvider={useNotificationProvider}
                     resources={[ 
                       {
                         name: "programa",
