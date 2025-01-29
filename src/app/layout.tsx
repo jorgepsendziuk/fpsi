@@ -1,7 +1,8 @@
 import { DevtoolsProvider } from "@providers/devtools";
 import { Refine } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-import { notificationProvider, RefineSnackbarProvider } from "@refinedev/mui";
+//import { notificationProvider, RefineSnackbarProvider } from "@refinedev/mui";
+import { RefineSnackbarProvider } from "@refinedev/mui";
 import routerProvider from "@refinedev/nextjs-router";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -25,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = cookies();
-  const theme = cookieStore.get("theme");
-  const defaultMode = theme?.value === "dark" ? "dark" : "light";
-
+  //const theme = cookieStore.get("theme");
+  //const defaultMode = theme?.value === "dark" ? "dark" : "light";
+  const defaultMode =  "light";
   return (
     <html lang="pt-BR">
       <body>
@@ -40,7 +41,7 @@ export default function RootLayout({
                     routerProvider={routerProvider}
                     authProvider={authProviderClient}
                     dataProvider={dataProvider}
-                    notificationProvider={notificationProvider}
+                    //notificationProvider={notificationProvider}
                     resources={[ 
                       {
                         name: "programa",
