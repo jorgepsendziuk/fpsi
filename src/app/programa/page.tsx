@@ -54,7 +54,7 @@ export default function ProgramaList() {
         field: "orgao",
         flex: 1,
         headerName: "Órgão",
-        valueGetter: ({ row }) => {
+        valueGetter: ({ row }: { row: { orgao: { id: number } } }) => {
           const value = row?.orgao;
           return value;
         },

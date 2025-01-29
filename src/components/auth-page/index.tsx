@@ -1,6 +1,6 @@
 "use client";
 import type { AuthPageProps } from "@refinedev/core";
-import { AuthPage as AuthPageBase, ThemedLayoutV2, ThemedTitle, ThemedTitleV2 } from "@refinedev/mui";
+import { AuthPage as AuthPageBase, ThemedLayoutV2, ThemedTitleV2 } from "@refinedev/mui";
 
 export const AuthPage = () => {
   return (
