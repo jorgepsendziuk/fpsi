@@ -10,17 +10,14 @@ import {
   useDataGrid,
 } from "@refinedev/mui";
 import React from "react";
-import { text } from "stream/consumers";
 
-export const ResponsavelList = () => {
+const ResponsavelList = () => {
   const { dataGridProps } = useDataGrid({
     resource: "responsavel"
-    
   });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      
       {
         field: "nome",
         flex: 1,
@@ -58,29 +55,31 @@ export const ResponsavelList = () => {
   );
 
   return (
-      <List
-        breadcrumb
-        headerButtons={<CreateButton 
-          resource="responsavel"
-          color="primary"
-          style={{ backgroundColor: "#ccc" }}
-        >CADASTRAR</CreateButton>}
-        title="Áreas de Domínio - Plano de Trabalho"
-        wrapperProps={{
-          sx: {
-            backgroundColor: "#e6ecf2",
-            textAlign: "center",
-          },
-        }}
-      >
-        <DataGrid 
+    <List
+      breadcrumb
+      headerButtons={<CreateButton 
+        resource="responsavel"
+        color="primary"
+        style={{ backgroundColor: "#ccc" }}
+      >CADASTRAR</CreateButton>}
+      title="Áreas de Domínio - Plano de Trabalho"
+      wrapperProps={{
+        sx: {
+          backgroundColor: "#e6ecf2",
+          textAlign: "center",
+        },
+      }}
+    >
+      <DataGrid 
         {...dataGridProps} 
         columns={columns}
         hideFooterPagination
         hideFooter
         autoHeight 
         style={{ backgroundColor: "white" }}
-        />
-      </List>
+      />
+    </List>
   );
 }
+
+export default ResponsavelList;
