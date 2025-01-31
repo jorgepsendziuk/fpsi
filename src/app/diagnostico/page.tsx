@@ -14,6 +14,7 @@ import {
   Snackbar,
   FormControl,
   InputLabel,
+  Box,
 } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 
@@ -22,6 +23,11 @@ import { supabaseBrowserClient } from "@utils/supabase/client";
 import { initialState, reducer, State, Action } from "./state";
 import { calculateSumOfResponsesForDiagnostico, getMaturityLabel, incc, respostas, respostasimnao, calculateMaturityIndexForControle } from "./utils";
 import SaveIcon from "@mui/icons-material/Save";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from "dayjs";
+import 'dayjs/locale/pt-br';
 
 const DiagnosticoPage = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -148,6 +154,8 @@ const DiagnosticoPage = () => {
 
   return (
     <div>
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+    
       {state.diagnosticos.map((diagnostico: any) => (
         <Accordion
           slotProps={{ transition: { unmountOnExit: true } }}
@@ -158,64 +166,66 @@ const DiagnosticoPage = () => {
           onChange={() => handleControleFetch(diagnostico.id)}
         >
           
-          <Grid container>
           <AccordionSummary   expandIcon={<ExpandMoreIcon />}>
             
-          
-              <Grid size={{ md: 9, sm: 12, xs: 12 }}
-                style={{ padding: "10px" }}>
+          <Box sx={{ flexGrow: 1 }}>
+          <Grid container spacing={0} >
+            <Grid  size={{ xs: 12, sm: 12, md: 8 }}
+              style={{ textAlign: "center"  }}>
+            <Typography
+                variant="h5"
+                style={{ fontWeight: "200" }}
+              >
+                DIAGNÓSTICO DE
+              </Typography>
               <Typography
-                  variant="h5"
-                  style={{ fontWeight: "200", padding: "0" }}
-                >
-                  DIAGNÓSTICO DE
+                variant="h4"
+                style={{ fontWeight: "800", padding: "0" }}
+              >
+                {diagnostico.descricao}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}
+            style={{ textAlign: "center"  }}>
+              
+                <Typography style={{ fontWeight: "400" }}>
+                  MATURIDADE
                 </Typography>
+                <Typography variant="h5"
+                  style={{ fontWeight: "800" }}
+                >
+                  {diagnostico.indice}
+                </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}
+             style={{ textAlign: "center"  }}>
+              
                 <Typography
                   variant="h4"
-                  style={{ fontWeight: "800", padding: "0" }}
+                  align="center"
+                  style={{ color: "red", fontWeight: "800", padding: "" }}
                 >
-                  {diagnostico.descricao}
+                  {calculateSumOfResponsesForDiagnostico(diagnostico.id, state)}
                 </Typography>
-              </Grid>
-              <Grid size={{ md: 3, sm: 6, xs: 6  }}>
-                
-                  <Typography align="center" style={{ fontWeight: "400" }}>
-                    MATURIDADE
-                  </Typography>
-                  <Typography
-                    align="center"
-                    variant="h5"
-                    style={{ fontWeight: "800", padding: "" }}
-                  >
-                    {diagnostico.indice}
-                  </Typography>
-              </Grid>
-              <Grid size={{ md: 3, sm: 6, xs: 6  }}>
-                
-                  <Typography
-                    variant="h4"
-                    align="center"
-                    style={{ color: "red", fontWeight: "800", padding: "" }}
-                  >
-                    {calculateSumOfResponsesForDiagnostico(diagnostico.id, state)}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    align="center"
-                    style={{ fontWeight: "800", padding: "" }}
-                  >
-                    {diagnostico.maturidade}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    align="center"
-                    style={{ fontWeight: "800", padding: "" }}
-                  >
-                    {getMaturityLabel(Number(calculateSumOfResponsesForDiagnostico(diagnostico.id, state)))}
-                  </Typography>
-              </Grid>
+                <Typography
+                  variant="h6"
+                  align="center"
+                  style={{ fontWeight: "800", padding: "" }}
+                >
+                  {diagnostico.maturidade}
+                </Typography>
+                <Typography
+                  variant="h6"
+                  align="center"
+                  style={{ fontWeight: "800", padding: "" }}
+                >
+                  {getMaturityLabel(Number(calculateSumOfResponsesForDiagnostico(diagnostico.id, state)))}
+                </Typography>
+            </Grid>
+          </Grid>
+          </Box>
           
-            </AccordionSummary></Grid>
+            </AccordionSummary>
           <AccordionDetails>
             {state.controles[diagnostico.id]?.map((controle) => (
               <Accordion
@@ -225,14 +235,20 @@ const DiagnosticoPage = () => {
               >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Grid container spacing={2}>
-                    <Grid size={{ md: 4 }} >
-                      <Typography
+                    <Grid size={{ md: 4 }} alignItems="center">
+                    <Typography
+                          variant="caption"
+                          style={{ fontWeight: "800", padding: "" }}
+                        >
+                          CONTROLE
+                        </Typography>
+                        <Typography
                         style={{ fontWeight: "600", padding: "10px" }}
                       >
                         ID {controle.numero} - {controle.nome}
                       </Typography>
                     </Grid>
-                    <Grid size={{ md: 7 }}>
+                    <Grid size={{ md: 6 }}>
                       
                         <Typography
                           variant="caption"
@@ -256,16 +272,18 @@ const DiagnosticoPage = () => {
                           ))}
                         </Select>
                     </Grid>
-                    <Grid size={{ md: 1 }}>
+                    <Grid size={{ md: 2 }}
+                    alignItems="center" style={{ textAlign: "center" }}>
                       
                         <Typography
                           variant="caption"
                           align="center"
                           style={{ fontWeight: "800", padding: "" }}
                         >
-                          Índice de Maturidade
+                          ÍNDICE DE MATURIDADE DO CONTROLE
                         </Typography>
-                        <Typography variant="h6" align="center">
+                        <Typography variant="h6" align="center"
+                        style={{ fontWeight: "800", padding: "" }}>
                           {calculateMaturityIndexForControle(controle, state)}
                         </Typography>
                     </Grid>
@@ -371,7 +389,7 @@ const DiagnosticoPage = () => {
                             <TextField
                               id={`justificativa-${medida.id}`}
                               style={{ width: "100%"}}
-                              label="Justificativa"
+                              label="Justificativa / Observação"
                               value={medida.justificativa || ""}
                               multiline
                               onChange={(event) =>
@@ -452,110 +470,6 @@ const DiagnosticoPage = () => {
                             />
                           </Grid>
                           <Grid size={{ md: 6 , sm: 12}}>
-                          <InputLabel id={`responsavel-label-${medida.id}`}>Responsável</InputLabel>
-                              <Select 
-                                labelId={`responsavel-label-${medida.id}`}
-                                id={`responsavel-${medida.id}`}
-                                size="small"
-                                style={{ width: "100%"}}
-                                value={medida.responsavel || "Responsável"}
-                                label="Responsável"
-                                onChange={(event,newValue) =>
-                                  handleSaveField(medida.id, controle.id, "responsavel", event.target.value)
-                                }
-                              >
-                                {responsaveis.map((responsavel) => (
-                                  <MenuItem key={responsavel.id} value={responsavel.id}>
-                                    {responsavel.nome} ({responsavel.departamento}) [{responsavel.email}]
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                          </Grid>
-                          <Grid size={{ md: 6 , sm: 12}}>
-                            <TextField
-                              id={`previsao_inicio-${medida.id}`}
-                              style={{ width: "100%"}}
-                              label="Previsão de Inicio"
-                              value={medida.previsao_inicio || ""}
-                              multiline
-                              onChange={(event) =>
-                                dispatch({
-                                  type: "UPDATE_MEDIDA",
-                                  medidaId: medida.id,
-                                  controleId: controle.id,
-                                  field: "previsao_inicio",
-                                  value: event.target.value,
-                                })
-                              }
-                              slotProps={{
-                                input: {
-                                  endAdornment: (
-                                    <SaveIcon
-                                      onClick={() => handleSaveField(medida.id, controle.id, "previsao_inicio", medida.previsao_inicio)}
-                                      style={{ cursor: "pointer", color: "grey" }}
-                                    />
-                                  ),
-                                },
-                              }}
-                            />
-                          </Grid>
-                          <Grid size={{ md: 6 , sm: 12}}>
-                            <TextField
-                              id={`previsao_fim-${medida.id}`}
-                              style={{ width: "100%"}}
-                              label="Previsão de Fim"
-                              value={medida.previsao_fim || ""}
-                              multiline
-                              onChange={(event) =>
-                                dispatch({
-                                  type: "UPDATE_MEDIDA",
-                                  medidaId: medida.id,
-                                  controleId: controle.id,
-                                  field: "previsao_fim",
-                                  value: event.target.value,
-                                })
-                              }
-                              slotProps={{
-                                input: {
-                                  endAdornment: (
-                                    <SaveIcon
-                                      onClick={() => handleSaveField(medida.id, controle.id, "previsao_fim", medida.previsao_fim)}
-                                      style={{ cursor: "pointer", color: "grey" }}
-                                    />
-                                  ),
-                                },
-                              }}
-                            />
-                          </Grid>
-                          <Grid size={{ md: 6 , sm: 12}}>
-                            <TextField
-                              id={`status_medida-${medida.id}`}
-                              style={{ width: "100%"}}
-                              label="Status Medida"
-                              value={medida.status_medida || ""}
-                              multiline
-                              onChange={(event) =>
-                                dispatch({
-                                  type: "UPDATE_MEDIDA",
-                                  medidaId: medida.id,
-                                  controleId: controle.id,
-                                  field: "status_medida",
-                                  value: event.target.value,
-                                })
-                              }
-                              slotProps={{
-                                input: {
-                                  endAdornment: (
-                                    <SaveIcon
-                                      onClick={() => handleSaveField(medida.id, controle.id, "status_medida", medida.status_medida)}
-                                      style={{ cursor: "pointer", color: "grey" }}
-                                    />
-                                  ),
-                                },
-                              }}
-                            />
-                          </Grid>
-                          <Grid size={{ md: 6 , sm: 12}}>
                             <TextField
                               id={`nova_resposta-${medida.id}`}
                               style={{ width: "100%"}}
@@ -583,6 +497,49 @@ const DiagnosticoPage = () => {
                               }}
                             />
                           </Grid>
+                          <Grid size={{ md: 6 , sm: 12}}>
+                          <InputLabel id={`responsavel-label-${medida.id}`}>Responsável</InputLabel>
+                              <Select 
+                                labelId={`responsavel-label-${medida.id}`}
+                                id={`responsavel-${medida.id}`}
+                                size="small"
+                                style={{ width: "100%"}}
+                                value={medida.responsavel || "Responsável"}
+                                label="Responsável<aa>"
+                                onChange={(event,newValue) =>
+                                  handleSaveField(medida.id, controle.id, "responsavel", event.target.value)
+                                }
+                              >
+                                {responsaveis.map((responsavel) => (
+                                  <MenuItem key={responsavel.id} value={responsavel.id}>
+                                    {responsavel.nome} ({responsavel.departamento}) [{responsavel.email}]
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                          </Grid>
+                          <Grid size={{ md: 3 , sm: 12}}>
+                          <DatePicker 
+                            name={`previsao_inicio-${medida.id}`}
+                            label="Previsão de Inicio" 
+                            value={dayjs(medida.previsao_inicio) || null}
+                            onChange={(newValue) =>
+                              handleSaveField(medida.id, controle.id, "previsao_inicio", newValue)
+                            }
+                            />
+                          </Grid>
+                          <Grid size={{ md: 3 , sm: 12}}>
+                          <DatePicker 
+                            name={`previsao_fim-${medida.id}`}
+                            label="Previsão de Fim" 
+                            value={dayjs(medida.previsao_fim) || null}
+                            onChange={(newValue) =>
+                              handleSaveField(medida.id, controle.id, "previsao_fim", newValue)
+                            }
+                            />
+                            
+                          </Grid>
+                          
+                          
                         </Grid>
                       </AccordionDetails>
                     </Accordion>
@@ -599,6 +556,7 @@ const DiagnosticoPage = () => {
         onClose={() => setToastMessage(null)}
         message={toastMessage}
       />
+      </LocalizationProvider>
     </div>
   );
 };
