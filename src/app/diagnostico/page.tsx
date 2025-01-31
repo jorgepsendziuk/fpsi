@@ -228,13 +228,13 @@ const DiagnosticoPage = () => {
             </AccordionSummary>
           <AccordionDetails>
             {state.controles[diagnostico.id]?.map((controle) => (
-              <Accordion
+              <Accordion style={{ border: "1px solid grey" }}
                 slotProps={{ transition: { unmountOnExit: true } }}
                 key={controle.id}
                 onChange={() => handleMedidaFetch(controle.id)}
               >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Grid container spacing={2}>
+                  <Grid container spacing={2} >
                     <Grid size={{ md: 4 }} alignItems="center">
                     <Typography
                           variant="caption"
@@ -292,6 +292,7 @@ const DiagnosticoPage = () => {
                 <AccordionDetails>
                   {state.medidas[controle.id]?.map((medida) => (
                     <Accordion
+                    style={{ border: "1px solid #ccc" }}
                       slotProps={{ transition: { unmountOnExit: true } }}
                       key={medida.id}
                       // component={Paper}
