@@ -10,13 +10,7 @@ export const fetchDiagnosticos = async (dispatch: Dispatch<Action>) => {
   dispatch({ type: "SET_DIAGNOSTICOS", payload: data });
 };
 
-export const fetchRespostas = async (dispatch: Dispatch<Action>) => {
-  const { data } = await supabaseBrowserClient
-    .from("resposta")
-    .select("*")
-    .order("id", { ascending: true });
-  dispatch({ type: "SET_RESPOSTAS", payload: data });
-};
+
 
 export const fetchControlesAndMedidas = async (dispatch: Dispatch<Action>) => {
   const diagnosticos = await supabaseBrowserClient

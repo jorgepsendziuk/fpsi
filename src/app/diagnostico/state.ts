@@ -1,4 +1,3 @@
-import { text } from "stream/consumers";
 
 export interface Diagnostico {
   id: number;
@@ -14,14 +13,6 @@ export interface Controle {
   numero: number;
   nome: string;
   nivel: number;
-}
-export interface Responsavel {
-  id: number;
-  programa: number;
-  departamento: string;
-  numero: number;
-  email: string ;
-  nome: string;
 }
 
 export interface Medida {
@@ -44,10 +35,13 @@ export interface Medida {
   nova_resposta: string;
 }
 
-export interface Resposta {
+export interface Responsavel {
   id: number;
-  peso: number | null;
-  label: string;
+  programa: number;
+  departamento: string;
+  numero: number;
+  email: string ;
+  nome: string;
 }
 
 export interface State {
