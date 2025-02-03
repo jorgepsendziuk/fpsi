@@ -19,10 +19,9 @@ import SaveIcon from "@mui/icons-material/Save";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import 'dayjs/locale/pt-br';
-import type { Medida } from "./state";
-import type { Medida as MedidaType, Controle, Responsavel } from "./state";
+import type { Medida, ProgramaMedida, Controle, Responsavel } from "./types";
 
-const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida: MedidaType, controle: Controle, handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void, responsaveis: Responsavel[] }) => {
+const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida: Medida, controle: Controle, handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void, responsaveis: Responsavel[] }) => {
   return (  
     <Accordion style={{ border: "1px solid #ccc" }} slotProps={{ transition: { unmountOnExit: true } }}>
       <Grid container spacing={0}>
@@ -64,10 +63,6 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
                 height: 40,
                 marginTop: 2,
                 opacity: 0.9,
-                "& .MuiChip-label": {
-                  display: "block",
-                  whiteSpace: "normal",
-                },
                 padding: 1,
                 verticalAlign: "center",
                 align: "center",
@@ -88,7 +83,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               id={`justificativa-${medida.id}`}
               style={{ width: "100%" }}
               label="Justificativa / Observação"
-              value={medida.justificativa || ""}
+              //value={medida.justificativa || ""}
               multiline
               onChange={(event) =>
                 handleMedidaChange(medida.id, controle.id, "justificativa", event.target.value)
@@ -109,7 +104,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
             <TextField
               id={`encaminhamento_interno-${medida.id}`}
               style={{ width: "100%" }}
-              value={medida.encaminhamento_interno || ""}
+              //value={medida.encaminhamento_interno || ""}
               multiline
               label="Encaminhamento interno (para uso do órgão)"
               onChange={(event) =>
@@ -132,7 +127,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               id={`observacao_orgao-${medida.id}`}
               style={{ width: "100%" }}
               label="Observação do Órgão para SGD"
-              value={medida.observacao_orgao || ""}
+              //value={medida.observacao_orgao || ""}
               multiline
               onChange={(event) =>
                 handleMedidaChange(medida.id, controle.id, "observacao_orgao", event.target.value)
@@ -141,7 +136,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
                 input: {
                   endAdornment: (
                     <SaveIcon
-                      onClick={() => handleMedidaChange(medida.id, controle.id, "observacao_orgao", medida.observacao_orgao)}
+                      //onClick={() => handleMedidaChange(medida.id, controle.id, "observacao_orgao", medida.observacao_orgao)}
                       style={{ cursor: "pointer", color: "grey" }}
                     />
                   ),
@@ -154,7 +149,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               id={`nova_resposta-${medida.id}`}
               style={{ width: "100%" }}
               label="Nova resposta"
-              value={medida.nova_resposta || ""}
+              //value={medida.nova_resposta || ""}
               multiline
               onChange={(event) =>
                 handleMedidaChange(medida.id, controle.id, "nova_resposta", event.target.value)
@@ -178,7 +173,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               id={`responsavel-${medida.id}`}
               size="small"
               style={{ width: "100%" }}
-              value={medida.responsavel || "Responsável"}
+              //value={medida.responsavel || "Responsável"}
               label="Responsável"
               onChange={(event) =>
                 handleMedidaChange(medida.id, controle.id, "responsavel", event.target.value)
@@ -195,7 +190,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
             <DatePicker
               name={`previsao_inicio-${medida.id}`}
               label="Previsão de Inicio"
-              value={dayjs(medida.previsao_inicio) || null}
+              //value={dayjs(medida.previsao_inicio) || null}
               onChange={(newValue) =>
                 handleMedidaChange(medida.id, controle.id, "previsao_inicio", newValue)
               }
@@ -205,7 +200,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
             <DatePicker
               name={`previsao_fim-${medida.id}`}
               label="Previsão de Fim"
-              value={dayjs(medida.previsao_fim) || null}
+              //value={dayjs(medida.previsao_fim) || null}
               onChange={(newValue) =>
                 handleMedidaChange(medida.id, controle.id, "previsao_fim", newValue)
               }

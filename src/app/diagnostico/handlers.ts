@@ -1,6 +1,6 @@
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { Dispatch } from "react";
-import { Action } from "./state";
+import { Action } from "./types";
 
 export const fetchDiagnosticos = async (dispatch: Dispatch<Action>) => {
   const { data } = await supabaseBrowserClient

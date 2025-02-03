@@ -10,7 +10,8 @@ import {
 import Grid from '@mui/material/Grid2';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { calculateMaturityIndexForControle, incc } from "./utils";
-import Medida, { MedidaType } from "./medida";
+import Medida from "./medida";
+import {Medida as MedidaType}  from "./types";
 
 const Controle = ({
   controle,
