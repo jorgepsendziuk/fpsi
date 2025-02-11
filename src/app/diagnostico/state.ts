@@ -1,84 +1,24 @@
-
-export interface Diagnostico {
-  id: number;
-  descricao: string;
-  cor: string;
-  indice: number;
-  maturidade: number;
-}
-
-export interface Controle {
-  id: number;
-  diagnostico: number;
-  numero: number;
-  nome: string;
-  nivel: number;
-}
-
-export interface Medida {
-  id: number;
-  id_medida: string;
-  id_controle: number;
-  id_cisv8: string;
-  grupo_imple: string;
-  funcao_nist_csf: string;
-  medida: string;
-  descricao: string;
-  resposta: number;
-  justificativa: string;
-  encaminhamento_interno: string;
-  observacao_orgao: string;
-  responsavel: number;
-  previsao_inicio: Date;
-  previsao_fim: Date;
-  status_medida: number;
-  nova_resposta: string;
-}
-
-export interface Responsavel {
-  id: number;
-  programa: number;
-  departamento: string;
-  numero: number;
-  email: string ;
-  nome: string;
-}
-
-export interface State {
-  diagnosticos: Diagnostico[];
-  controles: { [key: number]: Controle[] };
-  medidas: { [key: number]: Medida[] };
-  respostas: Resposta[];
-}
-
-export interface Action {
-  type: string;
-  payload?: any;
-  diagnosticoId?: number;
-  controleId?: number;
-  medidaId?: number;
-  field?: string;
-  value?: any;
-}
+import { Action, State } from "./types";
 
 export const initialState: State = {
+  programas: [],
   diagnosticos: [],
   controles: {},
   medidas: {},
+  medidas_programas: [],
   respostas: [],
 };
 
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case "SET_PROGRAMAS":
+      return { ...state, programas: action.payload };
     case "SET_DIAGNOSTICOS":
       return { ...state, diagnosticos: action.payload };
     case "SET_CONTROLES":
       return {
         ...state,
-        controles: {
-          ...state.controles,
-          [action.diagnosticoId!]: action.payload,
-        },
+        controles: { ...state.controles, [action.diagnosticoId!]: action.payload },
       };
     case "SET_MEDIDAS":
       return {
@@ -92,7 +32,7 @@ export function reducer(state: State, action: Action): State {
         ...state,
         medidas: {
           ...state.medidas,
-          [action.controleId!]: state.medidas[action.controleId!].map((medida) =>
+          [action.controleId!]: state.medidas[action.controleId!].map((medida: any) =>
             medida.id === action.medidaId
               ? { ...medida, [action.field!]: action.value }
               : medida
@@ -104,7 +44,7 @@ export function reducer(state: State, action: Action): State {
         ...state,
         controles: {
           ...state.controles,
-          [action.diagnosticoId!]: state.controles[action.diagnosticoId!].map((controle) =>
+          [action.diagnosticoId!]: state.controles[action.diagnosticoId!].map((controle: any) =>
             controle.id === action.controleId
               ? { ...controle, [action.field!]: action.value }
               : controle
@@ -115,3 +55,5 @@ export function reducer(state: State, action: Action): State {
       return state;
   }
 }
+
+
