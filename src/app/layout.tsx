@@ -6,7 +6,7 @@ import routerProvider from "@refinedev/nextjs-router";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import React, { Suspense } from "react";
-
+import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
 import { ColorModeContextProvider } from "@contexts/color-mode";
 import { authProviderClient } from "@providers/auth-provider";
 import { dataProvider } from "@providers/data-provider";
@@ -105,7 +105,7 @@ export default function RootLayout({
                       useNewQueryKeys: true,
                       projectId: "PRGNCh-Vt1Pdr-jpCKmI",
                       title: {  
-                        //icon: ,  // Replace with your custom icon component
+                        icon: <GppGoodTwoToneIcon color="primary" />,
                         text: "FPSI",  // Replace with your custom app name
                       },  
                     }}
