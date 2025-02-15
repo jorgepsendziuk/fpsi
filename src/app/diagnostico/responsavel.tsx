@@ -82,14 +82,14 @@ const Responsavel = (responsavel: Responsavel) => {
 
         if (isInEditMode) {
           return [
-            <GridActionsCellItem icon={<Save />} label="Save" onClick={handleSaveClick(id)} />,
-            <GridActionsCellItem icon={<Cancel />} label="Cancel" onClick={handleCancelClick(id)} />,
+            <GridActionsCellItem key={`save-${id}`} icon={<Save />} label="Save" onClick={handleSaveClick(id)} />,
+            <GridActionsCellItem key={`cancel-${id}`} icon={<Cancel />} label="Cancel" onClick={handleCancelClick(id)} />,
           ];
         }
 
         return [
-          <GridActionsCellItem icon={<Edit />} label="Edit" onClick={handleEditClick(id)} />,
-          <GridActionsCellItem icon={<Delete />} label="Delete" onClick={handleDeleteClick(id)} />,
+          <GridActionsCellItem key={`edit-${id}`}  icon={<Edit />} label="Edit" onClick={handleEditClick(id)} />,
+          <GridActionsCellItem key={`delete-${id}`}  icon={<Delete />} label="Delete" onClick={handleDeleteClick(id)} />,
         ];
       },
     },
