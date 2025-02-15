@@ -41,7 +41,7 @@ export const calculateSumOfResponses = (medidas: Medida[], diagnostico: number):
     }
     return sum + (resposta?.peso || 0);
   }, 0);
-};
+}; 
 
 export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, state: State): string | number => {
   const controles = state.controles[diagnosticoId] || [];

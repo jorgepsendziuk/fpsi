@@ -4,8 +4,9 @@ import { DataGrid, GridColDef, GridRowModesModel, GridRowModes, GridActionsCellI
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { Save, Cancel, Edit, Delete, Add } from "@mui/icons-material";
 import { Button, Box } from "@mui/material";
+import type { Responsavel } from "./types";
 
-const Responsavel = () => {
+const Responsavel = (responsavel: Responsavel) => {
   const [rows, setRows] = useState<any[]>([]);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
@@ -96,7 +97,7 @@ const Responsavel = () => {
 
   return (
     <Box>
-      <Button
+      <Button 
         startIcon={<Add />}
         onClick={handleAddClick}
         variant="contained"

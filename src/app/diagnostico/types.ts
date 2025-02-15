@@ -1,5 +1,7 @@
+import { DateTimeFieldOwnerState } from "@mui/x-date-pickers/DateTimeField/DateTimeField.types";
+
 export interface Programa {
-  id: number;
+  id: number; 
   orgao: number;
   sgd_versao_diagnostico_enviado: string;
   sgd_versao_diagnostico: string;
@@ -8,8 +10,8 @@ export interface Programa {
   responsavel_privacidade: number;
   responsavel_ti: number;
   sgd_numero_documento_nota_tecnica: string;
-  programa_sgd_data_limite_retorno: Date;
-  programa_sgd_retorno_data: Date;
+  sgd_data_limite_retorno: Date;
+  sgd_retorno_data: Date;
 }
 export interface Diagnostico {
   id: number;
@@ -22,6 +24,7 @@ export interface Diagnostico {
 export interface Controle {
   id: number;
   diagnostico: number;
+  programa: number;
   numero: number;
   nome: string;
   nivel: number;
@@ -67,8 +70,9 @@ export interface Resposta {
 }
 
 export interface State {
-  programas: any[];
-  diagnosticos: any[];
+  responsaveis: any;
+  programas: Programa[];
+  diagnosticos: Diagnostico[];
   controles: { [key: string]: any };
   medidas: { [key: string]: any };
   medidas_programas: any[];

@@ -5,10 +5,10 @@ import Grid from '@mui/material/Grid2';
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import type { Programa } from "./types";
 
-const Programa = () => {
-  const [programa, setPrograma] = useState<any>({});
-  const [programas, setProgramas] = useState<any[]>([]);
+const Programa = ({ programaId }: { programaId: number }) => {
+  const [programa, setPrograma] = useState<Programa>({} as Programa);
   const [responsaveis, setResponsaveis] = useState<any[]>([]);
 
   useEffect(() => {
@@ -16,11 +16,9 @@ const Programa = () => {
       const { data } = await supabaseBrowserClient
         .from("programa")
         .select("*")
+        .eq("id", programaId)
         .order("id", { ascending: true });
-      setProgramas(data || []);
-      if (data && data.length > 0) {
-        setPrograma(data[0]);
-      }
+      setPrograma(data ? data[0] : undefined);
     };
 
     const fetchResponsaveis = async () => {
@@ -33,7 +31,7 @@ const Programa = () => {
 
     fetchProgramas();
     fetchResponsaveis();
-  }, []);
+  }, [programaId]);
 
   const handleChange = (field: string) => (event: any) => {
     setPrograma({ ...programa, [field]: event.target.value });
@@ -47,50 +45,22 @@ const Programa = () => {
     await supabaseBrowserClient
       .from("programa")
       .update(programa)
-      .eq("id", programa.id);
+      .eq("id", programaId);
   };
 
   return (
     <Box component="form" noValidate autoComplete="off" sx={{ mt: 3 }}>
-      <Grid container spacing={2}>
-        <Grid size={{ md: 3, sm: 3, xs: 6}}>
-          <TextField
-            id="programa-id"
-            name="id"
-            fullWidth
-            label="ID"
-            value={programa.id || ""}
-            disabled
-          />
-        </Grid>
-        <Grid size={{ md: 3, sm: 3, xs: 6}}>
-          <TextField
-            id="programa-criado-em"
-            name="criado_em"
-            fullWidth
-            label="Criado Em"
-            value={programa.criado_em || ""}
-            onChange={handleChange("criado_em")}
-          />
-        </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
-          <TextField
-            id="programa-orgao"
-            name="orgao"
-            fullWidth
-            label="Órgão"
-            value={programa.orgao || ""}
-            onChange={handleChange("orgao")}
-          />
-        </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+      <Grid container spacing={2}> 
+        
+        
+        <Grid size={{ md: 3, sm: 6, xs: 12}}>
           <FormControl fullWidth>
             <InputLabel id="responsavel-controle-interno-label" >Responsável Controle Interno</InputLabel>
             <Select
               labelId="responsavel-controle-interno-label"
               id="responsavel-controle-interno"
               name="responsavel_controle_interno"
-              value={programa.responsavel_controle_interno || ""}
+              value={programa?.responsavel_controle_interno || ""}
               onChange={handleChange("responsavel_controle_interno")}
             >
               {responsaveis.map((responsavel: any) => (
@@ -101,14 +71,14 @@ const Programa = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 6, xs: 12}}>
           <FormControl fullWidth>
             <InputLabel id="responsavel-si-label" >Responsável SI</InputLabel>
             <Select
               labelId="responsavel-si-label"
               id="responsavel-si"
               name="responsavel_si"
-              value={programa.responsavel_si || ""}
+              value={programa?.responsavel_si || ""}
               onChange={handleChange("responsavel_si")}
             >
               {responsaveis.map((responsavel: any) => (
@@ -119,14 +89,14 @@ const Programa = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 6, xs: 12}}>
           <FormControl fullWidth>
             <InputLabel id="responsavel-privacidade-label" >Responsável Privacidade</InputLabel>
             <Select
               labelId="responsavel-privacidade-label"
               id="responsavel-privacidade"
               name="responsavel_privacidade"
-              value={programa.responsavel_privacidade || ""}
+              value={programa?.responsavel_privacidade || ""}
               onChange={handleChange("responsavel_privacidade")}
             >
               {responsaveis.map((responsavel: any) => (
@@ -137,14 +107,14 @@ const Programa = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 6, xs: 12}}>
           <FormControl fullWidth>
             <InputLabel >Responsável TI</InputLabel>
             <Select
               label="responsavel-ti-label"
               id="responsavel-ti"
               name="responsavel_ti"
-              value={programa.responsavel_ti || ""}
+              value={programa?.responsavel_ti || ""}
               onChange={handleChange("responsavel_ti")}
             >
               {responsaveis.map((responsavel: any) => (
@@ -155,57 +125,57 @@ const Programa = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 3, xs: 12}}>
           <TextField
             id="programa-sgd-numero-documento-nota-tecnica"
             name="sgd_numero_documento_nota_tecnica"
             fullWidth
             label="Número Documento Nota Técnica"
-            value={programa.sgd_numero_documento_nota_tecnica || ""}
+            value={programa?.sgd_numero_documento_nota_tecnica || ""}
             onChange={handleChange("sgd_numero_documento_nota_tecnica")}
           />
         </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 3, xs: 12}}>
           <TextField
             id="programa-sgd-versao-diagnostico-enviado"
             name="sgd_versao_diagnostico_enviado"
             fullWidth
             label="Versão Diagnóstico Enviado"
-            value={programa.sgd_versao_diagnostico_enviado || ""}
+            value={programa?.sgd_versao_diagnostico_enviado || ""}
             onChange={handleChange("sgd_versao_diagnostico_enviado")}
           />
         </Grid> 
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 3, xs: 12}}>
           <TextField
             id="programa-sgd-versao-diagnostico"
             name="sgd_versao_diagnostico"
             fullWidth
             label="Versão Diagnóstico"
-            value={programa.sgd_versao_diagnostico || ""}
+            value={programa?.sgd_versao_diagnostico || ""}
             onChange={handleChange("sgd_versao_diagnostico")}
           />
         </Grid> 
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 3, xs: 12}}>
           <DatePicker
             label="Data Limite Retorno"
-            value={dayjs(programa.sgd_data_limite_retorno) || null}
+            value={dayjs(programa?.sgd_data_limite_retorno) || null}
             onChange={handleDateChange("sgd_data_limite_retorno")}
             slotProps={{ textField: { id: "programa-sgd-data-limite-retorno", name: "sgd_data_limite_retorno", fullWidth: true } }}
           />
         </Grid>
-        <Grid size={{ md: 6, sm: 6, xs: 12}}>
+        <Grid size={{ md: 3, sm: 3, xs: 12}}>
           <DatePicker
             label="Retorno Data"
-            value={dayjs(programa.sgd_retorno_data) || null}
+            value={dayjs(programa?.sgd_retorno_data) || null}
             onChange={handleDateChange("sgd_retorno_data")}
             slotProps={{ textField: { id: "programa-sgd-retorno-data", name: "sgd_retorno_data", fullWidth: true } }}
           />
         </Grid>
-        <Grid size={{ md: 12 }}>
-          <Button variant="contained" color="primary" onClick={handleSave}>
+        {/* <Grid size={{ md: 12 }}>
+           <Button variant="contained" color="primary" onClick={handleSave}>
             Save
-          </Button>
-        </Grid>
+          </Button> 
+        </Grid> */}
       </Grid>
     </Box>
   );

@@ -42,16 +42,16 @@ export default function RootLayout({
                     dataProvider={dataProvider}
                     notificationProvider={useNotificationProvider}
                     resources={[ 
-                      {
-                        name: "programa",
-                        list: "/programa",
-                        create: "/programa/create",
-                        edit: "/programa/edit/:id",
-                        show: "/programa/show/:id",
-                        meta: {
-                          canDelete: false
-                        },
-                      },
+                      // {
+                      //   name: "programa",
+                      //   list: "/programa",
+                      //   create: "/programa/create",
+                      //   edit: "/programa/edit/:id",
+                      //   show: "/programa/show/:id",
+                      //   meta: {
+                      //     canDelete: false
+                      //   },
+                      // },
                       {
                         name: "diagnostico",
                         identifier: "diagnostico",

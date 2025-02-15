@@ -92,7 +92,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
                 input: {
                   endAdornment: (
                     <SaveIcon
-                      onClick={() => handleMedidaChange(medida.id, controle.id, "justificativa", medida.justificativa)}
+                      //onClick={() => handleMedidaChange(medida.id, controle.id, "justificativa", medida.justificativa)}
                       style={{ cursor: "pointer", color: "grey" }}
                     />
                   ),
@@ -114,7 +114,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
                 input: {
                   endAdornment: (
                     <SaveIcon
-                      onClick={() => handleMedidaChange(medida.id, controle.id, "encaminhamento_interno", medida.encaminhamento_interno)}
+                      //onClick={() => handleMedidaChange(medida.id, controle.id, "encaminhamento_interno", medida.encaminhamento_interno)}
                       style={{ cursor: "pointer", color: "grey" }}
                     />
                   ),
@@ -158,13 +158,13 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
                 input: {
                   endAdornment: (
                     <SaveIcon
-                      onClick={() => handleMedidaChange(medida.id, controle.id, "nova_resposta", medida.nova_resposta)}
+                      //onClick={() => handleMedidaChange(medida.id, controle.id, "nova_resposta", medida.nova_resposta)}
                       style={{ cursor: "pointer", color: "grey" }}
                     />
                   ),
                 },
               }}
-            />
+            /> 
           </Grid>
           <Grid size={{ md: 6, sm: 12 }}>
             <InputLabel id={`responsavel-label-${medida.id}`}>Responsável</InputLabel>

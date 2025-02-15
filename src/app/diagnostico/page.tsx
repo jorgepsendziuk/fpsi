@@ -8,6 +8,9 @@ import {
   Typography,
   Box,
   Alert,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -19,58 +22,71 @@ import Responsavel from "./responsavel";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
+import dayjs from "dayjs";
 
 const DiagnosticoPage = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastSeverity, setToastSeverity] = useState<"success" | "error">("success");
-  const [responsaveis, setResponsaveis] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState<string | false>(false);
+
+  const fetchResponsaveis = async (programaId: number) => {
+    const { data } = await supabaseBrowserClient
+      .from("responsavel")
+      .select("id, nome, departamento, email")
+      .eq("programa", programaId)
+      .order("nome", { ascending: true });
+    return data || [];
+  };
 
   useEffect(() => {
+    const fetchProgramas = async () => {
+      const { data } = await supabaseBrowserClient
+        .from("programa")
+        .select("*")
+        .order("id", { ascending: true });
+      dispatch({ type: "SET_PROGRAMAS", payload: data });
+    };
+
     const fetchDiagnosticos = async () => {
       const { data } = await supabaseBrowserClient
         .from("diagnostico")
-        .select("*")
+        .select("*") 
         .order("id", { ascending: true });
       dispatch({ type: "SET_DIAGNOSTICOS", payload: data });
     };
 
-    const fetchResponsaveis = async () => {
-      const { data } = await supabaseBrowserClient
-        .from("responsavel")
-        .select("id, nome, departamento, email")
-        .order("nome", { ascending: true });
-      setResponsaveis(data || []);
-    };
+    
 
-    const fetchControlesAndMedidas = async () => {
-      const diagnosticos = await supabaseBrowserClient
-        .from("diagnostico")
-        .select("id")
-        .order("id", { ascending: true });
-      for (const diagnostico of diagnosticos.data || []) {
-        const controles = await supabaseBrowserClient
-          .from("controle")
-          .select("id")
-          .eq("diagnostico", diagnostico.id)
-          .order("numero", { ascending: true });
-        for (const controle of controles.data || []) {
-          await handleMedidaFetch(controle.id);
-        }
-        await handleControleFetch(diagnostico.id);
-      }
-    };
-
+    fetchProgramas();
     fetchDiagnosticos();
-    fetchResponsaveis();
-    fetchControlesAndMedidas();
+    // fetchControlesAndMedidas();
   }, []);
+  
+  const fetchControlesAndMedidas = async () => {
+    const diagnosticos = await supabaseBrowserClient
+      .from("diagnostico")
+      .select("id")
+      .order("id", { ascending: true });
+    for (const diagnostico of diagnosticos.data || []) {
+      const controles = await supabaseBrowserClient
+        .from("controle")
+        .select("id")
+        .eq("diagnostico", diagnostico.id)
+        .order("numero", { ascending: true });
+      for (const controle of controles.data || []) {
+        await handleMedidaFetch(controle.id);
+      }
+      await handleControleFetch(diagnostico.id);
+    }
+  };
 
   const handleControleFetch = async (diagnosticoId: number): Promise<void> => {
     const { data } = await supabaseBrowserClient
       .from("controle")
       .select("*")
       .eq("diagnostico", diagnosticoId)
+      //.eq("programa", programaId)
       .order("id", { ascending: true });
     dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
   };
@@ -123,36 +139,103 @@ const DiagnosticoPage = () => {
     }
   };
 
+  const handleProgramaFetch = async (programaId: number) => {
+    const responsaveis = await fetchResponsaveis(programaId);
+    dispatch({ type: "SET_RESPONSAVEIS", payload: responsaveis });
+
+    if (expanded !== programaId.toString()) {
+      const { data: diagnosticos } = await supabaseBrowserClient
+        .from("diagnostico")
+        .select("*")
+        //.eq("programa", programaId)
+        .order("id", { ascending: true });
+      dispatch({ type: "SET_DIAGNOSTICOS", payload: diagnosticos });
+    }
+
+    setExpanded(expanded === programaId.toString() ? false : programaId.toString());
+  };
+
   return (
     <div>
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h5">Programa </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Programa />
-          </AccordionDetails>
-        </Accordion>
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h5">Responsável</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Responsavel />
-          </AccordionDetails>
-        </Accordion>
-        {state.diagnosticos.map((diagnostico: any) => (
-          <Diagnostico
-            key={diagnostico.id}
-            diagnostico={diagnostico}
-            state={state}
-            handleControleFetch={handleControleFetch}
-            handleINCCChange={handleINCCChange}
-            handleMedidaFetch={handleMedidaFetch}
-            handleMedidaChange={handleMedidaChange}
-            responsaveis={responsaveis}
-          />
+        {state.programas.map((programa: any) => (
+          <Accordion
+            key={programa.id}
+            expanded={expanded === programa.id.toString()}
+            onChange={() => handleProgramaFetch(programa.id)}
+            slotProps={{ transition: { unmountOnExit: true } }}
+            style={{ border: "2px solid grey" }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              
+          <Grid container spacing={2}>
+        
+          <Grid size={{ md: 6, sm: 6, xs: 12}}>
+          <Typography variant="h5" style={{ fontWeight: "400" }}>
+                Programa n.º {programa.id}
+          </Typography>
+          </Grid>
+          <Grid size={{ md: 3, sm: 3, xs: 12}}>
+            <TextField
+              id={programa.id}
+              name="orgao"
+              fullWidth
+              label="Órgão"
+              value={programa?.orgao || ""}
+              //onChange={handleChange("orgao")}
+            />
+          </Grid>
+          
+        </Grid>
+            </AccordionSummary>
+            <AccordionDetails>
+              
+                  <Programa key={programa.id} programaId={programa.id} /> 
+                
+              <Accordion style={{ border: "1px solid grey" }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h5" style={{ fontWeight: "400" }}>Responsáveis</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {state.responsaveis.map((responsavel: any) => (
+                    <Responsavel 
+                      key={responsavel.id} 
+                      id={responsavel.id} 
+                      nome={responsavel.nome}
+                      programa={responsavel.programa} 
+                      departamento={responsavel.departamento} 
+                      numero={responsavel.numero} 
+                      email={responsavel.email} 
+                    />
+                  ))}
+                </AccordionDetails>
+              </Accordion>
+              <Accordion
+                style={{ border: "1px solid grey" }}
+                onChange={() => fetchControlesAndMedidas()}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h5" style={{ fontWeight: "400" }}>Diagnóstico</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {state.diagnosticos.map((diagnostico: any) => (
+                    
+                    <Diagnostico
+                      key={diagnostico.id}
+                      programa={programa}
+                      diagnostico={diagnostico}
+                      state={state}
+                      handleControleFetch={handleControleFetch}
+                      handleINCCChange={handleINCCChange}
+                      handleMedidaFetch={handleMedidaFetch}
+                      handleMedidaChange={handleMedidaChange}
+                      responsaveis={state.responsaveis}
+                    />
+                  ))}
+                </AccordionDetails>
+              </Accordion>
+            </AccordionDetails>
+          </Accordion>
         ))}
       </LocalizationProvider>
       <Snackbar

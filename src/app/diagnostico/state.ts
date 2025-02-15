@@ -7,8 +7,9 @@ export const initialState: State = {
   medidas: {},
   medidas_programas: [],
   respostas: [],
+  responsaveis: [],
 };
-
+ 
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "SET_PROGRAMAS":
@@ -27,6 +28,8 @@ export function reducer(state: State, action: Action): State {
       };
     case "SET_RESPOSTAS":
       return { ...state, respostas: action.payload };
+    case "SET_RESPONSAVEIS":
+      return { ...state, responsaveis: action.payload };
     case "UPDATE_MEDIDA":
       return {
         ...state,

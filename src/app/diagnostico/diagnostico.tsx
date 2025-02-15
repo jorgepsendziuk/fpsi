@@ -10,20 +10,23 @@ import Grid from '@mui/material/Grid2';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { calculateSumOfResponsesForDiagnostico, getMaturityLabel } from "./utils";
 import Controle from "./controle";
-
+ 
 const Diagnostico = ({
   diagnostico,
+  programa,
   state,
   handleControleFetch,
   handleINCCChange,
   handleMedidaFetch,
+  handleMedidaProgramaFetch,
   handleMedidaChange,
+  handleProgramaControleFetch,
   responsaveis,
 }: any) => (
   <Accordion
     slotProps={{ transition: { unmountOnExit: true } }}
     style={{ backgroundColor: diagnostico.cor, color: "black", width: "100%" }}
-    onChange={() => handleControleFetch(diagnostico.id)}
+    onChange={() => handleControleFetch(diagnostico.id, programa.id)}
   >
     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
       <Box sx={{ flexGrow: 1 }}>
@@ -61,18 +64,23 @@ const Diagnostico = ({
       </Box>
     </AccordionSummary>
     <AccordionDetails>
-      {state.controles[diagnostico.id]?.map((controle: any) => (
-        <Controle
-          key={controle.id}
-          controle={controle}
-          diagnostico={diagnostico}
-          state={state}
-          handleINCCChange={handleINCCChange}
-          handleMedidaFetch={handleMedidaFetch}
-          handleMedidaChange={handleMedidaChange}
-          responsaveis={responsaveis}
-        />
-      ))}
+      {state.controles[diagnostico.id]
+        ?.filter((controle: any) => controle.programa === programa.id)
+        .map((controle: any) => (
+          <Controle
+            key={controle.id}
+            controle={controle}
+            diagnostico={diagnostico}
+            state={state}
+            programa={programa}
+            handleINCCChange={handleINCCChange}
+            handleMedidaFetch={handleMedidaFetch}
+            handleMedidaProgramaFetch={handleMedidaProgramaFetch}
+            handleMedidaChange={handleMedidaChange}
+            handleProgramaControleFetch={handleProgramaControleFetch}
+            responsaveis={responsaveis}
+          />
+        ))}
     </AccordionDetails>
   </Accordion>
 );
