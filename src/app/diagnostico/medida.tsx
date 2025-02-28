@@ -24,22 +24,22 @@ import type { Medida, ProgramaMedida, Controle, Responsavel } from "./types";
 const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida: Medida, controle: Controle, handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void, responsaveis: Responsavel[] }) => {
   return (  
     <Accordion style={{ border: "1px solid #ccc" }} slotProps={{ transition: { unmountOnExit: true } }}>
-      <Grid container spacing={0}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-label={medida.id_medida}
           aria-controls={medida.id_medida}
           id={medida.id_medida}
         >
-          <Grid size={{ md: 1, sm: 2, xs: 1 }}>
+          <Grid container spacing={0}>
+          <Grid size={{ md: 1, sm: 2, xs: 3 }}>
             <Typography sx={{ marginTop: 2 }} variant="h6" align="center">
               {medida.id_medida}
             </Typography>
           </Grid>
-          <Grid size={{ md: 4, sm: 4, xs: 5 }}>
+          <Grid size={{ md: 4, sm: 4, xs: 9 }}>
             <Typography sx={{ padding: 1 }}>{medida.medida}</Typography>
           </Grid>
-          <Grid size={{ md: 5, sm: 4, xs: 3 }}>
+          <Grid size={{ md: 5, sm: 4, xs: 6 }}>
             <Select
               sx={{ width: "90%" }}
               value={medida.resposta || ""}
@@ -56,7 +56,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               ))}
             </Select>
           </Grid>
-          <Grid size={{ md: 2, sm: 2, xs: 3 }}>
+          <Grid size={{ md: 2, sm: 2, xs: 6 }}>
             <Chip
               color="error"
               sx={{
@@ -70,15 +70,17 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               label="ATRASADO"
             />
           </Grid>
+          </Grid>
         </AccordionSummary>
-      </Grid>
+      
       <AccordionDetails>
         <Typography align="justify" style={{ fontWeight: "60", paddingBottom: 20, paddingTop: 0 }}>
           <i>&quot;{medida.descricao}&quot;</i>
         </Typography>
+      
   
-        <Grid container spacing={2}>
-          <Grid size={{ md: 6, sm: 12 }}>
+        <Grid container spacing={1}>
+          <Grid size={{ md: 6, sm: 12, xs: 12  }}>
             <TextField
               id={`justificativa-${medida.id}`}
               style={{ width: "100%" }}
@@ -100,7 +102,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               }}
             />
           </Grid>
-          <Grid size={{ md: 6, sm: 12 }}>
+          <Grid size={{ md: 6, sm: 12, xs: 12   }}>
             <TextField
               id={`encaminhamento_interno-${medida.id}`}
               style={{ width: "100%" }}
@@ -122,7 +124,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               }}
             />
           </Grid>
-          <Grid size={{ md: 6, sm: 12 }}>
+          <Grid size={{ md: 6, sm: 12, xs: 12   }}>
             <TextField
               id={`observacao_orgao-${medida.id}`}
               style={{ width: "100%" }}
@@ -144,7 +146,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               }}
             />
           </Grid>
-          <Grid size={{ md: 6, sm: 12 }}>
+          <Grid size={{ md: 6, sm: 12, xs: 12   }}>
             <TextField
               id={`nova_resposta-${medida.id}`}
               style={{ width: "100%" }}
@@ -166,7 +168,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               }}
             /> 
           </Grid>
-          <Grid size={{ md: 6, sm: 12 }}>
+          <Grid size={{ md: 6, sm: 12, xs: 12   }}>
             <InputLabel id={`responsavel-label-${medida.id}`}>Responsável</InputLabel>
             <Select
               labelId={`responsavel-label-${medida.id}`}
@@ -186,7 +188,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               ))}
             </Select>
           </Grid>
-          <Grid size={{ md: 3, sm: 12 }}>
+          <Grid size={{ md: 3, sm: 12, xs: 12   }}>
             <DatePicker
               name={`previsao_inicio-${medida.id}`}
               label="Previsão de Inicio"
@@ -196,7 +198,7 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
               }
             />
           </Grid>
-          <Grid size={{ md: 3, sm: 12 }}>
+          <Grid size={{ md: 3, sm: 12, xs: 12   }}>
             <DatePicker
               name={`previsao_fim-${medida.id}`}
               label="Previsão de Fim"

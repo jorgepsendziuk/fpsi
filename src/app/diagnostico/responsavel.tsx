@@ -6,7 +6,7 @@ import { Save, Cancel, Edit, Delete, Add } from "@mui/icons-material";
 import { Button, Box } from "@mui/material";
 import type { Responsavel } from "./types";
 
-const Responsavel = (responsavel: Responsavel) => {
+const Responsavel = ({ programa }: { programa: number }) => {
   const [rows, setRows] = useState<any[]>([]);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
@@ -15,12 +15,13 @@ const Responsavel = (responsavel: Responsavel) => {
       const { data } = await supabaseBrowserClient
         .from("responsavel")
         .select("*")
+        .eq("programa", programa)
         .order("id", { ascending: true });
       setRows(data || []);
     };
 
     fetchResponsaveis();
-  }, []);
+  }, [programa]);
 
   const handleRowEditStart = (params: any, event: any) => {
     event.defaultMuiPrevented = true;
@@ -57,39 +58,51 @@ const Responsavel = (responsavel: Responsavel) => {
 
   const handleAddClick = () => {
     const newId = Math.max(...rows.map((row) => row.id)) + 1;
-    setRows([...rows, { id: newId, nome: "", departamento: "", email: "", isNew: true }]);
+    setRows([...rows, { id: newId, nome: "", departamento: "", email: "", programa }]);
     setRowModesModel({ ...rowModesModel, [newId]: { mode: GridRowModes.Edit } });
   };
 
-  const handleProcessRowUpdate = (newRow: any) => {
-    const updatedRow = { ...newRow, isNew: false };
+  const handleProcessRowUpdate = async (newRow: any) => {
+    const updatedRow = { ...newRow };
     setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+    if (!newRow.id) {
+      const { error } = await supabaseBrowserClient
+        .from("responsavel")
+        .insert([updatedRow]);
+      if (error) {
+        console.error("Insert error:", error);
+      }
+    } else {
+      const { error } = await supabaseBrowserClient
+        .from("responsavel")
+        .update(updatedRow)
+        .eq("id", newRow.id);
+      if (error) {
+        console.error("Update error:", error);
+      }
+    }
     return updatedRow;
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "id", width: 150, editable: false },
-    { field: "nome", headerName: "Nome", width: 150, editable: true },
-    { field: "departamento", headerName: "Departamento", width: 150, editable: true },
-    { field: "email", headerName: "Email", width: 200, editable: true },
-    {
-      field: "actions",
-      headerName: "Ações",
-      width: 150,
-      type: "actions",
+    { field: "id", headerName: "ID", flex: 0.1, editable: false },
+    { field: "nome", headerName: "Nome", flex: 0.3, editable: true },
+    { field: "departamento", headerName: "Departamento", flex: 0.3, editable: true },
+    { field: "email", headerName: "Email", flex: 0.3, editable: true },
+    { field: "actions", headerName: "Ações", flex: 0.2, minWidth: 30, type: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
 
         if (isInEditMode) {
           return [
-            <GridActionsCellItem key={`save-${id}`} icon={<Save />} label="Save" onClick={handleSaveClick(id)} />,
-            <GridActionsCellItem key={`cancel-${id}`} icon={<Cancel />} label="Cancel" onClick={handleCancelClick(id)} />,
+            <GridActionsCellItem key={`save-${id}`} icon={<Save />} label="Salvar" onClick={handleSaveClick(id)} />,
+            <GridActionsCellItem key={`cancel-${id}`} icon={<Cancel />} label="Cancelar" onClick={handleCancelClick(id)} />,
           ];
         }
 
         return [
-          <GridActionsCellItem key={`edit-${id}`}  icon={<Edit />} label="Edit" onClick={handleEditClick(id)} />,
-          <GridActionsCellItem key={`delete-${id}`}  icon={<Delete />} label="Delete" onClick={handleDeleteClick(id)} />,
+          <GridActionsCellItem key={`edit-${id}`} icon={<Edit />} label="Editar" onClick={handleEditClick(id)} />,
+          <GridActionsCellItem key={`delete-${id}`} icon={<Delete />} label="Deletar" onClick={handleDeleteClick(id)} />,
         ];
       },
     },
@@ -97,7 +110,7 @@ const Responsavel = (responsavel: Responsavel) => {
 
   return (
     <Box>
-      <Button 
+      <Button id="add-responsavel"
         startIcon={<Add />}
         onClick={handleAddClick}
         variant="contained"
@@ -107,7 +120,7 @@ const Responsavel = (responsavel: Responsavel) => {
         Adicionar Responsável
       </Button>
       <div style={{ height: 300, width: '100%' }}>
-        <DataGrid
+        <DataGrid 
           rows={rows}
           columns={columns}
           editMode="row"

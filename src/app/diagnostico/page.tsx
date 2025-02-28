@@ -33,7 +33,7 @@ const DiagnosticoPage = () => {
   const fetchResponsaveis = async (programaId: number) => {
     const { data } = await supabaseBrowserClient
       .from("responsavel")
-      .select("id, nome, departamento, email")
+      .select("*")
       .eq("programa", programaId)
       .order("nome", { ascending: true });
     return data || [];
@@ -63,7 +63,7 @@ const DiagnosticoPage = () => {
     // fetchControlesAndMedidas();
   }, []);
   
-  const fetchControlesAndMedidas = async () => {
+  const fetchControlesAndMedidas = async (programaId: number) => {
     const diagnosticos = await supabaseBrowserClient
       .from("diagnostico")
       .select("id")
@@ -71,22 +71,23 @@ const DiagnosticoPage = () => {
     for (const diagnostico of diagnosticos.data || []) {
       const controles = await supabaseBrowserClient
         .from("controle")
-        .select("id")
+        .select("id,programa")
         .eq("diagnostico", diagnostico.id)
+        .eq("programa", programaId)
         .order("numero", { ascending: true });
       for (const controle of controles.data || []) {
         await handleMedidaFetch(controle.id);
       }
-      await handleControleFetch(diagnostico.id);
+      await handleControleFetch(diagnostico.id, programaId);
     }
   };
 
-  const handleControleFetch = async (diagnosticoId: number): Promise<void> => {
+  const handleControleFetch = async (diagnosticoId: number, programaId: number): Promise<void> => {
     const { data } = await supabaseBrowserClient
       .from("controle")
       .select("*")
       .eq("diagnostico", diagnosticoId)
-      //.eq("programa", programaId)
+      .eq("programa", programaId)
       .order("id", { ascending: true });
     dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
   };
@@ -188,31 +189,22 @@ const DiagnosticoPage = () => {
           
         </Grid>
             </AccordionSummary>
-            <AccordionDetails>
+            <AccordionDetails sx={{ bottom: 10 }}>
               
                   <Programa key={programa.id} programaId={programa.id} /> 
-                
+                <Box sx={{ mt: 2 }}>
               <Accordion style={{ border: "1px solid grey" }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="h5" style={{ fontWeight: "400" }}>Responsáveis</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  {state.responsaveis.map((responsavel: any) => (
-                    <Responsavel 
-                      key={responsavel.id} 
-                      id={responsavel.id} 
-                      nome={responsavel.nome}
-                      programa={responsavel.programa} 
-                      departamento={responsavel.departamento} 
-                      numero={responsavel.numero} 
-                      email={responsavel.email} 
-                    />
-                  ))}
+                  <Responsavel programa={programa.id} />
                 </AccordionDetails>
               </Accordion>
+              </Box>
               <Accordion
                 style={{ border: "1px solid grey" }}
-                onChange={() => fetchControlesAndMedidas()}
+                onChange={() => fetchControlesAndMedidas(programa.id)}
               >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="h5" style={{ fontWeight: "400" }}>Diagnóstico</Typography>
