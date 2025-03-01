@@ -21,8 +21,15 @@ import dayjs from "dayjs";
 import 'dayjs/locale/pt-br';
 import type { Medida, ProgramaMedida, Controle, Responsavel } from "./types";
 
+type TextFields = {
+  justificativa: string;
+  encaminhamento_interno: string;
+  observacao_orgao: string;
+  nova_resposta: string;
+};
+
 const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida: Medida, controle: Controle, handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void, responsaveis: Responsavel[] }) => {
-  const [localValues, setLocalValues] = useState({
+  const [localValues, setLocalValues] = useState<TextFields>({
     justificativa: medida.justificativa || "",
     encaminhamento_interno: medida.encaminhamento_interno || "",
     observacao_orgao: medida.observacao_orgao || "",
@@ -38,11 +45,11 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
     });
   }, [medida]);
 
-  const handleTextChange = (field: string, value: string) => {
+  const handleTextChange = (field: keyof TextFields, value: string) => {
     setLocalValues(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveField = (field: string) => {
+  const handleSaveField = (field: keyof TextFields) => {
     handleMedidaChange(medida.id, controle.id, field, localValues[field]);
   };
 
