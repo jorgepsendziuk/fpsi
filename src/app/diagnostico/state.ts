@@ -62,7 +62,7 @@ export function reducer(state: State, action: Action): State {
         ...state,
         programas: state.programas.map(programa =>
           programa.id === action.programaId
-            ? { ...programa, [action.field]: action.value }
+            ? { ...programa, [action.field as string]: action.value }
             : programa
         ),
       };
