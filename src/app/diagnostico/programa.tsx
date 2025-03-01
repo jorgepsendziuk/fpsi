@@ -55,7 +55,7 @@ const Programa = ({ programaId }: { programaId: number }) => {
           <FormControl fullWidth>
             <InputLabel id="responsavel-controle-interno-label" >Responsável Controle Interno</InputLabel>
             <Select
-              labelId="responsavel-controle-interno-label"
+              label="responsavel-controle-interno-label"
               id="responsavel-controle-interno"
               name="responsavel_controle_interno"
               value={programa?.responsavel_controle_interno || ""}
@@ -73,7 +73,7 @@ const Programa = ({ programaId }: { programaId: number }) => {
           <FormControl fullWidth>
             <InputLabel id="responsavel-si-label" >Responsável SI</InputLabel>
             <Select
-              labelId="responsavel-si-label"
+              label="responsavel-si-label"
               id="responsavel-si"
               name="responsavel_si"
               value={programa?.responsavel_si || ""}
@@ -91,7 +91,7 @@ const Programa = ({ programaId }: { programaId: number }) => {
           <FormControl fullWidth>
             <InputLabel id="responsavel-privacidade-label" >Responsável Privacidade</InputLabel>
             <Select
-              labelId="responsavel-privacidade-label"
+              label="responsavel-privacidade-label"
               id="responsavel-privacidade"
               name="responsavel_privacidade"
               value={programa?.responsavel_privacidade || ""}

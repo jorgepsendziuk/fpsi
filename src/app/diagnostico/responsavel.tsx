@@ -6,20 +6,21 @@ import { Save, Cancel, Edit, Delete, Add } from "@mui/icons-material";
 import { Button, Box } from "@mui/material";
 import type { Responsavel } from "./types";
 
-const Responsavel = ({ programa }: { programa: number }) => {
+const Responsavel = ({ programa, onUpdate }: { programa: number, onUpdate?: () => void }) => {
   const [rows, setRows] = useState<any[]>([]);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
-  useEffect(() => {
-    const fetchResponsaveis = async () => {
-      const { data } = await supabaseBrowserClient
-        .from("responsavel")
-        .select("*")
-        .eq("programa", programa)
-        .order("id", { ascending: true });
-      setRows(data || []);
-    };
+  const fetchResponsaveis = async () => {
+    const { data } = await supabaseBrowserClient
+      .from("responsavel")
+      .select("*")
+      .eq("programa", programa)
+      .order("id", { ascending: true });
+    setRows(data || []);
+    if (onUpdate) onUpdate();
+  };
 
+  useEffect(() => {
     fetchResponsaveis();
   }, [programa]);
 
@@ -42,6 +43,7 @@ const Responsavel = ({ programa }: { programa: number }) => {
       .from("responsavel")
       .update(row)
       .eq("id", id);
+    if (onUpdate) onUpdate();
   };
 
   const handleCancelClick = (id: any) => () => {
@@ -54,34 +56,57 @@ const Responsavel = ({ programa }: { programa: number }) => {
       .delete()
       .eq("id", id);
     setRows(rows.filter((row) => row.id !== id));
+    if (onUpdate) onUpdate();
   };
 
   const handleAddClick = () => {
-    const newId = Math.max(...rows.map((row) => row.id)) + 1;
-    setRows([...rows, { id: newId, nome: "", departamento: "", email: "", programa }]);
-    setRowModesModel({ ...rowModesModel, [newId]: { mode: GridRowModes.Edit } });
+    const newId = rows.length > 0 ? Math.max(...rows.map((row) => row.id)) + 1 : 1;
+    const newRow = { id: newId, nome: "", departamento: "", email: "", programa, isNew: true };
+    setRows((prevRows) => [...prevRows, newRow]);
+    setRowModesModel((oldModel) => ({
+      ...oldModel,
+      [newId]: { mode: GridRowModes.Edit }
+    }));
   };
 
   const handleProcessRowUpdate = async (newRow: any) => {
     const updatedRow = { ...newRow };
-    setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
-    if (!newRow.id) {
-      const { error } = await supabaseBrowserClient
+    delete updatedRow.isNew;  // Remove the isNew flag before database operations
+    
+    if (newRow.isNew) {
+      // This is a new row, perform insert
+      const { data, error } = await supabaseBrowserClient
         .from("responsavel")
-        .insert([updatedRow]);
+        .insert([updatedRow])
+        .select()
+        .single();
+        
       if (error) {
         console.error("Insert error:", error);
+        return newRow;
       }
+      
+      // Update the row with the actual database ID
+      const finalRow = { ...data };
+      setRows(rows.map((row) => (row.id === newRow.id ? finalRow : row)));
+      if (onUpdate) onUpdate();
+      return finalRow;
     } else {
+      // This is an existing row, perform update
       const { error } = await supabaseBrowserClient
         .from("responsavel")
         .update(updatedRow)
         .eq("id", newRow.id);
+        
       if (error) {
         console.error("Update error:", error);
+        return newRow;
       }
+      
+      setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+      if (onUpdate) onUpdate();
+      return updatedRow;
     }
-    return updatedRow;
   };
 
   const columns: GridColDef[] = [

@@ -30,8 +30,8 @@ export interface Controle {
   nivel: number;
 }
 
-export interface Medida {
-  resposta: number;
+export type Medida = {
+  // Read-only fields
   id: number;
   id_medida: string;
   id_controle: number;
@@ -40,7 +40,18 @@ export interface Medida {
   funcao_nist_csf: string;
   medida: string;
   descricao: string;
-}
+
+  // Editable fields
+  resposta?: number;
+  justificativa?: string;
+  encaminhamento_interno?: string;
+  observacao_orgao?: string;
+  nova_resposta?: string;
+  responsavel?: number;
+  previsao_inicio?: string | null;
+  previsao_fim?: string | null;
+};
+
 export interface ProgramaMedida {
   id: number;
   programa: number;
