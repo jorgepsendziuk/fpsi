@@ -290,12 +290,11 @@ const DiagnosticoPage = () => {
                         .eq("id", programa.id);
                       
                       if (!error) {
-                        dispatch({
-                          type: "UPDATE_PROGRAMA",
-                          programaId: programa.id,
-                          field: "setor",
-                          value: newValue,
-                        });
+                        // Update local state
+                        const updatedProgramas = state.programas.map(p => 
+                          p.id === programa.id ? { ...p, setor: newValue } : p
+                        );
+                        dispatch({ type: "SET_PROGRAMAS", payload: updatedProgramas });
                         setToastMessage("Setor atualizado com sucesso");
                         setToastSeverity("success");
                       } else {
@@ -328,7 +327,7 @@ const DiagnosticoPage = () => {
                         paddingBottom: 2,
                       },
                     }}
-                    value={programa.orgao ?? ""}
+                    value={programa.orgao || ""}
                     displayEmpty
                     onClick={(event) => event.stopPropagation()}
                     onChange={async (event) => {
@@ -340,12 +339,11 @@ const DiagnosticoPage = () => {
                         .eq("id", programa.id);
                       
                       if (!error) {
-                        dispatch({
-                          type: "UPDATE_PROGRAMA",
-                          programaId: programa.id,
-                          field: "orgao",
-                          value: newValue,
-                        });
+                        // Update local state
+                        const updatedProgramas = state.programas.map(p => 
+                          p.id === programa.id ? { ...p, orgao: newValue } : p
+                        );
+                        dispatch({ type: "SET_PROGRAMAS", payload: updatedProgramas });
                         setToastMessage("Órgão atualizado com sucesso");
                         setToastSeverity("success");
                       } else {

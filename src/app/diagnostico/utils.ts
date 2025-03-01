@@ -32,8 +32,8 @@ export const respostasimnao = [
 ];
 
 export const setor = [
-  { id: 1, label: "Público" },
-  { id: 2, label: "Privado" },
+  { id: 1, label: 'Público' },
+  { id: 2, label: 'Privado' }
 ];
 
 export const calculateSumOfResponses = (medidas: Medida[], diagnostico: number): number => {

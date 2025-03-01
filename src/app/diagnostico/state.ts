@@ -13,7 +13,10 @@ export const initialState: State = {
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "SET_PROGRAMAS":
-      return { ...state, programas: action.payload };
+      return {
+        ...state,
+        programas: action.payload,
+      };
     case "SET_DIAGNOSTICOS":
       return { ...state, diagnosticos: action.payload };
     case "SET_CONTROLES":
@@ -53,6 +56,15 @@ export function reducer(state: State, action: Action): State {
               : controle
           ),
         },
+      };
+    case "UPDATE_PROGRAMA":
+      return {
+        ...state,
+        programas: state.programas.map(programa =>
+          programa.id === action.programaId
+            ? { ...programa, [action.field]: action.value }
+            : programa
+        ),
       };
     default:
       return state;
