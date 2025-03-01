@@ -34,10 +34,12 @@
     "@uiw/react-md-editor": "^4.0.5",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "input-mask-react": "^1.0.7",
     "js-cookie": "^3.0.5",
     "next": "^15.1.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-imask": "^7.6.1"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

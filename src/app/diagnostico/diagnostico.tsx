@@ -31,7 +31,7 @@ const Diagnostico = ({
     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={0}>
-          <Grid size={{ xs: 12, sm: 12, md: 8 }} style={{ textAlign: "center" }}>
+          <Grid size={{ xs: 12, sm: 12, md: 8 }} style={{ textAlign: "left" }}>
             <Typography variant="h5" style={{ fontWeight: "200" }}>
               DIAGNÓSTICO DE
             </Typography>
