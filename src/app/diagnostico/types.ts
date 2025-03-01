@@ -12,6 +12,9 @@ export interface Programa {
   sgd_numero_documento_nota_tecnica: string;
   sgd_data_limite_retorno: Date;
   sgd_retorno_data: Date;
+  setor: number;
+  cnpj: number;
+  razao_social: string;
 }
 export interface Diagnostico {
   id: number;

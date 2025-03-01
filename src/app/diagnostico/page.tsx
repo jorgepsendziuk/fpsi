@@ -27,6 +27,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
 import dayjs from "dayjs";
+import { setor } from "./utils";
 
 const DiagnosticoPage = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -252,13 +253,63 @@ const DiagnosticoPage = () => {
               }}
             >
               <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                <Box sx={{ width: '50%' }}>
+                <Box sx={{ width: '30%' }}>
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
                     Programa de Privacidade e Proteção de Dados:
                   </Typography>
                   <Typography variant="h3" style={{ fontWeight: "400" }}>
                     nº {programa.id.toString().padStart(2, '0')}
                   </Typography>
+                </Box>
+                <Box sx={{ width: '20%' }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                    Setor:
+                  </Typography>
+                  <Select
+                    id={`setor-${programa.id}`}
+                    name="setor"
+                    fullWidth
+                    size="medium"
+                    sx={{
+                      height: 56,
+                      '& .MuiSelect-select': {
+                        fontSize: '1.2rem',
+                        paddingTop: 2,
+                        paddingBottom: 2,
+                      },
+                    }}
+                    value={programa.setor || 1}
+                    displayEmpty
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={async (event) => {
+                      event.stopPropagation();
+                      const newValue = event.target.value;
+                      const { error } = await supabaseBrowserClient
+                        .from("programa")
+                        .update({ setor: newValue })
+                        .eq("id", programa.id);
+                      
+                      if (!error) {
+                        dispatch({
+                          type: "UPDATE_PROGRAMA",
+                          programaId: programa.id,
+                          field: "setor",
+                          value: newValue,
+                        });
+                        setToastMessage("Setor atualizado com sucesso");
+                        setToastSeverity("success");
+                      } else {
+                        setToastMessage("Erro ao atualizar setor");
+                        setToastSeverity("error");
+                      }
+                    }}
+                  >
+                    {setor.map((item) => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </Box>
                 <Box sx={{ width: '50%' }}>
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>

@@ -31,6 +31,11 @@ export const respostasimnao = [
   { id: 2, peso: 0, label: "Não" },
 ];
 
+export const setor = [
+  { id: 1, label: "Público" },
+  { id: 2, label: "Privado" },
+];
+
 export const calculateSumOfResponses = (medidas: Medida[], diagnostico: number): number => {
   return medidas.reduce((sum, medida) => {
     let resposta: Resposta | undefined;
