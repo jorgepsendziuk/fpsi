@@ -38,6 +38,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Margin } from "@mui/icons-material";
 import { useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles'; // Add this import
 
 const sanitizeCNPJ = (value: string) => {
   return value.replace(/\D/g, '').slice(0, 14);
@@ -77,6 +78,7 @@ const CNPJMask = React.forwardRef<HTMLInputElement, CNPJMaskCustomProps>(
 );
 
 const DiagnosticoPage = () => {
+  const theme = useTheme(); // Get the current theme
   const isMobile = useMediaQuery('(max-width:600px)');
   const [state, dispatch] = useReducer(reducer, initialState);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -84,6 +86,17 @@ const DiagnosticoPage = () => {
   const [expanded, setExpanded] = useState<string | false>(false);
   const [orgaos, setOrgaos] = useState<any[]>([]);
   const [editedValues, setEditedValues] = useState<{[key: number]: {cnpj?: string, razao_social?: string}}>({});
+
+  // Define a function to get appropriate text color based on theme mode
+  const getContrastTextColor = () => {
+    return theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000';
+  };
+  
+  // Modify the getBackgroundContrastColor function to always return white for shield text
+  const getBackgroundContrastColor = (bgColor: string) => {
+    // For shield icon, always return white
+    return '#FFFFFF'; // White text on primary color background always
+  };
 
   const getEntityInitial = (program: any) => {
     if (program.setor === 2 && program.razao_social) {
@@ -317,7 +330,7 @@ const DiagnosticoPage = () => {
           component="h1" 
           sx={{ 
             fontWeight: 600,
-            color: 'text.primary',
+            color: getContrastTextColor(), // Use dynamic color
             fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
           }}
         >
@@ -351,11 +364,15 @@ const DiagnosticoPage = () => {
               '&:before': {
                 display: 'none',
               },
+              // Update background color based on theme mode
+              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'background.paper',
               '& .MuiAccordionSummary-root': {
                 borderRadius: 2,
+                // Add dark grey background for summary in dark mode
+                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'grey.100',
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  backgroundColor: 'action.hover',
+                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(80, 80, 80, 0.9)' : 'action.hover',
                 },
                 padding: { xs: 1, sm: 2 },
               },
@@ -364,12 +381,21 @@ const DiagnosticoPage = () => {
               '&.Mui-expanded': {
                 margin: '0 0 16px 0',
                 boxShadow: 6,
-                backgroundColor: 'background.paper',
+                // Add dark grey background for expanded accordion in dark mode
+                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'background.paper',
                 '& .MuiAccordionSummary-root': {
-                  backgroundColor: 'grey.100',
+                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(80, 80, 80, 0.9)' : 'grey.100',
                   borderBottom: '1px solid',
-                  borderColor: 'grey.300',
+                  borderColor: theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.3)' : 'grey.300',
                 },
+              },
+              // Allow content inside accordion details to use dynamic color
+              '& .MuiAccordionDetails-root .MuiTypography-root': {
+                color: getContrastTextColor(),
+              },
+              // Add styles for the accordion details background in dark mode
+              '& .MuiAccordionDetails-root': {
+                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'background.paper',
               },
             }}
           >
@@ -422,7 +448,7 @@ const DiagnosticoPage = () => {
                         fontSize={isMobile ? "large" : "large"} 
                         color="primary" 
                         sx={{ 
-                          fontSize: { xs: '4rem', sm: '3.5rem' },
+                          fontSize: { xs: '4rem', sm: '4rem' },
                           width: '100%'
                         }} 
                       />
@@ -434,7 +460,7 @@ const DiagnosticoPage = () => {
                           left: '50%', 
                           transform: 'translate(-50%, -50%)',
                           fontWeight: 'bold',
-                          color: 'white',
+                          color: '#FFFFFF', // Always white
                           fontSize: { xs: '2rem', sm: '1.75rem' }
                         }}
                       >
@@ -446,7 +472,7 @@ const DiagnosticoPage = () => {
                       flexDirection: 'column',
                       width: '70%'
                     }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                      <Typography variant="caption" sx={{ color: getContrastTextColor(), mb: 0.5, display: 'block' }}>
                         Setor:
                       </Typography>
                       <Select
@@ -456,10 +482,21 @@ const DiagnosticoPage = () => {
                         size="medium"
                         sx={{
                           height: 56,
+                          color: getContrastTextColor(),
                           '& .MuiSelect-select': {
                             fontSize: '1.2rem',
                             paddingTop: 2,
                             paddingBottom: 2,
+                            color: getContrastTextColor(),
+                          },
+                          '& .MuiInputLabel-root': {
+                            color: getContrastTextColor(),
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000',
                           },
                         }}
                         value={programa.setor || 1}
@@ -495,11 +532,11 @@ const DiagnosticoPage = () => {
                     </Box>
                   </Box>
                   <Box sx={{ 
-                    width: { xs: '100%', sm: '20%' },  // Change this from 25% to 20%
+                    width: { xs: '100%', sm: '20%' },  
                     display: { xs: 'none', sm: 'block' },
                     
                   }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                    <Typography variant="caption" sx={{ color: getContrastTextColor(), mb: 0.5, display: 'block' }}>
                       Setor:
                     </Typography>
                     <Select
@@ -509,10 +546,21 @@ const DiagnosticoPage = () => {
                       size="medium"
                       sx={{
                         height: 56,
+                        color: getContrastTextColor(),
                         '& .MuiSelect-select': {
                           fontSize: '1.2rem',
                           paddingTop: 2,
                           paddingBottom: 2,
+                          color: getContrastTextColor(),
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: getContrastTextColor(),
+                        },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000',
                         },
                       }}
                       value={programa.setor || 1}
@@ -547,7 +595,7 @@ const DiagnosticoPage = () => {
                     </Select>
                   </Box>
                   <Box sx={{ width: { xs: '100%', sm: '70%' } }}>  
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                    <Typography variant="caption" sx={{ color: getContrastTextColor(), mb: 0.5, display: 'block' }}>
                       {programa.setor === 2 ? 'Empresa:' : 'Órgão:'}
                     </Typography>
                     {programa.setor === 2 ? (
@@ -576,9 +624,21 @@ const DiagnosticoPage = () => {
                                 paddingBottom: 2,
                                 // Ensure text doesn't get cut off
                                 letterSpacing: '0.5px',
+                                color: getContrastTextColor(),
                               },
                               // Increase minimum width
                               minWidth: { sm: '180px' },
+                              '& .MuiInputLabel-root': {
+                                color: getContrastTextColor(),
+                              },
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000',
+                                },
+                              },
                             }}
                             onClick={(event) => event.stopPropagation()}
                             onChange={(event) => {
@@ -612,6 +672,18 @@ const DiagnosticoPage = () => {
                                 fontSize: '1.2rem',
                                 paddingTop: 2,
                                 paddingBottom: 2,
+                                color: getContrastTextColor(),
+                              },
+                              '& .MuiInputLabel-root': {
+                                color: getContrastTextColor(),
+                              },
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000',
+                                },
                               },
                             }}
                             onClick={(event) => event.stopPropagation()}
@@ -637,10 +709,21 @@ const DiagnosticoPage = () => {
                         size="medium"
                         sx={{
                           height: 56,
+                          color: getContrastTextColor(),
                           '& .MuiSelect-select': {
                             fontSize: '1.2rem',
                             paddingTop: 2,
                             paddingBottom: 2,
+                            color: getContrastTextColor(),
+                          },
+                          '& .MuiInputLabel-root': {
+                            color: getContrastTextColor(),
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000',
                           },
                         }}
                         value={programa.orgao || ""}
@@ -737,12 +820,13 @@ const DiagnosticoPage = () => {
                     '&:before': {
                       display: 'none',
                     },
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'background.paper',
                     '& .MuiAccordionSummary-root': {
                       borderRadius: 2,
-                      backgroundColor: 'background.paper',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'background.paper',
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
-                        backgroundColor: 'action.hover',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(80, 80, 80, 0.9)' : 'action.hover',
                       },
                     },
                     boxShadow: 2,
@@ -750,12 +834,19 @@ const DiagnosticoPage = () => {
                     '&.Mui-expanded': {
                       margin: '0 0 16px 0',
                       boxShadow: 4,
-                      backgroundColor: 'background.paper',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'background.paper',
                       '& .MuiAccordionSummary-root': {
-                        backgroundColor: 'grey.100',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(80, 80, 80, 0.9)' : 'grey.100',
                         borderBottom: '1px solid',
-                        borderColor: 'grey.300',
+                        borderColor: theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.3)' : 'grey.300',
                       },
+                    },
+                    '& .MuiTypography-root': {
+                      color: getContrastTextColor(),
+                    },
+                    // Add styles for the accordion details in dark mode
+                    '& .MuiAccordionDetails-root': {
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.9)' : 'background.paper',
                     },
                   }}
                 >
@@ -773,7 +864,7 @@ const DiagnosticoPage = () => {
                         <GroupIcon fontSize="medium" color="primary" sx={{ ml: 1 }} />
                         <Typography variant="h5" style={{ fontWeight: "400" }}>Responsáveis</Typography>
                       </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+                      <Typography variant="body2" sx={{ color: getContrastTextColor(), mr: 2 }}>
                         {state.responsaveis?.length || 0} cadastrado{state.responsaveis?.length !== 1 ? 's' : ''}
                       </Typography>
                     </Box>
@@ -811,37 +902,8 @@ const DiagnosticoPage = () => {
                       borderColor: 'grey.300',
                     },
                   },
-                  '& .MuiAccordion-root': {
-                    boxShadow: 'none',
-                    border: '1px solid #ccc',
-                    borderRadius: 0,
-                    '&:before': {
-                      display: 'block',
-                    },
-                    '& .MuiAccordionSummary-root': {
-                      backgroundColor: 'transparent',
-                      color: 'text.primary',
-                      borderRadius: 0,
-                      transition: 'none',
-                      '&:hover': {
-                        backgroundColor: 'transparent',
-                      },
-                      '& .MuiTypography-root': {
-                        color: 'text.primary',
-                        fontWeight: 400,
-                      },
-                      '& .MuiSvgIcon-root': {
-                        color: 'text.secondary',
-                      },
-                    },
-                    '&.Mui-expanded': {
-                      margin: '8px 0',
-                      boxShadow: 'none',
-                      '& .MuiAccordionSummary-root': {
-                        backgroundColor: 'transparent',
-                        borderBottom: 'none',
-                      },
-                    },
+                  '& .MuiTypography-root': {
+                    color: getContrastTextColor(), // Dynamic text color
                   },
                 }}
               >
@@ -851,6 +913,10 @@ const DiagnosticoPage = () => {
                     minHeight: 64,
                     '& .MuiAccordionSummary-content': {
                       margin: '12px 0',
+                    },
+                    // Force text to be black
+                    '& .MuiTypography-root': {
+                      color: '#000000',
                     },
                   }}
                 >
