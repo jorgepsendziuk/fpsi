@@ -20,6 +20,7 @@ import Grid from '@mui/material/Grid2';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SaveIcon from '@mui/icons-material/Save';
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { initialState, reducer } from "./state";
 import Diagnostico from "./diagnostico";
@@ -36,6 +37,7 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import GroupIcon from '@mui/icons-material/Group';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Margin } from "@mui/icons-material";
+import { useMediaQuery } from '@mui/material';
 
 const sanitizeCNPJ = (value: string) => {
   return value.replace(/\D/g, '').slice(0, 14);
@@ -75,11 +77,28 @@ const CNPJMask = React.forwardRef<HTMLInputElement, CNPJMaskCustomProps>(
 );
 
 const DiagnosticoPage = () => {
+  const isMobile = useMediaQuery('(max-width:600px)');
   const [state, dispatch] = useReducer(reducer, initialState);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastSeverity, setToastSeverity] = useState<"success" | "error">("success");
   const [expanded, setExpanded] = useState<string | false>(false);
   const [orgaos, setOrgaos] = useState<any[]>([]);
+  const [editedValues, setEditedValues] = useState<{[key: number]: {cnpj?: string, razao_social?: string}}>({});
+
+  const getEntityInitial = (program: any) => {
+    if (program.setor === 2 && program.razao_social) {
+      // For private sector, use company name
+      return program.razao_social.charAt(0).toUpperCase();
+    } else if (program.setor !== 2 && program.orgao) {
+      // For public sector with selected organization
+      const matchingOrg = orgaos.find(org => org.id === program.orgao);
+      if (matchingOrg?.nome) {
+        return matchingOrg.nome.charAt(0).toUpperCase();
+      }
+    }
+    // Default fallback to program ID
+    return program.id.toString();
+  };
 
   const fetchOrgaos = async () => {
     const { data } = await supabaseBrowserClient
@@ -250,20 +269,56 @@ const DiagnosticoPage = () => {
     }
   };
 
+  const handleSaveCompanyDetails = async (programaId: number) => {
+    if (!editedValues[programaId]) return;
+    
+    const { error } = await supabaseBrowserClient
+      .from("programa")
+      .update({
+        cnpj: editedValues[programaId].cnpj,
+        razao_social: editedValues[programaId].razao_social
+      })
+      .eq("id", programaId);
+      
+    if (!error) {
+      // Update the programas array with the new values after successful save
+      const updatedProgramas = state.programas.map(p => 
+        p.id === programaId ? { ...p, ...editedValues[programaId] } : p
+      );
+      dispatch({ type: "SET_PROGRAMAS", payload: updatedProgramas });
+      
+      // Clear edited values for this program
+      setEditedValues(prev => {
+        const newValues = {...prev};
+        delete newValues[programaId];
+        return newValues;
+      });
+      
+      setToastMessage("Dados da empresa salvos com sucesso");
+      setToastSeverity("success");
+    } else {
+      setToastMessage("Erro ao salvar dados da empresa");
+      setToastSeverity("error");
+    }
+  };
+
   return (
     <div>
       <Box sx={{ 
         mb: 3, 
         display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' }, 
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        gap: { xs: 2, sm: 0 }
       }}>
         <Typography 
           variant="h4" 
           component="h1" 
           sx={{ 
             fontWeight: 600,
-            color: 'text.primary'
+            color: 'text.primary',
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
           }}
         >
           Programas de Privacidade e Proteção de Dados
@@ -277,6 +332,7 @@ const DiagnosticoPage = () => {
             '&:hover': {
               backgroundColor: 'primary.dark',
             },
+            width: { xs: '100%', sm: 'auto' }
           }}
         >
           Novo Programa
@@ -301,6 +357,7 @@ const DiagnosticoPage = () => {
                 '&:hover': {
                   backgroundColor: 'action.hover',
                 },
+                padding: { xs: 1, sm: 2 },
               },
               boxShadow: 3,
               border: 'none',
@@ -316,15 +373,19 @@ const DiagnosticoPage = () => {
               },
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', 
+              flexDirection: { xs: 'column', sm: 'row' }, 
+              width: '100%' }}>
               <AccordionSummary 
                 expandIcon={<ExpandMoreIcon />}
                 sx={{
                   flexGrow: 1,
-                  minHeight: 64,
+                  minHeight: { xs: 80, sm: 64 },
                   backgroundColor: 'grey.100',
                   '& .MuiAccordionSummary-content': {
-                    margin: '12px 0',
+                    margin: { xs: '8px 0', sm: '12px 0' },
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: 'flex-start'
                   },
                   '&.Mui-expanded': {
                     backgroundColor: 'grey.100',
@@ -332,21 +393,112 @@ const DiagnosticoPage = () => {
                   '&:hover': {
                     filter: 'brightness(0.95)',
                   },
+                  width: '100%'
                 }}
               >
-                <Box sx={{ display: 'flex', gap: 2, width: '100%', alignItems: 'center' }}>
-                  <Box sx={{ width: '30%', display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <ShieldIcon fontSize="large" color="primary" sx={{ ml: 1, mr: 1 }} />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                        Programa:
-                      </Typography>
-                      <Typography variant="h3" style={{ fontWeight: "400" }}>
-                        nº {programa.id.toString().padStart(2, '0')}
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: { xs: 1, sm: 2 }, 
+                  width: '100%', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { xs: 'flex-start', sm: 'center' } 
+                }}>
+                  <Box 
+                    sx={{ 
+                      width: '100%',
+                      display: 'flex', 
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 2,
+                      mb: { xs: 2, sm: 0 },
+                      maxWidth: { xs: '100%', sm: '10%' }
+                    }}
+                  >
+                    <Box sx={{ 
+                      position: 'relative',
+                      width: { sm: '100%' }
+                    }}>
+                      <ShieldIcon 
+                        fontSize={isMobile ? "large" : "large"} 
+                        color="primary" 
+                        sx={{ 
+                          fontSize: { xs: '4rem', sm: '3.5rem' },
+                          width: '100%'
+                        }} 
+                      />
+                      <Typography 
+                        variant="h5" 
+                        sx={{ 
+                          position: 'absolute', 
+                          top: '50%', 
+                          left: '50%', 
+                          transform: 'translate(-50%, -50%)',
+                          fontWeight: 'bold',
+                          color: 'white',
+                          fontSize: { xs: '2rem', sm: '1.75rem' }
+                        }}
+                      >
+                        {getEntityInitial(programa)}
                       </Typography>
                     </Box>
+                    <Box sx={{ 
+                      display: { xs: 'flex', sm: 'none' },
+                      flexDirection: 'column',
+                      width: '70%'
+                    }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                        Setor:
+                      </Typography>
+                      <Select
+                        id={`setor-mobile-${programa.id}`}
+                        name="setor"
+                        fullWidth
+                        size="medium"
+                        sx={{
+                          height: 56,
+                          '& .MuiSelect-select': {
+                            fontSize: '1.2rem',
+                            paddingTop: 2,
+                            paddingBottom: 2,
+                          },
+                        }}
+                        value={programa.setor || 1}
+                        displayEmpty
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={async (event) => {
+                          event.stopPropagation();
+                          const newValue = event.target.value;
+                          const { error } = await supabaseBrowserClient
+                            .from("programa")
+                            .update({ setor: newValue })
+                            .eq("id", programa.id);
+                          
+                          if (!error) {
+                            const updatedProgramas = state.programas.map(p => 
+                              p.id === programa.id ? { ...p, setor: newValue } : p
+                            );
+                            dispatch({ type: "SET_PROGRAMAS", payload: updatedProgramas });
+                            setToastMessage("Setor atualizado com sucesso");
+                            setToastSeverity("success");
+                          } else {
+                            setToastMessage("Erro ao atualizar setor");
+                            setToastSeverity("error");
+                          }
+                        }}
+                      >
+                        {setor.map((item) => (
+                          <MenuItem key={item.id} value={item.id}>
+                            {item.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </Box>
                   </Box>
-                  <Box sx={{ width: '20%' }}>
+                  <Box sx={{ 
+                    width: { xs: '100%', sm: '20%' },  // Change this from 25% to 20%
+                    display: { xs: 'none', sm: 'block' },
+                    
+                  }}>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
                       Setor:
                     </Typography>
@@ -375,7 +527,6 @@ const DiagnosticoPage = () => {
                           .eq("id", programa.id);
                         
                         if (!error) {
-                          // Update local state
                           const updatedProgramas = state.programas.map(p => 
                             p.id === programa.id ? { ...p, setor: newValue } : p
                           );
@@ -395,23 +546,66 @@ const DiagnosticoPage = () => {
                       ))}
                     </Select>
                   </Box>
-                  <Box sx={{ width: '45%' }}>
+                  <Box sx={{ width: { xs: '100%', sm: '70%' } }}>  
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
                       {programa.setor === 2 ? 'Empresa:' : 'Órgão:'}
                     </Typography>
                     {programa.setor === 2 ? (
                       <Grid container spacing={2}>
-                        <Grid size={{ xs: 4 }}>
+                        <Grid size={{ xs: 12, sm: 5, md: 4 }}>
                           <TextField
                             id={`cnpj-${programa.id}`}
                             name="cnpj"
                             fullWidth
                             size="medium"
                             label="CNPJ"
-                            value={String(programa.cnpj || '')}
+                            value={
+                              editedValues[programa.id]?.cnpj !== undefined
+                                ? editedValues[programa.id].cnpj 
+                                : String(programa.cnpj || '')
+                            }
                             InputProps={{
                               inputComponent: CNPJMask as any,
                             }}
+                            sx={{
+                              height: 56,
+                              mb: { xs: 2, sm: 0 },
+                              '& .MuiInputBase-input': {
+                                fontSize: '1.2rem',
+                                paddingTop: 2,
+                                paddingBottom: 2,
+                                // Ensure text doesn't get cut off
+                                letterSpacing: '0.5px',
+                              },
+                              // Increase minimum width
+                              minWidth: { sm: '180px' },
+                            }}
+                            onClick={(event) => event.stopPropagation()}
+                            onChange={(event) => {
+                              // Instead of updating the program directly, store the edited value
+                              const sanitizedValue = sanitizeCNPJ(event.target.value);
+                              setEditedValues(prev => ({
+                                ...prev,
+                                [programa.id]: {
+                                  ...prev[programa.id],
+                                  cnpj: sanitizedValue
+                                }
+                              }));
+                            }}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 7, md: 8 }}>
+                          <TextField
+                            id={`razao_social-${programa.id}`}
+                            name="razao_social"
+                            fullWidth
+                            size="medium"
+                            label="Razão Social"
+                            value={
+                              editedValues[programa.id]?.razao_social !== undefined
+                                ? editedValues[programa.id].razao_social
+                                : (programa.razao_social || "")
+                            }
                             sx={{
                               height: 56,
                               '& .MuiInputBase-input': {
@@ -422,50 +616,15 @@ const DiagnosticoPage = () => {
                             }}
                             onClick={(event) => event.stopPropagation()}
                             onChange={(event) => {
-                              const sanitizedValue = sanitizeCNPJ(event.target.value);
-                              const updatedProgramas = state.programas.map(p => 
-                                p.id === programa.id ? { ...p, cnpj: sanitizedValue } : p
-                              );
-                              dispatch({ type: "SET_PROGRAMAS", payload: updatedProgramas });
-                            }}
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 8 }}>
-                          <TextField
-                            id={`razao_social-${programa.id}`}
-                            name="razao_social"
-                            fullWidth
-                            size="medium"
-                            label="Razão Social"
-                            value={programa.razao_social || ""}
-                            sx={{
-                              height: 56,
-                              '& .MuiInputBase-input': {
-                                fontSize: '1.2rem',
-                                paddingTop: 2,
-                                paddingBottom: 2,
-                              },
-                            }}
-                            onClick={(event) => event.stopPropagation()}
-                            onChange={async (event) => {
-                              event.stopPropagation();
+                              // Instead of updating the program directly, store the edited value
                               const newValue = event.target.value;
-                              const { error } = await supabaseBrowserClient
-                                .from("programa")
-                                .update({ razao_social: newValue })
-                                .eq("id", programa.id);
-                              
-                              if (!error) {
-                                const updatedProgramas = state.programas.map(p => 
-                                  p.id === programa.id ? { ...p, razao_social: newValue } : p
-                                );
-                                dispatch({ type: "SET_PROGRAMAS", payload: updatedProgramas });
-                                setToastMessage("Razão Social atualizada com sucesso");
-                                setToastSeverity("success");
-                              } else {
-                                setToastMessage("Erro ao atualizar Razão Social");
-                                setToastSeverity("error");
-                              }
+                              setEditedValues(prev => ({
+                                ...prev,
+                                [programa.id]: {
+                                  ...prev[programa.id],
+                                  razao_social: newValue
+                                }
+                              }));
                             }}
                           />
                         </Grid>
@@ -521,23 +680,54 @@ const DiagnosticoPage = () => {
                   </Box>
                 </Box>
               </AccordionSummary>
-              <IconButton
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleDeletePrograma(programa.id);
-                }}
-                color="error"
-                sx={{
-                  mr: 2,
-                  '&:hover': {
-                    backgroundColor: 'error.light',
-                  },
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
+              <Box sx={{ 
+                display: 'flex',
+                width: { xs: '100%', sm: 'auto' },
+                justifyContent: { xs: 'flex-end', sm: 'center' },
+                mb: { xs: 1, sm: 0 },
+                gap: 1
+              }}>
+                {editedValues[programa.id] && (
+                  <IconButton
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleSaveCompanyDetails(programa.id);
+                    }}
+                    color="success"
+                    sx={{
+                      mr: { xs: 0, sm: 1 },
+                      '&:hover': {
+                        backgroundColor: 'success.main',
+                        '& .MuiSvgIcon-root': {
+                          color: 'white',
+                        },
+                      },
+                    }}
+                  >
+                    <SaveIcon />
+                  </IconButton>
+                )}
+                <IconButton
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleDeletePrograma(programa.id);
+                  }}
+                  color="error"
+                  sx={{
+                    mr: { xs: 0, sm: 2 },
+                    '&:hover': {
+                      backgroundColor: 'error.main',
+                      '& .MuiSvgIcon-root': {
+                        color: 'white',
+                      },
+                    },
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
             </Box>
-            <AccordionDetails sx={{ bottom: 10 }}>
+            <AccordionDetails sx={{ bottom: 10, p: { xs: 1, sm: 2 } }}>
               <Programa key={programa.id} programaId={programa.id} /> 
               <Box sx={{ mt: 2 }}>
                 <Accordion 
