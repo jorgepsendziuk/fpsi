@@ -21,14 +21,14 @@ const ProgramHeader = ({ handleCreatePrograma }: ProgramHeaderProps) => {
     }}>
       <Typography 
         variant="h4" 
-        component="h1" 
+        component="h2" 
         sx={{ 
           fontWeight: 600,
           color: getContrastTextColor(),
-          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+          fontSize: { xs: '1.5rem', sm: '2rem', md: '2rem' }
         }}
       >
-        Programas de Privacidade e Proteção de Dados
+        Programas de Privacidade e Segurança da Informação
       </Typography>
       <Button
         variant="contained"

@@ -51,7 +51,7 @@ const Programa = ({ programaId }: { programaId: number }) => {
   return (
     <Box component="form" noValidate autoComplete="off" sx={{ mt: 3 }}>
       <Grid container spacing={2}> 
-        <Grid size={{ md: 3, sm: 6, xs: 12}}>
+        <Grid size={{ md: 6, xs: 12}}>
           <FormControl fullWidth>
             <InputLabel id="responsavel-controle-interno-label" >Responsável Controle Interno</InputLabel>
             <Select
