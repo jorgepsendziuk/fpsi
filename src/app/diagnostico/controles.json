@@ -1,0 +1,252 @@
+{
+  "controles": [
+    {
+      "id": 1,
+      "nome": "Inventário e Controle de Ativos Institucionais",
+      "texto": "Gerenciar ativamente (inventariar, rastrear e corrigir) todos os ativos institucionais conectados à rede, com o objetivo de identificar precisamente quais necessitam ser monitorados e/ou protegidos dentro da empresa, mapeando todos os ativos não autorizados para uma possível remoção ou remediação futura.",
+      "por_que_implementar": "As instituições não podem defender aquilo que não está mapeado ou não se tem conhecimento de sua existência. Por esta razão, ter um inventário de ativos institucionais é essencial para que uma atitude de defesa possa acontecer. Neste intuito o Inventário e Controle de Ativos Institucionais desempenha um papel crítico no monitoramento de segurança, resposta a incidentes, backup e recuperação de sistemas.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Gestão de Ativos, com enfoque em prover diretrizes para gestão de ativos que constitui referência importante para instituições e profissionais de segurança da informação, que desejam realizar o gerenciamento de ativos da instituição.",
+      "aplicabilidade_privacidade": "Princípios de privacidade devem ser incorporados ao processo de inventário de dispositivos, tanto do ponto de vista tecnológico quanto do processual. O conhecimento sobre um dispositivo, onde está localizado, quem o está usando e como está usando pode fornecer informações pessoais. Muitas instituições utilizam o nome ou identificador de um indivíduo, que o vincula explicitamente ao dispositivo."
+    },
+    {
+      "id": 2,
+      "nome": "Inventário e Controle de Ativos de Software",
+      "texto": "Gerenciar ativamente (inventariar, rastrear e corrigir) todo o software na rede para que apenas o software autorizado seja instalado e possa ser executado, e que todo o software não autorizado e não gerenciado seja encontrado e impedido de instalação ou execução.",
+      "por_que_implementar": "Um inventário de software completo é um recurso crítico para prevenir ataques. Os atacantes realizam varreduras na infraestrutura do órgão continuamente em busca de versões vulneráveis de software que possam ser exploradas. Contudo, sem um inventário completo dos ativos de software, um órgão não pode determinar se possui software vulnerável ou se há violações de licenciamento em potencial.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Gestão de Ativos, com enfoque em prover diretrizes para gestão de ativos que constitui referência importante para instituições e profissionais de segurança da informação, que desejam realizar o gerenciamento de ativos de software da instituição.",
+      "aplicabilidade_privacidade": "Princípios de privacidade devem ser incorporados ao processo de inventário de software, tanto do ponto de vista tecnológico quanto processual. Os inventários de software listam softwares autorizados instalados em dispositivos aprovados pela instituição. Esses ativos de software estão diretamente vinculados a indivíduos específicos podendo coletar e manipular seus dados pessoais."
+    },
+    {
+      "id": 3,
+      "nome": "Proteção de Dados",
+      "texto": "Utilizar processos e ferramentas para identificar, classificar, manusear, reter e descartar dados.",
+      "por_que_implementar": "No momento atual sabemos que os dados podem não estar apenas dentro da estrutura das instituições; podemos ter dados na nuvem, em dispositivos portáteis do usuário final, compartilhados com parceiros ou com serviços on-line em qualquer lugar do mundo. As organizações possuem uma série de dados, que são importantes para o negócio, dentre eles os dados pessoais.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia de Elaboração do Processo de Gestão de Dados e o Modelo de Política de Gestão de Registros (Logs) de Auditoria, com enfoque na gestão de Dados, no fluxo dos dados e na classificação de dados.",
+      "aplicabilidade_privacidade": "A implementação do controle de proteção de dados pode ajudar a proteger uma infinidade de informações em uma rede corporativa, incluindo Informações de Identificação Pessoais. Sem as medidas listadas aqui, muitas das informações pessoais de clientes estariam em risco de exposição não autorizada."
+    },
+    {
+      "id": 4,
+      "nome": "Configuração Segura de Ativos Institucionais e Software",
+      "texto": "Estabelecer e manter a configuração segura de ativos institucionais (dispositivos de usuário final, incluindo portáteis e móveis; dispositivos de rede; dispositivos não computacionais/IoT; e servidores) e software (sistemas operacionais e aplicações).",
+      "por_que_implementar": "As configurações padrões para ativos e softwares são normalmente voltadas para a facilidade de implantação e uso, em vez da segurança. Controles básicos, serviços e portas abertas, contas ou senhas padrão e pré-instalação de software desnecessário podem ser explorados se deixados em seu estado padrão.",
+      "fique_atento": null,
+      "aplicabilidade_privacidade": "As configurações seguras para ativos institucionais e software podem ajudar a viabilizar a privacidade dos funcionários, evitando violações de dados e invasões de contas. Algumas configurações podem ser vistas como vulnerabilidades absolutas, enquanto outras configurações podem enfraquecer um sistema ou software e torná-lo mais suscetível a um ataque bem-sucedido."
+    },
+    {
+      "id": 5,
+      "nome": "Gestão de Contas",
+      "texto": "Usar processos e ferramentas para atribuir e gerenciar autorização de credenciais para contas de usuário, contas de administrador, contas de serviço para ativos e softwares institucionais.",
+      "por_que_implementar": "É mais fácil para um agente de ameaça (externo ou interno) obter acesso não autorizado a ativos ou dados da organização usando credenciais de usuário válidas do que \"hackeando\" o ambiente.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Gestão de Controle de Acesso, com enfoque em prover diretrizes para gestão de controle de acesso que constitui referência importante para instituições e profissionais de segurança da informação, que desejam realizar o gerenciamento das contas da instituição.",
+      "aplicabilidade_privacidade": "O gerenciamento de contas é aplicável a todos os aplicativos, dispositivos e serviços. Todos os usuários precisarão de uma conta para acessar aplicativos, dispositivos e provedores de serviços internos ou externos."
+    },
+    {
+      "id": 6,
+      "nome": "Gestão do Controle de Acesso",
+      "texto": "Usar processos e ferramentas para criar, atribuir, gerenciar e revogar credenciais de acesso e privilégios para contas de usuário, administrador e serviço para ativos e software institucionais.",
+      "por_que_implementar": "Deve ser assegurado que os usuários tenham acesso apenas aos dados ou ativos institucionais apropriados para suas funções e garantir que haja autenticação forte para dados ou funções corporativas críticas ou sensíveis. As contas devem ter apenas a autorização mínima necessária para a função. O desenvolvimento de direitos de acesso consistentes para cada função e a atribuição de funções aos usuários é uma prática recomendada.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Gestão de Controle de Acessos com enfoque em prover diretrizes para controle de acesso que constitui referência importante para instituições e profissionais de segurança da informação, que desejam realizar o gerenciamento dos acessos da instituição.",
+      "aplicabilidade_privacidade": "O Controle de Gerenciamento de Acesso destina-se a gerenciar grande parte do processo de autenticação e autorização, desde como um usuário acessa um dispositivo até a revogação de credenciais e privilégios de acesso. As informações de identificação pessoal são frequentemente armazenadas em sistemas de autenticação e autorização. Esses sistemas precisam ser configurados de maneira que preserve a privacidade."
+    },
+    {
+      "id": 7,
+      "nome": "Gestão Contínua de Vulnerabilidades",
+      "texto": "Desenvolver um plano para avaliar e rastrear vulnerabilidades continuamente em todos os ativos dentro da infraestrutura da organização, a fim de remediar e minimizar a janela de oportunidade para atacantes. Monitorar as fontes públicas e privadas para novas informações sobre ameaças e vulnerabilidades.",
+      "por_que_implementar": "Compreender e gerenciar vulnerabilidades em uma rede corporativa é uma atividade contínua, que requer tempo, foco e recursos. Por isso, os profissionais de segurança devem ter informações oportunas de ameaças disponíveis, como atualizações de software, patches, avisos de segurança e boletins de ameaças.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia de Gerenciamento de Vulnerabilidades e o Modelo de Política de Gerenciamento de Vulnerabilidades, com enfoque no gerenciamento de vulnerabilidades que constitui uma referência importante para instituições e profissionais de segurança da informação.",
+      "aplicabilidade_privacidade": "Este controle é voltado ao monitoramento de possíveis vulnerabilidades em softwares ou hardwares usados pela instituição. Abrange processos para tomada de decisões com ações proativas e correções naquilo que possa comprometer a privacidade, incluindo ações defensivas."
+    },
+    {
+      "id": 8,
+      "nome": "Gestão de Registros de Auditoria",
+      "texto": "Coletar, alertar, analisar e reter logs de eventos com o objetivo de ajudar a detectar, compreender ou se recuperar de um ataque.",
+      "por_que_implementar": "A coleta e análise de log são procedimentos críticos para que uma organização possa detectar atividades maliciosas rapidamente. Em certas ocasiões, os registros de auditoria são a única evidência de um ataque bem-sucedido.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Gestão de Registros (Logs) de Auditoria com o objetivo de prover diretrizes para a gestão de registros de auditoria, uma referência importante para instituições e profissionais de segurança da informação.",
+      "aplicabilidade_privacidade": "Os logs são muito úteis, tanto para desenvolvedores quanto para equipe de TI, na melhoria e na solução de problemas, porém podem armazenar informações pessoais, trazendo implicações para privacidade. Eles podem conter todo tipo de informação pessoal (nomes, e-mails etc). Para evitar isso, deve ser definido um processo de gerenciamento de log de auditoria que leve em consideração a privacidade."
+    },
+    {
+      "id": 9,
+      "nome": "Proteções de E-mail e Navegador Web",
+      "texto": "Melhorar as proteções e detecções de vetores de ameaças de e-mail e web, pois são oportunidades para atacantes manipularem o comportamento humano por meio do engajamento direto.",
+      "por_que_implementar": "Navegadores Web e clientes de e-mail são pontos de entrada muito comuns para atacantes em virtude de sua interação direta com usuários dentro das instituições. Conteúdos podem ser criados para atrair ou enganar os usuários para que revelem suas credenciais, forneçam dados sensíveis ou forneçam um canal aberto onde os atacantes obtenham acesso.",
+      "fique_atento": null,
+      "aplicabilidade_privacidade": "As medidas deste controle podem ajudar a proteger os dados pessoais, e devem ser cuidadosamente consideradas para que extensões de navegador não cometam ações maliciosas ou até mesmo a coleta de informações pessoais desnecessárias."
+    },
+    {
+      "id": 10,
+      "nome": "Defesas Contra Malware",
+      "texto": "Impedir ou controlar a instalação, disseminação e execução de aplicações, códigos ou scripts maliciosos em ativos da organização.",
+      "por_que_implementar": "Os softwares maliciosos estão em constante evolução e adaptação. Os ataques ocorrem por meio de vulnerabilidades em dispositivos de usuário final e geralmente depende do comportamento inseguro do usuário, como clicar em links, abrir anexos, instalar software ou perfis, ou inserir unidade flash USB.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Defesas contra Malware com enfoque em prover diretrizes para defesa contra Malwares que constitui referência importante para instituições e profissionais de segurança da informação.",
+      "aplicabilidade_privacidade": "A implementação das medidas de segurança contra malware contidas neste controle podem evitar que um malware instalado em um sistema possa coletar informação de identificação pessoal. Os logs e alertas do software antimalware defensivo devem ser armazenados em um local seguro e o acesso deve ser restrito para evitar roubo ou vazamento de dados pessoais que tenham sido coletados."
+    },
+    {
+      "id": 11,
+      "nome": "Recuperação de Dados",
+      "texto": "Criar e manter práticas de recuperação de dados que sejam capazes de restaurar os ativos da organização para um estado pré-incidente ou o estado mais confiável possível.",
+      "por_que_implementar": "Os órgãos precisam de muitos tipos de dados para tomar decisões de negócios e, quando esses dados não estão disponíveis ou não são confiáveis, eles podem impactar o órgão. Quando os atacantes comprometem os ativos, fazem alterações nas configurações, adicionam contas e, frequentemente, adicionam softwares ou scripts, essas alterações nem sempre são fáceis de identificar. Vale ressaltar também o aumento exponencial de ransomware, caso em que o atacante realiza a criptografia dos dados de um órgão em uma forma de 'sequestro' e em seguida exige um resgaste para restauração ou para não divulgação e venda dos dados.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Backup com enfoque em prover diretrizes para as políticas de backup e restauração de dados digitais que constitui referência importante para instituições e profissionais de segurança da informação, que desejam realizar a construção das políticas de backup e restauração de dados digitais da instituição.",
+      "aplicabilidade_privacidade": "A aplicação deste controle destina-se a auxiliar a instituição na preparação para a recuperação de um incidente cibernético. A equipe de TI precisará criar backups das informações corporativas como parte desse controle. Informações de identificação pessoal contidas em registros precisarão ter backup. Testar se os backups podem realmente ser restaurados é uma parte importante do processo de recuperação de dados."
+    },
+    {
+      "id": 12,
+      "nome": "Gestão da Infraestrutura de Rede",
+      "texto": "Estabeleça, implemente e gerencie ativamente (rastreie, reporte, corrija) os dispositivos de rede, a fim de evitar que atacantes explorem serviços de rede e pontos de acesso vulneráveis.",
+      "por_que_implementar": "A infraestrutura de rede segura é uma defesa essencial contra os ataques. Isso inclui uma arquitetura de segurança apropriada, abordando vulnerabilidades que são, muitas vezes, introduzidas com configurações padrão, monitoramento de alterações e reavaliação das configurações atuais.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal o Modelo de Política de Gestão de Ativos, o Modelo de Política de Controle de Acesso, o Modelo de Política de Gestão de Registros (Logs) de Auditoria e o Modelo de Política de Defesas contra Malware com enfoque em prover diretrizes para uma infraestrutura de rede segura.",
+      "aplicabilidade_privacidade": "A aplicação deste controle visa a garantir que a infraestrutura de rede seja mantida e configurada adequadamente durante todo o seu ciclo de vida. O design e a segmentação de rede inadequados podem levar a menores graus de privacidade para usuários da rede corporativa."
+    },
+    {
+      "id": 13,
+      "nome": "Monitoramento e Defesa da Rede",
+      "texto": "Implementar processos e ferramentas para que a organização estabeleça o monitoramento e a defesa de rede contra ameaças de segurança em toda a sua infraestrutura de rede e base de usuários.",
+      "por_que_implementar": "Não podemos confiar que as defesas da rede sejam perfeitas. Os adversários continuam a evoluir e amadurecer à medida que compartilham ou vendem informações. As ferramentas de segurança somente são eficazes se oferecerem suporte a um processo de monitoramento contínuo que permita à equipe ser alertada e responder rapidamente a incidentes de segurança.",
+      "fique_atento": null,
+      "aplicabilidade_privacidade": "A visibilidade da rede permite entender os tipos e a frequência dos ataques enfrentados pela instituição. As empresas devem garantir que as ferramentas SIEM não estejam alertando regularmente sobre informações que contenham dados pessoais. As informações de tráfego de rede coletadas pelo IDS, IPS e softwares de filtragem de aplicativos devem ser armazenadas e protegidas adequadamente para evitar um vazamento de dados que possam conter dados pessoais."
+    },
+    {
+      "id": 14,
+      "nome": "Conscientização e Treinamento de Competências sobre Segurança",
+      "texto": "Implantar e manter um programa de conscientização de segurança que possa influenciar e conscientizar o comportamento dos colaboradores, tornando-os devidamente qualificados e assim atingir o objetivo de reduzir riscos de segurança cibernética da organização.",
+      "por_que_implementar": "As ações das pessoas podem causar incidentes, intencionalmente ou não. É mais fácil para um atacante induzir um usuário a clicar em um link ou abrir um anexo de email para instalar malware e entrar na rede de uma organização, do que fazer um exploit de rede diretamente. Nenhum programa de segurança pode lidar com o risco cibernético de maneira eficaz sem um meio de lidar com essa vulnerabilidade humana fundamental.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Desenvolvimento de Pessoas em Privacidade e Segurança da Informação com o objetivo de prover diretrizes para o desenvolvimento pessoal.",
+      "aplicabilidade_privacidade": "A aplicação deste controle destina-se a garantir que os colaboradores recebam treinamento de segurança direcionado para suas funções e responsabilidades específicas. Administradores de TI com acessos privilegiados podem tomar decisões ruins se não forem treinados sobre o uso apropriado de seus acessos e as consequências de violações de dados sigilosos e de dados pessoais."
+    },
+    {
+      "id": 15,
+      "nome": "Gestão de Provedor de Serviços",
+      "texto": "Com o objetivo de garantir a proteção das informações, sistemas e processos críticos da organização, estabeleça um processo para avaliar os provedores de serviços que operem e mantenham estes ativos da organização.",
+      "por_que_implementar": "Normalmente as organizações contam com fornecedores e parceiros para ajudar a gerenciar seus dados ou contam com infraestrutura de terceiros para aplicações ou funções essenciais. Violações de terceiros costumam impactar significativamente uma organização.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Gestão de Provedor de Serviços e o Guia de Requisitos e Obrigações quanto a Privacidade e à Segurança da Informação com enfoque em prover diretrizes para a gestão de provedor de serviços.",
+      "aplicabilidade_privacidade": "Algumas instituições utilizam os provedores de serviços em nuvem para e-mail ou armazenamento. Os provedores de serviços (operadores, conforme art. 5º, inciso VII da LGPD) podem utilizar, vender ou compartilhar dados pessoais obtidos por meio de seus clientes. Os dados pessoais podem ser fornecidos diretamente como parte de uma função comercial ou criados por meio do uso de um produto ou serviço."
+    },
+    {
+      "id": 16,
+      "nome": "Segurança de Aplicações",
+      "texto": "Gerenciar o ciclo de vida de segurança de todos os softwares desenvolvidos e adquiridos internamente, a fim de prevenir, detectar e corrigir falhas de segurança.",
+      "por_que_implementar": "As organizações usam aplicações para gerenciar seus dados mais sensíveis e controlar o acesso aos recursos do sistema. Na ausência de credenciais, um atacante pode usar a própria aplicação para comprometer os dados. As aplicações modernas são desenvolvidas, operadas e mantidas em um ambiente altamente complexo, diverso e dinâmico, sendo executadas em várias plataformas: web, móvel, nuvem etc., com arquiteturas mais complexas que as estruturas legadas.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal três Guias voltados ao desenvolvimento seguro: Guia de Requisitos Mínimos de Privacidade e Segurança da Informação para Aplicações Web, para APIs e para Aplicativos Móveis.",
+      "aplicabilidade_privacidade": "A aplicação do controle se concentra nos esforços que desenvolvedores podem realizar para evitar vulnerabilidades exploráveis em seu código, que podem levar à exposição não autorizada de dados pessoais. Bibliotecas de software de terceiros e APIs podem coletar informações por meio de seu uso. Os dados que esses componentes podem coletar devem ser claramente declarados nos SLAs."
+    },
+    {
+      "id": 17,
+      "nome": "Gestão de Resposta a Incidentes",
+      "texto": "Proteger as informações e a reputação da organização, desenvolvendo e implementando uma infraestrutura de resposta a incidentes para descobrir um ataque de forma ágil, conter efetivamente o impacto, eliminar a presença do atacante, e restaurar a integridade da rede e dos sistemas.",
+      "por_que_implementar": "Um programa abrangente de segurança cibernética inclui proteções, detecções, resposta e recursos de recuperação. O objetivo principal da resposta a incidentes é identificar ameaças na organização, responder a elas antes que possam se espalhar e remediá-las antes que possam causar danos.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia de Resposta a Incidentes de Segurança, com enfoque em incidentes que envolvam dados pessoais.",
+      "aplicabilidade_privacidade": "Existem dois aspectos de privacidade do controle: como responder a um incidente de privacidade e como manter a privacidade de todos os indivíduos ao responder a um incidente cibernético. As equipes de resposta podem ter acesso a dados pessoais, então eles precisam manipular essas informações adequadamente."
+    },
+    {
+      "id": 18,
+      "nome": "Testes de Invasão",
+      "texto": "Testar a eficácia e a resiliência dos ativos institucionais por meio da identificação e exploração de fraquezas nos controles de segurança e da simulação das ações e objetivos de um atacante.",
+      "por_que_implementar": "Uma postura defensiva bem-sucedida requer um programa abrangente de políticas e governança eficazes, fortes defesas técnicas, combinadas com a ação apropriada das pessoas. Em um ambiente complexo onde a tecnologia está em constante evolução, as organizações devem testar periodicamente seus controles.",
+      "fique_atento": null,
+      "aplicabilidade_privacidade": "A aplicação do controle tem como objetivo simular efetivamente as ações de um invasor externo e/ou interno. Como parte do processo de teste, informações pessoais podem ser obtidas pelos testadores de invasão. Quaisquer dados coletados devem ser bem protegidos e acordados previamente como serão descartados."
+    },
+    {
+      "id": 19,
+      "nome": "Inventário e Mapeamento",
+      "texto": "As operações de tratamento de dados pessoais por sistemas, produtos, processos ou serviços devem ser identificadas e inventariadas.",
+      "por_que_implementar": "De acordo com o art. 37 da LGPD o controlador e o operador devem manter registradas as operações de tratamento de dados pessoais que realizam. O Registro de Operações representa uma operação importante de governança de dados pessoais e de subsídio para avaliação de impacto à proteção de dados pessoais.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal o Guia de Inventário de Dados Pessoais e o Modelo de Inventário de Dados Pessoais, que incentivam a adoção de registros das operações de tratamento de dados pessoais.",
+      "aplicabilidade_privacidade": "A atividade contempla os processos de negócio que realizam tratamento de dados pessoais, bem como o Inventário de Dados Pessoais (IDP) que aborda agentes de tratamento, finalidades, compartilhamento, transferência internacional e medidas de segurança."
+    },
+    {
+      "id": 20,
+      "nome": "Finalidade e Hipóteses Legais",
+      "texto": "A organização deve identificar, especificar e documentar as finalidades, hipóteses de tratamento e bases legais que fundamentam as atividades de tratamento de dados pessoais e dados pessoais sensíveis.",
+      "por_que_implementar": "A partir da LGPD não é mais possível tratar dados pessoais com finalidades genéricas. Os órgãos devem justificar para qual finalidade usarão cada um dos dados pessoais coletados. O princípio da finalidade previsto no art. 6°, inciso I estabelece que o tratamento deve estar sempre associado a uma finalidade pública, legítima, específica, explícita e informada.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal a Cartilha sobre Finalidades e Hipóteses Legais, com enfoque na identificação da finalidade, hipótese e possíveis bases legais para o tratamento de dados pessoais.",
+      "aplicabilidade_privacidade": "Para que o tratamento de dados pessoais possa acontecer, é necessário estar amparado em uma das hipóteses legais previstas no art. 7° e 11 da LGPD. A especificação da finalidade e a identificação da hipótese de tratamento deve acontecer antes que o tratamento seja realizado."
+    },
+    {
+      "id": 21,
+      "nome": "Governança",
+      "texto": "A governança em privacidade estabelece uma metodologia abrangente que influenciará permanentemente os processos de tomada de decisão com base em riscos de impacto à privacidade e melhorias contínuas na maturidade.",
+      "por_que_implementar": "A LGPD estabelece no Art. 50 que os controladores e operadores, no âmbito de suas competências, poderão formular regras de boas práticas e de governança que definam as condições de organização, bem como, o regime de funcionamento, procedimentos e outras ações referentes à governança em privacidade e proteção de dados pessoais. As organizações devem implementar medidas apropriadas para estabelecer uma governança eficiente relacionada ao processamento de dados pessoais.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia de Boas Práticas da LGPD e um Guia de Elaboração de um Programa de Governança em Privacidade que apresenta os principais pontos da LGPD, fornecendo os subsídios para a criação de um programa institucional de gerenciamento de privacidade.",
+      "aplicabilidade_privacidade": "Para aumentar a confiança de todas as partes interessadas é necessário que os gestores do gerenciamento de segurança, proteção de dados pessoais e risco ampliem tanto a frequência quanto a amplitude da comunicação, para assim assegurar que o uso dos dados pessoais seja granular, com finalidades específicas e com riscos mapeados e sob controle."
+    },
+    {
+      "id": 22,
+      "nome": "Políticas, Processos e Procedimentos",
+      "texto": "Definir, desenvolver, divulgar, implementar e atualizar políticas, processos e procedimentos operacionais, internos e externos que regem as ações relativas à proteção de dados pessoais e privacidade, e controles para programas, sistemas de informação ou tecnologias que envolvam o tratamento de dados pessoais.",
+      "por_que_implementar": "O art. 50 da LGPD prevê que os controladores e operadores poderão formular regras de boas práticas e de governança que estabeleçam as condições de organização, o regime de funcionamento, os procedimentos, incluindo reclamações e petições de titulares, as normas de segurança, os padrões técnicos, as obrigações específicas para os diversos envolvidos no tratamento, as ações educativas, os mecanismos internos de supervisão e de mitigação de riscos e outros aspectos relacionados ao tratamento de dados pessoais.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal uma série de documentos referentes à temática, incluindo modelos de políticas e guias de requisitos.",
+      "aplicabilidade_privacidade": "O órgão deve desenvolver e implementar políticas, processos e procedimentos para gerenciar e monitorar os requisitos regulatórios, legais, de risco, ambientais e operacionais da organização que sejam compreendidos para informar a administração sobre o gerenciamento dos riscos que impactam na privacidade e proteção de dados pessoais."
+    },
+    {
+      "id": 23,
+      "nome": "Conscientização e Treinamento",
+      "texto": "As pessoas envolvidas no tratamento de dados são instruídas e conscientizadas sobre privacidade, sendo treinadas para desempenhar suas funções e responsabilidades relacionadas à privacidade de acordo com as políticas, processos, procedimentos, acordos e valores de privacidade da organização.",
+      "por_que_implementar": "Tendo como base o disposto previsto no art. 50 da LGPD, os controladores e operadores devem aplicar medidas educativas periódicas apropriadas para as pessoas que têm acesso aos dados pessoais.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Modelo de Política de Desenvolvimento de Pessoas em Privacidade e Segurança da Informação que apresenta diretrizes para o desenvolvimento pessoal dentro de uma organização.",
+      "aplicabilidade_privacidade": "O programa de treinamento deve implementar e manter uma estratégia abrangente de treinamento e conscientização, criar mecanismos para manter o pessoal atualizado, administrar treinamento básico e direcionado, garantir certificação de responsabilidades e incluir conscientização sobre notificação de incidentes."
+    },
+    {
+      "id": 24,
+      "nome": "Minimização de Dados",
+      "texto": "O órgão, dentro dos limites de suas competências legais, deve implementar ações para não coletar e tratar de forma inadequada ou excessiva os dados pessoais dos titulares de dados pessoais e tratar a mínima quantidade de dados necessários para atingir a finalidade legal desejada.",
+      "por_que_implementar": "Conforme estabelecido no art. 18 da LGPD, o titular dos dados pessoais tem direito a obter do controlador a anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade com a Lei. O Controlador deve limitar a quantidade de dados pessoais tratados ao mínimo necessário para a realização de suas finalidades.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia sobre Privacidade desde a Concepção e por Padrão que apresenta diretrizes para minimizar o tratamento de dados pessoais dentro de uma organização.",
+      "aplicabilidade_privacidade": "As organizações não devem coletar dados pessoais indiscriminadamente. Tanto a quantidade quanto o tipo de dados pessoais coletados devem ser limitados ao necessário para cumprir as finalidades legítimas especificadas pelo controlador."
+    },
+    {
+      "id": 25,
+      "nome": "Gestão do Tratamento",
+      "texto": "A gestão do tratamento visa a limitar o uso, a retenção e a divulgação de dados pessoais ao que for estritamente necessário para cumprir propósitos específicos, explícitos e legítimos.",
+      "por_que_implementar": "O princípio da necessidade, previsto no art. 6º da LGPD, estabelece que o tratamento deve ser limitado ao mínimo necessário para a realização de suas finalidades, com abrangência dos dados pertinentes, proporcionais e não excessivos em relação às finalidades do tratamento de dados.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia sobre Privacidade desde a Concepção e por Padrão que apresenta diretrizes para uma boa gestão do tratamento de dados pessoais dentro de uma organização.",
+      "aplicabilidade_privacidade": "Os dados pessoais devem ser gerenciados em conformidade com a estratégia de risco da organização para proteger a privacidade dos indivíduos, aumentar a gerenciabilidade e permitir a implementação de princípios de privacidade."
+    },
+    {
+    "id": 26,
+    "nome": "Acesso e Qualidade",
+    "texto": "O acesso e qualidade visam a garantir que os direitos do titular, quanto ao tratamento de dados pessoais, sejam atendidos e assegurar que sejam feitos de forma exata, clara, relevante e atualizado de acordo com a necessidade e para o cumprimento da finalidade de seu tratamento. Assegurar também o livre acesso aos titulares para consulta facilitada e gratuita sobre a integralidade de seus dados pessoais.",
+    "por_que_implementar": "Conforme os princípios do livre acesso e qualidade dos dados estabelecido no art. 6º da LGPD e os direitos do titular de dados pessoais, previsto no art. 18, o controlador deve garantir aos titulares o acesso facilitado e gratuito a seus dados pessoais, bem como sobre a integralidade de seus dados pessoais com direito a correção de dados incompletos, inexatos ou desatualizados.",
+    "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia sobre Privacidade desde a Concepção e por Padrão que apresenta diretrizes para garantir que os direitos do titular dos dados pessoais sejam atendidos e assegurados dentro de uma organização.",
+    "aplicabilidade_privacidade": "A organização deve implementar processos para garantir que o tratamento de dados pessoais seja preciso, completo, atualizado, adequado e relevante para a finalidade de uso e implementar medidas para garantir a precisão dos dados pessoais coletados."
+    },
+    {
+    "id": 27,
+    "nome": "Compartilhamento, Transferência e Divulgação",
+    "texto": "Assim como ocorre com outras operações de tratamento, o compartilhamento, a transferência e a divulgação de dados pessoais devem ser realizados em conformidade com a LGPD, observando os princípios, as bases legais, garantia dos direitos dos titulares e outras regras específicas aplicáveis.",
+    "por_que_implementar": "De acordo com o art. 26 da LGPD o uso compartilhado de dados pessoais pelo Poder Público deve atender a finalidades específicas de execução de políticas públicas e atribuição legal pelos órgãos e pelas entidades públicas, respeitados os princípios de proteção de dados pessoais elencados no art. 6º desta Lei.",
+    "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal a Cartilha sobre Finalidades e Hipóteses Legais, e a ANPD disponibiliza um Guia de Tratamento de Dados Pessoais pelo Poder Público que apresenta instruções claras sobre compartilhamento de dados pessoais pelo Poder Púbico.",
+    "aplicabilidade_privacidade": "A organização deve implementar medidas apropriadas para garantir que quaisquer compartilhamentos, transferências e divulgações de dados pessoais atendam requisitos de conformidade relevantes."
+    },
+    {
+    "id": 28,
+    "nome": "Supervisão em Terceiros",
+    "texto": "A supervisão em terceiros visa a garantir, através de meios contratuais ou outros, como políticas internas obrigatórias, que o terceiro destinatário implemente ações previstas pelo controlador no intuito de atender aos requisitos de conformidade com as leis e regulamentos de proteção de dados em vigor e requisitos de privacidade.",
+    "por_que_implementar": "O art. 39 da LGPD estabelece que o operador deverá realizar o tratamento segundo as instruções fornecidas pelo controlador, que verificará a observância das próprias instruções e das normas sobre a matéria.",
+    "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia de Requisitos e Obrigações quanto à Segurança da Informação e à Privacidade que orienta a adequação do processo de contratação para contemplar os requisitos mais importantes de segurança e privacidade dos dados.",
+    "aplicabilidade_privacidade": "As organizações devem implementar medidas apropriadas para garantir que contratados e processadores de dados pessoais cumpram as cláusulas contratuais previstas no momento do estabelecimento de acordo entre as partes interessadas."
+    },
+    {
+    "id": 29,
+    "nome": "Abertura, Transparência e Notificação",
+    "texto": "O órgão, ao efetuar o tratamento de dados pessoais no exercício de suas competências legais ou execução de políticas públicas, deverá dar publicidade sobre a finalidade e a forma como o dado será tratado.",
+    "por_que_implementar": "A Abertura, Transparência e Notificação buscam atender o princípio de transparência da LGPD, art. 6º, inciso VI. O referido princípio é a garantia, aos titulares, de informações claras, precisas e facilmente acessíveis sobre a realização do tratamento e os respectivos agentes de tratamento.",
+    "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal um Guia de Elaboração de Termo de Uso e Política de Privacidade e um Modelo com Orientações para Elaboração do Termo de Uso e Política de Privacidade.",
+    "aplicabilidade_privacidade": "As informações exigidas pela LGPD devem ser disponibilizadas de forma adequada, ostensiva, em linguagem simples e acessível, de modo a assegurar o efetivo conhecimento do titular a respeito das atividades de tratamento realizadas pelo controlador."
+    },
+    {
+    "id": 30,
+    "nome": "Avaliação de Impacto, Monitoramento e Auditoria",
+    "texto": "Este controle visa a avaliar a necessidade de implementar uma avaliação de impacto à proteção de dados pessoais, quando novos tratamentos ou mudanças no tratamento existente de dados pessoais forem planejados e documentar medidas adotadas para a mitigação dos riscos identificados.",
+    "por_que_implementar": "A LGPD define o RIPD como uma documentação do controlador que contém a descrição dos processos de tratamento de dados pessoais que podem gerar riscos às liberdades civis e aos direitos fundamentais, bem como medidas, salvaguardas e mecanismos de mitigação de risco.",
+    "fique_atento": "A Secretaria de Governo Digital disponibiliza um Guia de Elaboração de Relatório de Impacto à Proteção de Dados Pessoais que orienta a elaboração de documento de comunicação e transparência que contém a descrição dos processos de tratamento de dados pessoais.",
+    "aplicabilidade_privacidade": "As medidas para remediar uma violação de privacidade devem ser proporcionais aos riscos associados à violação, mas devem ser implementadas o mais rápido possível. O monitoramento contínuo e avaliações periódicas das medidas técnicas e administrativas devem ser realizados."
+    },
+    {
+      "id": 31,
+      "nome": "Segurança Aplicada à Privacidade",
+      "texto": "Os agentes de tratamento devem adotar medidas de segurança, técnicas e administrativas aptas a proteger os dados pessoais de acessos não autorizados e de situações acidentais ou ilícitas de destruição, perda, alteração, comunicação ou qualquer forma de tratamento inadequado ou ilícito.",
+      "por_que_implementar": "Os dados pessoais sob os cuidados e custódia do Poder Público devem ser protegidos conforme orientações previstas na LGPD em seus artigos 46, 47, 49 e 50. Os controladores e operadores devem atender aos requisitos de segurança, aos padrões de boas práticas e de governança e aos princípios gerais previstos na LGPD e às demais normas regulamentares.",
+      "fique_atento": "A Secretaria de Governo Digital disponibiliza em seu portal uma série de documentos referente temática: Modelo de Política de Gestão de Controle de Acesso, Modelo de Política de Gestão de Registros (Logs) de Auditoria e o Guia de Resposta a Incidentes de Segurança.",
+      "aplicabilidade_privacidade": "Os dados pessoais sob custódia da organização devem ser protegidos por controles apropriados, de acordo com os resultados de uma avaliação de risco de ameaça e/ou impacto na privacidade."
+    }
+    ]
+}
