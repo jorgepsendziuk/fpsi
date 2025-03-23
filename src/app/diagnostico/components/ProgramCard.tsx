@@ -183,9 +183,7 @@ const ProgramCard = ({
       <AccordionDetails sx={{ bottom: 10, p: { xs: 1, sm: 2 } }}>
         <Programa key={programa.id} programaId={programa.id} /> 
         
-        <Box sx={{ mt: 2 }}>
-          <ResponsaveisSection programa={programa.id} responsaveis={state.responsaveis} />
-        </Box>
+        
         
         <DiagnosticoSection 
           programa={programa}
