@@ -10,6 +10,8 @@ import {
   ListItemText,
   MenuItem,
   InputLabel,
+  Button,
+  Box,
 } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 
@@ -111,88 +113,92 @@ const Medida = ({ medida, controle, handleMedidaChange, responsaveis }: { medida
       
         <Grid container spacing={3}>
           <Grid size={{ md: 6, sm: 12, xs: 12 }}>
-            <TextField
-              id={`justificativa-${medida.id}`}
-              style={{ width: "100%" }}
-              label="Justificativa / Observação"
-              value={localValues.justificativa}
-              multiline
-              
-              onChange={(event) => handleTextChange("justificativa", event.target.value)}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <SaveIcon
-                      style={{ cursor: "pointer", color: "grey" }}
-                      onClick={() => handleSaveField("justificativa")}
-                    />
-                  ),
-                },
-              }}
-            />
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                id={`justificativa-${medida.id}`}
+                style={{ width: "100%" }}
+                label="Justificativa / Observação"
+                value={localValues.justificativa}
+                multiline
+                onChange={(event) => handleTextChange("justificativa", event.target.value)}
+              />
+              {localValues.justificativa !== medida.justificativa && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleSaveField("justificativa")}
+                  sx={{ minWidth: 'auto' }}
+                >
+                  <SaveIcon />
+                </Button>
+              )}
+            </Box>
           </Grid>
           <Grid size={{ md: 6, sm: 12, xs: 12 }}>
-            <TextField
-              id={`encaminhamento_interno-${medida.id}`}
-              style={{ width: "100%" }}
-              value={localValues.encaminhamento_interno}
-              multiline
-              
-              label="Encaminhamento interno (para uso do órgão)"
-              onChange={(event) => handleTextChange("encaminhamento_interno", event.target.value)}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <SaveIcon
-                      style={{ cursor: "pointer", color: "grey" }}
-                      onClick={() => handleSaveField("encaminhamento_interno")}
-                    />
-                  ),
-                },
-              }}
-            />
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                id={`encaminhamento_interno-${medida.id}`}
+                style={{ width: "100%" }}
+                value={localValues.encaminhamento_interno}
+                multiline
+                label="Encaminhamento interno (para uso do órgão)"
+                onChange={(event) => handleTextChange("encaminhamento_interno", event.target.value)}
+              />
+              {localValues.encaminhamento_interno !== medida.encaminhamento_interno && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleSaveField("encaminhamento_interno")}
+                  sx={{ minWidth: 'auto' }}
+                >
+                  <SaveIcon />
+                </Button>
+              )}
+            </Box>
           </Grid>
           <Grid size={{ md: 6, sm: 12, xs: 12 }}>
-            <TextField
-              id={`observacao_orgao-${medida.id}`}
-              style={{ width: "100%" }}
-              value={localValues.observacao_orgao}
-              label="Observação do Órgão para SGD"
-              multiline
-              
-              onChange={(event) => handleTextChange("observacao_orgao", event.target.value)}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <SaveIcon
-                      style={{ cursor: "pointer", color: "grey" }}
-                      onClick={() => handleSaveField("observacao_orgao")}
-                    />
-                  ),
-                },
-              }}
-            />
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                id={`observacao_orgao-${medida.id}`}
+                style={{ width: "100%" }}
+                value={localValues.observacao_orgao}
+                label="Observação do Órgão para SGD"
+                multiline
+                onChange={(event) => handleTextChange("observacao_orgao", event.target.value)}
+              />
+              {localValues.observacao_orgao !== medida.observacao_orgao && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleSaveField("observacao_orgao")}
+                  sx={{ minWidth: 'auto' }}
+                >
+                  <SaveIcon />
+                </Button>
+              )}
+            </Box>
           </Grid>
           <Grid size={{ md: 6, sm: 12, xs: 12 }}>
-            <TextField
-              id={`nova_resposta-${medida.id}`}
-              style={{ width: "100%" }}
-              value={localValues.nova_resposta}
-              label="Nova resposta"
-              multiline
-              
-              onChange={(event) => handleTextChange("nova_resposta", event.target.value)}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <SaveIcon
-                      style={{ cursor: "pointer", color: "grey" }}
-                      onClick={() => handleSaveField("nova_resposta")}
-                    />
-                  ),
-                },
-              }}
-            /> 
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                id={`nova_resposta-${medida.id}`}
+                style={{ width: "100%" }}
+                value={localValues.nova_resposta}
+                label="Nova resposta"
+                multiline
+                onChange={(event) => handleTextChange("nova_resposta", event.target.value)}
+              />
+              {localValues.nova_resposta !== medida.nova_resposta && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleSaveField("nova_resposta")}
+                  sx={{ minWidth: 'auto' }}
+                >
+                  <SaveIcon />
+                </Button>
+              )}
+            </Box>
           </Grid>
           <Grid size={{ md: 6, sm: 12, xs: 12 }}>
             <InputLabel id={`responsavel-label-${medida.id}`}>Responsável</InputLabel>
