@@ -15,6 +15,11 @@ export interface Programa {
   setor: number;
   cnpj: number;
   razao_social: string;
+  atendimento_fone: string;
+  atendimento_email: string;
+  atendimento_site: string;
+  politica_inicio_vigencia: Date;
+  politica_prazo_revisao: Date;
 }
 export interface Diagnostico {
   id: number;
