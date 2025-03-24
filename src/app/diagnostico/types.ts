@@ -116,3 +116,5 @@ export interface TextFieldsState {
   observacao_orgao: string;
   nova_resposta: string;
 }
+
+export type MedidaTextField = keyof TextFieldsState;

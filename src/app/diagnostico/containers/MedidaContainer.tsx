@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Types
-import { Medida, Controle, Responsavel } from '../types';
+import { Medida, Controle, Responsavel, MedidaTextField } from '../types';
 
 // Components
 import MedidaComponent from '../components/Medida';
@@ -51,14 +51,14 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
   /**
    * Handles changes to text fields by updating local state
    */
-  const handleTextChange = (field: keyof typeof localValues, value: string) => {
+  const handleTextChange = (field: MedidaTextField, value: string) => {
     setLocalValues(prev => ({ ...prev, [field]: value }));
   };
 
   /**
    * Handles saving a field value by calling the parent handler
    */
-  const handleSaveField = (field: keyof typeof localValues) => {
+  const handleSaveField = (field: MedidaTextField) => {
     handleMedidaChange(medida.id, controle.id, field, localValues[field]);
   };
 
@@ -69,8 +69,8 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
       handleMedidaChange={handleMedidaChange}
       responsaveis={responsaveis}
       localValues={localValues} 
-      handleTextChange={(field: "justificativa" | "encaminhamento_interno" | "observacao_orgao" | "nova_resposta", value: string) => handleTextChange(field, value)}
-      handleSaveField={(field: "justificativa" | "encaminhamento_interno" | "observacao_orgao" | "nova_resposta") => handleSaveField(field)}
+      handleTextChange={handleTextChange}
+      handleSaveField={handleSaveField}
     />
   );
 };

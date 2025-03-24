@@ -31,7 +31,7 @@ import dayjs from 'dayjs';
 import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../utils';
 
 // Types
-import { Medida as MedidaType, Controle, Responsavel, TextFieldsState } from '../../types';
+import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField } from '../../types';
 
 // Styles
 import { medidaStyles } from './styles';
@@ -52,9 +52,9 @@ export interface MedidaProps {
   /** Current values for text fields */
   localValues: TextFieldsState;
   /** Function to handle text field changes */
-  handleTextChange: (field: string, value: string) => void;
+  handleTextChange: (field: MedidaTextField, value: string) => void;
   /** Function to save a field value */
-  handleSaveField: (field: string) => void;
+  handleSaveField: (field: MedidaTextField) => void;
 }
 
 /**
