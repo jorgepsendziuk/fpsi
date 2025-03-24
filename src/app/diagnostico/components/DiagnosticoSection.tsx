@@ -8,8 +8,9 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import Diagnostico from "../diagnostico";
 import { useThemeColors } from "../hooks/useThemeColors";
+import DiagnosticoComponent from "./Diagnostico";
+import { calculateSumOfResponsesForDiagnostico, getMaturityLabel } from "../utils";
 
 interface DiagnosticoSectionProps {
   programa: any;
@@ -27,54 +28,20 @@ const DiagnosticoSection = ({
   handleINCCChange, handleMedidaFetch, handleMedidaChange, responsaveis 
 }: DiagnosticoSectionProps) => {
   const { 
-    getContrastTextColor, 
-    getAccordionBackgroundColor,
-    getAccordionHoverBackgroundColor,
-    getAccordionSummaryBackgroundColor,
-    getAccordionBorderColor
+    accordionStyles 
   } = useThemeColors();
 
   return (
     <Accordion
       onChange={() => fetchControlesAndMedidas(programa.id)}
       sx={{
-        mb: 2,
-        borderRadius: 2,
-        '&:before': {
-          display: 'none',
-        },
-        '& .MuiAccordionSummary-root': {
-          borderRadius: 2,
-          backgroundColor: getAccordionBackgroundColor(),
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            backgroundColor: getAccordionHoverBackgroundColor(),
-          },
-        },
-        boxShadow: 2,
-        border: 'none',
-        '&.Mui-expanded': {
-          margin: '0 0 16px 0',
-          boxShadow: 4,
-          backgroundColor: getAccordionBackgroundColor(),
-          '& .MuiAccordionSummary-root': {
-            backgroundColor: getAccordionSummaryBackgroundColor(),
-            borderBottom: '1px solid',
-            borderColor: getAccordionBorderColor(),
-          },
-        },
-        '& .MuiTypography-root': {
-          color: getContrastTextColor(),
-        },
+        ...accordionStyles,
+        width: '100%', // Garantir largura total
       }}
     >
       <AccordionSummary 
         expandIcon={<ExpandMoreIcon />}
         sx={{
-          minHeight: 64,
-          '& .MuiAccordionSummary-content': {
-            margin: '12px 0',
-          },
           // Set text color to black for this summary
           '& .MuiTypography-root': {
             color: '#000000',
@@ -82,24 +49,38 @@ const DiagnosticoSection = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <CheckCircleOutlineIcon fontSize="medium" color="primary" sx={{ ml: 1 }} />
-          <Typography variant="h5" style={{ fontWeight: "400" }}>Diagnóstico</Typography>
+          <CheckCircleOutlineIcon fontSize="large" color="primary" sx={{ ml: 1 }} />
+          <Typography variant="h5" style={{ fontWeight: "500" }}>Diagnóstico</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails>
-        {state.diagnosticos.map((diagnostico: any) => (
-          <Diagnostico
-            key={diagnostico.id}
-            programa={programa}
-            diagnostico={diagnostico}
-            state={state}
-            handleControleFetch={handleControleFetch}
-            handleINCCChange={handleINCCChange}
-            handleMedidaFetch={handleMedidaFetch}
-            handleMedidaChange={handleMedidaChange}
-            responsaveis={responsaveis}
-          />
-        ))}
+        {state.diagnosticos.map((diagnostico: any) => {
+          // Calcular o índice de maturidade corretamente
+          const calculatedMaturityScore = calculateSumOfResponsesForDiagnostico(diagnostico.id, state);
+          const calculatedMaturityLabel = getMaturityLabel(Number(calculatedMaturityScore));
+          
+          return (
+            <DiagnosticoComponent
+              key={diagnostico.id}
+              programa={programa}
+              diagnostico={diagnostico}
+              handleControleFetch={handleControleFetch}
+              state={state}
+              controles={state.controles && state.controles[diagnostico.id] ? 
+                state.controles[diagnostico.id].filter((controle: any) => controle.programa === programa.id) : 
+                []
+              }
+              maturityScore={calculatedMaturityScore}
+              maturityLabel={calculatedMaturityLabel}
+              handleINCCChange={handleINCCChange}
+              handleMedidaFetch={handleMedidaFetch}
+              handleMedidaChange={handleMedidaChange}
+              handleMedidaProgramaFetch={async (programaId: number) => Promise.resolve()}
+              handleProgramaControleFetch={async (programaId: number) => Promise.resolve()}
+              responsaveis={responsaveis}
+            />
+          );
+        })}
       </AccordionDetails>
     </Accordion>
   );

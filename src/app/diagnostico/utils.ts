@@ -36,6 +36,19 @@ export const setor = [
   { id: 2, label: 'Privado' }
 ];
 
+export const status_medida = [
+  { id: 1, label: 'Finalizado' },
+  { id: 2, label: 'Não Finalizado' }
+];
+
+export const status_plano_acao = [
+  { id: 1, label: 'Datas inválidas', color: 'blue' },
+  { id: 2, label: 'Concluído', color: 'green' },
+  { id: 3, label: 'Não iniciado', color: 'grey' },
+  { id: 4, label: 'Em andamento', color: 'yellow' },
+  { id: 5, label: 'Atrasado', color: 'red' }
+];
+
 export const calculateSumOfResponses = (medidas: Medida[], diagnostico: number): number => {
   return medidas.reduce((sum, medida) => {
     let resposta: Resposta | undefined;

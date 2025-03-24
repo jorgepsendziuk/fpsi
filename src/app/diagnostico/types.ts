@@ -44,6 +44,7 @@ export type Medida = {
   id_medida: string;
   id_controle: number;
   id_cisv8: string;
+  status_medida: number;
   grupo_imple: string;
   funcao_nist_csf: string;
   medida: string;
@@ -58,6 +59,7 @@ export type Medida = {
   responsavel?: number;
   previsao_inicio?: string | null;
   previsao_fim?: string | null;
+  status_plano_acao?: number;
 };
 
 export interface ProgramaMedida {
@@ -78,7 +80,6 @@ export interface Responsavel {
   id: number;
   programa: number;
   departamento: string;
-  numero: number;
   email: string ;
   nome: string;
 }
@@ -107,4 +108,11 @@ export interface Action {
   medidaId?: number;
   field?: string;
   value?: any;
+}
+
+export interface TextFieldsState {
+  justificativa: string;
+  encaminhamento_interno: string;
+  observacao_orgao: string;
+  nova_resposta: string;
 }
