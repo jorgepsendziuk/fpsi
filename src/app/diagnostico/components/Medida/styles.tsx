@@ -33,11 +33,11 @@ export const medidaStyles = {
   statusChip: {
     height: 44,
     marginTop: 0.5,
-    opacity: 0.9,
+    opacity: 1,
     padding: '0 10px',
     width: '100%',
-    maxWidth: '160px',
-    fontWeight: 'bold',
+    maxWidth: '200px',
+    boxShadow: '0px 1px 2px rgba(0,0,0,0.1)',
     '& .MuiChip-label': {
       overflow: 'visible',
       whiteSpace: 'normal',

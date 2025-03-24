@@ -42,11 +42,11 @@ export const status_medida = [
 ];
 
 export const status_plano_acao = [
-  { id: 1, label: 'Datas inválidas', color: 'blue' },
-  { id: 2, label: 'Concluído', color: 'green' },
-  { id: 3, label: 'Não iniciado', color: 'grey' },
-  { id: 4, label: 'Em andamento', color: 'yellow' },
-  { id: 5, label: 'Atrasado', color: 'red' }
+  { id: 1, label: 'Datas inválidas', color: '#8ecae6' },
+  { id: 2, label: 'Concluído', color: '#95d5b2' },
+  { id: 3, label: 'Não iniciado', color: '#e9ecef' },
+  { id: 4, label: 'Em andamento', color: '#ffdd94' },
+  { id: 5, label: 'Atrasado', color: '#ffadad' }
 ];
 
 export const calculateSumOfResponses = (medidas: Medida[], diagnostico: number): number => {

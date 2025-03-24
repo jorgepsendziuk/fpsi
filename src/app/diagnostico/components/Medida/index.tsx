@@ -103,7 +103,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               {medida.id_medida}
             </Typography>
           </Grid>
-          <Grid size={{ md: 6, sm: 6, xs: 9 }}>
+          <Grid size={{ md: 5, sm: 5, xs: 9 }}>
             <Typography sx={medidaStyles.titleSection}>{medida.medida}</Typography>
           </Grid>
           <Grid size={{ md: 3, sm: 3, xs: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -123,15 +123,16 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               ))}
             </Select>
           </Grid>
-          <Grid size={{ md: 2, sm: 3, xs: 6 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Grid size={{ md: 3, sm: 4, xs: 6 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant="caption" sx={{ fontWeight: '500', mb: 0 }}>
-              Plano de Ação
+              PLANO DE AÇÃO
             </Typography>
             <Chip
               sx={{
                 ...medidaStyles.statusChip,
-                bgcolor: status_plano_acao.find(status => status.id === medida.status_plano_acao)?.color || 'grey',
-                color: '#fff'
+                bgcolor: status_plano_acao.find(status => status.id === medida.status_plano_acao)?.color || '#e9ecef',
+                color: (medida.status_plano_acao === 3 || medida.status_plano_acao === 4) ? '#333333' : '#000000',
+                fontWeight: 600
               }}
               label={
                 status_plano_acao.find(status => status.id === medida.status_plano_acao)?.label || "Não definido"
