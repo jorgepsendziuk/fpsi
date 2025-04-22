@@ -36,6 +36,10 @@ export interface Controle {
   numero: number;
   nome: string;
   nivel: number;
+  texto?: string;
+  por_que_implementar?: string;
+  fique_atento?: string | null;
+  aplicabilidade_privacidade?: string;
 }
 
 export type Medida = {

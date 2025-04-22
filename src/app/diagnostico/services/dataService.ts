@@ -1,4 +1,5 @@
 import { supabaseBrowserClient } from "@utils/supabase/client";
+import { mergeControleData } from "./controlesData";
 
 export const fetchProgramas = async () => {
   const { data } = await supabaseBrowserClient
@@ -40,7 +41,8 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
     .eq("diagnostico", diagnosticoId)
     .eq("programa", programaId)
     .order("id", { ascending: true });
-  return data || [];
+  
+  return data ? data.map(controle => mergeControleData(controle)) : [];
 };
 
 export const fetchMedidas = async (controleId: number): Promise<any[]> => {

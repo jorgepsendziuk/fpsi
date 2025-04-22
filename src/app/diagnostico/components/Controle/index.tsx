@@ -1,5 +1,6 @@
 // React and hooks
-import React from 'react';
+import React, { useState } from 'react';
+import { useMediaQuery } from '@mui/material';
 
 // Material UI components
 import {
@@ -9,11 +10,19 @@ import {
   Typography,
   Select,
   MenuItem,
+  Tabs,
+  Tab,
+  Box,
+  Paper,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 // Material UI icons
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
+import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 
 // Types
 import { Controle, Medida, Diagnostico } from '../../types';
@@ -48,6 +57,44 @@ export interface ControleProps {
   calculateMaturityIndex: (controle: Controle) => string | number;
 }
 
+type InfoType = 'texto' | 'por_que_implementar' | 'fique_atento' | 'aplicabilidade_privacidade';
+
+const infoLabels: Record<InfoType, string> = {
+  texto: 'Descrição',
+  por_que_implementar: 'Por que implementar',
+  fique_atento: 'Fique atento',
+  aplicabilidade_privacidade: 'Aplicabilidade em privacidade'
+};
+
+const tabColors: Record<InfoType, string> = {
+  texto: '#E3F2FD', // azul claro
+  por_que_implementar: '#D8E6C3', // verde claro da imagem
+  fique_atento: '#E6E0ED', // roxo claro da imagem
+  aplicabilidade_privacidade: '#FFF3E0' // laranja claro
+};
+
+const tabIcons: Record<InfoType, React.ReactElement> = {
+  texto: <DescriptionOutlinedIcon sx={{ mr: 1 }} />,
+  por_que_implementar: <HelpOutlineOutlinedIcon sx={{ mr: 1 }} />,
+  fique_atento: <ErrorOutlineOutlinedIcon sx={{ mr: 1 }} />,
+  aplicabilidade_privacidade: <SecurityOutlinedIcon sx={{ mr: 1 }} />
+};
+
+const getBackgroundColor = (info: InfoType) => {
+  switch(info) {
+    case 'texto':
+      return '#F5F5F5'; // cinza claro
+    case 'por_que_implementar':
+      return '#D8E6C3';
+    case 'fique_atento':
+      return '#E6E0ED';
+    case 'aplicabilidade_privacidade':
+      return '#FFF3E0';
+    default:
+      return 'background.paper';
+  }
+};
+
 /**
  * Controle component displays a control with its measures
  */
@@ -61,6 +108,12 @@ const ControleComponent: React.FC<ControleProps> = ({
   calculateMaturityIndex,
 }) => {
   const { accordionStyles } = useThemeColors();
+  const [selectedTab, setSelectedTab] = useState<InfoType>('texto');
+  const isMobile = useMediaQuery('(max-width:900px)');
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: InfoType) => {
+    setSelectedTab(newValue);
+  };
 
   return (
     <Accordion
@@ -120,6 +173,115 @@ const ControleComponent: React.FC<ControleProps> = ({
       </AccordionSummary>
       <AccordionDetails>
         <div style={controleStyles.medidasContainer}>
+          <Paper 
+            elevation={1}
+            sx={{ 
+              mb: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              overflow: 'hidden'
+            }}
+          >
+            <Box sx={{ 
+              backgroundColor: 'background.default',
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden'
+            }}>
+              <Tabs 
+                value={selectedTab} 
+                onChange={handleTabChange}
+                orientation={isMobile ? 'horizontal' : 'vertical'}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  borderRight: { xs: 'none', md: 1 },
+                  borderBottom: { xs: 1, md: 'none' },
+                  borderColor: 'divider',
+                  minWidth: { xs: '100%', md: '250px' },
+                  maxWidth: { xs: '100%', md: '250px' },
+                  '& .MuiTabs-flexContainer': {
+                    gap: { xs: '4px', md: 0 },
+                    '& .MuiTab-root': {
+                      borderBottom: { xs: 'none', md: '1px solid' },
+                      borderRight: { xs: '1px solid', md: 'none' },
+                      borderColor: 'divider',
+                      '&:last-child': {
+                        borderBottom: 'none',
+                        borderRight: 'none'
+                      }
+                    }
+                  },
+                  '& .MuiTabs-indicator': {
+                    display: 'none'
+                  },
+                  '& .MuiTab-root': {
+                    textTransform: 'uppercase',
+                    minHeight: '48px',
+                    padding: '8px 24px',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    color: '#1F2937',
+                    alignItems: 'center',
+                    textAlign: 'left',
+                    minWidth: { xs: 'auto', md: '100%' },
+                    flex: { xs: 1, md: 'none' },
+                    flexDirection: 'row',
+                    justifyContent: 'flex-start'
+                  }
+                }}
+              >
+                {(Object.keys(infoLabels) as InfoType[]).map((info) => (
+                  <Tab 
+                    key={info}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {tabIcons[info]}
+                        {infoLabels[info]}
+                      </Box>
+                    }
+                    value={info}
+                    sx={{
+                      backgroundColor: getBackgroundColor(info),
+                      '&.Mui-selected': {
+                        backgroundColor: getBackgroundColor(info),
+                        fontWeight: 600,
+                        color: '#1F2937',
+                      },
+                      '&:hover': {
+                        opacity: 0.9
+                      }
+                    }}
+                  />
+                ))}
+              </Tabs>
+              <Box sx={{ 
+                p: { xs: 2, md: 3 }, 
+                flex: 1, 
+                bgcolor: getBackgroundColor(selectedTab),
+                transition: 'background-color 0.3s ease',
+                minHeight: { xs: '200px', md: 'auto' }
+              }}>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    lineHeight: 1.6,
+                    color: '#000000 !important',
+                    fontStyle: 'italic',
+                    display: 'block',
+                    fontSize: { xs: '0.875rem', md: '1rem' }
+                  }}
+                >
+                  "{controle[selectedTab] || 'Não há informações disponíveis'}"
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+
           {medidas.map((medida) => (
             <MedidaContainer
               key={medida.id}
