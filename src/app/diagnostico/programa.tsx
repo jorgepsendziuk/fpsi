@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl, FilledTextFieldProps, OutlinedTextFieldProps, StandardTextFieldProps, TextFieldVariants, Typography } from "@mui/material";
+import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl, FilledTextFieldProps, OutlinedTextFieldProps, StandardTextFieldProps, TextFieldVariants, Typography, Tabs, Tab, IconButton, Tooltip } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -16,12 +16,18 @@ import GroupIcon from '@mui/icons-material/Group';
 import Responsavel from './responsavel';
 import * as dataService from './services/dataService';
 import SaveIcon from '@mui/icons-material/Save';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { useThemeColors } from "./hooks/useThemeColors";
+import { useRouter } from "next/navigation";
+import jsPDF from "jspdf";
 
 const Programa = ({ programaId }: { programaId: number }) => {
   const [programa, setPrograma] = useState<Programa>({} as Programa);
   const [responsaveis, setResponsaveis] = useState<any[]>([]);
   const [editedFields, setEditedFields] = useState<{[key: string]: any}>({});
+  const router = useRouter();
   const { 
     getContrastTextColor, 
     getAccordionBackgroundColor,
@@ -80,8 +86,97 @@ const Programa = ({ programaId }: { programaId: number }) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (window.confirm("Tem certeza que deseja excluir este programa?")) {
+      const { error } = await supabaseBrowserClient
+        .from("programa")
+        .delete()
+        .eq("id", programaId);
+      
+      if (!error) {
+        router.push("/diagnostico");
+      }
+    }
+  };
+
+  const handleReport = () => {
+    router.push(`/diagnostico/relatorio?programaId=${programaId}`);
+  };
+
+  const handleGeneratePDF = async () => {
+    // Primeiro navega para a página de relatório para buscar os dados
+    const response = await fetch(`/api/relatorio?programaId=${programaId}`);
+    const data = await response.json();
+    
+    const doc = new jsPDF();
+    const tableData = data.map((item: any) => [
+      item.diagnostico,
+      item.controle,
+      item.medida,
+      item.status,
+      item.responsavel,
+      item.previsao,
+    ]);
+
+    doc.autoTable({
+      head: [["Diagnóstico", "Controle", "Medida", "Status", "Responsável", "Previsão"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [41, 128, 185] },
+      styles: { fontSize: 8 },
+      margin: { top: 20 },
+    });
+
+    doc.save(`relatorio-programa-${programaId}.pdf`);
+  };
+
   return (
     <Box component="form" noValidate autoComplete="off" sx={{ mt: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'flex-end', 
+        gap: 0.5,
+        mb: -1,
+        "& .MuiIconButton-root": {
+          borderRadius: '4px 4px 0 0',
+          height: '40px',
+          width: '40px',
+          backgroundColor: 'primary.main',
+          color: 'white',
+          boxShadow: '0 -2px 4px rgba(0,0,0,0.1)',
+          '&:hover': {
+            backgroundColor: 'primary.dark',
+          },
+          '&.delete': {
+            backgroundColor: 'error.main',
+            '&:hover': {
+              backgroundColor: 'error.dark',
+            },
+          }
+        }
+      }}>
+        <Tooltip title="Relatório">
+          <IconButton onClick={handleReport}>
+            <AssessmentIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Exportar PDF">
+          <IconButton onClick={handleGeneratePDF}>
+            <PictureAsPdfIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Salvar">
+          <IconButton onClick={() => handleSave('all')}>
+            <SaveIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Excluir">
+          <IconButton onClick={handleDelete} className="delete">
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
       <Grid container spacing={0} direction="column"> 
         <Grid>
           <Accordion sx={accordionStyles}>
@@ -103,16 +198,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                       value={editedFields.atendimento_fone !== undefined ? editedFields.atendimento_fone : (programa?.atendimento_fone || "")}
                       onChange={handleChange("atendimento_fone")}
                     />
-                    {editedFields.atendimento_fone !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("atendimento_fone")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ md: 4, sm: 6, xs: 12}}>
@@ -125,16 +210,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                       value={editedFields.atendimento_email !== undefined ? editedFields.atendimento_email : (programa?.atendimento_email || "")}
                       onChange={handleChange("atendimento_email")}
                     />
-                    {editedFields.atendimento_email !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("atendimento_email")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ md: 4, sm: 6, xs: 12}}>
@@ -147,16 +222,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                       value={editedFields.atendimento_site !== undefined ? editedFields.atendimento_site : (programa?.atendimento_site || "")}
                       onChange={handleChange("atendimento_site")}
                     />
-                    {editedFields.atendimento_site !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("atendimento_site")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ md: 6, sm: 6, xs: 12}}>
@@ -167,16 +232,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                       onChange={handleDateChange("politica_inicio_vigencia")}
                       slotProps={{ textField: { id: "programa-politica-inicio-vigencia", name: "politica_inicio_vigencia", fullWidth: true } }}
                     />
-                    {editedFields.politica_inicio_vigencia !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("politica_inicio_vigencia")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ md: 6, sm: 6, xs: 12}}>
@@ -187,16 +242,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                       onChange={handleDateChange("politica_prazo_revisao")}
                       slotProps={{ textField: { id: "programa-politica-prazo-revisao", name: "politica_prazo_revisao", fullWidth: true } }}
                     />
-                    {editedFields.politica_prazo_revisao !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("politica_prazo_revisao")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
               </Grid>
@@ -232,16 +277,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         ))}
                       </Select>
                     </FormControl>
-                    {editedFields.responsavel_controle_interno !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("responsavel_controle_interno")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ md: 3, sm: 6, xs: 12}}>
@@ -262,16 +297,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         ))}
                       </Select>
                     </FormControl>
-                    {editedFields.responsavel_si !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("responsavel_si")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ md: 3, sm: 6, xs: 12}}>
@@ -292,16 +317,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         ))}
                       </Select>
                     </FormControl>
-                    {editedFields.responsavel_privacidade !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("responsavel_privacidade")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ md: 3, sm: 6, xs: 12}}>
@@ -322,16 +337,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         ))}
                       </Select>
                     </FormControl>
-                    {editedFields.responsavel_ti !== undefined && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleSave("responsavel_ti")}
-                        sx={{ minWidth: 'auto' }}
-                      >
-                        <SaveIcon />
-                      </Button>
-                    )}
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
@@ -363,16 +368,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         value={editedFields.sgd_numero_documento_nota_tecnica !== undefined ? editedFields.sgd_numero_documento_nota_tecnica : (programa?.sgd_numero_documento_nota_tecnica || "")}
                         onChange={handleChange("sgd_numero_documento_nota_tecnica")}
                       />
-                      {editedFields.sgd_numero_documento_nota_tecnica !== undefined && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleSave("sgd_numero_documento_nota_tecnica")}
-                          sx={{ minWidth: 'auto' }}
-                        >
-                          <SaveIcon />
-                        </Button>
-                      )}
                     </Box>
                   </Grid>
                   <Grid size={{ md: 3, sm: 6, xs: 12}}>
@@ -385,16 +380,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         value={editedFields.sgd_versao_diagnostico_enviado !== undefined ? editedFields.sgd_versao_diagnostico_enviado : (programa?.sgd_versao_diagnostico_enviado || "")}
                         onChange={handleChange("sgd_versao_diagnostico_enviado")}
                       />
-                      {editedFields.sgd_versao_diagnostico_enviado !== undefined && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleSave("sgd_versao_diagnostico_enviado")}
-                          sx={{ minWidth: 'auto' }}
-                        >
-                          <SaveIcon />
-                        </Button>
-                      )}
                     </Box>
                   </Grid>
                   <Grid size={{ md: 3, sm: 6, xs: 12}}>
@@ -407,16 +392,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         value={editedFields.sgd_versao_diagnostico !== undefined ? editedFields.sgd_versao_diagnostico : (programa?.sgd_versao_diagnostico || "")}
                         onChange={handleChange("sgd_versao_diagnostico")}
                       />
-                      {editedFields.sgd_versao_diagnostico !== undefined && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleSave("sgd_versao_diagnostico")}
-                          sx={{ minWidth: 'auto' }}
-                        >
-                          <SaveIcon />
-                        </Button>
-                      )}
                     </Box>
                   </Grid>
                   <Grid size={{ md: 3, sm: 6, xs: 12}}>
@@ -427,16 +402,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         onChange={handleDateChange("sgd_data_limite_retorno")}
                         slotProps={{ textField: { id: "programa-sgd-data-limite-retorno", name: "sgd_data_limite_retorno", fullWidth: true } }}
                       />
-                      {editedFields.sgd_data_limite_retorno !== undefined && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleSave("sgd_data_limite_retorno")}
-                          sx={{ minWidth: 'auto' }}
-                        >
-                          <SaveIcon />
-                        </Button>
-                      )}
                     </Box>
                   </Grid>
                   <Grid size={{ md: 3, sm: 6, xs: 12}}>
@@ -447,16 +412,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
                         onChange={handleDateChange("sgd_retorno_data")}
                         slotProps={{ textField: { id: "programa-sgd-retorno-data", name: "sgd_retorno_data", fullWidth: true } }}
                       />
-                      {editedFields.sgd_retorno_data !== undefined && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleSave("sgd_retorno_data")}
-                          sx={{ minWidth: 'auto' }}
-                        >
-                          <SaveIcon />
-                        </Button>
-                      )}
                     </Box>
                   </Grid>
                 </Grid>

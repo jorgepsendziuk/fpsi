@@ -276,7 +276,7 @@ const ControleComponent: React.FC<ControleProps> = ({
                     fontSize: { xs: '0.875rem', md: '1rem' }
                   }}
                 >
-                  "{controle[selectedTab] || 'Não há informações disponíveis'}"
+                  &ldquo;{controle[selectedTab] || 'Não há informações disponíveis'}&rdquo;
                 </Typography>
               </Box>
             </Box>

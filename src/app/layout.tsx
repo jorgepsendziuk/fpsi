@@ -60,7 +60,16 @@ export default function RootLayout({
                         meta: {
                           canDelete: false,
                           label: "Diagnóstico" 
-
+                        },
+                      },
+                      {
+                        name: "relatorio",
+                        identifier: "diagnostico",
+                        list: "/diagnostico/relatorio",
+                        meta: {
+                          canDelete: false,
+                          label: "Relatório",
+                          dataProviderName: "default"
                         },
                       },
                       // {
