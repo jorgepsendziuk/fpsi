@@ -15,6 +15,7 @@ export interface Programa {
   setor: number;
   cnpj: number;
   razao_social: string;
+  nome_fantasia: string;
   atendimento_fone: string;
   atendimento_email: string;
   atendimento_site: string;

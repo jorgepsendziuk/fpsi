@@ -5,6 +5,8 @@ import {
   AccordionDetails,
   Box,
   IconButton,
+  Button,
+  Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -15,6 +17,7 @@ import ProgramSummaryContent from "./ProgramSummaryContent";
 import ResponsaveisSection from "./ResponsaveisSection";
 import DiagnosticoSection from "./DiagnosticoSection";
 import { useMediaQuery } from '@mui/material';
+import { useRouter } from 'next/navigation';
 
 interface ProgramCardProps {
   programa: any;
@@ -51,6 +54,7 @@ const ProgramCard = ({
     getAccordionBorderColor
   } = useThemeColors();
   const isMobile = useMediaQuery('(max-width:600px)');
+  const router = useRouter();
 
   return (
     <Accordion
@@ -182,9 +186,26 @@ const ProgramCard = ({
       
       <AccordionDetails sx={{ bottom: 10, p: { xs: 1, sm: 2 } }}>
         <Programa key={programa.id} programaId={programa.id} /> 
-        
-        
-        
+
+        {/* POLÍTICAS Accordion */}
+        <Accordion sx={{ mt: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight={600}>POLÍTICAS</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ mb: 2 }}
+              onClick={() => router.push(`/politica/protecao_dados_pessoais?programaId=${programa.id}`)}
+            >
+              Política de Proteção de Dados Pessoais
+            </Button>
+            {/* Aqui você pode adicionar mais políticas no futuro */}
+          </AccordionDetails>
+        </Accordion>
+
         <DiagnosticoSection 
           programa={programa}
           state={state}

@@ -1,0 +1,18 @@
+{
+"secoes": [
+    {
+      "id": 1,
+      "secao": "Propósito",
+      "titulo": "Objetivo da Política",
+      "descricao": "Levando em consideração a natureza e a finalidade do órgão ou entidade, descreva os fatores ou circunstâncias que determinam a existência da política de proteção de dados pessoais. Além disso, demonstre os objetivos básicos da política e o que ela pretende alcançar. Exemplo:",
+      "texto": "<p>A Política de Proteção de Dados Pessoais tem por objetivo estabelecer diretrizes, princípios e conceitos a serem seguidos por todas as pessoas e entidades que se relacionam com [Órgão ou Entidade] que em algum momento realizam operações de tratamento de dados pessoais, visando o cumprimento da Lei Geral de Proteção de Dados Pessoais (LGPD) e outras normas vigentes.</p><p style=\"color: #dc0000;\">[Acrescente aqui os objetivos para a Política de Proteção de Dados Pessoais que julgar necessário.]</p>"
+    },
+    {
+      "id": 2,
+      "secao": "xxxx",
+      "titulo": "Objetivo da Política",
+      "descricao": "xxxxx em consideração a natureza e a finalidade do órgão ou entidade, descreva os fatores ou circunstâncias que determinam a existência da política de proteção de dados pessoais. Além disso, demonstre os objetivos básicos da política e o que ela pretende alcançar. Exemplo:",
+      "texto": "A"
+    }
+  ] 
+}

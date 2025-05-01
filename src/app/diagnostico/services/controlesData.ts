@@ -10,7 +10,7 @@ interface ControleJson {
 }
 
 export const getControleJsonData = (controleId: number): ControleJson | undefined => {
-  return controlesJson.controles.find(controle => controle.id === controleId);
+  return controlesJson.controles.find((controle): controle is ControleJson => controle.id === controleId);
 };
 
 export const mergeControleData = (dbControle: any): any => {

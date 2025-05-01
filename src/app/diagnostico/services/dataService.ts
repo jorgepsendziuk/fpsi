@@ -104,3 +104,12 @@ export const updateProgramaDetails = async (programaId: number, details: any) =>
     .update(details)
     .eq("id", programaId);
 };
+
+export const fetchProgramaById = async (programaId: number) => {
+  const { data } = await supabaseBrowserClient
+    .from("programa")
+    .select("*")
+    .eq("id", programaId)
+    .single();
+  return data;
+};
