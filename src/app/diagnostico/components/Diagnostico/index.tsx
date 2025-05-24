@@ -9,6 +9,7 @@ import {
   Typography,
   Box,
   Tooltip,
+  Chip,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
@@ -59,13 +60,9 @@ export interface DiagnosticoComponentProps {
   /** Function to handle changes to the NCC level */
   handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
   /** Function to fetch measures for a control */
-  handleMedidaFetch: (controleId: number) => Promise<void>;
-  /** Function to fetch program measures */
-  handleMedidaProgramaFetch: (programaId: number) => Promise<void>;
+  handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to a measure */
-  handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void;
-  /** Function to fetch program controls */
-  handleProgramaControleFetch: (programaId: number) => Promise<void>;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
   responsaveis: any[];
 }
@@ -79,11 +76,11 @@ const DiagnosticoComponent: React.FC<DiagnosticoComponentProps> = ({
   controles,
   maturityScore,
   maturityLabel,
+  state,
   handleControleFetch,
   handleINCCChange,
   handleMedidaFetch,
   handleMedidaChange,
-  state,
   responsaveis,
 }) => {
   const { accordionStyles } = useThemeColors();

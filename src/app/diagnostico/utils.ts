@@ -51,15 +51,21 @@ export const status_plano_acao = [
 
 export const calculateSumOfResponses = (medidas: Medida[], diagnostico: number): number => {
   return medidas.reduce((sum, medida) => {
+    if (medida.resposta === undefined || medida.resposta === null) return sum;
+
     let resposta: Resposta | undefined;
+    const respostaId = typeof medida.resposta === 'string' ? parseInt(medida.resposta, 10) : medida.resposta;
+
     if (diagnostico === 1) {
-      resposta = respostasimnao.find((resposta) => resposta.id === medida.resposta);
+      resposta = respostasimnao.find((resposta) => resposta.id === respostaId);
     } else if (diagnostico === 2 || diagnostico === 3) {
-      resposta = respostas.find((resposta) => resposta.id === medida.resposta);
+      resposta = respostas.find((resposta) => resposta.id === respostaId);
     }
+
+    if (resposta?.peso === null) return sum;
     return sum + (resposta?.peso || 0);
   }, 0);
-}; 
+};
 
 export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, state: State): string | number => {
   const controles = state.controles[diagnosticoId] || [];
@@ -88,13 +94,14 @@ export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, sta
 export const calculateMaturityIndexForControle = (controle: Controle, state: State): string => {
   const medidas = state.medidas[controle.id] || [];
   const sumOfResponses = calculateSumOfResponses(medidas, controle.diagnostico);
-  const numberOfMedidas = medidas.length;
-  return numberOfMedidas > 0 ? 
-    (
-      ((sumOfResponses / numberOfMedidas) / 2) *
-      (1 + (((incc.find((incc) => incc.id === controle.nivel)?.nivel || 0)) * 1 / 5))
-    ).toFixed(2) 
-    : "0";
+  const numberOfMedidas = medidas.filter(m => m.resposta !== undefined && m.resposta !== null).length;
+  
+  if (numberOfMedidas === 0) return "0";
+
+  const baseIndex = sumOfResponses / numberOfMedidas;
+  const inccMultiplier = 1 + (((incc.find((incc) => incc.id === controle.nivel)?.nivel || 0)) * 1 / 5);
+  
+  return ((baseIndex / 2) * inccMultiplier).toFixed(2);
 };
 
 export const getMaturityLabel = (indice: number): string => {

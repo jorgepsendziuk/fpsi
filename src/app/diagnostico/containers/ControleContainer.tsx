@@ -18,14 +18,16 @@ export interface ControleContainerProps {
   controle: Controle;
   /** The diagnostic this control belongs to */
   diagnostico: Diagnostico;
+  /** The program ID */
+  programaId: number;
   /** Application state */
   state: any;
   /** Function to handle changes to the NCC level */
   handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
   /** Function to fetch measures for this control */
-  handleMedidaFetch: (controleId: number) => Promise<void>;
+  handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to a measure */
-  handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
   responsaveis: any[];
 }
@@ -36,6 +38,7 @@ export interface ControleContainerProps {
 const ControleContainer: React.FC<ControleContainerProps> = ({
   controle,
   diagnostico,
+  programaId,
   state,
   handleINCCChange,
   handleMedidaFetch,
@@ -57,19 +60,27 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
     const loadMedidas = async () => {
       // Only fetch if we don't already have the data
       if (!state.medidas || !state.medidas[controle.id] || state.medidas[controle.id].length === 0) {
-        await handleMedidaFetch(controle.id);
+        await handleMedidaFetch(controle.id, programaId);
       }
     };
     
     loadMedidas();
-  }, [controle.id, handleMedidaFetch, state.medidas]);
+  }, [controle.id, programaId, handleMedidaFetch, state.medidas]);
 
   /**
    * Calculate the maturity index for this control
    */
   const calculateMaturityIndex = (controle: Controle) => {
-    return calculateMaturityIndexForControle(controle, state);
+    console.log('Chamando cálculo de maturidade para controle', controle.id);
+    const result = calculateMaturityIndexForControle(controle, state);
+    console.log('Medidas usadas no cálculo para controle', controle.id, state.medidas[controle.id] || []);
+    console.log('Maturidade calculada:', result);
+    return result;
   };
+
+  // Log na renderização do container
+  console.log('Renderizando ControleContainer para controle', controle.id);
+  calculateMaturityIndex(controle);
 
   return (
     <ControleComponent

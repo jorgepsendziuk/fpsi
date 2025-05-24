@@ -45,8 +45,10 @@ export interface MedidaProps {
   medida: MedidaType;
   /** The parent control */
   controle: Controle;
+  /** The program ID */
+  programaId: number;
   /** Function to handle changes to the measure */
-  handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
   responsaveis: Responsavel[];
   /** Current values for text fields */
@@ -63,6 +65,7 @@ export interface MedidaProps {
 const MedidaComponent: React.FC<MedidaProps> = ({
   medida,
   controle,
+  programaId,
   handleMedidaChange,
   responsaveis,
   localValues,
@@ -70,6 +73,9 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   handleSaveField,
 }) => {
   const { accordionStyles } = useThemeColors();
+
+  // Apenas log de renderização para depuração
+  console.log('Renderizando MedidaComponent para medida', medida);
 
   return (
     <Accordion 
@@ -113,7 +119,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               aria-label={medida.id_medida}
               onClick={(event) => event.stopPropagation()}
               onChange={(event) =>
-                handleMedidaChange(medida.id, controle.id, "resposta", event.target.value)
+                handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
               }
             >
               {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
@@ -158,7 +164,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 value={medida.responsavel || ""}
                 label="Responsável"
                 onChange={(event) =>
-                  handleMedidaChange(medida.id, controle.id, "responsavel", event.target.value)
+                  handleMedidaChange(medida.id, controle.id, programaId, "responsavel", event.target.value)
                 }
               >
                 <MenuItem value="">
@@ -181,7 +187,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               value={medida.previsao_inicio ? dayjs(medida.previsao_inicio) : null}
               label="Data de início prevista"
               onChange={(date) => 
-                handleMedidaChange(medida.id, controle.id, "previsao_inicio", date ? date.format('YYYY-MM-DD') : null)
+                handleMedidaChange(medida.id, controle.id, programaId, "previsao_inicio", date ? date.format('YYYY-MM-DD') : null)
               }
             />
           </Grid>
@@ -193,7 +199,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               value={medida.previsao_fim ? dayjs(medida.previsao_fim) : null}
               label="Data de conclusão prevista"
               onChange={(date) => 
-                handleMedidaChange(medida.id, controle.id, "previsao_fim", date ? date.format('YYYY-MM-DD') : null)
+                handleMedidaChange(medida.id, controle.id, programaId, "previsao_fim", date ? date.format('YYYY-MM-DD') : null)
               }
             />
           </Grid>
@@ -208,7 +214,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 value={medida.status_medida || ""}
                 label="Status da Medida"
                 onChange={(event) =>
-                  handleMedidaChange(medida.id, controle.id, "status_medida", event.target.value)
+                  handleMedidaChange(medida.id, controle.id, programaId, "status_medida", event.target.value)
                 }
               >
                 {status_medida.map((status) => (

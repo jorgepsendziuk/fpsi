@@ -18,8 +18,10 @@ export interface MedidaContainerProps {
   medida: Medida;
   /** The parent control */
   controle: Controle;
+  /** The program ID */
+  programaId: number;
   /** Function to handle changes to the measure */
-  handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
   responsaveis: Responsavel[];
 }
@@ -30,6 +32,7 @@ export interface MedidaContainerProps {
 const MedidaContainer: React.FC<MedidaContainerProps> = ({
   medida,
   controle,
+  programaId,
   handleMedidaChange,
   responsaveis,
 }) => {
@@ -99,7 +102,7 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
   useEffect(() => {
     const newStatus = determineStatusPlanoAcao();
     if (newStatus !== medida.status_plano_acao) {
-      handleMedidaChange(medida.id, controle.id, "status_plano_acao", newStatus);
+      handleMedidaChange(medida.id, controle.id, programaId, "status_plano_acao", newStatus);
     }
   }, [medida.previsao_inicio, medida.previsao_fim, medida.status_medida]);
 
@@ -114,13 +117,14 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
    * Handles saving a field value by calling the parent handler
    */
   const handleSaveField = (field: MedidaTextField) => {
-    handleMedidaChange(medida.id, controle.id, field, localValues[field]);
+    handleMedidaChange(medida.id, controle.id, programaId, field, localValues[field]);
   };
 
   return (
     <MedidaComponent
       medida={medida}
       controle={controle}
+      programaId={programaId}
       handleMedidaChange={handleMedidaChange}
       responsaveis={responsaveis}
       localValues={localValues} 

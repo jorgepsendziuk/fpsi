@@ -31,13 +31,9 @@ export interface DiagnosticoContainerProps {
   /** Function to handle changes to the NCC level */
   handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
   /** Function to fetch measures for a control */
-  handleMedidaFetch: (controleId: number) => Promise<void>;
-  /** Function to fetch program measures */
-  handleMedidaProgramaFetch: (programaId: number) => Promise<void>;
+  handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to a measure */
-  handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void;
-  /** Function to fetch program controls */
-  handleProgramaControleFetch: (programaId: number) => Promise<void>;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
   responsaveis: any[];
 }
@@ -55,9 +51,7 @@ const DiagnosticoContainer: React.FC<DiagnosticoContainerProps> = ({
   handleControleFetch,
   handleINCCChange,
   handleMedidaFetch,
-  handleMedidaProgramaFetch,
   handleMedidaChange,
-  handleProgramaControleFetch,
   responsaveis,
 }) => {
   const [controles, setControles] = useState<any[]>(propControles || []);
@@ -103,9 +97,7 @@ const DiagnosticoContainer: React.FC<DiagnosticoContainerProps> = ({
       handleControleFetch={handleControleFetch}
       handleINCCChange={handleINCCChange}
       handleMedidaFetch={handleMedidaFetch}
-      handleMedidaProgramaFetch={handleMedidaProgramaFetch}
       handleMedidaChange={handleMedidaChange}
-      handleProgramaControleFetch={handleProgramaControleFetch}
       responsaveis={responsaveis}
     />
   );

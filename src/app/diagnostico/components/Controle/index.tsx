@@ -25,7 +25,7 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 
 // Types
-import { Controle, Medida, Diagnostico } from '../../types';
+import { Controle, Medida, Diagnostico, Responsavel } from '../../types';
 
 // Components
 import MedidaContainer from '../../containers/MedidaContainer';
@@ -45,16 +45,16 @@ export interface ControleProps {
   controle: Controle;
   /** The diagnostic this control belongs to */
   diagnostico: Diagnostico;
-  /** List of measures for this control */
+  /** The measures for this control */
   medidas: Medida[];
   /** List of available responsibles */
-  responsaveis: any[];
+  responsaveis: Responsavel[];
   /** Function to handle changes to the NCC level */
   handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
   /** Function to handle changes to a measure */
-  handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** Function to calculate the maturity index */
-  calculateMaturityIndex: (controle: Controle) => string | number;
+  calculateMaturityIndex: (controle: Controle) => number;
 }
 
 type InfoType = 'texto' | 'por_que_implementar' | 'fique_atento' | 'aplicabilidade_privacidade';
@@ -287,6 +287,7 @@ const ControleComponent: React.FC<ControleProps> = ({
               key={medida.id}
               medida={medida}
               controle={controle}
+              programaId={controle.programa}
               handleMedidaChange={handleMedidaChange}
               responsaveis={responsaveis}
             />

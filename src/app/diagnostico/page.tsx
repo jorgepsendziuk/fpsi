@@ -12,6 +12,7 @@ import * as dataService from "./services/dataService";
 import ProgramHeader from "./components/ProgramHeader";
 import ProgramCard from "./components/ProgramCard";
 import { useMediaQuery } from '@mui/material';
+import { Programa } from './types';
 
 const DiagnosticoPage = () => {
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -21,6 +22,7 @@ const DiagnosticoPage = () => {
   const [expanded, setExpanded] = useState<string | false>(false);
   const [orgaos, setOrgaos] = useState<any[]>([]);
   const [editedValues, setEditedValues] = useState<{[key: number]: {cnpj?: string, razao_social?: string}}>({});
+  const [programa, setPrograma] = useState<Programa | null>(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -37,12 +39,25 @@ const DiagnosticoPage = () => {
     loadInitialData();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const programaId = 1; // TODO: Get this from URL or context
+      const programas = await dataService.fetchProgramas();
+      const programa = programas.find(p => p.id === programaId);
+      if (programa) {
+        setPrograma(programa);
+        await fetchControlesAndMedidas(programaId);
+      }
+    };
+    fetchData();
+  }, []);
+
   const fetchControlesAndMedidas = async (programaId: number) => {
     const diagnosticos = await dataService.fetchDiagnosticos();
     for (const diagnostico of diagnosticos) {
       const controles = await dataService.fetchControles(diagnostico.id, programaId);
       for (const controle of controles) {
-        await handleMedidaFetch(controle.id);
+        await handleMedidaFetch(controle.id, programaId);
       }
       await handleControleFetch(diagnostico.id, programaId);
     }
@@ -53,8 +68,8 @@ const DiagnosticoPage = () => {
     dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
   };
 
-  const handleMedidaFetch = async (controleId: number): Promise<void> => {
-    const data = await dataService.fetchMedidas(controleId);
+  const handleMedidaFetch = async (controleId: number, programaId: number): Promise<void> => {
+    const data = await dataService.fetchMedidas(controleId, programaId);
     dispatch({ type: "SET_MEDIDAS", controleId, payload: data });
   };
 
@@ -71,10 +86,11 @@ const DiagnosticoPage = () => {
     setToastSeverity("success");
   };
 
-  const handleMedidaChange = async (medidaId: number, controleId: number, field: string, value: any) => {
-    const { error } = await dataService.updateMedida(medidaId, field, value);
+  const handleMedidaChange = async (medidaId: number, controleId: number, programaId: number, field: string, value: any) => {
+    const { error } = await dataService.updateMedida(medidaId, programaId, field, value);
 
     if (!error) {
+      // First update the state with the new value
       dispatch({
         type: "UPDATE_MEDIDA",
         medidaId,
@@ -82,6 +98,20 @@ const DiagnosticoPage = () => {
         field,
         value,
       });
+
+      // Then refetch measures to ensure we have the latest data
+      await handleMedidaFetch(controleId, programaId);
+
+      // Find the diagnosticoId for this controle
+      const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
+        state.controles[key].some((c: any) => c.id === controleId)
+      ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
+
+      if (diagnosticoId) {
+        // Refetch controles to trigger maturity recalculation
+        await handleControleFetch(diagnosticoId, programaId);
+      }
+
       setToastMessage("Resposta atualizada");
       setToastSeverity("success");
     } else {

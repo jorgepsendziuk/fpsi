@@ -16,17 +16,23 @@ interface DiagnosticoSectionProps {
   programa: any;
   state: any;
   fetchControlesAndMedidas: (programaId: number) => Promise<void>;
-  handleControleFetch: any;
-  handleINCCChange: any;
-  handleMedidaFetch: any;
-  handleMedidaChange: any;
+  handleControleFetch: (diagnosticoId: number, programaId: number) => Promise<void>;
+  handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
+  handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   responsaveis: any[];
 }
 
-const DiagnosticoSection = ({ 
-  programa, state, fetchControlesAndMedidas, handleControleFetch, 
-  handleINCCChange, handleMedidaFetch, handleMedidaChange, responsaveis 
-}: DiagnosticoSectionProps) => {
+const DiagnosticoSection: React.FC<DiagnosticoSectionProps> = ({
+  programa,
+  state,
+  fetchControlesAndMedidas,
+  handleControleFetch,
+  handleINCCChange,
+  handleMedidaFetch,
+  handleMedidaChange,
+  responsaveis,
+}) => {
   const { 
     accordionStyles 
   } = useThemeColors();

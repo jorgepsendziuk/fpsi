@@ -39,19 +39,43 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
     .from("controle")
     .select("*")
     .eq("diagnostico", diagnosticoId)
-    .eq("programa", programaId)
     .order("id", { ascending: true });
   
   return data ? data.map(controle => mergeControleData(controle)) : [];
 };
 
-export const fetchMedidas = async (controleId: number): Promise<any[]> => {
-  const { data } = await supabaseBrowserClient
+export const fetchMedidas = async (controleId: number, programaId: number): Promise<any[]> => {
+  // First fetch the static measure data
+  const { data: medidasData } = await supabaseBrowserClient
     .from("medida")
     .select("*")
     .eq("id_controle", controleId)
     .order("id_medida", { ascending: true });
-  return data || [];
+
+  // Then fetch the program-specific responses
+  const { data: programaMedidasData } = await supabaseBrowserClient
+    .from("programa_medida")
+    .select("*")
+    .eq("programa", programaId)
+    .in("medida", medidasData?.map(m => m.id) || []);
+
+  // Merge the data
+  return medidasData?.map(medida => {
+    const programaMedida = programaMedidasData?.find(pm => pm.medida === medida.id);
+    return {
+      ...medida,
+      resposta: programaMedida?.resposta,
+      justificativa: programaMedida?.justificativa,
+      observacao_orgao: programaMedida?.observacao_orgao,
+      responsavel: programaMedida?.responsavel,
+      previsao_inicio: programaMedida?.previsao_inicio,
+      previsao_fim: programaMedida?.previsao_fim,
+      nova_resposta: programaMedida?.nova_resposta,
+      encaminhamento_interno: programaMedida?.encaminhamento_interno,
+      status_medida: programaMedida?.status_medida,
+      status_plano_acao: programaMedida?.status_plano_acao
+    };
+  }) || [];
 };
 
 export const updateControleNivel = async (controleId: number, newValue: number) => {
@@ -61,12 +85,33 @@ export const updateControleNivel = async (controleId: number, newValue: number) 
     .eq("id", controleId);
 };
 
-export const updateMedida = async (medidaId: number, field: string, value: any) => {
+export const updateMedida = async (medidaId: number, programaId: number, field: string, value: any) => {
+  // Check if a record exists in programa_medida
+  const { data: existingRecord } = await supabaseBrowserClient
+    .from("programa_medida")
+    .select("id")
+    .eq("medida", medidaId)
+    .eq("programa", programaId)
+    .single();
+
   const updatePayload = { [field]: value };
-  return await supabaseBrowserClient
-    .from("medida")
-    .update(updatePayload)
-    .eq("id", medidaId);
+
+  if (existingRecord) {
+    // Update existing record
+    return await supabaseBrowserClient
+      .from("programa_medida")
+      .update(updatePayload)
+      .eq("id", existingRecord.id);
+  } else {
+    // Create new record
+    return await supabaseBrowserClient
+      .from("programa_medida")
+      .insert({
+        medida: medidaId,
+        programa: programaId,
+        ...updatePayload
+      });
+  }
 };
 
 export const updateProgramaSetor = async (programaId: number, setor: number) => {
