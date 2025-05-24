@@ -46,10 +46,10 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia }: 
           },
         }}
       >
-        <Typography variant="h4" component="h2" sx={{ mb: 1 }}>
-          {section.id} - {section.secao}
+        <Typography variant="h4" component="h2" sx={{ mb: 1, fontSize: '1.6rem', fontWeight: 'bold' }}>
+          {section.secao}
         </Typography>
-        <Typography variant="h5" component="h3" sx={{ color: 'text.secondary' }}>
+        <Typography variant="h5" component="h3" sx={{ color: 'text.secondary', fontSize: '1.3rem' }}>
           {section.titulo}
         </Typography>
       </AccordionSummary>

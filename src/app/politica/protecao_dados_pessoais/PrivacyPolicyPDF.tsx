@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { useState, useEffect } from 'react';
 
@@ -67,97 +68,67 @@ const styles = StyleSheet.create({
   },
 });
 
-function parseHTML(html: string): JSX.Element[] {
+const processNode = (node: Node, key: string): React.ReactNode | React.ReactNode[] => {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent?.trim();
+    if (text) {
+      return <Text key={key} style={styles.content}>{text}</Text>;
+    }
+    return <></>;
+  } else if (node.nodeType === Node.ELEMENT_NODE) {
+    const element = node as HTMLElement;
+    
+    switch (element.tagName.toLowerCase()) {
+      case 'p':
+        return (
+          <View key={key} style={{ marginBottom: 8 }}>
+            {Array.from(element.childNodes).map((child, i) => 
+              processNode(child, `${key}-${i}`)
+            )}
+          </View>
+        );
+      case 'strong':
+      case 'b':
+        return <Text key={key} style={[styles.content, styles.bold]}>{element.textContent}</Text>;
+      case 'em':
+      case 'i':
+        return <Text key={key} style={[styles.content, styles.italic]}>{element.textContent}</Text>;
+      case 'u':
+        return <Text key={key} style={[styles.content, styles.underline]}>{element.textContent}</Text>;
+      case 'ul':
+      case 'ol':
+        return (
+          <View key={key} style={styles.list}>
+            {Array.from(element.children).map((li, i) => (
+              <View key={`${key}-${i}`} style={styles.listItem}>
+                <Text style={styles.content}>
+                  {element.tagName.toLowerCase() === 'ol' ? `${i + 1}. ` : '• '}
+                  {li.textContent}
+                </Text>
+              </View>
+            ))}
+          </View>
+        );
+      case 'br':
+        return <Text key={key} style={styles.content}>{'\n'}</Text>;
+      default:
+        return Array.from(element.childNodes).map((child, i) => 
+          processNode(child, `${key}-${i}`)
+        );
+    }
+  }
+  return <></>;
+};
+
+function parseHTML(html: string): React.ReactNode[] {
   if (typeof window === 'undefined') return [];
 
   try {
-    // Create a temporary div to parse HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
-
-    const elements: JSX.Element[] = [];
-
-    function processNode(node: Node, key: string): void {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent?.trim();
-        if (text) {
-          elements.push(
-            <Text key={key} style={styles.content}>
-              {text}
-            </Text>
-          );
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const element = node as HTMLElement;
-        
-        switch (element.tagName.toLowerCase()) {
-          case 'p':
-            elements.push(
-              <View key={key} style={{ marginBottom: 8 }}>
-                {Array.from(element.childNodes).map((child, i) => 
-                  processNode(child, `${key}-${i}`)
-                )}
-              </View>
-            );
-            break;
-          case 'strong':
-          case 'b':
-            elements.push(
-              <Text key={key} style={[styles.content, styles.bold]}>
-                {element.textContent}
-              </Text>
-            );
-            break;
-          case 'em':
-          case 'i':
-            elements.push(
-              <Text key={key} style={[styles.content, styles.italic]}>
-                {element.textContent}
-              </Text>
-            );
-            break;
-          case 'u':
-            elements.push(
-              <Text key={key} style={[styles.content, styles.underline]}>
-                {element.textContent}
-              </Text>
-            );
-            break;
-          case 'ul':
-          case 'ol':
-            elements.push(
-              <View key={key} style={styles.list}>
-                {Array.from(element.children).map((li, i) => (
-                  <View key={`${key}-${i}`} style={styles.listItem}>
-                    <Text style={styles.content}>
-                      {element.tagName.toLowerCase() === 'ol' ? `${i + 1}. ` : '• '}
-                      {li.textContent}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            );
-            break;
-          case 'br':
-            elements.push(
-              <Text key={key} style={styles.content}>
-                {'\n'}
-              </Text>
-            );
-            break;
-          default:
-            Array.from(element.childNodes).forEach((child, i) => 
-              processNode(child, `${key}-${i}`)
-            );
-        }
-      }
-    }
-
-    Array.from(tempDiv.childNodes).forEach((node, i) => 
+    return Array.from(tempDiv.childNodes).map((node, i) => 
       processNode(node, `node-${i}`)
     );
-
-    return elements;
   } catch (error) {
     console.error('Error parsing HTML:', error);
     return [];
@@ -178,11 +149,10 @@ export default function PrivacyPolicyPDF({ sections }: PrivacyPolicyPDFProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Política de Proteção de Dados Pessoais</Text>
         {sections.map((section) => (
           <View key={section.id} style={styles.section}>
             <Text style={styles.sectionTitle}>
-              {section.id} - {section.secao}
+              {section.secao.replace(/^\d+\s*-\s*/, '')}
             </Text>
             <Text style={styles.description}>{section.descricao}</Text>
             {section.texto && (

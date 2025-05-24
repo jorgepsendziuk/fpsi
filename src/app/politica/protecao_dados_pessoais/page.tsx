@@ -22,7 +22,7 @@ export default function ProtecaoDadosPessoais() {
       id: section.id,
       secao: section.secao,
       titulo: section.titulo,
-      descricao: section.descricao,
+      descricao: section.descricao ?? '',
       texto: section.texto ?? ''
     }))
   );
@@ -63,24 +63,25 @@ export default function ProtecaoDadosPessoais() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', py: 4 }}>
-      <Container maxWidth="lg">
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', py: 2 }}>
+      <Container maxWidth="lg" sx={{ px: 2 }}>
+        <Paper elevation={3} sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography 
-              variant="h3" 
+              variant="h4" 
               component="h1" 
               sx={{ 
-                pb: 2, 
+                pb: 1.5, 
                 borderBottom: '2px solid',
-                borderColor: 'divider'
+                borderColor: 'divider',
+                fontSize: '1.8rem'
               }}
             >
-              Política de Proteção de Dados Pessoais
+              Editor de Políticas
             </Typography>
             <PDFDownloadButton sections={sections} nomeFantasia={programa?.nome_fantasia || ''} />
           </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {sections.map(section => (
               <SectionDisplay
                 key={section.id}
