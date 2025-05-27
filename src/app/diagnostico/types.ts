@@ -31,16 +31,27 @@ export interface Diagnostico {
 } 
 
 export interface Controle {
+  // Static fields from controle table
   id: number;
   diagnostico: number;
-  programa: number;
   numero: number;
   nome: string;
-  nivel: number;
   texto?: string;
   por_que_implementar?: string;
   fique_atento?: string | null;
   aplicabilidade_privacidade?: string;
+
+  // Dynamic fields from programa_controle table (optional when not joined)
+  programa_controle_id?: number; // ID from programa_controle table for updates
+  programa?: number;
+  nivel?: number;
+}
+
+export interface ProgramaControle {
+  id: number;
+  programa: number;
+  controle: number;
+  nivel?: number;
 }
 
 export type Medida = {
@@ -110,6 +121,7 @@ export interface Action {
   programaId?: number;
   diagnosticoId?: number;
   controleId?: number;
+  programaControleId?: number;
   medidaId?: number;
   field?: string;
   value?: any;

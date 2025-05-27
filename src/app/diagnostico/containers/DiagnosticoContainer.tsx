@@ -29,7 +29,7 @@ export interface DiagnosticoContainerProps {
   /** Function to fetch controls for this diagnostic */
   handleControleFetch: (diagnosticoId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to the NCC level */
-  handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
   /** Function to fetch measures for a control */
   handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to a measure */

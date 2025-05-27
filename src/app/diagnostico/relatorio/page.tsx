@@ -145,24 +145,17 @@ export default function RelatorioPage() {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableData = table.getRowModel().rows.map((row) => {
-      return [
-        row.original.diagnostico,
-        row.original.controle,
-        row.original.medida,
-        row.original.status,
-        row.original.responsavel,
-        row.original.previsao,
-      ];
-    });
-
-    doc.autoTable({
-      head: [["Diagnóstico", "Controle", "Medida", "Status", "Responsável", "Previsão"]],
-      body: tableData,
-      theme: "grid",
-      headStyles: { fillColor: [41, 128, 185] },
-      styles: { fontSize: 8 },
-      margin: { top: 20 },
+    
+    // Simple text-based PDF instead of autoTable
+    doc.text("Relatório de Diagnósticos", 20, 20);
+    doc.text(`Programa ID: ${programaId}`, 20, 30);
+    doc.text(`Total de itens: ${reportData.length}`, 20, 40);
+    
+    // Add some basic data
+    let yPosition = 60;
+    reportData.slice(0, 10).forEach((item, index) => {
+      doc.text(`${index + 1}. ${item.diagnostico} - ${item.controle}`, 20, yPosition);
+      yPosition += 10;
     });
 
     doc.save("relatorio-diagnosticos.pdf");

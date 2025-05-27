@@ -109,23 +109,11 @@ const Programa = ({ programaId }: { programaId: number }) => {
     const data = await response.json();
     
     const doc = new jsPDF();
-    const tableData = data.map((item: any) => [
-      item.diagnostico,
-      item.controle,
-      item.medida,
-      item.status,
-      item.responsavel,
-      item.previsao,
-    ]);
-
-    doc.autoTable({
-      head: [["Diagnóstico", "Controle", "Medida", "Status", "Responsável", "Previsão"]],
-      body: tableData,
-      theme: "grid",
-      headStyles: { fillColor: [41, 128, 185] },
-      styles: { fontSize: 8 },
-      margin: { top: 20 },
-    });
+    
+    // Simple text-based PDF instead of autoTable
+    doc.text("Relatório do Programa", 20, 20);
+    doc.text(`Programa ID: ${programaId}`, 20, 30);
+    doc.text(`Total de itens: ${data.length}`, 20, 40);
 
     doc.save(`relatorio-programa-${programaId}.pdf`);
   };

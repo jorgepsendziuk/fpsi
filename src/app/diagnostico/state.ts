@@ -51,7 +51,7 @@ export function reducer(state: State, action: Action): State {
         controles: {
           ...state.controles,
           [action.diagnosticoId!]: state.controles[action.diagnosticoId!].map((controle: any) =>
-            controle.id === action.controleId
+            controle.programa_controle_id === action.programaControleId
               ? { ...controle, [action.field!]: action.value }
               : controle
           ),

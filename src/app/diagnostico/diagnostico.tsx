@@ -18,11 +18,9 @@ interface DiagnosticoProps {
   maturityScore: string | number;
   maturityLabel: string;
   handleControleFetch: (diagnosticoId: number, programaId: number) => Promise<void>;
-  handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
-  handleMedidaFetch: (controleId: number) => Promise<void>;
-  handleMedidaProgramaFetch: (programaId: number) => Promise<void>;
-  handleMedidaChange: (medidaId: number, controleId: number, field: string, value: any) => void;
-  handleProgramaControleFetch: (programaId: number) => Promise<void>;
+  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
+  handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
+  handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   responsaveis: any[];
 }
 

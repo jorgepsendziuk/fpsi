@@ -130,15 +130,9 @@ function drawText(
 export async function POST(request: Request) {
   try {
     const { sections } = await request.json();
-    console.log('Recebido na API:', sections);
-
-    console.log('Received sections:', JSON.stringify(sections, null, 2));
 
     if (!sections || !Array.isArray(sections)) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Invalid sections data' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return NextResponse.json({ error: 'Sections array is required' }, { status: 400 });
     }
 
     // Create a new PDF document
@@ -173,11 +167,6 @@ export async function POST(request: Request) {
     // Add each section
     for (const section of sections) {
       try {
-        console.log(`Processing section ${section.id}:`, {
-          secao: section.secao,
-          texto: section.texto
-        });
-
         // Add section ID and name
         const sectionHeader = `${section.id} - ${section.secao}`;
         page.drawText(sectionHeader, {
@@ -197,7 +186,6 @@ export async function POST(request: Request) {
         if (section.texto !== undefined) {
           // Process HTML content
           const decodedText = decodeHtmlEntities(section.texto ?? '');
-          console.log(`Decoded text for section ${section.id}:`, decodedText);
           
           // Draw text with basic formatting
           y = drawText(

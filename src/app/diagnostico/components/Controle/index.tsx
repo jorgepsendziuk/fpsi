@@ -47,14 +47,16 @@ export interface ControleProps {
   diagnostico: Diagnostico;
   /** The measures for this control */
   medidas: Medida[];
+  /** The program ID */
+  programaId: number;
   /** List of available responsibles */
   responsaveis: Responsavel[];
   /** Function to handle changes to the NCC level */
-  handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
   /** Function to handle changes to a measure */
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** Function to calculate the maturity index */
-  calculateMaturityIndex: (controle: Controle) => number;
+  calculateMaturityIndex: (controle: Controle) => string;
 }
 
 type InfoType = 'texto' | 'por_que_implementar' | 'fique_atento' | 'aplicabilidade_privacidade';
@@ -102,6 +104,7 @@ const ControleComponent: React.FC<ControleProps> = ({
   controle,
   diagnostico,
   medidas,
+  programaId,
   responsaveis,
   handleINCCChange,
   handleMedidaChange,
@@ -148,9 +151,11 @@ const ControleComponent: React.FC<ControleProps> = ({
               sx={controleStyles.niveisList}
               value={controle.nivel || ""}
               onClick={(event) => event.stopPropagation()}
-              onChange={(event) =>
-                handleINCCChange(controle.id, diagnostico.id, parseInt(event.target.value.toString(), 10))
-              }
+              onChange={(event) => {
+                if (controle.programa_controle_id) {
+                  handleINCCChange(controle.programa_controle_id, diagnostico.id, parseInt(event.target.value.toString(), 10));
+                }
+              }}
             >
               {incc.map((incc) => (
                 <MenuItem key={incc.id} value={incc.id}>
@@ -287,7 +292,7 @@ const ControleComponent: React.FC<ControleProps> = ({
               key={medida.id}
               medida={medida}
               controle={controle}
-              programaId={controle.programa}
+              programaId={programaId}
               handleMedidaChange={handleMedidaChange}
               responsaveis={responsaveis}
             />

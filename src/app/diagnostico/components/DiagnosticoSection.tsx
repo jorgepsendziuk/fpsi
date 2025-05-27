@@ -17,7 +17,7 @@ interface DiagnosticoSectionProps {
   state: any;
   fetchControlesAndMedidas: (programaId: number) => Promise<void>;
   handleControleFetch: (diagnosticoId: number, programaId: number) => Promise<void>;
-  handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
   handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   responsaveis: any[];
@@ -81,8 +81,6 @@ const DiagnosticoSection: React.FC<DiagnosticoSectionProps> = ({
               handleINCCChange={handleINCCChange}
               handleMedidaFetch={handleMedidaFetch}
               handleMedidaChange={handleMedidaChange}
-              handleMedidaProgramaFetch={async (programaId: number) => Promise.resolve()}
-              handleProgramaControleFetch={async (programaId: number) => Promise.resolve()}
               responsaveis={responsaveis}
             />
           );

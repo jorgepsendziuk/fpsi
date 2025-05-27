@@ -74,9 +74,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
 }) => {
   const { accordionStyles } = useThemeColors();
 
-  // Apenas log de renderização para depuração
-  console.log('Renderizando MedidaComponent para medida', medida);
-
   return (
     <Accordion 
       slotProps={{ transition: { unmountOnExit: true } }}

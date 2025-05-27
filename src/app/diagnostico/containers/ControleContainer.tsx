@@ -23,7 +23,7 @@ export interface ControleContainerProps {
   /** Application state */
   state: any;
   /** Function to handle changes to the NCC level */
-  handleINCCChange: (controleId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
   /** Function to fetch measures for this control */
   handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to a measure */
@@ -71,22 +71,16 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
    * Calculate the maturity index for this control
    */
   const calculateMaturityIndex = (controle: Controle) => {
-    console.log('Chamando cálculo de maturidade para controle', controle.id);
     const result = calculateMaturityIndexForControle(controle, state);
-    console.log('Medidas usadas no cálculo para controle', controle.id, state.medidas[controle.id] || []);
-    console.log('Maturidade calculada:', result);
     return result;
   };
-
-  // Log na renderização do container
-  console.log('Renderizando ControleContainer para controle', controle.id);
-  calculateMaturityIndex(controle);
 
   return (
     <ControleComponent
       controle={controle}
       diagnostico={diagnostico}
       medidas={medidas}
+      programaId={programaId}
       responsaveis={responsaveis}
       handleINCCChange={handleINCCChange}
       handleMedidaChange={handleMedidaChange}

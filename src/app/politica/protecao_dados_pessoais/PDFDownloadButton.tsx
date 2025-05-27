@@ -22,16 +22,14 @@ export default function PDFDownloadButton({ sections, nomeFantasia }: PDFDownloa
     setIsGenerating(true);
     setError(null);
     
-    const sectionsWithNome = sections.map(section => ({
-      ...section,
-      texto: section.texto
-        ? section.texto.replace(/\[Órgão ou Entidade\]/g, nomeFantasia)
-        : section.texto
-    }));
-
-    console.log('Enviando para API:', sectionsWithNome);
-
     try {
+      const sectionsWithNome = sections.map(section => ({
+        ...section,
+        texto: section.texto
+          ? section.texto.replace(/\[Órgão ou Entidade\]/g, nomeFantasia)
+          : section.texto
+      }));
+
       const response = await fetch('/api/generate-pdf', {
         method: 'POST',
         headers: {

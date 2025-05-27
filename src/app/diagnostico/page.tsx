@@ -73,12 +73,12 @@ const DiagnosticoPage = () => {
     dispatch({ type: "SET_MEDIDAS", controleId, payload: data });
   };
 
-  const handleINCCChange = async (controleId: number, diagnosticoId: number, newValue: number): Promise<void> => {
-    await dataService.updateControleNivel(controleId, newValue);
+  const handleINCCChange = async (programaControleId: number, diagnosticoId: number, newValue: number): Promise<void> => {
+    await dataService.updateControleNivel(programaControleId, newValue);
     dispatch({
       type: "UPDATE_CONTROLE",
       diagnosticoId,
-      controleId,
+      programaControleId,
       field: "nivel",
       value: newValue,
     });
@@ -136,6 +136,9 @@ const DiagnosticoPage = () => {
     const { data, error } = await dataService.createPrograma();
 
     if (!error && data) {
+      // Create programa_controle records for all existing controles
+      await dataService.createProgramaControlesForProgram(data.id);
+      
       dispatch({ type: "SET_PROGRAMAS", payload: [...state.programas, data] });
       setToastMessage("Programa criado com sucesso");
       setToastSeverity("success");

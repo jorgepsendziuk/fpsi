@@ -94,7 +94,7 @@ export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, sta
 export const calculateMaturityIndexForControle = (controle: Controle, state: State): string => {
   const medidas = state.medidas[controle.id] || [];
   const sumOfResponses = calculateSumOfResponses(medidas, controle.diagnostico);
-  const numberOfMedidas = medidas.filter(m => m.resposta !== undefined && m.resposta !== null).length;
+  const numberOfMedidas = medidas.filter((m: any) => m.resposta !== undefined && m.resposta !== null).length;
   
   if (numberOfMedidas === 0) return "0";
 

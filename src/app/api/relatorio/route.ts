@@ -27,7 +27,7 @@ export async function GET(request: Request) {
       .select("*");
 
     // Processa os dados no mesmo formato do relatório
-    const reportData = [];
+    const reportData: any[] = [];
     
     if (diagnosticos && controles && medidas) {
       diagnosticos.forEach((diagnostico: any) => {

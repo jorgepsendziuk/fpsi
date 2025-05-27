@@ -37,11 +37,27 @@ export const fetchResponsaveis = async (programaId: number) => {
 export const fetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {
   const { data } = await supabaseBrowserClient
     .from("controle")
-    .select("*")
+    .select(`
+      *,
+      programa_controle!inner(
+        id,
+        nivel
+      )
+    `)
     .eq("diagnostico", diagnosticoId)
+    .eq("programa_controle.programa", programaId)
     .order("id", { ascending: true });
   
-  return data ? data.map(controle => mergeControleData(controle)) : [];
+  // Flatten the data structure to maintain compatibility
+  const flattenedData = data?.map(controle => ({
+    ...controle,
+    programa_controle_id: controle.programa_controle[0]?.id,
+    programa: programaId,
+    nivel: controle.programa_controle[0]?.nivel,
+    programa_controle: undefined // Remove the nested object
+  })) || [];
+
+  return flattenedData.map(controle => mergeControleData(controle));
 };
 
 export const fetchMedidas = async (controleId: number, programaId: number): Promise<any[]> => {
@@ -78,11 +94,11 @@ export const fetchMedidas = async (controleId: number, programaId: number): Prom
   }) || [];
 };
 
-export const updateControleNivel = async (controleId: number, newValue: number) => {
+export const updateControleNivel = async (programaControleId: number, newValue: number) => {
   return await supabaseBrowserClient
-    .from("controle")
+    .from("programa_controle")
     .update({ nivel: newValue })
-    .eq("id", controleId);
+    .eq("id", programaControleId);
 };
 
 export const updateMedida = async (medidaId: number, programaId: number, field: string, value: any) => {
@@ -157,4 +173,23 @@ export const fetchProgramaById = async (programaId: number) => {
     .eq("id", programaId)
     .single();
   return data;
+};
+
+export const createProgramaControlesForProgram = async (programaId: number) => {
+  // Get all existing controles
+  const { data: controles } = await supabaseBrowserClient
+    .from("controle")
+    .select("id");
+
+  if (!controles || controles.length === 0) return { data: null, error: null };
+
+  // Create programa_controle records for all controles
+  const programaControles = controles.map(controle => ({
+    programa: programaId,
+    controle: controle.id
+  }));
+
+  return await supabaseBrowserClient
+    .from("programa_controle")
+    .insert(programaControles);
 };
