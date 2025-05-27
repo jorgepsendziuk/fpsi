@@ -234,6 +234,7 @@ const DiagnosticoComponent: React.FC<DiagnosticoComponentProps> = ({
               key={controle.id}
               controle={controle}
               diagnostico={diagnostico}
+              programaId={programa.id}
               state={state}
               handleINCCChange={handleINCCChange}
               handleMedidaFetch={handleMedidaFetch}
