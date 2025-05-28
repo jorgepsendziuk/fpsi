@@ -276,12 +276,11 @@ const ControleComponent: React.FC<ControleProps> = ({
                   sx={{ 
                     lineHeight: 1.6,
                     color: '#000000 !important',
-                    fontStyle: 'italic',
                     display: 'block',
                     fontSize: { xs: '0.875rem', md: '1rem' }
                   }}
                 >
-                  &ldquo;{controle[selectedTab] || 'Não há informações disponíveis'}&rdquo;
+                  {controle[selectedTab] || 'Nenhuma informação registrada para este tópico'}
                 </Typography>
               </Box>
             </Box>
