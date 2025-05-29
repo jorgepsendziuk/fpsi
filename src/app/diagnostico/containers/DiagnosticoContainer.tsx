@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 
 // Types
-import { Diagnostico, Programa, Controle } from '../types';
+import { Diagnostico, Programa, Controle, State } from '../types';
 
 // Components
 import DiagnosticoComponent from '../components/DiagnosticoComponent';
@@ -20,12 +20,7 @@ export interface DiagnosticoContainerProps {
   /** The program this diagnostic belongs to */
   programa: Programa;
   /** Application state */
-  state: {
-    controles: { [key: string]: Controle[] };
-    medidas: { [key: string]: any };
-    loading?: boolean;
-    error?: string;
-  };
+  state: State;
   /** Function to fetch controls for this diagnostic */
   handleControleFetch: (programaId: number, diagnosticoId: number) => Promise<void>;
   /** Function to handle changes to the NCC level */
