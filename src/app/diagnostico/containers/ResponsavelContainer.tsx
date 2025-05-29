@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Responsavel } from '../types';
 
 // Components
-import ResponsavelComponent from '../components/Responsavel';
+import ResponsavelComponent from '../components/ResponsavelComponent';
 
 // Database
 import { supabaseBrowserClient } from "@utils/supabase/client";
@@ -205,5 +205,8 @@ const ResponsavelContainer: React.FC<ResponsavelContainerProps> = ({
     />
   );
 };
+
+// Named export for tests
+export { ResponsavelContainer };
 
 export default ResponsavelContainer; 

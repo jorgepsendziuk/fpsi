@@ -8,7 +8,7 @@ import { Controle, Diagnostico, Medida } from '../types';
 import ControleComponent from '../components/Controle';
 
 // Utils
-import { calculateMaturityIndexForControle } from '../utils';
+import { calculateMaturityIndexForControle } from '../utils/calculations';
 
 /**
  * Props for the ControleContainer component
@@ -21,9 +21,13 @@ export interface ControleContainerProps {
   /** The program ID */
   programaId: number;
   /** Application state */
-  state: any;
+  state: {
+    medidas: { [key: string]: Medida[] };
+    loading?: boolean;
+    error?: string;
+  };
   /** Function to handle changes to the NCC level */
-  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (programaId: number, diagnosticoId: number, value: number) => void;
   /** Function to fetch measures for this control */
   handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to a measure */
@@ -57,15 +61,8 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
 
   // Load measures when the component mounts
   useEffect(() => {
-    const loadMedidas = async () => {
-      // Only fetch if we don't already have the data
-      if (!state.medidas || !state.medidas[controle.id] || state.medidas[controle.id].length === 0) {
-        await handleMedidaFetch(controle.id, programaId);
-      }
-    };
-    
-    loadMedidas();
-  }, [controle.id, programaId, handleMedidaFetch, state.medidas]);
+    handleMedidaFetch(controle.id, programaId);
+  }, [controle.id, programaId, handleMedidaFetch]);
 
   /**
    * Calculate the maturity index for this control
@@ -88,5 +85,8 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
     />
   );
 };
+
+// Named export for tests
+export { ControleContainer };
 
 export default ControleContainer; 
