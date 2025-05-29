@@ -18,6 +18,11 @@
     npm run start
 ```
 
+## Documentation
+
+Para informações sobre o processo de refatoração e documentação do projeto, consulte:
+- [Guia de Refatoração e Documentação](./docs/REFACTORING_GUIDE.md)
+
 ## License
 
 MIT
