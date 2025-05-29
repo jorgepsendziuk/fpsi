@@ -56,7 +56,7 @@ export interface ControleProps {
   /** Function to handle changes to a measure */
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** Function to calculate the maturity index */
-  calculateMaturityIndex: (controle: Controle) => string;
+  calculateMaturityIndex: (controle: Controle) => number;
 }
 
 type InfoType = 'texto' | 'por_que_implementar' | 'fique_atento' | 'aplicabilidade_privacidade';
