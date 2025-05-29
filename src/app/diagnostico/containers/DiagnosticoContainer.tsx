@@ -62,8 +62,6 @@ const DiagnosticoContainer: React.FC<DiagnosticoContainerProps> = ({
       onAddControle={() => {}}
       onEditDiagnostico={() => {}}
       onDeleteDiagnostico={() => {}}
-      loading={state.loading}
-      error={state.error}
     />
   );
 };
