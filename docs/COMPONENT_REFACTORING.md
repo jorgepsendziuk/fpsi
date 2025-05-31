@@ -205,6 +205,14 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
     return calculateMaturityIndexForControle(controle, state);
   }, [controle, state]);
 
+  /**
+   * Calculate the maturity index for this control
+   */
+  const calculateMaturityIndex = (controle: Controle) => {
+    const result = calculateMaturityIndexForControle(controle, state);
+    return result;
+  };
+
   return (
     <ControleComponent
       controle={controle}
@@ -214,7 +222,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
       responsaveis={responsaveis}
       handleINCCChange={handleINCCChange}
       handleMedidaChange={handleMedidaChange}
-      calculateMaturityIndex={() => maturityIndex}
+      calculateMaturityIndex={calculateMaturityIndex}
     />
   );
 };
@@ -222,120 +230,52 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
 
 ## 3. ResponsavelComponent
 
-### Estado Atual
-- Usa `any` em props e eventos
-- Falta tipagem para ações do grid
-- Duplicação de lógica de manipulação de linhas
-- Falta validação de dados
+### Problema Original
+- Interface indefinida/não padronizada
+- Falta de integração com containers
+- Ausência de funcionalidades de edição em grid
 
-### Mudanças Necessárias
-1. **Tipagem**
+### Nova Interface
 ```typescript
-interface GridEvent {
-  id: number;
-  field: string;
-  value: any;
-}
-
 interface ResponsavelComponentProps {
   rows: Responsavel[];
   rowModesModel: GridRowModesModel;
-  handleRowEditStart: (params: GridEvent, event: React.MouseEvent) => void;
-  handleRowEditStop: (params: GridEvent, event: React.MouseEvent) => void;
-  handleEditClick: (id: number) => () => void;
-  handleSaveClick: (id: number) => () => Promise<void>;
-  handleCancelClick: (id: number) => () => void;
-  handleDeleteClick: (id: number) => () => Promise<void>;
-  handleAddClick: () => Promise<void>;
-  handleProcessRowUpdate: (newRow: Responsavel) => Promise<Responsavel>;
+  handleRowEditStart: (params: any, event: any) => void;
+  handleRowEditStop: (params: any, event: any) => void;
+  handleEditClick: (id: any) => () => void;
+  handleSaveClick: (id: any) => () => void;
+  handleCancelClick: (id: any) => () => void;
+  handleDeleteClick: (id: any) => () => void;
+  handleAddClick: () => void;
+  handleProcessRowUpdate: (newRow: any) => any;
 }
 ```
 
-2. **Custom Hook para Grid**
+### Nova Implementação
 ```typescript
-const useResponsavelGrid = (
-  rows: Responsavel[],
-  onSave: (row: Responsavel) => Promise<void>,
-  onDelete: (id: number) => Promise<void>
-) => {
-  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+// src/app/diagnostico/components/ResponsavelComponent.tsx
+import React from 'react';
+import { DataGrid, GridColDef, GridRowModesModel, GridActionsCellItem } from '@mui/x-data-grid';
+import { Save, Cancel, Edit, Delete, Add } from '@mui/icons-material';
+import { Button, Box } from '@mui/material';
+import type { Responsavel } from '../types';
 
-  const handleRowEditStart = (params: GridEvent, event: React.MouseEvent) => {
-    event.defaultMuiPrevented = true;
-    setRowModesModel({ ...rowModesModel, [params.id]: { mode: GridRowModes.Edit } });
-  };
-
-  const handleRowEditStop = (params: GridEvent, event: React.MouseEvent) => {
-    event.defaultMuiPrevented = true;
-    setRowModesModel({ ...rowModesModel, [params.id]: { mode: GridRowModes.View } });
-  };
-
-  const handleEditClick = (id: number) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  };
-
-  const handleSaveClick = (id: number) => async () => {
-    const row = rows.find(r => r.id === id);
-    if (row) {
-      await onSave(row);
-      setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-    }
-  };
-
-  const handleDeleteClick = (id: number) => async () => {
-    await onDelete(id);
-  };
-
-  return {
-    rowModesModel,
-    handleRowEditStart,
-    handleRowEditStop,
-    handleEditClick,
-    handleSaveClick,
-    handleDeleteClick
-  };
-};
-```
-
-3. **Validação de Dados**
-```typescript
-const validateResponsavel = (responsavel: Responsavel): string[] => {
-  const errors: string[] = [];
-  
-  if (!responsavel.nome?.trim()) {
-    errors.push('Nome é obrigatório');
-  }
-  
-  if (!responsavel.email?.trim()) {
-    errors.push('Email é obrigatório');
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(responsavel.email)) {
-    errors.push('Email inválido');
-  }
-  
-  return errors;
-};
-```
-
-### Implementação
-```typescript
 const ResponsavelComponent: React.FC<ResponsavelComponentProps> = ({
   rows,
-  handleProcessRowUpdate,
+  rowModesModel,
+  handleRowEditStart,
+  handleRowEditStop,
+  handleEditClick,
+  handleSaveClick,
+  handleCancelClick,
+  handleDeleteClick,
   handleAddClick,
-  handleDeleteClick
+  handleProcessRowUpdate,
 }) => {
-  const {
-    rowModesModel,
-    handleRowEditStart,
-    handleRowEditStop,
-    handleEditClick,
-    handleSaveClick,
-    handleDeleteClick: handleGridDeleteClick
-  } = useResponsavelGrid(rows, handleProcessRowUpdate, handleDeleteClick);
-
   const columns: GridColDef[] = [
     { field: 'nome', headerName: 'Nome', width: 200, editable: true },
-    { field: 'email', headerName: 'Email', width: 200, editable: true },
+    { field: 'email', headerName: 'Email', width: 250, editable: true },
+    { field: 'departamento', headerName: 'Departamento', width: 200, editable: true },
     {
       field: 'actions',
       type: 'actions',
@@ -343,48 +283,55 @@ const ResponsavelComponent: React.FC<ResponsavelComponentProps> = ({
       width: 100,
       cellClassName: 'actions',
       getActions: ({ id }) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
+        const isInEditMode = rowModesModel[id]?.mode === 'edit';
 
         if (isInEditMode) {
           return [
             <GridActionsCellItem
+              key="save"
               icon={<Save />}
-              label="Save"
+              label="Salvar"
               onClick={handleSaveClick(id)}
             />,
             <GridActionsCellItem
+              key="cancel"
               icon={<Cancel />}
-              label="Cancel"
+              label="Cancelar"
               onClick={handleCancelClick(id)}
-            />
+            />,
           ];
         }
 
         return [
           <GridActionsCellItem
+            key="edit"
             icon={<Edit />}
-            label="Edit"
+            label="Editar"
             onClick={handleEditClick(id)}
           />,
           <GridActionsCellItem
+            key="delete"
             icon={<Delete />}
-            label="Delete"
-            onClick={handleGridDeleteClick(id)}
-          />
+            label="Excluir"
+            onClick={handleDeleteClick(id)}
+          />,
         ];
-      }
-    }
+      },
+    },
   ];
 
   return (
-    <Box sx={responsavelStyles.container}>
-      <Button
-        startIcon={<Add />}
-        onClick={handleAddClick}
-        sx={responsavelStyles.addButton}
-      >
-        Adicionar Responsável
-      </Button>
+    <Box sx={{ height: 400, width: '100%' }}>
+      <Box sx={{ mb: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={handleAddClick}
+        >
+          Adicionar Responsável
+        </Button>
+      </Box>
+      
       <DataGrid
         rows={rows}
         columns={columns}
@@ -393,11 +340,18 @@ const ResponsavelComponent: React.FC<ResponsavelComponentProps> = ({
         onRowEditStart={handleRowEditStart}
         onRowEditStop={handleRowEditStop}
         processRowUpdate={handleProcessRowUpdate}
-        sx={responsavelStyles.grid}
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 10 },
+          },
+        }}
+        pageSizeOptions={[10, 25, 50]}
       />
     </Box>
   );
 };
+
+export default ResponsavelComponent;
 ```
 
 ## 4. Decisões Técnicas

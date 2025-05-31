@@ -65,69 +65,51 @@ describe('validations', () => {
   });
 
   describe('validateMedida', () => {
-    it('should validate a valid medida', () => {
+    it('should validate valid medida', () => {
       const medida = {
-        nome: 'Medida Teste',
-        controle: 1,
-        programa: 1,
-        status: 'ativo',
+        medida: 'Medida Teste',
+        descricao: 'Descrição teste',
       };
 
       const result = validateMedida(medida);
 
       expect(result.isValid).toBe(true);
-      expect(result.errors).toEqual({});
+      expect(result.errors).toHaveLength(0);
     });
 
-    it('should validate medida with missing required fields', () => {
+    it('should return error for missing medida', () => {
       const medida = {
-        nome: '',
-        controle: 0,
-        programa: 0,
-        status: '',
+        descricao: 'Descrição teste',
       };
 
       const result = validateMedida(medida);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual({
-        nome: 'Nome é obrigatório',
-        controle: 'Controle é obrigatório',
-        programa: 'Programa é obrigatório',
-        status: 'Status é obrigatório',
-      });
+      expect(result.errors).toContain('Medida é obrigatória');
     });
 
-    it('should validate medida with invalid status', () => {
+    it('should return error for empty medida', () => {
       const medida = {
-        nome: 'Medida Teste',
-        controle: 1,
-        programa: 1,
-        status: 'status-invalido',
+        medida: '',
+        descricao: 'Descrição teste',
       };
 
       const result = validateMedida(medida);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual({
-        status: 'Status inválido',
-      });
+      expect(result.errors).toContain('Medida é obrigatória');
     });
 
-    it('should validate medida with long fields', () => {
+    it('should return error for missing descricao', () => {
       const medida = {
-        nome: 'a'.repeat(256),
-        controle: 1,
-        programa: 1,
-        status: 'ativo',
+        medida: 'Medida Teste',
+        descricao: '',
       };
 
       const result = validateMedida(medida);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual({
-        nome: 'Nome deve ter no máximo 255 caracteres',
-      });
+      expect(result.errors).toContain('Descrição é obrigatória');
     });
   });
 

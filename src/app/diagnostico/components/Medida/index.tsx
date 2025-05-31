@@ -31,7 +31,7 @@ import dayjs from 'dayjs';
 import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../utils';
 
 // Types
-import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField } from '../../types';
+import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../types';
 
 // Styles
 import { medidaStyles } from './styles';
@@ -43,6 +43,8 @@ import { useThemeColors } from '../../hooks/useThemeColors';
 export interface MedidaProps {
   /** The measure data */
   medida: MedidaType;
+  /** The programa medida data containing junction table data */
+  programaMedida?: ProgramaMedida;
   /** The parent control */
   controle: Controle;
   /** The program ID */
@@ -64,6 +66,7 @@ export interface MedidaProps {
  */
 const MedidaComponent: React.FC<MedidaProps> = ({
   medida,
+  programaMedida,
   controle,
   programaId,
   handleMedidaChange,
@@ -112,7 +115,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
           <Grid size={{ md: 3, sm: 3, xs: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
             <Select
               sx={{ ...medidaStyles.selectSection, width: '100%' }}
-              value={medida.resposta || ""}
+              value={programaMedida?.resposta || ""}
               aria-label={medida.id_medida}
               onClick={(event) => event.stopPropagation()}
               onChange={(event) =>
@@ -133,12 +136,12 @@ const MedidaComponent: React.FC<MedidaProps> = ({
             <Chip
               sx={{
                 ...medidaStyles.statusChip,
-                bgcolor: status_plano_acao.find(status => status.id === medida.status_plano_acao)?.color || '#e9ecef',
-                color: (medida.status_plano_acao === 3 || medida.status_plano_acao === 4) ? '#333333' : '#000000',
+                bgcolor: status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao)?.color || '#e9ecef',
+                color: (programaMedida?.status_plano_acao === 3 || programaMedida?.status_plano_acao === 4) ? '#333333' : '#000000',
                 fontWeight: 600
               }}
               label={
-                status_plano_acao.find(status => status.id === medida.status_plano_acao)?.label || "Não definido"
+                status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao)?.label || "Não definido"
               }
             />
           </Grid>
@@ -158,7 +161,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               <Select
                 labelId={`responsavel-label-${medida.id}`}
                 id={`responsavel-${medida.id}`}
-                value={medida.responsavel || ""}
+                value={programaMedida?.responsavel || ""}
                 label="Responsável"
                 onChange={(event) =>
                   handleMedidaChange(medida.id, controle.id, programaId, "responsavel", event.target.value)
@@ -181,7 +184,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
             <DatePicker
               sx={medidaStyles.datePicker}
               format="DD/MM/YYYY"
-              value={medida.previsao_inicio ? dayjs(medida.previsao_inicio) : null}
+              value={programaMedida?.previsao_inicio ? dayjs(programaMedida.previsao_inicio) : null}
               label="Data de início prevista"
               onChange={(date) => 
                 handleMedidaChange(medida.id, controle.id, programaId, "previsao_inicio", date ? date.format('YYYY-MM-DD') : null)
@@ -193,7 +196,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
             <DatePicker
               sx={medidaStyles.datePicker}
               format="DD/MM/YYYY"
-              value={medida.previsao_fim ? dayjs(medida.previsao_fim) : null}
+              value={programaMedida?.previsao_fim ? dayjs(programaMedida.previsao_fim) : null}
               label="Data de conclusão prevista"
               onChange={(date) => 
                 handleMedidaChange(medida.id, controle.id, programaId, "previsao_fim", date ? date.format('YYYY-MM-DD') : null)
@@ -208,7 +211,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               <Select
                 labelId={`status-medida-label-${medida.id}`}
                 id={`status-medida-${medida.id}`}
-                value={medida.status_medida || ""}
+                value={programaMedida?.status_medida || ""}
                 label="Status da Medida"
                 onChange={(event) =>
                   handleMedidaChange(medida.id, controle.id, programaId, "status_medida", event.target.value)
@@ -234,7 +237,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 multiline
                 onChange={(event) => handleTextChange("justificativa", event.target.value)}
               />
-              {localValues.justificativa !== medida.justificativa && (
+              {localValues.justificativa !== programaMedida?.justificativa && (
                 <Button
                   variant="contained"
                   color="primary"
@@ -258,8 +261,8 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 label="Encaminhamento interno (para uso do órgão)"
                 onChange={(event) => handleTextChange("encaminhamento_interno", event.target.value)}
               />
-              {localValues.encaminhamento_interno !== medida.encaminhamento_interno && (
-                <Button
+              {localValues.encaminhamento_interno !== programaMedida?.encaminhamento_interno && (
+                <Button 
                   variant="contained"
                   color="primary"
                   onClick={() => handleSaveField("encaminhamento_interno")}
@@ -282,7 +285,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 label="Observação do órgão"
                 onChange={(event) => handleTextChange("observacao_orgao", event.target.value)}
               />
-              {localValues.observacao_orgao !== medida.observacao_orgao && (
+              {localValues.observacao_orgao !== programaMedida?.observacao_orgao && (
                 <Button
                   variant="contained"
                   color="primary"

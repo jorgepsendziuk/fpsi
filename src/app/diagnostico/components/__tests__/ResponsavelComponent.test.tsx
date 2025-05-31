@@ -1,90 +1,81 @@
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { GridRowModes } from '@mui/x-data-grid';
 import ResponsavelComponent from '../ResponsavelComponent';
 
 describe('ResponsavelComponent', () => {
   const mockProps = {
-    responsavel: {
-      id: 1,
-      nome: 'Responsável Teste',
-      email: 'responsavel@teste.com',
-      cargo: 'Cargo Teste',
-      status: 'ativo',
-      data_criacao: '2024-01-01',
-      data_atualizacao: '2024-01-01',
-    },
-    onEditResponsavel: jest.fn(),
-    onDeleteResponsavel: jest.fn(),
+    rows: [
+      {
+        id: 1,
+        programa: 1,
+        nome: 'Responsável Teste',
+        email: 'teste@exemplo.com',
+        departamento: 'TI',
+      },
+    ],
+    rowModesModel: {},
+    handleRowEditStart: jest.fn(),
+    handleRowEditStop: jest.fn(),
+    handleEditClick: jest.fn(),
+    handleSaveClick: jest.fn(),
+    handleCancelClick: jest.fn(),
+    handleDeleteClick: jest.fn(),
+    handleAddClick: jest.fn(),
+    handleProcessRowUpdate: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should render correctly', () => {
+  it('should render DataGrid with responsaveis', () => {
     render(<ResponsavelComponent {...mockProps} />);
-
+    
     expect(screen.getByText('Responsável Teste')).toBeInTheDocument();
-    expect(screen.getByText('responsavel@teste.com')).toBeInTheDocument();
-    expect(screen.getByText('Cargo Teste')).toBeInTheDocument();
+    expect(screen.getByText('teste@exemplo.com')).toBeInTheDocument();
+    expect(screen.getByText('TI')).toBeInTheDocument();
   });
 
-  it('should handle edit responsavel', () => {
+  it('should handle add responsavel', () => {
     render(<ResponsavelComponent {...mockProps} />);
-
-    fireEvent.click(screen.getByText('Editar'));
-
-    expect(mockProps.onEditResponsavel).toHaveBeenCalledWith(mockProps.responsavel);
+    
+    const addButton = screen.getByText('Adicionar Responsável');
+    fireEvent.click(addButton);
+    
+    expect(mockProps.handleAddClick).toHaveBeenCalled();
   });
 
-  it('should handle delete responsavel', () => {
+  it('should handle edit mode', () => {
+    const editModeProps = {
+      ...mockProps,
+      rowModesModel: { 1: { mode: GridRowModes.Edit } },
+    };
+    
+    render(<ResponsavelComponent {...editModeProps} />);
+    
+    // Should show save/cancel buttons in edit mode
+    expect(screen.getByLabelText('Salvar')).toBeInTheDocument();
+    expect(screen.getByLabelText('Cancelar')).toBeInTheDocument();
+  });
+
+  it('should handle view mode', () => {
     render(<ResponsavelComponent {...mockProps} />);
-
-    fireEvent.click(screen.getByText('Excluir'));
-
-    expect(mockProps.onDeleteResponsavel).toHaveBeenCalledWith(1);
+    
+    // Should show edit/delete buttons in view mode
+    expect(screen.getByLabelText('Editar')).toBeInTheDocument();
+    expect(screen.getByLabelText('Excluir')).toBeInTheDocument();
   });
 
-  it('should handle inactive status', () => {
-    const propsWithInactiveStatus = {
+  it('should handle empty rows', () => {
+    const emptyProps = {
       ...mockProps,
-      responsavel: {
-        ...mockProps.responsavel,
-        status: 'inativo',
-      },
+      rows: [],
     };
-
-    render(<ResponsavelComponent {...propsWithInactiveStatus} />);
-
-    expect(screen.getByText('Inativo')).toBeInTheDocument();
-  });
-
-  it('should handle loading state', () => {
-    render(<ResponsavelComponent {...mockProps} loading={true} />);
-
-    expect(screen.getByText('Carregando...')).toBeInTheDocument();
-  });
-
-  it('should handle error state', () => {
-    render(<ResponsavelComponent {...mockProps} error="Erro ao carregar responsável" />);
-
-    expect(screen.getByText('Erro ao carregar responsável')).toBeInTheDocument();
-  });
-
-  it('should handle long text', () => {
-    const propsWithLongText = {
-      ...mockProps,
-      responsavel: {
-        ...mockProps.responsavel,
-        nome: 'a'.repeat(100),
-        email: 'a'.repeat(100) + '@teste.com',
-        cargo: 'a'.repeat(100),
-      },
-    };
-
-    render(<ResponsavelComponent {...propsWithLongText} />);
-
-    expect(screen.getByText('a'.repeat(100))).toBeInTheDocument();
-    expect(screen.getByText('a'.repeat(100) + '@teste.com')).toBeInTheDocument();
-    expect(screen.getByText('a'.repeat(100))).toBeInTheDocument();
+    
+    render(<ResponsavelComponent {...emptyProps} />);
+    
+    // DataGrid should still render with add button
+    expect(screen.getByText('Adicionar Responsável')).toBeInTheDocument();
   });
 }); 

@@ -470,4 +470,43 @@ Ativo
 - Styled Components
   - Rejeitado por duplicação de funcionalidade
 - CSS puro
-  - Rejeitado por dificuldade de manutenção 
+  - Rejeitado por dificuldade de manutenção
+
+## Decisão: Refatoração do Sistema de Cálculo de Maturidade
+
+### Status
+✅ **IMPLEMENTADO** - 29/05/2024
+
+### Contexto
+O sistema anterior tinha problemas de tipagem e consistência nos cálculos de maturidade.
+
+### Decisão
+1. **Padronizar retorno numérico**: `calculateMaturityIndex` retorna `number` em vez de `string`
+2. **Interface State completa**: `DiagnosticoContainer` agora usa `State` completo
+3. **ResponsavelComponent como DataGrid**: Migração para interface baseada em `@mui/x-data-grid`
+
+### Implementação
+```typescript
+// ControleComponent interface
+interface ControleProps {
+  calculateMaturityIndex: (controle: Controle) => number; // number, não string
+}
+
+// DiagnosticoContainer interface
+interface DiagnosticoContainerProps {
+  state: State; // State completo, não parcial
+}
+
+// ResponsavelComponent interface
+interface ResponsavelComponentProps {
+  rows: Responsavel[];
+  rowModesModel: GridRowModesModel;
+  // ... outros props do DataGrid
+}
+```
+
+### Consequências
+- ✅ Compilação sem erros de tipo
+- ✅ Consistência nos cálculos
+- ✅ Interface moderna para gerenciamento de responsáveis
+- ✅ Melhor integração com testes 

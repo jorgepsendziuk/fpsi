@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Types
-import { Medida, Controle, Responsavel, MedidaTextField } from '../types';
+import { Medida, Controle, Responsavel, MedidaTextField, ProgramaMedida } from '../types';
 
 // Components
 import MedidaComponent from '../components/Medida';
@@ -16,6 +16,8 @@ import dayjs from 'dayjs';
 export interface MedidaContainerProps {
   /** The measure data */
   medida: Medida;
+  /** The programa medida data containing junction table data */
+  programaMedida?: ProgramaMedida;
   /** The parent control */
   controle: Controle;
   /** The program ID */
@@ -31,6 +33,7 @@ export interface MedidaContainerProps {
  */
 const MedidaContainer: React.FC<MedidaContainerProps> = ({
   medida,
+  programaMedida,
   controle,
   programaId,
   handleMedidaChange,
@@ -38,29 +41,29 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
 }) => {
   // Local state for form values
   const [localValues, setLocalValues] = useState({
-    justificativa: medida.justificativa || "",
-    encaminhamento_interno: medida.encaminhamento_interno || "",
-    observacao_orgao: medida.observacao_orgao || "",
-    nova_resposta: medida.nova_resposta || ""
+    justificativa: programaMedida?.justificativa || "",
+    encaminhamento_interno: programaMedida?.encaminhamento_interno || "",
+    observacao_orgao: programaMedida?.observacao_orgao || "",
+    nova_resposta: programaMedida?.nova_resposta || ""
   });
 
   // Update local values when medida prop changes
   useEffect(() => {
     setLocalValues({
-      justificativa: medida.justificativa || "",
-      encaminhamento_interno: medida.encaminhamento_interno || "",
-      observacao_orgao: medida.observacao_orgao || "",
-      nova_resposta: medida.nova_resposta || ""
+      justificativa: programaMedida?.justificativa || "",
+      encaminhamento_interno: programaMedida?.encaminhamento_interno || "",
+      observacao_orgao: programaMedida?.observacao_orgao || "",
+      nova_resposta: programaMedida?.nova_resposta || ""
     });
-  }, [medida]);
+  }, [programaMedida]);
 
   /**
    * Determines the status_plano_acao based on dates and status_medida
    */
   const determineStatusPlanoAcao = () => {
     const today = dayjs();
-    const inicioDate = medida.previsao_inicio ? dayjs(medida.previsao_inicio) : null;
-    const fimDate = medida.previsao_fim ? dayjs(medida.previsao_fim) : null;
+    const inicioDate = programaMedida?.previsao_inicio ? dayjs(programaMedida.previsao_inicio) : null;
+    const fimDate = programaMedida?.previsao_fim ? dayjs(programaMedida.previsao_fim) : null;
     
     // If both dates are defined, check if start date is after end date
     if (inicioDate && fimDate && inicioDate.isAfter(fimDate)) {
@@ -68,7 +71,7 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
     }
     
     // If status_medida is "Finalizado" (1)
-    if (medida.status_medida === 1) {
+    if (programaMedida?.status_medida === 1) {
       return 2; // Concluído
     }
     
@@ -101,10 +104,10 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
   // Update status_plano_acao whenever relevant fields change
   useEffect(() => {
     const newStatus = determineStatusPlanoAcao();
-    if (newStatus !== medida.status_plano_acao) {
+    if (newStatus !== programaMedida?.status_plano_acao) {
       handleMedidaChange(medida.id, controle.id, programaId, "status_plano_acao", newStatus);
     }
-  }, [medida.previsao_inicio, medida.previsao_fim, medida.status_medida]);
+  }, [programaMedida?.previsao_inicio, programaMedida?.previsao_fim, programaMedida?.status_medida]);
 
   /**
    * Handles changes to text fields by updating local state
@@ -123,6 +126,673 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
   return (
     <MedidaComponent
       medida={medida}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       controle={controle}
       programaId={programaId}
       handleMedidaChange={handleMedidaChange}

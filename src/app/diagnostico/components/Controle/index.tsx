@@ -25,7 +25,7 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 
 // Types
-import { Controle, Medida, Diagnostico, Responsavel } from '../../types';
+import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '../../types';
 
 // Components
 import MedidaContainer from '../../containers/MedidaContainer';
@@ -43,6 +43,8 @@ import { useThemeColors } from '../../hooks/useThemeColors';
 export interface ControleProps {
   /** The control data */
   controle: Controle;
+  /** The programa controle data containing nivel and other junction table data */
+  programaControle?: ProgramaControle;
   /** The diagnostic this control belongs to */
   diagnostico: Diagnostico;
   /** The measures for this control */
@@ -102,6 +104,7 @@ const getBackgroundColor = (info: InfoType) => {
  */
 const ControleComponent: React.FC<ControleProps> = ({
   controle,
+  programaControle,
   diagnostico,
   medidas,
   programaId,
@@ -149,11 +152,11 @@ const ControleComponent: React.FC<ControleProps> = ({
             </Typography>
             <Select
               sx={controleStyles.niveisList}
-              value={controle.nivel || ""}
+              value={programaControle?.nivel || ""}
               onClick={(event) => event.stopPropagation()}
               onChange={(event) => {
-                if (controle.programa_controle_id) {
-                  handleINCCChange(controle.programa_controle_id, diagnostico.id, parseInt(event.target.value.toString(), 10));
+                if (programaControle?.id) {
+                  handleINCCChange(programaControle.id, diagnostico.id, parseInt(event.target.value.toString(), 10));
                 }
               }}
             >

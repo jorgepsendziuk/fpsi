@@ -31,7 +31,6 @@ export interface Diagnostico {
 } 
 
 export interface Controle {
-  // Static fields from controle table
   id: number;
   diagnostico: number;
   numero: number;
@@ -40,11 +39,6 @@ export interface Controle {
   por_que_implementar?: string;
   fique_atento?: string | null;
   aplicabilidade_privacidade?: string;
-
-  // Dynamic fields from programa_controle table (optional when not joined)
-  programa_controle_id?: number; // ID from programa_controle table for updates
-  programa?: number;
-  nivel?: number;
 }
 
 export interface ProgramaControle {
@@ -55,27 +49,15 @@ export interface ProgramaControle {
 }
 
 export type Medida = {
-  // Read-only fields
   id: number;
   id_medida: string;
   id_controle: number;
   id_cisv8: string;
-  status_medida: number;
   grupo_imple: string;
   funcao_nist_csf: string;
   medida: string;
   descricao: string;
 
-  // Editable fields
-  resposta?: number;
-  justificativa?: string;
-  encaminhamento_interno?: string;
-  observacao_orgao?: string;
-  nova_resposta?: string;
-  responsavel?: number;
-  previsao_inicio?: string | null;
-  previsao_fim?: string | null;
-  status_plano_acao?: number;
 };
 
 export interface ProgramaMedida {
@@ -89,6 +71,8 @@ export interface ProgramaMedida {
   responsavel: number;
   previsao_inicio: Date;
   previsao_fim: Date;
+  status_medida: number;
+  status_plano_acao: number;
   nova_resposta: string;
 }
 

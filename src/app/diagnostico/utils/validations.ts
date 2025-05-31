@@ -39,10 +39,6 @@ export const validateMedida = (medida: Partial<Medida>): ValidationResult => {
     errors.push('Descrição é obrigatória');
   }
 
-  if (medida.resposta !== undefined && (medida.resposta < 0 || medida.resposta > 100)) {
-    errors.push('Resposta deve estar entre 0 e 100');
-  }
-
   return {
     isValid: errors.length === 0,
     errors,
