@@ -5,40 +5,51 @@ import { useState, useEffect } from 'react';
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, CircularProgress } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-// Dynamic import para TinyMCE somente no lado do cliente
+// Flag para controlar inicialização do TinyMCE
 let tinymceInitialized = false;
 
 const initializeTinyMCE = async () => {
   if (typeof window !== 'undefined' && !tinymceInitialized) {
-    // Import TinyMCE core
-    await import('tinymce/tinymce');
-    
-    // Import essentials
-    await import('tinymce/icons/default/icons.min.js');
-    await import('tinymce/themes/silver/theme.min.js');
-    await import('tinymce/models/dom/model.min.js');
-    
-    // Import skins
-    await import('tinymce/skins/ui/oxide/skin.js');
-    await import('tinymce/skins/ui/oxide/content.js');
-    await import('tinymce/skins/content/default/content.js');
-    
-    // Import plugins que são usados
-    await import('tinymce/plugins/advlist');
-    await import('tinymce/plugins/autolink');
-    await import('tinymce/plugins/lists');
-    await import('tinymce/plugins/link');
-    await import('tinymce/plugins/charmap');
-    await import('tinymce/plugins/preview');
-    await import('tinymce/plugins/searchreplace');
-    await import('tinymce/plugins/visualblocks');
-    await import('tinymce/plugins/code');
-    await import('tinymce/plugins/fullscreen');
-    await import('tinymce/plugins/insertdatetime');
-    await import('tinymce/plugins/table');
-    await import('tinymce/plugins/wordcount');
-    
-    tinymceInitialized = true;
+    try {
+      // Import TinyMCE core usando dynamic import com type assertion
+      await import('tinymce/tinymce');
+      
+      // Import componentes essenciais
+      await Promise.all([
+        import('tinymce/icons/default/icons.min.js' as any),
+        import('tinymce/themes/silver/theme.min.js' as any),
+        import('tinymce/models/dom/model.min.js' as any),
+      ]);
+      
+      // Import skins
+      await Promise.all([
+        import('tinymce/skins/ui/oxide/skin.js' as any),
+        import('tinymce/skins/ui/oxide/content.js' as any),
+        import('tinymce/skins/content/default/content.js' as any),
+      ]);
+      
+      // Import plugins em paralelo
+      await Promise.all([
+        import('tinymce/plugins/advlist' as any),
+        import('tinymce/plugins/autolink' as any),
+        import('tinymce/plugins/lists' as any),
+        import('tinymce/plugins/link' as any),
+        import('tinymce/plugins/charmap' as any),
+        import('tinymce/plugins/preview' as any),
+        import('tinymce/plugins/searchreplace' as any),
+        import('tinymce/plugins/visualblocks' as any),
+        import('tinymce/plugins/code' as any),
+        import('tinymce/plugins/fullscreen' as any),
+        import('tinymce/plugins/insertdatetime' as any),
+        import('tinymce/plugins/table' as any),
+        import('tinymce/plugins/wordcount' as any),
+      ]);
+      
+      tinymceInitialized = true;
+    } catch (error) {
+      console.error('Erro ao carregar TinyMCE:', error);
+      throw error;
+    }
   }
 };
 
@@ -60,12 +71,18 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia }: 
   const [content, setContent] = useState(section.texto || '');
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const setupEditor = async () => {
-      await initializeTinyMCE();
-      setIsMounted(true);
-      setIsEditorReady(true);
+      try {
+        await initializeTinyMCE();
+        setIsMounted(true);
+        setIsEditorReady(true);
+      } catch (error) {
+        setLoadError('Erro ao carregar o editor');
+        console.error('Erro na inicialização do TinyMCE:', error);
+      }
     };
     
     setupEditor();
@@ -103,12 +120,29 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia }: 
             {section.descricao}
           </Typography>
         </Box>
-        {isMounted && isEditorReady ? (
+        
+        {loadError ? (
+          <Box 
+            sx={{ 
+              height: 300, 
+              border: '1px solid', 
+              borderColor: 'error.main', 
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'error.light',
+              color: 'error.contrastText'
+            }}
+          >
+            <Typography>{loadError}</Typography>
+          </Box>
+        ) : isMounted && isEditorReady ? (
           <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
             <Editor
+              licenseKey="gpl" // GPL license for self-hosted (camelCase for React wrapper)
               value={displayContent}
               init={{
-                license_key: 'gpl', // Using GPL license for self-hosted
                 height: 300,
                 menubar: true,
                 plugins: [
