@@ -24,7 +24,7 @@ export const authProviderClient: AuthProvider = {
 
       return {
         success: true,
-        redirectTo: "/",
+        redirectTo: "/programas",
       };
     }
 
@@ -49,7 +49,7 @@ export const authProviderClient: AuthProvider = {
 
     return {
       success: true,
-      redirectTo: "/login",
+      redirectTo: "/",
     };
   },
   register: async ({ email, password }) => {
@@ -69,7 +69,7 @@ export const authProviderClient: AuthProvider = {
       if (data) {
         return {
           success: true,
-          redirectTo: "/",
+          redirectTo: "/programas",
         };
       }
     } catch (error: any) {

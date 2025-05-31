@@ -120,51 +120,6 @@ const Programa = ({ programaId }: { programaId: number }) => {
 
   return (
     <Box component="form" noValidate autoComplete="off" sx={{ mt: 3 }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'flex-end', 
-        gap: 0.5,
-        mb: -1,
-        "& .MuiIconButton-root": {
-          borderRadius: '4px 4px 0 0',
-          height: '40px',
-          width: '40px',
-          backgroundColor: 'primary.main',
-          color: 'white',
-          boxShadow: '0 -2px 4px rgba(0,0,0,0.1)',
-          '&:hover': {
-            backgroundColor: 'primary.dark',
-          },
-          '&.delete': {
-            backgroundColor: 'error.main',
-            '&:hover': {
-              backgroundColor: 'error.dark',
-            },
-          }
-        }
-      }}>
-        <Tooltip title="Relatório">
-          <IconButton onClick={handleReport}>
-            <AssessmentIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Exportar PDF">
-          <IconButton onClick={handleGeneratePDF}>
-            <PictureAsPdfIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Salvar">
-          <IconButton onClick={() => handleSave('all')}>
-            <SaveIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Excluir">
-          <IconButton onClick={handleDelete} className="delete">
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
       <Grid container spacing={0} direction="column"> 
         <Grid>
           <Accordion sx={accordionStyles}>

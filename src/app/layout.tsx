@@ -12,8 +12,8 @@ import { authProviderClient } from "@providers/auth-provider";
 import { dataProvider } from "@providers/data-provider";
 
 export const metadata: Metadata = {
-  title: "FPSI",
-  description: "FPSI", 
+  title: "FPSI - Framework de Privacidade e Segurança da Informação",
+  description: "Sistema de diagnóstico de privacidade e segurança da informação para organizações", 
   icons: {
     icon: "/favicon.ico",
   },
@@ -25,9 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = cookies();
-  //const theme = cookieStore.get("theme");
-  //const defaultMode = theme?.value === "dark" ? "dark" : "light";
-  const defaultMode =  "light";
+  const defaultMode = "light";
+
   return (
     <html lang="pt-BR">
       <body>
@@ -42,29 +41,29 @@ export default function RootLayout({
                     dataProvider={dataProvider}
                     notificationProvider={useNotificationProvider}
                     resources={[ 
-                      // {
-                      //   name: "programa",
-                      //   list: "/programa",
-                      //   create: "/programa/create",
-                      //   edit: "/programa/edit/:id",
-                      //   show: "/programa/show/:id",
-                      //   meta: {
-                      //     canDelete: false
-                      //   },
-                      // },
+                      {
+                        name: "programas",
+                        identifier: "programas",
+                        list: "/programas",
+                        meta: {
+                          canDelete: false,
+                          label: "Programas",
+                          icon: <GppGoodTwoToneIcon />
+                        },
+                      },
                       {
                         name: "diagnostico",
                         identifier: "diagnostico",
                         list: "/diagnostico",
-                        // create: "/diagnostico/create",
                         meta: {
                           canDelete: false,
-                          label: "Diagnóstico" 
+                          label: "Diagnóstico (Legacy)",
+                          hide: true // Ocultar da navegação
                         },
                       },
                       {
                         name: "relatorio",
-                        identifier: "diagnostico",
+                        identifier: "relatorio",
                         list: "/diagnostico/relatorio",
                         meta: {
                           canDelete: false,
@@ -72,41 +71,6 @@ export default function RootLayout({
                           dataProviderName: "default"
                         },
                       },
-                      // {
-                      //   name: "medida",
-                      //   list: "/medida",
-                      //   create: "/medida/create",
-                      //   edit: "/medida/edit/:id",
-                      //   show: "/medida/show/:id",
-                      //   meta: {
-                      //     canDelete: false,
-                      //     label: "Medidas" 
-                      //   },
-                      // },
-                      // {
-                      //   name: "controle",
-                      //   list: "/controle",
-                      //   create: "/controle/create",
-                      //   edit: "/controle/edit/:id",
-                      //   show: "/controle/show/:id",
-                      //   meta: {
-                      //     canDelete: false,
-                      //     //parent: "Manutenção",
-                      //     label: "Controles" 
-                      //   },
-                      // },
-                      // {
-                      //   name: "responsavel",
-                      //   list: "/responsavel",
-                      //   create: "/responsavel/create",
-                      //   edit: "/responsavel/edit/:id",
-                      //   show: "/responsavel/show/:id",
-                      //   meta: {
-                      //     canDelete: false,
-                      //     parent: "Tabelas Auxiliares",
-                      //     label: "Responsáveis" 
-                      //   },
-                      // },
                     ]}
                     options={{
                       syncWithLocation: true,
@@ -115,8 +79,8 @@ export default function RootLayout({
                       projectId: "PRGNCh-Vt1Pdr-jpCKmI",
                       title: {  
                         icon: <GppGoodTwoToneIcon color="primary" />,
-                        text: "FPSI",  // Replace with your custom app name
-                      },  
+                        text: "FPSI",
+                      },
                     }}
                   >
                     {children}
