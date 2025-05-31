@@ -5,6 +5,43 @@ import { useState, useEffect } from 'react';
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, CircularProgress } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
+// Dynamic import para TinyMCE somente no lado do cliente
+let tinymceInitialized = false;
+
+const initializeTinyMCE = async () => {
+  if (typeof window !== 'undefined' && !tinymceInitialized) {
+    // Import TinyMCE core
+    await import('tinymce/tinymce');
+    
+    // Import essentials
+    await import('tinymce/icons/default/icons.min.js');
+    await import('tinymce/themes/silver/theme.min.js');
+    await import('tinymce/models/dom/model.min.js');
+    
+    // Import skins
+    await import('tinymce/skins/ui/oxide/skin.js');
+    await import('tinymce/skins/ui/oxide/content.js');
+    await import('tinymce/skins/content/default/content.js');
+    
+    // Import plugins que são usados
+    await import('tinymce/plugins/advlist');
+    await import('tinymce/plugins/autolink');
+    await import('tinymce/plugins/lists');
+    await import('tinymce/plugins/link');
+    await import('tinymce/plugins/charmap');
+    await import('tinymce/plugins/preview');
+    await import('tinymce/plugins/searchreplace');
+    await import('tinymce/plugins/visualblocks');
+    await import('tinymce/plugins/code');
+    await import('tinymce/plugins/fullscreen');
+    await import('tinymce/plugins/insertdatetime');
+    await import('tinymce/plugins/table');
+    await import('tinymce/plugins/wordcount');
+    
+    tinymceInitialized = true;
+  }
+};
+
 interface Section {
   id: number;
   secao: string;
@@ -15,16 +52,23 @@ interface Section {
 
 interface SectionDisplayProps {
   section: Section;
-  onTextChange: (id: number, text: string) => void;
+  onTextChange: (sectionId: number, text: string) => void;
   nomeFantasia: string;
 }
 
 export default function SectionDisplay({ section, onTextChange, nomeFantasia }: SectionDisplayProps) {
   const [content, setContent] = useState(section.texto || '');
   const [isMounted, setIsMounted] = useState(false);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    const setupEditor = async () => {
+      await initializeTinyMCE();
+      setIsMounted(true);
+      setIsEditorReady(true);
+    };
+    
+    setupEditor();
   }, []);
 
   const displayContent = content
@@ -59,12 +103,12 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia }: 
             {section.descricao}
           </Typography>
         </Box>
-        {isMounted ? (
+        {isMounted && isEditorReady ? (
           <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
             <Editor
-              apiKey="u5nzk0vkrbayrac05shc8v5mnoes0d8uw8ykym31wgiq4x7u"
               value={displayContent}
               init={{
+                license_key: 'gpl', // Using GPL license for self-hosted
                 height: 300,
                 menubar: true,
                 plugins: [
