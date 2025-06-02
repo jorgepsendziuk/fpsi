@@ -55,12 +55,19 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   // Update medidas when state.medidas or controle changes
   useEffect(() => {
     if (state.medidas && state.medidas[controle.id]) {
+      console.log(`ControleContainer: Setting medidas for controle ${controle.id}:`, state.medidas[controle.id]);
+      console.log(`ControleContainer: Sample medida with programa_medida:`, state.medidas[controle.id][0]);
       setMedidas(state.medidas[controle.id]);
+    } else {
+      console.log(`ControleContainer: No medidas found for controle ${controle.id}`);
     }
   }, [state.medidas, controle.id]);
 
   // Load measures when the component mounts
   useEffect(() => {
+    console.log(`ControleContainer: Controle data:`, controle);
+    console.log(`ControleContainer: Controle nivel:`, controle.nivel);
+    console.log(`ControleContainer: Controle programa_controle_id:`, controle.programa_controle_id);
     handleMedidaFetch(controle.id, programaId);
   }, [controle.id, programaId, handleMedidaFetch]);
 
@@ -72,9 +79,20 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
     return result;
   };
 
+  // Create programaControle object from controle data
+  const programaControle = {
+    id: controle.programa_controle_id || 0,
+    programa: programaId,
+    controle: controle.id,
+    nivel: controle.nivel || 1
+  };
+
+  console.log(`ControleContainer: ProgramaControle object:`, programaControle);
+
   return (
     <ControleComponent
       controle={controle}
+      programaControle={programaControle}
       diagnostico={diagnostico}
       medidas={medidas}
       programaId={programaId}

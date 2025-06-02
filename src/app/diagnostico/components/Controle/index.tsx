@@ -155,8 +155,10 @@ const ControleComponent: React.FC<ControleProps> = ({
               value={programaControle?.nivel || ""}
               onClick={(event) => event.stopPropagation()}
               onChange={(event) => {
-                if (programaControle?.id) {
+                if (programaControle?.id && programaControle.id > 0) {
                   handleINCCChange(programaControle.id, diagnostico.id, parseInt(event.target.value.toString(), 10));
+                } else {
+                  console.warn('Cannot update INCC: programaControle.id is not valid', programaControle);
                 }
               }}
             >
@@ -293,6 +295,7 @@ const ControleComponent: React.FC<ControleProps> = ({
             <MedidaContainer
               key={medida.id}
               medida={medida}
+              programaMedida={medida.programa_medida}
               controle={controle}
               programaId={programaId}
               handleMedidaChange={handleMedidaChange}

@@ -140,6 +140,7 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
   return (
     <MedidaComponent
       medida={medida}
+      programaMedida={programaMedida}
       controle={controle}
       programaId={programaId}
       handleMedidaChange={handleMedidaChange}

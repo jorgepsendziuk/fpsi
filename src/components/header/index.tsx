@@ -12,6 +12,7 @@ import Typography from "@mui/material/Typography";
 import { useGetIdentity } from "@refinedev/core";
 import { HamburgerMenu, RefineThemedLayoutV2HeaderProps} from "@refinedev/mui";
 import React, { useContext } from "react";
+import Image from 'next/image';
 
 type IUser = {
   id: number;
@@ -32,16 +33,29 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
         <Stack
           direction="row"
           width="100%"
-          justifyContent="flex-end"
+          justifyContent="space-between"
           alignItems="center"
         >
-          <HamburgerMenu />
+          {/* Logo and Title */}
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Image 
+              src="/logo_p.png" 
+              alt="FPSI Logo" 
+              width={32} 
+              height={32} 
+            />
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'inherit' }}>
+              FPSI
+            </Typography>
+          </Stack>
+
+          {/* Navigation and User Section */}
           <Stack
             direction="row"
-            width="100%"
-            justifyContent="flex-end"
             alignItems="center"
+            spacing={1}
           >
+            <HamburgerMenu />
             <IconButton
               color="inherit"
               onClick={() => {

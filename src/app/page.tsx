@@ -36,6 +36,7 @@ import {
   Dashboard as DashboardIcon,
 } from "@mui/icons-material";
 import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
+import Image from 'next/image';
 
 const features = [
   {
@@ -128,7 +129,13 @@ export default function HomePage() {
       {/* Header */}
       <AppBar position="static" elevation={1} sx={{ bgcolor: 'background.paper', color: 'text.primary' }}>
         <Toolbar>
-          <GppGoodTwoToneIcon color="primary" sx={{ mr: 2 }} />
+          <Image 
+            src="/logo_p.png" 
+            alt="FPSI Logo" 
+            width={40} 
+            height={40} 
+            style={{ marginRight: 16 }}
+          />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
             FPSI
           </Typography>
@@ -209,6 +216,19 @@ export default function HomePage() {
         <Container maxWidth="lg">
           <Fade in timeout={1000}>
             <Box>
+              {/* Add logo to hero section */}
+              <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
+                <Image 
+                  src="/logo_p.png" 
+                  alt="FPSI Logo" 
+                  width={120} 
+                  height={120} 
+                  style={{ 
+                    filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1))',
+                  }}
+                />
+              </Box>
+              
               <Typography 
                 variant={isMobile ? "h3" : "h2"} 
                 component="h1" 
@@ -358,6 +378,15 @@ export default function HomePage() {
       <Box sx={{ bgcolor: 'background.paper', py: 4, mt: 'auto' }}>
         <Container maxWidth="lg">
           <Box textAlign="center">
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+              <Image 
+                src="/logo_p.png" 
+                alt="FPSI Logo" 
+                width={40} 
+                height={40} 
+                style={{ opacity: 0.8 }}
+              />
+            </Box>
             <Typography variant="body2" color="text.secondary">
               © 2024 FPSI - Framework de Privacidade e Segurança da Informação. Todos os direitos reservados.
             </Typography>

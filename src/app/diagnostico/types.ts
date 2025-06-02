@@ -39,10 +39,13 @@ export interface Controle {
   por_que_implementar?: string;
   fique_atento?: string | null;
   aplicabilidade_privacidade?: string;
+  nivel?: number;
+  programa_controle_id?: number;
+  programa?: number;
 }
 
 export interface ProgramaControle {
-  id: number;
+  id?: number;
   programa: number;
   controle: number;
   nivel?: number;
@@ -57,7 +60,17 @@ export type Medida = {
   funcao_nist_csf: string;
   medida: string;
   descricao: string;
-
+  resposta?: number;
+  justificativa?: string;
+  observacao_orgao?: string;
+  responsavel?: number;
+  previsao_inicio?: Date;
+  previsao_fim?: Date;
+  nova_resposta?: string;
+  encaminhamento_interno?: string;
+  status_medida?: number;
+  status_plano_acao?: number;
+  programa_medida?: ProgramaMedida;
 };
 
 export interface ProgramaMedida {

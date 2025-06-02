@@ -46,6 +46,7 @@ import {
   Schedule as ScheduleIcon,
   Analytics as AnalyticsIcon,
 } from "@mui/icons-material";
+import Image from 'next/image';
 import * as dataService from "../diagnostico/services/dataService";
 import { Programa } from "../diagnostico/types";
 import { initialState, reducer } from "../diagnostico/state";
@@ -279,53 +280,27 @@ export default function ProgramasPage() {
       {/* Header melhorado */}
       <Box sx={{ mb: 6 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box>
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              sx={{ 
-                fontWeight: 'bold',
-                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent',
-                mb: 1
-              }}
-            >
-              Meus Programas
-            </Typography>
-            <Typography variant="h6" color="text.secondary">
-              Gerencie seus programas de privacidade e segurança da informação
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            
+            <Box>
+              <Typography 
+                variant="h3" 
+                component="h1" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  mb: 1
+                }}
+              >
+                Meus Programas
+              </Typography>
+            </Box>
           </Box>
           
-          {/* Estatísticas rápidas */}
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3 }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                {programas.length}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Programas
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                {Math.floor(programas.length * 0.7)}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Ativos
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'info.main' }}>
-                {Math.floor(programas.length * 0.3)}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Em Análise
-              </Typography>
-            </Box>
-          </Box>
+          
         </Box>
         
         <Divider sx={{ mb: 4 }} />
@@ -344,7 +319,13 @@ export default function ProgramasPage() {
           }}
         >
           <Box sx={{ mb: 4 }}>
-            <SecurityIcon sx={{ fontSize: 120, color: alpha(theme.palette.primary.main, 0.5) }} />
+            <Image 
+              src="/logo_p.png" 
+              alt="FPSI Logo" 
+              width={120} 
+              height={120} 
+              style={{ opacity: 0.7 }}
+            />
           </Box>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
             Bem-vindo ao FPSI
@@ -607,7 +588,12 @@ export default function ProgramasPage() {
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <SecurityIcon color="primary" />
+            <Image 
+              src="/logo_p.png" 
+              alt="FPSI Logo" 
+              width={24} 
+              height={24} 
+            />
             <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
               Criar Novo Programa
             </Typography>

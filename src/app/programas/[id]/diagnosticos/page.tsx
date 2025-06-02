@@ -51,6 +51,7 @@ import {
   Print as PrintIcon,
   Edit as EditIcon,
 } from "@mui/icons-material";
+import Image from 'next/image';
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
@@ -250,13 +251,21 @@ export default function DiagnosticosPage() {
 
         console.log("Programa encontrado:", programaAtual);
 
-        // 3. Update state with basic data
+        // 3. Ensure programa_controle records exist for this program
+        console.log("Garantindo que registros programa_controle existam...");
+        await dataService.ensureProgramaControleRecords(programaId);
+
+        // 3.1. Ensure programa_medida records exist for this program
+        console.log("Garantindo que registros programa_medida existam...");
+        await dataService.ensureProgramaMedidaRecords(programaId);
+
+        // 4. Update state with basic data
         setPrograma(programaAtual);
         dispatch({ type: "SET_PROGRAMAS", payload: programasData });
         dispatch({ type: "SET_DIAGNOSTICOS", payload: diagnosticosData });
         setOrgaos(orgaosData);
 
-        // 4. Load responsáveis
+        // 5. Load responsáveis
         console.log("Carregando responsáveis...");
         const responsaveis = await dataService.fetchResponsaveis(programaId);
         if (!mounted) return;
@@ -509,6 +518,28 @@ export default function DiagnosticosPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Breadcrumbs melhorados */}
+      <Box sx={{ mb: 4 }}>
+        <Breadcrumbs sx={{ mb: 2 }}>
+          <Link 
+            href="/programas" 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' }
+            }}
+          >
+            <ArrowBackIcon sx={{ mr: 0.5 }} fontSize="small" />
+            Meus Programas
+          </Link>
+          <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            
+            Diagnóstico
+          </Typography>
+        </Breadcrumbs>
+      </Box>
+
       {/* Header com nome da instituição */}
       <Paper 
         elevation={3}

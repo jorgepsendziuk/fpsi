@@ -7,6 +7,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import React, { Suspense } from "react";
 import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
+import Image from 'next/image';
 import { ColorModeContextProvider } from "@contexts/color-mode";
 import { authProviderClient } from "@providers/auth-provider";
 import { dataProvider } from "@providers/data-provider";
@@ -78,7 +79,14 @@ export default function RootLayout({
                       useNewQueryKeys: true,
                       projectId: "PRGNCh-Vt1Pdr-jpCKmI",
                       title: {  
-                        icon: <GppGoodTwoToneIcon color="primary" />,
+                        icon: (
+                          <Image 
+                            src="/logo_p.png" 
+                            alt="FPSI Logo" 
+                            width={24} 
+                            height={24} 
+                          />
+                        ),
                         text: "FPSI",
                       },
                     }}
