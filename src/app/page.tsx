@@ -129,13 +129,7 @@ export default function HomePage() {
       {/* Header */}
       <AppBar position="static" elevation={1} sx={{ bgcolor: 'background.paper', color: 'text.primary' }}>
         <Toolbar>
-          <Image 
-            src="/logo_p.png" 
-            alt="FPSI Logo" 
-            width={40} 
-            height={40} 
-            style={{ marginRight: 16 }}
-          />
+          
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
             FPSI
           </Typography>
@@ -378,15 +372,7 @@ export default function HomePage() {
       <Box sx={{ bgcolor: 'background.paper', py: 4, mt: 'auto' }}>
         <Container maxWidth="lg">
           <Box textAlign="center">
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
-              <Image 
-                src="/logo_p.png" 
-                alt="FPSI Logo" 
-                width={40} 
-                height={40} 
-                style={{ opacity: 0.8 }}
-              />
-            </Box>
+            
             <Typography variant="body2" color="text.secondary">
               © 2024 FPSI - Framework de Privacidade e Segurança da Informação. Todos os direitos reservados.
             </Typography>

@@ -3,16 +3,21 @@
 import { ColorModeContext } from "@contexts/color-mode";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
+import LogoutIcon from "@mui/icons-material/Logout";
+import HomeIcon from "@mui/icons-material/Home";
 import AppBar from "@mui/material/AppBar";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { useGetIdentity } from "@refinedev/core";
-import { HamburgerMenu, RefineThemedLayoutV2HeaderProps} from "@refinedev/mui";
+import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
+import { useGetIdentity, useLogout } from "@refinedev/core";
+import { RefineThemedLayoutV2HeaderProps} from "@refinedev/mui";
 import React, { useContext } from "react";
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
 
 type IUser = {
   id: number;
@@ -24,8 +29,17 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   sticky = true,
 }) => {
   const { mode, setMode } = useContext(ColorModeContext);
-
   const { data: user } = useGetIdentity<IUser>();
+  const { mutate: logout } = useLogout();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const handleGoHome = () => {
+    router.push('/programas');
+  };
 
   return (
     <AppBar position={sticky ? "sticky" : "relative"}>
@@ -38,12 +52,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
         >
           {/* Logo and Title */}
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Image 
-              src="/logo_p.png" 
-              alt="FPSI Logo" 
-              width={32} 
-              height={32} 
-            />
+            
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'inherit' }}>
               FPSI
             </Typography>
@@ -55,22 +64,31 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
             alignItems="center"
             spacing={1}
           >
-            <HamburgerMenu />
-            <IconButton
-              color="inherit"
-              onClick={() => {
-                setMode();
-              }}
-            >
-              {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
-            </IconButton>
+            <Tooltip title="Ir para Programas">
+              <IconButton
+                color="inherit"
+                onClick={handleGoHome}
+              >
+                <HomeIcon />
+              </IconButton>
+            </Tooltip>
 
-            {(user?.avatar || user?.name) && (
+            <Tooltip title={mode === "dark" ? "Modo Claro" : "Modo Escuro"}>
+              <IconButton
+                color="inherit"
+                onClick={() => {
+                  setMode();
+                }}
+              >
+                {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
+              </IconButton>
+            </Tooltip>
+
+            {user && (
               <Stack
                 direction="row"
-                gap="16px"
                 alignItems="center"
-                justifyContent="center"
+                spacing={1}
               >
                 {user?.name && (
                   <Typography
@@ -85,7 +103,17 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                     {user?.name}
                   </Typography>
                 )}
-                <Avatar src={user?.avatar} alt={user?.name} />
+                <Avatar src={user?.avatar} alt={user?.name} sx={{ width: 32, height: 32 }} />
+                
+                <Tooltip title="Logout">
+                  <IconButton
+                    color="inherit"
+                    onClick={handleLogout}
+                    sx={{ ml: 1 }}
+                  >
+                    <LogoutIcon />
+                  </IconButton>
+                </Tooltip>
               </Stack>
             )}
           </Stack>

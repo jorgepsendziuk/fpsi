@@ -16,9 +16,14 @@ export const metadata: Metadata = {
   title: "FPSI - Framework de Privacidade e Segurança da Informação",
   description: "Sistema de diagnóstico de privacidade e segurança da informação para organizações", 
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/ico_p.png", sizes: "any" },
+      { url: "/ico_p.png", type: "image/png" },
+    ],
+    shortcut: "/ico_p.png",
+    apple: "/ico_p.png",
   },
-};
+}; 
 
 export default function RootLayout({
   children,
@@ -89,6 +94,7 @@ export default function RootLayout({
                         ),
                         text: "FPSI",
                       },
+                      breadcrumb: false,
                     }}
                   >
                     {children}
