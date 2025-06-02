@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -48,6 +48,8 @@ import {
 } from "@mui/icons-material";
 import * as dataService from "../diagnostico/services/dataService";
 import { Programa } from "../diagnostico/types";
+import { initialState, reducer } from "../diagnostico/state";
+import { calculateProgramaMaturityCached } from "../diagnostico/utils/maturity";
 
 export default function ProgramasPage() {
   const router = useRouter();
@@ -60,10 +62,73 @@ export default function ProgramasPage() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedPrograma, setSelectedPrograma] = useState<Programa | null>(null);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
+  // Carregar dados necessários para cálculos de maturidade
   useEffect(() => {
-    loadProgramas();
+    loadAllData();
   }, []);
+
+  const loadAllData = async () => {
+    try {
+      setLoading(true);
+      
+      // Carregar dados em paralelo
+      const [programasData, diagnosticosData] = await Promise.all([
+        dataService.fetchProgramas(),
+        dataService.fetchDiagnosticos()
+      ]);
+      
+      setProgramas(programasData);
+      dispatch({ type: "SET_PROGRAMAS", payload: programasData });
+      dispatch({ type: "SET_DIAGNOSTICOS", payload: diagnosticosData });
+      
+      // Carregar controles e medidas para cada programa
+      for (const programa of programasData) {
+        await loadProgramaData(programa.id);
+      }
+      
+      setDataLoaded(true);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      setToastMessage("Erro ao carregar dados");
+      setToastSeverity("error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadProgramaData = async (programaId: number) => {
+    try {
+      // Carregar responsáveis
+      const responsaveis = await dataService.fetchResponsaveis(programaId);
+      dispatch({ type: "SET_RESPONSAVEIS", payload: responsaveis });
+
+      // Carregar controles e medidas para cada diagnóstico
+      const diagnosticos = state.diagnosticos || [];
+      for (const diagnostico of diagnosticos) {
+        try {
+          const controles = await dataService.fetchControles(diagnostico.id, programaId);
+          dispatch({ type: "SET_CONTROLES", diagnosticoId: diagnostico.id, payload: controles });
+          
+          // Carregar medidas para cada controle
+          for (const controle of controles) {
+            try {
+              const medidas = await dataService.fetchMedidas(controle.id, programaId);
+              dispatch({ type: "SET_MEDIDAS", controleId: controle.id, payload: medidas });
+            } catch (error) {
+              console.log(`Medidas não encontradas para controle ${controle.id}`);
+            }
+          }
+        } catch (error) {
+          console.log(`Controles não encontrados para diagnóstico ${diagnostico.id}`);
+        }
+      }
+    } catch (error) {
+      console.log(`Dados não encontrados para programa ${programaId}`);
+    }
+  };
 
   const loadProgramas = async () => {
     try {
@@ -77,6 +142,19 @@ export default function ProgramasPage() {
       setLoading(false);
     }
   };
+
+  // Memoizar cálculos de maturidade para evitar recálculos desnecessários
+  const programaMaturityData = useMemo(() => {
+    if (!dataLoaded) return new Map();
+    
+    const maturityMap = new Map();
+    programas.forEach(programa => {
+      const maturity = calculateProgramaMaturityCached(programa.id, state);
+      maturityMap.set(programa.id, maturity);
+    });
+    
+    return maturityMap;
+  }, [programas, state, dataLoaded]);
 
   const handleCreatePrograma = async () => {
     try {
@@ -150,11 +228,14 @@ export default function ProgramasPage() {
     return `linear-gradient(135deg, ${alpha(color, 0.1)} 0%, ${alpha(color, 0.05)} 100%)`;
   };
 
-  // Simular algumas estatísticas (você pode substituir por dados reais)
-  const getRandomProgress = () => Math.floor(Math.random() * 100);
-  const getRandomStatus = () => {
-    const statuses = ['Em andamento', 'Concluído', 'Pendente', 'Revisão'];
-    return statuses[Math.floor(Math.random() * statuses.length)];
+  const getStatusFromMaturity = (maturityLabel: string) => {
+    switch (maturityLabel) {
+      case 'Aprimorado': return 'Concluído';
+      case 'Em Aprimoramento': return 'Em andamento';
+      case 'Intermediário': return 'Em andamento';
+      case 'Básico': return 'Pendente';
+      default: return 'Pendente';
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -214,7 +295,7 @@ export default function ProgramasPage() {
               Meus Programas
             </Typography>
             <Typography variant="h6" color="text.secondary">
-              Gerencie seus programas de diagnóstico de segurança da informação
+              Gerencie seus programas de privacidade e segurança da informação
             </Typography>
           </Box>
           
@@ -295,8 +376,9 @@ export default function ProgramasPage() {
       ) : (
         <Grid container spacing={4}>
           {programas.map((programa) => {
-            const progress = getRandomProgress();
-            const status = getRandomStatus();
+            const maturityData = programaMaturityData.get(programa.id) || { score: 0, label: 'Inicial' };
+            const progress = Math.round(maturityData.score * 100);
+            const status = getStatusFromMaturity(maturityData.label);
             
             return (
               <Grid item xs={12} sm={6} lg={4} key={programa.id}>
@@ -330,29 +412,41 @@ export default function ProgramasPage() {
                   onMouseLeave={() => setHoveredCard(null)}
                 >
                   <CardContent sx={{ flex: 1, p: 3 }}>
-                    {/* Header do card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box
-                          sx={{
-                            p: 1.5,
-                            borderRadius: 2,
-                            background: alpha(theme.palette.background.paper, 0.8),
-                            backdropFilter: 'blur(10px)',
-                          }}
-                        >
-                          {getSetorIcon(programa.setor)}
-                        </Box>
-                        <Chip
-                          label={getSetorLabel(programa.setor)}
-                          size="small"
-                          color={getSetorColor(programa.setor) as any}
+                    {/* Header do card com título e mais opções na mesma linha */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                      <Box sx={{ flex: 1, mr: 1 }}>
+                        <Typography 
+                          variant="h6" 
+                          component="h2" 
                           sx={{ 
                             fontWeight: 'bold',
-                            borderRadius: 2,
+                            mb: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            lineHeight: 1.3
                           }}
+                        >
+                          {programa.razao_social || programa.nome_fantasia || `Programa #${programa.id}`}
+                          <Badge
+                            color={getStatusColor(status) as any}
+                            variant="dot"
+                            sx={{
+                              '& .MuiBadge-dot': {
+                                width: 6,
+                                height: 6,
+                              }
+                            }}
+                          />
+                        </Typography>
+                        <Chip
+                          label={status}
+                          size="small"
+                          color={getStatusColor(status) as any}
+                          sx={{ borderRadius: 1, height: 20, fontSize: '0.75rem' }}
                         />
                       </Box>
+                      
                       <Tooltip title="Mais opções">
                         <IconButton
                           size="small"
@@ -360,87 +454,44 @@ export default function ProgramasPage() {
                           sx={{
                             background: alpha(theme.palette.background.paper, 0.8),
                             backdropFilter: 'blur(10px)',
+                            width: 32,
+                            height: 32,
                             '&:hover': {
                               background: alpha(theme.palette.background.paper, 0.9),
                             }
                           }}
                         >
-                          <MoreVertIcon />
+                          <MoreVertIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </Box>
 
-                    {/* Título e ID */}
-                    <Box sx={{ mb: 3 }}>
-                      <Typography 
-                        variant="h5" 
-                        component="h2" 
-                        sx={{ 
-                          fontWeight: 'bold',
-                          mb: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1
-                        }}
-                      >
-                        Programa #{programa.id}
-                        <Badge
-                          color={getStatusColor(status) as any}
-                          variant="dot"
-                          sx={{
-                            '& .MuiBadge-dot': {
-                              width: 8,
-                              height: 8,
-                            }
-                          }}
-                        />
-                      </Typography>
-                      <Chip
-                        label={status}
-                        size="small"
-                        color={getStatusColor(status) as any}
-                        sx={{ borderRadius: 1 }}
-                      />
-                    </Box>
-
                     {/* Informações da empresa */}
-                    <Stack spacing={1.5} sx={{ mb: 3 }}>
-                      {programa.setor === 2 && (
-                        <>
-                          {programa.razao_social && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <BusinessIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                              <Typography variant="body2" color="text.secondary">
-                                {programa.razao_social}
-                              </Typography>
-                            </Box>
-                          )}
-                          {programa.cnpj && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold' }}>
-                                CNPJ: {programa.cnpj}
-                              </Typography>
-                            </Box>
-                          )}
-                        </>
+                    <Stack spacing={1} sx={{ mb: 2 }}>
+                      {programa.setor === 2 && programa.cnpj && (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                          <strong>CNPJ:</strong> {programa.cnpj}
+                        </Typography>
                       )}
 
-                      {programa.nome_fantasia && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            <strong>Nome:</strong> {programa.nome_fantasia}
-                          </Typography>
-                        </Box>
+                      {programa.nome_fantasia && programa.razao_social && programa.nome_fantasia !== programa.razao_social && (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                          <strong>Nome:</strong> {programa.nome_fantasia}
+                        </Typography>
                       )}
+                      
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                        <strong>Maturidade:</strong> {maturityData.label}
+                      </Typography>
                     </Stack>
 
-                    {/* Progresso simulado */}
+                    {/* Progresso baseado em dados reais */}
                     <Box sx={{ mb: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>
                           Progresso do Diagnóstico
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                           {progress}%
                         </Typography>
                       </Box>
@@ -448,44 +499,15 @@ export default function ProgramasPage() {
                         variant="determinate" 
                         value={progress}
                         sx={{
-                          height: 8,
-                          borderRadius: 4,
+                          height: 6,
+                          borderRadius: 3,
                           backgroundColor: alpha(theme.palette.grey[300], 0.3),
                           '& .MuiLinearProgress-bar': {
-                            borderRadius: 4,
+                            borderRadius: 3,
                             background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                           }
                         }}
                       />
-                    </Box>
-
-                    {/* Stats rápidas */}
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-around',
-                      p: 2,
-                      borderRadius: 2,
-                      background: alpha(theme.palette.background.paper, 0.5),
-                      backdropFilter: 'blur(10px)',
-                    }}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <CheckCircleIcon sx={{ fontSize: 20, color: 'success.main', mb: 0.5 }} />
-                        <Typography variant="caption" display="block" color="text.secondary">
-                          {Math.floor(Math.random() * 50)} Controles
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <AnalyticsIcon sx={{ fontSize: 20, color: 'info.main', mb: 0.5 }} />
-                        <Typography variant="caption" display="block" color="text.secondary">
-                          {Math.floor(Math.random() * 200)} Medidas
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <ScheduleIcon sx={{ fontSize: 20, color: 'warning.main', mb: 0.5 }} />
-                        <Typography variant="caption" display="block" color="text.secondary">
-                          {Math.floor(Math.random() * 30)} Dias
-                        </Typography>
-                      </Box>
                     </Box>
                   </CardContent>
 

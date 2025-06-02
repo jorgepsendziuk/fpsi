@@ -130,7 +130,7 @@ export default function HomePage() {
         <Toolbar>
           <GppGoodTwoToneIcon color="primary" sx={{ mr: 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            FPSI - Framework de Privacidade e Segurança da Informação
+            FPSI
           </Typography>
           
           {user ? (

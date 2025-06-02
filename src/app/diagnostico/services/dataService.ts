@@ -159,11 +159,20 @@ export const deletePrograma = async (programaId: number) => {
     .eq("id", programaId);
 };
 
-export const updateProgramaDetails = async (programaId: number, details: any) => {
-  return await supabaseBrowserClient
+export const updateProgramaDetails = async (programaId: number, updates: { cnpj?: string; razao_social?: string }) => {
+  const { data, error } = await supabaseBrowserClient
     .from("programa")
-    .update(details)
+    .update(updates)
     .eq("id", programaId);
+  return { data, error };
+};
+
+export const updateProgramaField = async (programaId: number, field: string, value: any) => {
+  const { data, error } = await supabaseBrowserClient
+    .from("programa")
+    .update({ [field]: value })
+    .eq("id", programaId);
+  return { data, error };
 };
 
 export const fetchProgramaById = async (programaId: number) => {

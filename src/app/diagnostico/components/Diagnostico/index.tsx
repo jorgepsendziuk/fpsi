@@ -1,5 +1,5 @@
 // React
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 
 // Material UI components
 import {
@@ -84,9 +84,25 @@ const DiagnosticoComponent: React.FC<DiagnosticoComponentProps> = ({
   responsaveis,
 }) => {
   const { accordionStyles } = useThemeColors();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Memoized handler to prevent unnecessary re-renders
+  const handleAccordionChange = useCallback(async (event: React.SyntheticEvent, expanded: boolean) => {
+    setIsExpanded(expanded);
+    
+    // Only fetch data when expanding AND data hasn't been loaded yet
+    if (expanded && !dataLoaded && controles.length === 0) {
+      console.log(`Fetching controls for diagnostico ${diagnostico.id} - first time`);
+      await handleControleFetch(diagnostico.id, programa.id);
+      setDataLoaded(true);
+    }
+  }, [diagnostico.id, programa.id, dataLoaded, controles.length, handleControleFetch]);
 
   return (
     <Accordion
+      expanded={isExpanded}
+      onChange={handleAccordionChange}
       slotProps={{ transition: { unmountOnExit: true } }}
       sx={{
         ...accordionStyles,
@@ -94,7 +110,6 @@ const DiagnosticoComponent: React.FC<DiagnosticoComponentProps> = ({
         mb: 2,
         backgroundColor: diagnostico.cor,
       }}
-      onChange={() => handleControleFetch(diagnostico.id, programa.id)}
     >
       <AccordionSummary 
         expandIcon={<ExpandMoreIcon />}
