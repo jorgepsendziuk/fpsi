@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { useGetIdentity, useLogout } from "@refinedev/core";
 import {
@@ -24,6 +24,7 @@ import {
   ListItemIcon,
   Divider,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import {
   Security as SecurityIcon,
@@ -34,9 +35,12 @@ import {
   Shield as ShieldIcon,
   Logout as LogoutIcon,
   Dashboard as DashboardIcon,
+  DarkModeOutlined,
+  LightModeOutlined,
 } from "@mui/icons-material";
 import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
 import Image from 'next/image';
+import { ColorModeContext } from "@contexts/color-mode";
 
 const features = [
   {
@@ -84,6 +88,7 @@ export default function HomePage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { mode, setMode } = useContext(ColorModeContext);
   
   const { data: user, isLoading: userLoading } = useGetIdentity<IUser>();
   const { mutate: logout } = useLogout();
@@ -133,6 +138,17 @@ export default function HomePage() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
             FPSI
           </Typography>
+          
+          {/* Theme toggle button */}
+          <Tooltip title={mode === "dark" ? "Modo Claro" : "Modo Escuro"}>
+            <IconButton
+              color="inherit"
+              onClick={() => setMode()}
+              sx={{ mr: 1 }}
+            >
+              {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
+            </IconButton>
+          </Tooltip>
           
           {user ? (
             // Usuário logado - mostrar menu do usuário
