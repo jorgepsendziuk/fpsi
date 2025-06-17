@@ -2,13 +2,13 @@
 import React, { useEffect, useState } from 'react';
 
 // Types
-import { Controle, Diagnostico, Medida } from '../types';
+import { Controle, Diagnostico, Medida } from '../../../app/diagnostico/types';
 
 // Components
-import ControleComponent from '../components/Controle';
+import ControleComponent from '../Controle';
 
 // Utils
-import { calculateMaturityIndexForControle } from '../utils/calculations';
+import { calculateMaturityIndexForControle } from '../../../app/diagnostico/utils/calculations';
 
 /**
  * Props for the ControleContainer component

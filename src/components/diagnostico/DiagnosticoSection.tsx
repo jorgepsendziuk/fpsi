@@ -8,9 +8,9 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import { useThemeColors } from "../hooks/useThemeColors";
+import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
 import DiagnosticoComponent from "./Diagnostico";
-import { calculateSumOfResponsesForDiagnostico, getMaturityLabel } from "../utils";
+import { calculateSumOfResponsesForDiagnostico, getMaturityLabel } from "../../app/diagnostico/utils";
 
 interface DiagnosticoSectionProps {
   programa: any;

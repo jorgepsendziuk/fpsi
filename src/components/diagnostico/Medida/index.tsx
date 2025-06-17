@@ -28,14 +28,14 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 // Utils
 import dayjs from 'dayjs';
-import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../utils';
+import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../../app/diagnostico/utils';
 
 // Types
-import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../types';
+import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../app/diagnostico/types';
 
 // Styles
 import { medidaStyles } from './styles';
-import { useThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors } from '../../../app/diagnostico/hooks/useThemeColors';
 
 /**
  * Props for the Medida component

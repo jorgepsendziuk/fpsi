@@ -1,4 +1,4 @@
-import { Diagnostico } from '../types';
+import { Diagnostico } from '../../../app/diagnostico/types';
 
 interface GridData {
   diagnosticos: Diagnostico[];

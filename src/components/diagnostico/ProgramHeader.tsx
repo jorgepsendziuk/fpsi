@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Box, Button } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
-import { useThemeColors } from "../hooks/useThemeColors";
+import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
 
 interface ProgramHeaderProps {
   handleCreatePrograma: () => void;

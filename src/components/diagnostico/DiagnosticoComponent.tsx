@@ -1,5 +1,5 @@
 import React from 'react';
-import { Diagnostico, Controle } from '../types';
+import { Diagnostico, Controle } from '../../app/diagnostico/types';
 
 interface DiagnosticoComponentProps {
   diagnostico: Diagnostico;

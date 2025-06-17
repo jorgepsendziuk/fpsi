@@ -25,17 +25,17 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 
 // Types
-import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '../../types';
+import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '../../../app/diagnostico/types';
 
 // Components
-import MedidaContainer from '../../containers/MedidaContainer';
+import MedidaContainer from '../containers/MedidaContainer';
 
 // Utils
-import { incc } from '../../utils';
+import { incc } from '../../../app/diagnostico/utils';
 
 // Styles
 import { controleStyles } from './styles';
-import { useThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors } from '../../../app/diagnostico/hooks/useThemeColors';
 
 /**
  * Props for the Controle component

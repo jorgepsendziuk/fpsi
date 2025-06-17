@@ -2,7 +2,7 @@ import React from 'react';
 import { DataGrid, GridColDef, GridRowModesModel, GridActionsCellItem } from '@mui/x-data-grid';
 import { Save, Cancel, Edit, Delete, Add } from '@mui/icons-material';
 import { Button, Box } from '@mui/material';
-import type { Responsavel } from '../types';
+import type { Responsavel } from '../../app/diagnostico/types';
 
 interface ResponsavelComponentProps {
   rows: Responsavel[];

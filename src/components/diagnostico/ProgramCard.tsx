@@ -11,13 +11,13 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
-import { useThemeColors } from "../hooks/useThemeColors";
-import Programa from "../programa";
+import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
 import ProgramSummaryContent from "./ProgramSummaryContent";
 import ResponsaveisSection from "./ResponsaveisSection";
 import DiagnosticoSection from "./DiagnosticoSection";
 import { useMediaQuery } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import ProgramaComponent from "./ProgramaComponent";
 
 interface ProgramCardProps {
   programa: any;
@@ -185,7 +185,12 @@ const ProgramCard = ({
       </Box>
       
       <AccordionDetails sx={{ bottom: 10, p: { xs: 1, sm: 2 } }}>
-        <Programa key={programa.id} programaId={programa.id} /> 
+        <ProgramaComponent
+          key={programa.id}
+          programa={programa}
+          onEditPrograma={() => {}}
+          onDeletePrograma={() => {}}
+        /> 
 
         {/* POLÍTICAS Accordion */}
         <Accordion sx={{ mt: 2 }}>

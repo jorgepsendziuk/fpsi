@@ -2,14 +2,14 @@
 import React, { useEffect } from 'react';
 
 // Types
-import { Diagnostico, Programa, Controle, State } from '../types';
+import { Diagnostico, Programa, Controle, State } from '../../../app/diagnostico/types';
 
 // Components
-import DiagnosticoComponent from '../components/DiagnosticoComponent';
+import DiagnosticoComponent from '../DiagnosticoComponent';
 
 // Utils
-import { calculateSumOfResponsesForDiagnostico } from '../utils/calculations';
-import { getMaturityLabel } from '../utils/maturity';
+import { calculateSumOfResponsesForDiagnostico } from '../../../app/diagnostico/utils/calculations';
+import { getMaturityLabel } from '../../../app/diagnostico/utils/maturity';
 
 /**
  * Props for the DiagnosticoContainer component

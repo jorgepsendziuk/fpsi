@@ -17,14 +17,14 @@ import Grid from '@mui/material/Grid2';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Types
-import { Controle, Diagnostico, Programa } from '../../types';
+import { Controle, Diagnostico, Programa } from '../../../app/diagnostico/types';
 
 // Components
-import ControleContainer from '../../containers/ControleContainer';
+import ControleContainer from '../containers/ControleContainer';
 
 // Styles
 import { diagnosticoStyles } from './styles';
-import { useThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors } from '../../../app/diagnostico/hooks/useThemeColors';
 
 /**
  * Retorna a cor para o índice de maturidade com base no valor

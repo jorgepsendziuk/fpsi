@@ -8,8 +8,8 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupIcon from '@mui/icons-material/Group';
-import Responsavel from "../responsavel";
-import { useThemeColors } from "../hooks/useThemeColors";
+import ResponsavelContainer from "./containers/ResponsavelContainer";
+import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
 
 interface ResponsaveisSectionProps {
   programa: number;
@@ -43,7 +43,7 @@ const ResponsaveisSection = ({ programa, responsaveis }: ResponsaveisSectionProp
         </Box>
       </AccordionSummary>
       <AccordionDetails>
-        <Responsavel programa={programa} />
+        <ResponsavelContainer programa={programa} />
       </AccordionDetails>
     </Accordion>
   );
