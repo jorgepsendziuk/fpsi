@@ -65,14 +65,15 @@ export default function ProgramasPage() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [state, dispatch] = useReducer(reducer, initialState);
   const [dataLoaded, setDataLoaded] = useState(false);
+
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
   const loadAllData = async () => {
     try {
       setLoading(true);
   // Carregar dados necessários para cálculos de maturidade
-  useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
-
 
       
       // Carregar dados em paralelo
