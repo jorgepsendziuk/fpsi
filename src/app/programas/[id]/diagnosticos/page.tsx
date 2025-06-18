@@ -119,26 +119,20 @@ export default function DiagnosticosPage() {
     } catch (error) {
       console.error(`Error fetching medidas for controle ${controleId}:`, error);
     }
-  }, []);
+  }, [dispatch]);
 
   const handleControleFetch = useCallback(async (diagnosticoId: number, programaId: number): Promise<void> => {
     const loadingKey = diagnosticoId;
-    
-    // Prevent duplicate requests
     if (loadingControlIds.has(loadingKey)) {
       console.log(`Already loading controls for diagnostico ${diagnosticoId}, skipping...`);
       return;
     }
-
     setLoadingControlIds(prev => new Set(prev).add(loadingKey));
-    
     try {
       console.log(`Fetching controles for diagnostico ${diagnosticoId}, programa ${programaId}`);
       const data = await dataService.fetchControles(diagnosticoId, programaId);
       console.log(`Controles fetched:`, data.length);
       dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
-      
-      // Load measures for each control sequentially
       for (const controle of data) {
         await handleMedidaFetch(controle.id, programaId);
       }
@@ -151,7 +145,7 @@ export default function DiagnosticosPage() {
         return newSet;
       });
     }
-  }, [loadingControlIds, handleMedidaFetch]);
+  }, [loadingControlIds, handleMedidaFetch, dispatch]);
 
   const handleINCCChange = useCallback(async (programaControleId: number, diagnosticoId: number, newValue: number): Promise<void> => {
     try {
@@ -170,7 +164,7 @@ export default function DiagnosticosPage() {
       setToastMessage("Erro ao atualizar resposta");
       setToastSeverity("error");
     }
-  }, []);
+  }, [dispatch]);
 
   const handleMedidaChange = useCallback(async (medidaId: number, controleId: number, programaId: number, field: string, value: any) => {
     try {

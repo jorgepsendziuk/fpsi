@@ -106,7 +106,6 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
 
   // Update status_plano_acao whenever relevant fields change
   useEffect(() => {
-    // Only update if we have programaMedida and the calculation would change
     if (programaMedida) {
       const newStatus = determineStatusPlanoAcao();
       if (newStatus !== programaMedida.status_plano_acao) {
@@ -114,14 +113,7 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
         memoizedHandleMedidaChange(medida.id, controle.id, programaId, "status_plano_acao", newStatus);
       }
     }
-  }, [
-    medida.id, 
-    controle.id, 
-    programaId, 
-    programaMedida,
-    determineStatusPlanoAcao,
-    memoizedHandleMedidaChange
-  ]);
+  }, [medida.id, controle.id, programaId, programaMedida, determineStatusPlanoAcao, memoizedHandleMedidaChange]);
 
   /**
    * Handles changes to text fields by updating local state

@@ -69,7 +69,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
     console.log(`ControleContainer: Controle nivel:`, controle.nivel);
     console.log(`ControleContainer: Controle programa_controle_id:`, controle.programa_controle_id);
     handleMedidaFetch(controle.id, programaId);
-  }, [controle.id, programaId, handleMedidaFetch]);
+  }, [controle, controle.id, programaId, handleMedidaFetch]);
 
   /**
    * Calculate the maturity index for this control

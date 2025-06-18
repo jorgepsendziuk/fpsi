@@ -39,6 +39,17 @@ const DiagnosticoPage = () => {
     loadInitialData();
   }, []);
 
+  
+  const fetchControlesAndMedidas = async (programaId: number) => {
+    const diagnosticos = await dataService.fetchDiagnosticos();
+    for (const diagnostico of diagnosticos) {
+      const controles = await dataService.fetchControles(diagnostico.id, programaId);
+      for (const controle of controles) {
+        await handleMedidaFetch(controle.id, programaId);
+      }
+      await handleControleFetch(diagnostico.id, programaId);
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       const programaId = 1; // TODO: Get this from URL or context
@@ -50,18 +61,7 @@ const DiagnosticoPage = () => {
       }
     };
     fetchData();
-  }, []);
-
-  const fetchControlesAndMedidas = async (programaId: number) => {
-    const diagnosticos = await dataService.fetchDiagnosticos();
-    for (const diagnostico of diagnosticos) {
-      const controles = await dataService.fetchControles(diagnostico.id, programaId);
-      for (const controle of controles) {
-        await handleMedidaFetch(controle.id, programaId);
-      }
-      await handleControleFetch(diagnostico.id, programaId);
-    }
-  };
+  }, [fetchControlesAndMedidas]);
 
   const handleControleFetch = async (diagnosticoId: number, programaId: number): Promise<void> => {
     const data = await dataService.fetchControles(diagnosticoId, programaId);

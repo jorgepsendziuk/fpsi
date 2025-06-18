@@ -47,7 +47,7 @@ const ResponsavelContainer: React.FC<ResponsavelContainerProps> = ({
   // Load responsaveis when the component mounts or programa changes
   useEffect(() => {
     fetchResponsaveis();
-  }, [programa]);
+  }, [programa, fetchResponsaveis]);
 
   /**
    * Handle row edit start event
