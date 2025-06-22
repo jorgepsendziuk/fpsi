@@ -25,7 +25,7 @@ export const fetchOrgaos = async () => {
   return data || [];
 };
 
-export const fetchResponsaveis = async (programaId: number, retries = 3) => {
+export const fetchResponsaveis = async (programaId: number, retries = 3): Promise<any[]> => {
   try {
     const { data, error } = await supabaseBrowserClient
       .from("responsavel")
