@@ -2,7 +2,7 @@ import { AuthPage } from "@refinedev/mui";
 import { authProviderServer } from "@providers/auth-provider";
 import { redirect } from "next/navigation";
 
-export default async function Login() {
+export default async function Register() {
   const data = await getData();
 
   if (data.authenticated) {
@@ -11,8 +11,8 @@ export default async function Login() {
 
   return (
     <AuthPage 
-      type="login"
-      title="FPSI - Framework de Privacidade e Segurança da Informação"
+      type="register"
+      title="FPSI - Criar Nova Conta"
       wrapperProps={{
         sx: {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -47,4 +47,4 @@ async function getData() {
     redirectTo,
     error,
   };
-}
+} 

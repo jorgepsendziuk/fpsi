@@ -1,59 +1,59 @@
 {
     "pages": {
       "login": {
-        "title": "Faça login na sua conta",
+        "title": "Acesse sua conta",
         "signin": "Entrar",
-        "signup": "Inscrever-se",
+        "signup": "Criar conta",
         "divider": "ou",
         "fields": {
-          "email": "Email",
+          "email": "E-mail",
           "password": "Senha"
         },
         "errors": {
-          "validEmail": "Endereço de email inválido",
-          "requiredEmail": "Email é obrigatório",
+          "validEmail": "Endereço de e-mail inválido",
+          "requiredEmail": "E-mail é obrigatório",
           "requiredPassword": "Senha é obrigatória"
         },
         "buttons": {
-          "submit": "Login",
+          "submit": "Entrar",
           "forgotPassword": "Esqueceu a senha?",
-          "noAccount": "Não tem uma conta?",
+          "noAccount": "Não tem uma conta? Criar conta",
           "rememberMe": "Lembrar-me"
         }
       },
       "forgotPassword": {
         "title": "Esqueceu sua senha?",
         "fields": {
-          "email": "Email"
+          "email": "E-mail"
         },
         "errors": {
-          "validEmail": "Endereço de email inválido",
-          "requiredEmail": "Email é obrigatório"
+          "validEmail": "Endereço de e-mail inválido",
+          "requiredEmail": "E-mail é obrigatório"
         },
         "buttons": {
           "submit": "Enviar instruções de redefinição"
         }
       },
       "register": {
-        "title": "Inscreva-se na sua conta",
+        "title": "Criar nova conta",
         "fields": {
-          "email": "Email",
+          "email": "E-mail",
           "password": "Senha"
         },
         "errors": {
-          "validEmail": "Endereço de email inválido",
-          "requiredEmail": "Email é obrigatório",
+          "validEmail": "Endereço de e-mail inválido",
+          "requiredEmail": "E-mail é obrigatório",
           "requiredPassword": "Senha é obrigatória"
         },
         "buttons": {
-          "submit": "Registrar",
-          "haveAccount": "Já tem uma conta?"
+          "submit": "Criar conta",
+          "haveAccount": "Já tem uma conta? Fazer login"
         }
       },
       "updatePassword": {
         "title": "Atualizar senha",
         "fields": {
-          "password": "Nova Senha",
+          "password": "Nova senha",
           "confirmPassword": "Confirmar nova senha"
         },
         "errors": {
