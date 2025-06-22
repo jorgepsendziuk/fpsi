@@ -1,5 +1,5 @@
 // React and hooks
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 // Types
 import { Responsavel } from '../../../app/diagnostico/types';
@@ -34,20 +34,26 @@ const ResponsavelContainer: React.FC<ResponsavelContainerProps> = ({
   /**
    * Fetch responsaveis from the database
    */
-  const fetchResponsaveis = async () => {
+  const fetchResponsaveis = useCallback(async () => {
     const { data } = await supabaseBrowserClient
       .from("responsavel")
       .select("*")
       .eq("programa", programa)
       .order("id", { ascending: true });
     setRows(data || []);
-    if (onUpdate) onUpdate();
-  };
+  }, [programa]);
 
   // Load responsaveis when the component mounts or programa changes
   useEffect(() => {
     fetchResponsaveis();
-  }, [programa, fetchResponsaveis]);
+  }, [fetchResponsaveis]);
+
+  // Call onUpdate when rows change, but only if we have data
+  useEffect(() => {
+    if (rows.length > 0 && onUpdate) {
+      onUpdate();
+    }
+  }, [rows, onUpdate]);
 
   /**
    * Handle row edit start event
@@ -82,7 +88,6 @@ const ResponsavelContainer: React.FC<ResponsavelContainerProps> = ({
       return;
     }
     
-    // Certifique-se de que todos os campos obrigatórios estão presentes
     const updatedRow = {
       ...row,
       programa: programa
@@ -96,11 +101,10 @@ const ResponsavelContainer: React.FC<ResponsavelContainerProps> = ({
         
       if (error) {
         console.error("Erro ao salvar responsável:", error);
-        // Tratar erro
         return;
       }
       
-      if (onUpdate) onUpdate();
+      // Don't call onUpdate here - it will be called when rows change
     } catch (err) {
       console.error("Erro inesperado:", err);
     }
@@ -127,7 +131,7 @@ const ResponsavelContainer: React.FC<ResponsavelContainerProps> = ({
       .delete()
       .eq("id", id);
     setRows(rows.filter((row) => row.id !== id));
-    if (onUpdate) onUpdate();
+    // Don't call onUpdate here - it will be called when rows change
   };
 
   /**

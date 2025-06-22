@@ -25,13 +25,24 @@ export const fetchOrgaos = async () => {
   return data || [];
 };
 
-export const fetchResponsaveis = async (programaId: number) => {
-  const { data } = await supabaseBrowserClient
-    .from("responsavel")
-    .select("*")
-    .eq("programa", programaId)
-    .order("nome", { ascending: true });
-  return data || [];
+export const fetchResponsaveis = async (programaId: number, retries = 3) => {
+  try {
+    const { data, error } = await supabaseBrowserClient
+      .from("responsavel")
+      .select("id, nome, email, departamento, programa")
+      .eq("programa", programaId)
+      .order("nome", { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error(`Error fetching responsaveis (attempt ${4 - retries}):`, error);
+    if (retries > 0 && error.message?.includes('INSUFFICIENT_RESOURCES')) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      return fetchResponsaveis(programaId, retries - 1);
+    }
+    return [];
+  }
 };
 
 export const fetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {

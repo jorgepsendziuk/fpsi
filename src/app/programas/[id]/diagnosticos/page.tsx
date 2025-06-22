@@ -113,6 +113,8 @@ export default function DiagnosticosPage() {
   const handleMedidaFetch = useCallback(async (controleId: number, programaId: number): Promise<void> => {
     try {
       console.log(`Fetching medidas for controle ${controleId}, programa ${programaId}`);
+      // Add small delay to prevent overwhelming Supabase
+      await new Promise(resolve => setTimeout(resolve, 100));
       const data = await dataService.fetchMedidas(controleId, programaId);
       console.log(`Medidas fetched:`, data.length);
       dispatch({ type: "SET_MEDIDAS", controleId, payload: data });
@@ -133,7 +135,9 @@ export default function DiagnosticosPage() {
       const data = await dataService.fetchControles(diagnosticoId, programaId);
       console.log(`Controles fetched:`, data.length);
       dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
+      // Load measures sequentially with delay to prevent resource exhaustion
       for (const controle of data) {
+        await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay between requests
         await handleMedidaFetch(controle.id, programaId);
       }
     } catch (error) {
@@ -782,11 +786,6 @@ export default function DiagnosticosPage() {
                       </Typography>
                       <ResponsavelContainer 
                         programa={programaId} 
-                        onUpdate={async () => {
-                          // Recarregar responsáveis quando houver atualizações
-                          const responsaveis = await dataService.fetchResponsaveis(programaId);
-                          dispatch({ type: "SET_RESPONSAVEIS", payload: responsaveis });
-                        }}
                       />
                     </Grid>
                   </Grid>
