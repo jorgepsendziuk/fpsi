@@ -10,11 +10,11 @@ export default function NotFound() {
   return (
     <ColorModeContextProvider>
       <RefineSnackbarProvider>
-        <Suspense>
-          <Authenticated key="not-found">
-            <ErrorComponent />
-          </Authenticated>
-        </Suspense>
+    <Suspense>
+      <Authenticated key="not-found">
+        <ErrorComponent />
+      </Authenticated>
+    </Suspense>
       </RefineSnackbarProvider>
     </ColorModeContextProvider>
   );
