@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useReducer, useEffect, useState, useCallback } from "react";
+import React, { useReducer, useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -62,7 +62,7 @@ import { Programa } from '../../../diagnostico/types';
 import DiagnosticoComponent from "../../../diagnostico/components/Diagnostico";
 import ProgramaForm from "../../../diagnostico/programa";
 import { calculateSumOfResponsesForDiagnostico, getMaturityLabel } from "../../../diagnostico/utils";
-import { calculateDiagnosticoMaturity, clearMaturityCache } from "../../../diagnostico/utils/maturity";
+import { calculateDiagnosticoMaturityCached, clearMaturityCache } from "../../../diagnostico/utils/maturity";
 import ResponsavelContainer from "../../../diagnostico/containers/ResponsavelContainer";
 
 /**
@@ -108,6 +108,8 @@ export default function DiagnosticosPage() {
   const [loadingControlIds, setLoadingControlIds] = useState<Set<number>>(new Set());
   const [editMode, setEditMode] = useState<{[key: string]: boolean}>({});
   const [programaEditValues, setProgramaEditValues] = useState<{[key: string]: any}>({});
+  const [diagnosticoMaturities, setDiagnosticoMaturities] = useState<{[diagnosticoId: number]: { score: number, label: string }}>(() => ({}));
+  const [diagnosticosLoaded, setDiagnosticosLoaded] = useState<{[diagnosticoId: number]: boolean}>({});
 
   // Memoized handlers to prevent re-creation on every render
   const handleMedidaFetch = useCallback(async (controleId: number, programaId: number): Promise<void> => {
@@ -161,6 +163,14 @@ export default function DiagnosticosPage() {
         field: "nivel",
         value: newValue,
       });
+      // Limpar cache de maturidade SEMPRE que houver mudança de INCC
+      clearMaturityCache(programaId);
+      // Encontrar o controle alterado
+      const controles = state.controles[diagnosticoId] || [];
+      const controleAlterado = controles.find((c: any) => c.programa_controle_id === programaControleId);
+      if (controleAlterado) {
+        await handleMedidaFetch(controleAlterado.id, programaId);
+      }
       setToastMessage("Resposta atualizada com sucesso");
       setToastSeverity("success");
     } catch (error) {
@@ -168,7 +178,7 @@ export default function DiagnosticosPage() {
       setToastMessage("Erro ao atualizar resposta");
       setToastSeverity("error");
     }
-  }, [dispatch]);
+  }, [dispatch, programaId, state.controles, handleMedidaFetch]);
 
   const handleMedidaChange = useCallback(async (medidaId: number, controleId: number, programaId: number, field: string, value: any) => {
     try {
@@ -183,19 +193,17 @@ export default function DiagnosticosPage() {
           value,
         });
 
-        // Limpar cache de maturidade quando há mudança significativa
-        if (['resposta', 'status_medida'].includes(field)) {
-          clearMaturityCache(programaId);
-          await handleMedidaFetch(controleId, programaId);
-          
-          // Find and reload the parent diagnostic
-          const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
-            state.controles[key].some((c: any) => c.id === controleId)
-          ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
+        // Limpar cache de maturidade SEMPRE que houver mudança
+        clearMaturityCache(programaId);
+        await handleMedidaFetch(controleId, programaId);
+        
+        // Find and reload the parent diagnostic
+        const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
+          state.controles[key].some((c: any) => c.id === controleId)
+        ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
 
-          if (diagnosticoId) {
-            await handleControleFetch(diagnosticoId, programaId);
-          }
+        if (diagnosticoId) {
+          await handleControleFetch(diagnosticoId, programaId);
         }
 
         setToastMessage("Resposta atualizada com sucesso");
@@ -382,10 +390,10 @@ export default function DiagnosticosPage() {
     return setor === 1 ? <AccountBalanceIcon /> : <BusinessIcon />;
   };
 
-  // Função para calcular maturidade de forma estável e documentada
+  // Função para calcular maturidade de forma estável e documentada com cache
   const calculateStableMaturity = useCallback((diagnosticoId: number): { score: number, label: string } => {
-    return calculateDiagnosticoMaturity(diagnosticoId, programaId, state);
-  }, [state, programaId]);
+    return calculateDiagnosticoMaturityCached(diagnosticoId, programaId, state);
+  }, [state.controles, state.medidas, programaId]);
 
   // Função para lidar com edição de campos do programa
   const handleProgramaFieldChange = useCallback((field: string, value: any) => {
@@ -488,6 +496,48 @@ export default function DiagnosticosPage() {
       </Box>
     );
   };
+
+  // [AJUSTE] Função para verificar se todas as medidas de todos os controles de um diagnóstico estão carregadas
+  const areAllMedidasLoaded = (diagnosticoId: number) => {
+    const controles = state.controles[diagnosticoId] || [];
+    if (!controles.length) return false;
+    return controles.every((controle: any) => Array.isArray(state.medidas[controle.id]) && state.medidas[controle.id].length > 0);
+  };
+
+  // [AJUSTE] Carregar todos os controles e medidas de todos os diagnósticos antes de calcular maturidade
+  useEffect(() => {
+    if (!dataLoaded || !state.diagnosticos.length) return;
+    let cancelled = false;
+
+    const loadAllControlesEMedidas = async () => {
+      for (const diagnostico of state.diagnosticos) {
+        // Carregar controles
+        await handleControleFetch(diagnostico.id, programaId);
+        // Carregar medidas de todos os controles desse diagnóstico
+        const controles = state.controles[diagnostico.id] || [];
+        for (const controle of controles) {
+          await handleMedidaFetch(controle.id, programaId);
+        }
+        if (!cancelled && areAllMedidasLoaded(diagnostico.id)) {
+          setDiagnosticosLoaded(prev => ({ ...prev, [diagnostico.id]: true }));
+        }
+      }
+    };
+    loadAllControlesEMedidas();
+    return () => { cancelled = true; };
+  }, [dataLoaded, state.diagnosticos.length, state.controles, state.medidas, programaId]);
+
+  // [AJUSTE] Atualizar cache local de maturidade quando dados mudarem
+  useEffect(() => {
+    if (!state.diagnosticos.length) return;
+    const newMaturities: {[diagnosticoId: number]: { score: number, label: string }} = {};
+    for (const diagnostico of state.diagnosticos) {
+      if (diagnosticosLoaded[diagnostico.id] && areAllMedidasLoaded(diagnostico.id)) {
+        newMaturities[diagnostico.id] = calculateDiagnosticoMaturityCached(diagnostico.id, programaId, state);
+      }
+    }
+    setDiagnosticoMaturities(newMaturities);
+  }, [state.controles, state.medidas, state.diagnosticos, diagnosticosLoaded, programaId]);
 
   if (loading) {
     return (
@@ -887,13 +937,13 @@ export default function DiagnosticosPage() {
                   {/* Renderizar diagnósticos */}
                   <Stack spacing={2}>
                     {state.diagnosticos.map((diagnostico: any, index: number) => {
-                      const maturityData = calculateStableMaturity(diagnostico.id);
                       const controles = state.controles && state.controles[diagnostico.id] ? 
                         state.controles[diagnostico.id].filter((controle: any) => controle.programa === programa.id) : 
                         [];
-
-                      console.log(`Rendering diagnostico ${diagnostico.id} with ${controles.length} controles, stable maturity: ${maturityData.score} (${maturityData.label})`);
-                      
+                      // Só renderizar maturidade se dados estiverem carregados
+                      const maturityData = diagnosticoMaturities[diagnostico.id] && diagnosticosLoaded[diagnostico.id]
+                        ? diagnosticoMaturities[diagnostico.id]
+                        : { score: 0, label: "Inicial" };
                       return (
                         <Box key={`${diagnostico.id}-${index}`}>
                           <DiagnosticoComponent

@@ -8,8 +8,7 @@ import { Diagnostico, Programa, Controle, State } from '../../../app/diagnostico
 import DiagnosticoComponent from '../DiagnosticoComponent';
 
 // Utils
-import { calculateSumOfResponsesForDiagnostico } from '../../../app/diagnostico/utils/calculations';
-import { getMaturityLabel } from '../../../app/diagnostico/utils/maturity';
+import { calculateDiagnosticoMaturity } from '../../../app/diagnostico/utils/maturity';
 
 /**
  * Props for the DiagnosticoContainer component
@@ -51,8 +50,10 @@ const DiagnosticoContainer: React.FC<DiagnosticoContainerProps> = ({
   }, [programa.id, diagnostico.id, handleControleFetch]);
 
   const controles = state.controles[diagnostico.id] || [];
-  const maturityScore = calculateSumOfResponsesForDiagnostico(diagnostico.id, state);
-  const maturityLabel = getMaturityLabel(maturityScore);
+  // Calculate maturity score for this diagnostic using the correct formula
+  const maturityResult = calculateDiagnosticoMaturity(diagnostico.id, programa.id, state);
+  const maturityScore = maturityResult.score;
+  const maturityLabel = maturityResult.label;
 
   return (
     <DiagnosticoComponent

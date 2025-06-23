@@ -36,11 +36,7 @@ export const fetchResponsaveis = async (programaId: number, retries = 3): Promis
     if (error) throw error;
     return data || [];
   } catch (error: any) {
-    console.error(`Error fetching responsaveis (attempt ${4 - retries}):`, error);
-    if (retries > 0 && error.message?.includes('INSUFFICIENT_RESOURCES')) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      return fetchResponsaveis(programaId, retries - 1);
-    }
+    console.error(error);
     return [];
   }
 };

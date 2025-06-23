@@ -10,7 +10,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
 import DiagnosticoComponent from "./Diagnostico";
-import { calculateSumOfResponsesForDiagnostico, getMaturityLabel } from "../../app/diagnostico/utils";
+import { calculateDiagnosticoMaturity } from "../../app/diagnostico/utils/maturity";
 
 interface DiagnosticoSectionProps {
   programa: any;
@@ -61,9 +61,10 @@ const DiagnosticoSection: React.FC<DiagnosticoSectionProps> = ({
       </AccordionSummary>
       <AccordionDetails>
         {state.diagnosticos.map((diagnostico: any) => {
-          // Calcular o índice de maturidade corretamente
-          const calculatedMaturityScore = calculateSumOfResponsesForDiagnostico(diagnostico.id, state);
-          const calculatedMaturityLabel = getMaturityLabel(Number(calculatedMaturityScore));
+          // Calcular o índice de maturidade corretamente usando a fórmula completa
+          const maturityResult = calculateDiagnosticoMaturity(diagnostico.id, programa.id, state);
+          const calculatedMaturityScore = maturityResult.score;
+          const calculatedMaturityLabel = maturityResult.label;
           
           return (
             <DiagnosticoComponent

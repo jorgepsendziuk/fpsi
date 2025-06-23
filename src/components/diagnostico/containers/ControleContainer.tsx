@@ -8,7 +8,8 @@ import { Controle, Diagnostico, Medida } from '../../../app/diagnostico/types';
 import ControleComponent from '../Controle';
 
 // Utils
-import { calculateMaturityIndexForControle } from '../../../app/diagnostico/utils/calculations';
+import { calculateMaturityIndexForControle, calculateMaturityIndex } from '../../../app/diagnostico/utils/calculations';
+import { respostas, respostasimnao, incc } from '../../../app/diagnostico/utils';
 
 /**
  * Props for the ControleContainer component
@@ -72,11 +73,51 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   }, [controle, controle.id, programaId, handleMedidaFetch]);
 
   /**
-   * Calculate the maturity index for this control
+   * Calculate the maturity index for this control using the correct formula
    */
-  const calculateMaturityIndex = (controle: Controle) => {
-    const result = calculateMaturityIndexForControle(controle, state);
-    return result;
+  const calculateMaturityIndexLocal = (controle: Controle): number => {
+    // Construir programaMedidas a partir dos dados disponíveis
+    const programaMedidas = medidas
+      .filter(medida => medida.programa_medida)
+      .map(medida => medida.programa_medida!)
+      .filter(pm => pm !== undefined);
+
+    if (programaMedidas.length > 0) {
+      // Usar a fórmula correta com os dados completos
+      const result = calculateMaturityIndexForControle(controle, programaControle, programaMedidas);
+      console.log(`ControleContainer: Maturity calculated for controle ${controle.id}: ${result}`);
+      return parseFloat(result);
+    } else {
+      // Fallback: usar cálculo simplificado baseado apenas nas respostas disponíveis
+      console.log(`ControleContainer: Using fallback calculation for controle ${controle.id}`);
+      
+      let totalResponses = 0;
+      let responseCount = 0;
+
+      medidas.forEach((medida: any) => {
+        if (medida.resposta && typeof medida.resposta === 'number') {
+          // Buscar o peso correto da resposta
+          let resposta: any;
+          if (controle.diagnostico === 1) {
+            resposta = respostasimnao.find((r) => r.id === medida.resposta);
+          } else {
+            resposta = respostas.find((r) => r.id === medida.resposta);
+          }
+          
+          if (resposta && resposta.peso !== null) {
+            totalResponses += resposta.peso;
+            responseCount++;
+          }
+        }
+      });
+
+      const baseScore = responseCount > 0 ? totalResponses / responseCount : 0;
+      const inccLevel = incc.find((i) => i.id === programaControle.nivel);
+      const inccMultiplier = 1 + ((inccLevel?.nivel || 0) * 1 / 5);
+      const finalScore = (baseScore / 2) * inccMultiplier;
+      
+      return finalScore;
+    }
   };
 
   // Create programaControle object from controle data
@@ -99,7 +140,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
       responsaveis={responsaveis}
       handleINCCChange={handleINCCChange}
       handleMedidaChange={handleMedidaChange}
-      calculateMaturityIndex={calculateMaturityIndex}
+      calculateMaturityIndex={calculateMaturityIndexLocal}
     />
   );
 };

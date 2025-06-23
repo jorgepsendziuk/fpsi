@@ -181,12 +181,55 @@ export const calculateProgramaMaturityCached = (
 };
 
 /**
+ * Versão com cache do cálculo de maturidade do diagnóstico
+ * @param diagnosticoId ID do diagnóstico
+ * @param programaId ID do programa
+ * @param state Estado da aplicação
+ * @returns Objeto com score e label de maturidade (pode vir do cache)
+ */
+export const calculateDiagnosticoMaturityCached = (
+  diagnosticoId: number, 
+  programaId: number, 
+  state: State
+): { score: number; label: string } => {
+  const cacheKey = `diagnostico-${diagnosticoId}-programa-${programaId}`;
+  const now = Date.now();
+  
+  // Verificar se existe no cache e ainda é válido
+  const cached = maturityCache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return { score: cached.score, label: cached.label };
+  }
+
+  // Calcular novo valor
+  const result = calculateDiagnosticoMaturity(diagnosticoId, programaId, state);
+  
+  // Salvar no cache
+  maturityCache.set(cacheKey, {
+    ...result,
+    timestamp: now
+  });
+
+  return result;
+};
+
+/**
  * Limpa o cache de maturidade para um programa específico
  * @param programaId ID do programa
  */
 export const clearMaturityCache = (programaId?: number) => {
   if (programaId) {
+    // Limpar cache do programa
     maturityCache.delete(`programa-${programaId}`);
+    
+    // Limpar cache de todos os diagnósticos deste programa
+    const keysToDelete: string[] = [];
+    maturityCache.forEach((value, key) => {
+      if (key.includes(`programa-${programaId}`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => maturityCache.delete(key));
   } else {
     maturityCache.clear();
   }
