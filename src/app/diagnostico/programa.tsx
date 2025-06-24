@@ -4,6 +4,9 @@ import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl, Fill
 import Grid from '@mui/material/Grid2';
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import 'dayjs/locale/pt-br';
 import dayjs from "dayjs";
 import type { Programa } from "./types";
 import Accordion from '@mui/material/Accordion';
@@ -119,241 +122,72 @@ const Programa = ({ programaId }: { programaId: number }) => {
   };
 
   return (
-    <Box component="form" noValidate autoComplete="off" sx={{ mt: 3 }}>
-      <Grid container spacing={0} direction="column"> 
-        <Grid>
-          <Accordion sx={accordionStyles}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <BusinessIcon fontSize="large" color="primary" sx={{ ml: 1 }} />
-                <Typography variant="h5" style={{ fontWeight: "500" }}>Dados da Instituição</Typography>
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={3}>
-                <Grid size={{ md: 4, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <TextField
-                      id="programa-atendimento-fone"
-                      name="atendimento_fone"
-                      fullWidth
-                      label="Telefone de Atendimento"
-                      value={editedFields.atendimento_fone !== undefined ? editedFields.atendimento_fone : (programa?.atendimento_fone || "")}
-                      onChange={handleChange("atendimento_fone")}
-                    />
-                  </Box>
-                </Grid>
-                <Grid size={{ md: 4, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <TextField
-                      id="programa-atendimento-email"
-                      name="atendimento_email"
-                      fullWidth
-                      label="Email de Atendimento"
-                      value={editedFields.atendimento_email !== undefined ? editedFields.atendimento_email : (programa?.atendimento_email || "")}
-                      onChange={handleChange("atendimento_email")}
-                    />
-                  </Box>
-                </Grid>
-                <Grid size={{ md: 4, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <TextField
-                      id="programa-atendimento-site"
-                      name="atendimento_site"
-                      fullWidth
-                      label="Site de Atendimento"
-                      value={editedFields.atendimento_site !== undefined ? editedFields.atendimento_site : (programa?.atendimento_site || "")}
-                      onChange={handleChange("atendimento_site")}
-                    />
-                  </Box>
-                </Grid>
-                <Grid size={{ md: 6, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <DatePicker
-                      label="Início da Vigência da Política"
-                      value={editedFields.politica_inicio_vigencia !== undefined ? editedFields.politica_inicio_vigencia : (programa?.politica_inicio_vigencia ? dayjs(programa.politica_inicio_vigencia) : null)}
-                      onChange={handleDateChange("politica_inicio_vigencia")}
-                      slotProps={{ textField: { id: "programa-politica-inicio-vigencia", name: "politica_inicio_vigencia", fullWidth: true } }}
-                    />
-                  </Box>
-                </Grid>
-                <Grid size={{ md: 6, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <DatePicker
-                      label="Prazo de Revisão da Política"
-                      value={editedFields.politica_prazo_revisao !== undefined ? editedFields.politica_prazo_revisao : (programa?.politica_prazo_revisao ? dayjs(programa.politica_prazo_revisao) : null)}
-                      onChange={handleDateChange("politica_prazo_revisao")}
-                      slotProps={{ textField: { id: "programa-politica-prazo-revisao", name: "politica_prazo_revisao", fullWidth: true } }}
-                    />
-                  </Box>
-                </Grid>
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-        </Grid>
-        
-        <Grid>
-          <Accordion sx={accordionStyles}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <GroupIcon fontSize="large" color="primary" sx={{ ml: 1 }} />
-                <Typography variant="h5" style={{ fontWeight: "500" }}>Responsabilidades</Typography>
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={3}>
-                <Grid size={{ md: 3, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <FormControl fullWidth>
-                      <InputLabel id="responsavel-controle-interno-label">Responsável Controle Interno</InputLabel>
-                      <Select
-                        label="responsavel-controle-interno-label"
-                        id="responsavel-controle-interno"
-                        name="responsavel_controle_interno"
-                        value={editedFields.responsavel_controle_interno !== undefined ? editedFields.responsavel_controle_interno : (programa?.responsavel_controle_interno || "")}
-                        onChange={handleChange("responsavel_controle_interno")}
-                      >
-                        {responsaveis.map((responsavel: any) => (
-                          <MenuItem key={responsavel.id} value={responsavel.id}>
-                            {responsavel.nome}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </Grid>
-                <Grid size={{ md: 3, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <FormControl fullWidth>
-                      <InputLabel id="responsavel-si-label">Responsável SI</InputLabel>
-                      <Select
-                        label="responsavel-si-label"
-                        id="responsavel-si"
-                        name="responsavel_si"
-                        value={editedFields.responsavel_si !== undefined ? editedFields.responsavel_si : (programa?.responsavel_si || "")}
-                        onChange={handleChange("responsavel_si")}
-                      >
-                        {responsaveis.map((responsavel: any) => (
-                          <MenuItem key={responsavel.id} value={responsavel.id}>
-                            {responsavel.nome}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </Grid>
-                <Grid size={{ md: 3, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <FormControl fullWidth>
-                      <InputLabel id="responsavel-privacidade-label">Responsável Privacidade</InputLabel>
-                      <Select
-                        label="responsavel-privacidade-label"
-                        id="responsavel-privacidade"
-                        name="responsavel_privacidade"
-                        value={editedFields.responsavel_privacidade !== undefined ? editedFields.responsavel_privacidade : (programa?.responsavel_privacidade || "")}
-                        onChange={handleChange("responsavel_privacidade")}
-                      >
-                        {responsaveis.map((responsavel: any) => (
-                          <MenuItem key={responsavel.id} value={responsavel.id}>
-                            {responsavel.nome}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </Grid>
-                <Grid size={{ md: 3, sm: 6, xs: 12}}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>Responsável TI</InputLabel>
-                      <Select
-                        label="responsavel-ti-label"
-                        id="responsavel-ti"
-                        name="responsavel_ti"
-                        value={editedFields.responsavel_ti !== undefined ? editedFields.responsavel_ti : (programa?.responsavel_ti || "")}
-                        onChange={handleChange("responsavel_ti")}
-                      >
-                        {responsaveis.map((responsavel: any) => (
-                          <MenuItem key={responsavel.id} value={responsavel.id}>
-                            {responsavel.nome}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
-                  <Responsavel programa={programaId} onUpdate={fetchResponsaveis} />
-                </Grid>
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-        </Grid>
-        
-        {programa?.setor === 1 && (
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+      <Box component="form" noValidate autoComplete="off" sx={{ mt: 3 }}>
+        <Grid container spacing={0} direction="column"> 
           <Grid>
             <Accordion sx={accordionStyles}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <AccountBalanceIcon fontSize="large" color="primary" sx={{ ml: 1 }} />
-                  <Typography variant="h5" style={{ fontWeight: "500" }}>Uso da SGD</Typography>
+                  <BusinessIcon fontSize="large" color="primary" sx={{ ml: 1 }} />
+                  <Typography variant="h5" style={{ fontWeight: "500" }}>Dados da Instituição</Typography>
                 </Box>
               </AccordionSummary>
               <AccordionDetails>
                 <Grid container spacing={3}>
-                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                  <Grid size={{ md: 4, sm: 6, xs: 12}}>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <TextField
-                        id="programa-sgd-numero-documento-nota-tecnica"
-                        name="sgd_numero_documento_nota_tecnica"
+                        id="programa-atendimento-fone"
+                        name="atendimento_fone"
                         fullWidth
-                        label="Número Documento Nota Técnica"
-                        value={editedFields.sgd_numero_documento_nota_tecnica !== undefined ? editedFields.sgd_numero_documento_nota_tecnica : (programa?.sgd_numero_documento_nota_tecnica || "")}
-                        onChange={handleChange("sgd_numero_documento_nota_tecnica")}
+                        label="Telefone de Atendimento"
+                        value={editedFields.atendimento_fone !== undefined ? editedFields.atendimento_fone : (programa?.atendimento_fone || "")}
+                        onChange={handleChange("atendimento_fone")}
                       />
                     </Box>
                   </Grid>
-                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                  <Grid size={{ md: 4, sm: 6, xs: 12}}>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <TextField
-                        id="programa-sgd-versao-diagnostico-enviado"
-                        name="sgd_versao_diagnostico_enviado"
+                        id="programa-atendimento-email"
+                        name="atendimento_email"
                         fullWidth
-                        label="Versão Diagnóstico Enviado"
-                        value={editedFields.sgd_versao_diagnostico_enviado !== undefined ? editedFields.sgd_versao_diagnostico_enviado : (programa?.sgd_versao_diagnostico_enviado || "")}
-                        onChange={handleChange("sgd_versao_diagnostico_enviado")}
+                        label="Email de Atendimento"
+                        value={editedFields.atendimento_email !== undefined ? editedFields.atendimento_email : (programa?.atendimento_email || "")}
+                        onChange={handleChange("atendimento_email")}
                       />
                     </Box>
                   </Grid>
-                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                  <Grid size={{ md: 4, sm: 6, xs: 12}}>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <TextField
-                        id="programa-sgd-versao-diagnostico"
-                        name="sgd_versao_diagnostico"
+                        id="programa-atendimento-site"
+                        name="atendimento_site"
                         fullWidth
-                        label="Versão Diagnóstico"
-                        value={editedFields.sgd_versao_diagnostico !== undefined ? editedFields.sgd_versao_diagnostico : (programa?.sgd_versao_diagnostico || "")}
-                        onChange={handleChange("sgd_versao_diagnostico")}
+                        label="Site de Atendimento"
+                        value={editedFields.atendimento_site !== undefined ? editedFields.atendimento_site : (programa?.atendimento_site || "")}
+                        onChange={handleChange("atendimento_site")}
                       />
                     </Box>
                   </Grid>
-                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                  <Grid size={{ md: 6, sm: 6, xs: 12}}>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <DatePicker
-                        label="Data Limite Retorno"
-                        value={editedFields.sgd_data_limite_retorno !== undefined ? editedFields.sgd_data_limite_retorno : (programa?.sgd_data_limite_retorno ? dayjs(programa.sgd_data_limite_retorno) : null)}
-                        onChange={handleDateChange("sgd_data_limite_retorno")}
-                        slotProps={{ textField: { id: "programa-sgd-data-limite-retorno", name: "sgd_data_limite_retorno", fullWidth: true } }}
+                        label="Início da Vigência da Política"
+                        value={editedFields.politica_inicio_vigencia !== undefined ? editedFields.politica_inicio_vigencia : (programa?.politica_inicio_vigencia ? dayjs(programa.politica_inicio_vigencia) : null)}
+                        onChange={handleDateChange("politica_inicio_vigencia")}
+                        slotProps={{ textField: { id: "programa-politica-inicio-vigencia", name: "politica_inicio_vigencia", fullWidth: true } }}
                       />
                     </Box>
                   </Grid>
-                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                  <Grid size={{ md: 6, sm: 6, xs: 12}}>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <DatePicker
-                        label="Retorno Data"
-                        value={editedFields.sgd_retorno_data !== undefined ? editedFields.sgd_retorno_data : (programa?.sgd_retorno_data ? dayjs(programa.sgd_retorno_data) : null)}
-                        onChange={handleDateChange("sgd_retorno_data")}
-                        slotProps={{ textField: { id: "programa-sgd-retorno-data", name: "sgd_retorno_data", fullWidth: true } }}
+                        label="Prazo de Revisão da Política"
+                        value={editedFields.politica_prazo_revisao !== undefined ? editedFields.politica_prazo_revisao : (programa?.politica_prazo_revisao ? dayjs(programa.politica_prazo_revisao) : null)}
+                        onChange={handleDateChange("politica_prazo_revisao")}
+                        slotProps={{ textField: { id: "programa-politica-prazo-revisao", name: "politica_prazo_revisao", fullWidth: true } }}
                       />
                     </Box>
                   </Grid>
@@ -361,9 +195,180 @@ const Programa = ({ programaId }: { programaId: number }) => {
               </AccordionDetails>
             </Accordion>
           </Grid>
-        )}
-      </Grid>
-    </Box>
+          
+          <Grid>
+            <Accordion sx={accordionStyles}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <GroupIcon fontSize="large" color="primary" sx={{ ml: 1 }} />
+                  <Typography variant="h5" style={{ fontWeight: "500" }}>Responsabilidades</Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={3}>
+                  <Grid size={{ md: 3, xs: 12}}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <FormControl fullWidth>
+                        <InputLabel id="responsavel-controle-interno-label">Responsável Controle Interno</InputLabel>
+                        <Select
+                          label="responsavel-controle-interno-label"
+                          id="responsavel-controle-interno"
+                          name="responsavel_controle_interno"
+                          value={editedFields.responsavel_controle_interno !== undefined ? editedFields.responsavel_controle_interno : (programa?.responsavel_controle_interno || "")}
+                          onChange={handleChange("responsavel_controle_interno")}
+                        >
+                          {responsaveis.map((responsavel: any) => (
+                            <MenuItem key={responsavel.id} value={responsavel.id}>
+                              {responsavel.nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <FormControl fullWidth>
+                        <InputLabel id="responsavel-si-label">Responsável SI</InputLabel>
+                        <Select
+                          label="responsavel-si-label"
+                          id="responsavel-si"
+                          name="responsavel_si"
+                          value={editedFields.responsavel_si !== undefined ? editedFields.responsavel_si : (programa?.responsavel_si || "")}
+                          onChange={handleChange("responsavel_si")}
+                        >
+                          {responsaveis.map((responsavel: any) => (
+                            <MenuItem key={responsavel.id} value={responsavel.id}>
+                              {responsavel.nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <FormControl fullWidth>
+                        <InputLabel id="responsavel-privacidade-label">Responsável Privacidade</InputLabel>
+                        <Select
+                          label="responsavel-privacidade-label"
+                          id="responsavel-privacidade"
+                          name="responsavel_privacidade"
+                          value={editedFields.responsavel_privacidade !== undefined ? editedFields.responsavel_privacidade : (programa?.responsavel_privacidade || "")}
+                          onChange={handleChange("responsavel_privacidade")}
+                        >
+                          {responsaveis.map((responsavel: any) => (
+                            <MenuItem key={responsavel.id} value={responsavel.id}>
+                              {responsavel.nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <FormControl fullWidth>
+                        <InputLabel>Responsável TI</InputLabel>
+                        <Select
+                          label="responsavel-ti-label"
+                          id="responsavel-ti"
+                          name="responsavel_ti"
+                          value={editedFields.responsavel_ti !== undefined ? editedFields.responsavel_ti : (programa?.responsavel_ti || "")}
+                          onChange={handleChange("responsavel_ti")}
+                        >
+                          {responsaveis.map((responsavel: any) => (
+                            <MenuItem key={responsavel.id} value={responsavel.id}>
+                              {responsavel.nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
+                    <Responsavel programa={programaId} onUpdate={fetchResponsaveis} />
+                  </Grid>
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+          </Grid>
+          
+          {programa?.setor === 1 && (
+            <Grid>
+              <Accordion sx={accordionStyles}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <AccountBalanceIcon fontSize="large" color="primary" sx={{ ml: 1 }} />
+                    <Typography variant="h5" style={{ fontWeight: "500" }}>Uso da SGD</Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={3}>
+                    <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <TextField
+                          id="programa-sgd-numero-documento-nota-tecnica"
+                          name="sgd_numero_documento_nota_tecnica"
+                          fullWidth
+                          label="Número Documento Nota Técnica"
+                          value={editedFields.sgd_numero_documento_nota_tecnica !== undefined ? editedFields.sgd_numero_documento_nota_tecnica : (programa?.sgd_numero_documento_nota_tecnica || "")}
+                          onChange={handleChange("sgd_numero_documento_nota_tecnica")}
+                        />
+                      </Box>
+                    </Grid>
+                    <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <TextField
+                          id="programa-sgd-versao-diagnostico-enviado"
+                          name="sgd_versao_diagnostico_enviado"
+                          fullWidth
+                          label="Versão Diagnóstico Enviado"
+                          value={editedFields.sgd_versao_diagnostico_enviado !== undefined ? editedFields.sgd_versao_diagnostico_enviado : (programa?.sgd_versao_diagnostico_enviado || "")}
+                          onChange={handleChange("sgd_versao_diagnostico_enviado")}
+                        />
+                      </Box>
+                    </Grid>
+                    <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <TextField
+                          id="programa-sgd-versao-diagnostico"
+                          name="sgd_versao_diagnostico"
+                          fullWidth
+                          label="Versão Diagnóstico"
+                          value={editedFields.sgd_versao_diagnostico !== undefined ? editedFields.sgd_versao_diagnostico : (programa?.sgd_versao_diagnostico || "")}
+                          onChange={handleChange("sgd_versao_diagnostico")}
+                        />
+                      </Box>
+                    </Grid>
+                    <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <DatePicker
+                          label="Data Limite Retorno"
+                          value={editedFields.sgd_data_limite_retorno !== undefined ? editedFields.sgd_data_limite_retorno : (programa?.sgd_data_limite_retorno ? dayjs(programa.sgd_data_limite_retorno) : null)}
+                          onChange={handleDateChange("sgd_data_limite_retorno")}
+                          slotProps={{ textField: { id: "programa-sgd-data-limite-retorno", name: "sgd_data_limite_retorno", fullWidth: true } }}
+                        />
+                      </Box>
+                    </Grid>
+                    <Grid size={{ md: 3, sm: 6, xs: 12}}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <DatePicker
+                          label="Retorno Data"
+                          value={editedFields.sgd_retorno_data !== undefined ? editedFields.sgd_retorno_data : (programa?.sgd_retorno_data ? dayjs(programa.sgd_retorno_data) : null)}
+                          onChange={handleDateChange("sgd_retorno_data")}
+                          slotProps={{ textField: { id: "programa-sgd-retorno-data", name: "sgd_retorno_data", fullWidth: true } }}
+                        />
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+          )}
+        </Grid>
+      </Box>
+    </LocalizationProvider>
   );
 };
 
