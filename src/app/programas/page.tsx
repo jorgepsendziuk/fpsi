@@ -31,6 +31,7 @@ import {
   alpha,
   Badge,
   Tooltip,
+  CardActionArea,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -210,7 +211,7 @@ export default function ProgramasPage() {
   };
 
   const handleAccessDiagnostico = (programa: Programa) => {
-    router.push(`/programas/${programa.id}/diagnosticos`);
+    router.push(`/programas/${programa.id}`);
   };
 
   const getSetorLabel = (setor: number) => {
@@ -296,7 +297,7 @@ export default function ProgramasPage() {
                   mb: 1
                 }}
               >
-                Meus Programas
+                Programas
               </Typography>
             </Box>
           </Box>
@@ -410,57 +411,16 @@ export default function ProgramasPage() {
                           }}
                         >
                           {programa.razao_social || programa.nome_fantasia || `Programa #${programa.id}`}
-                          <Badge
-                            color={getStatusColor(status) as any}
-                            variant="dot"
-                            sx={{
-                              '& .MuiBadge-dot': {
-                                width: 6,
-                                height: 6,
-                              }
-                            }}
-                          />
+                          
                         </Typography>
-                        <Chip
-                          label={status}
-                          size="small"
-                          color={getStatusColor(status) as any}
-                          sx={{ borderRadius: 1, height: 20, fontSize: '0.75rem' }}
-                        />
+                        
                       </Box>
                       
-                      <Tooltip title="Mais opções">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleOpenMenu(e, programa)}
-                          sx={{
-                            background: alpha(theme.palette.background.paper, 0.8),
-                            backdropFilter: 'blur(10px)',
-                            width: 32,
-                            height: 32,
-                            '&:hover': {
-                              background: alpha(theme.palette.background.paper, 0.9),
-                            }
-                          }}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      
                     </Box>
 
                     {/* Informações da empresa */}
                     <Stack spacing={1} sx={{ mb: 2 }}>
-                      {programa.setor === 2 && programa.cnpj && (
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                          <strong>CNPJ:</strong> {programa.cnpj}
-                        </Typography>
-                      )}
-
-                      {programa.nome_fantasia && programa.razao_social && programa.nome_fantasia !== programa.razao_social && (
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                          <strong>Nome:</strong> {programa.nome_fantasia}
-                        </Typography>
-                      )}
                       
                       <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                         <strong>Maturidade:</strong> {maturityData.label}

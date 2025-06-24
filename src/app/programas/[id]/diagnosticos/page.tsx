@@ -194,16 +194,16 @@ export default function DiagnosticosPage() {
         });
 
         // Limpar cache de maturidade SEMPRE que houver mudança
-        clearMaturityCache(programaId);
-        await handleMedidaFetch(controleId, programaId);
-        
-        // Find and reload the parent diagnostic
-        const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
-          state.controles[key].some((c: any) => c.id === controleId)
-        ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
+          clearMaturityCache(programaId);
+          await handleMedidaFetch(controleId, programaId);
+          
+          // Find and reload the parent diagnostic
+          const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
+            state.controles[key].some((c: any) => c.id === controleId)
+          ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
 
-        if (diagnosticoId) {
-          await handleControleFetch(diagnosticoId, programaId);
+          if (diagnosticoId) {
+            await handleControleFetch(diagnosticoId, programaId);
         }
 
         setToastMessage("Resposta atualizada com sucesso");

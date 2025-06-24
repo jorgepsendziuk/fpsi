@@ -94,11 +94,11 @@ export const calculateMaturityIndex = (controle: Controle, state: State): number
 
   if (programaMedidas.length === 0) {
     // Fallback para dados sem programa_medida
-    let totalResponses = 0;
-    let responseCount = 0;
+  let totalResponses = 0;
+  let responseCount = 0;
 
-    medidas.forEach((medida: any) => {
-      if (medida.resposta && typeof medida.resposta === 'number') {
+  medidas.forEach((medida: any) => {
+    if (medida.resposta && typeof medida.resposta === 'number') {
         // Buscar o peso correto da resposta
         let resposta: any;
         if (controle.diagnostico === 1) {
@@ -109,12 +109,12 @@ export const calculateMaturityIndex = (controle: Controle, state: State): number
         
         if (resposta && resposta.peso !== null) {
           totalResponses += resposta.peso;
-          responseCount++;
+      responseCount++;
         }
-      }
-    });
+    }
+  });
 
-    return responseCount > 0 ? totalResponses / responseCount : 0;
+  return responseCount > 0 ? totalResponses / responseCount : 0;
   }
 
   // Usar a fórmula correta se temos os dados necessários
