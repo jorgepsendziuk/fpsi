@@ -27,7 +27,10 @@ export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, sta
  */
 export const calculateSumOfResponses = (programaMedidas: ProgramaMedida[], diagnostico: number): number => {
   return programaMedidas.reduce((sum, programaMedida) => {
-    if (programaMedida.resposta === undefined || programaMedida.resposta === null) return sum;
+    // ✅ CORREÇÃO: Medidas não respondidas são consideradas como peso 0
+    if (programaMedida.resposta === undefined || programaMedida.resposta === null) {
+      return sum + 0; // Contribui com 0 para o cálculo
+    }
 
     let resposta: any;
     const respostaId = typeof programaMedida.resposta === 'string' ? parseInt(programaMedida.resposta, 10) : programaMedida.resposta;
@@ -38,7 +41,7 @@ export const calculateSumOfResponses = (programaMedidas: ProgramaMedida[], diagn
       resposta = respostas.find((resposta) => resposta.id === respostaId);
     }
 
-    if (resposta?.peso === null) return sum;
+    if (resposta?.peso === null) return sum; // "Não se aplica" continua sendo ignorado
     return sum + (resposta?.peso || 0);
   }, 0);
 };
@@ -63,11 +66,17 @@ export const calculateMaturityIndexForControle = (
   programaMedidas: ProgramaMedida[]
 ): string => {
   const sumOfResponses = calculateSumOfResponses(programaMedidas, controle.diagnostico);
-  const numberOfMedidas = programaMedidas.filter((pm) => pm.resposta !== undefined && pm.resposta !== null).length;
   
-  if (numberOfMedidas === 0) return "0.00";
+  // ✅ CORREÇÃO: Usar total de medidas (incluindo não respondidas), excluindo apenas "Não se aplica"
+  const totalMedidas = programaMedidas.filter((pm) => {
+    // Excluir apenas medidas com resposta "Não se aplica" (id: 6)
+    if (pm.resposta === 6) return false;
+    return true; // Incluir todas as outras (respondidas e não respondidas)
+  }).length;
+  
+  if (totalMedidas === 0) return "0.00";
 
-  const baseIndex = sumOfResponses / numberOfMedidas;
+  const baseIndex = sumOfResponses / totalMedidas;
   const inccLevel = incc.find((incc) => incc.id === programaControle.nivel);
   const inccMultiplier = 1 + ((inccLevel?.nivel || 0) * 1 / 5);
   
@@ -94,11 +103,16 @@ export const calculateMaturityIndex = (controle: Controle, state: State): number
 
   if (programaMedidas.length === 0) {
     // Fallback para dados sem programa_medida
-  let totalResponses = 0;
-  let responseCount = 0;
+    let totalResponses = 0;
+    let totalMedidas = 0;
 
-  medidas.forEach((medida: any) => {
-    if (medida.resposta && typeof medida.resposta === 'number') {
+    medidas.forEach((medida: any) => {
+      // ✅ CORREÇÃO: Incluir todas as medidas no denominador, exceto "Não se aplica"
+      if (medida.resposta === 6) return; // Ignorar "Não se aplica"
+      
+      totalMedidas++; // Contar todas as medidas (respondidas e não respondidas)
+      
+      if (medida.resposta && typeof medida.resposta === 'number') {
         // Buscar o peso correto da resposta
         let resposta: any;
         if (controle.diagnostico === 1) {
@@ -109,12 +123,12 @@ export const calculateMaturityIndex = (controle: Controle, state: State): number
         
         if (resposta && resposta.peso !== null) {
           totalResponses += resposta.peso;
-      responseCount++;
         }
-    }
-  });
+      }
+      // Se não tem resposta, contribui com 0 (já incluído em totalMedidas)
+    });
 
-  return responseCount > 0 ? totalResponses / responseCount : 0;
+    return totalMedidas > 0 ? totalResponses / totalMedidas : 0;
   }
 
   // Usar a fórmula correta se temos os dados necessários

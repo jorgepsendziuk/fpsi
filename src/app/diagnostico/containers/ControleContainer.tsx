@@ -92,9 +92,14 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
       console.log(`ControleContainer: Using fallback calculation for controle ${controle.id}`);
       
       let totalResponses = 0;
-      let responseCount = 0;
+      let totalMedidas = 0;
 
       medidas.forEach((medida: any) => {
+        // ✅ CORREÇÃO: Incluir todas as medidas no denominador, exceto "Não se aplica"
+        if (medida.resposta === 6) return; // Ignorar "Não se aplica"
+        
+        totalMedidas++; // Contar todas as medidas (respondidas e não respondidas)
+        
         if (medida.resposta && typeof medida.resposta === 'number') {
           // Buscar o peso correto da resposta
           let resposta: any;
@@ -106,12 +111,12 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
           
           if (resposta && resposta.peso !== null) {
             totalResponses += resposta.peso;
-            responseCount++;
           }
         }
+        // Se não tem resposta, contribui com 0 (já incluído em totalMedidas)
       });
 
-      const baseScore = responseCount > 0 ? totalResponses / responseCount : 0;
+      const baseScore = totalMedidas > 0 ? totalResponses / totalMedidas : 0;
       const inccLevel = incc.find((i) => i.id === programaControle.nivel);
       const inccMultiplier = 1 + ((inccLevel?.nivel || 0) * 1 / 5);
       const finalScore = (baseScore / 2) * inccMultiplier;

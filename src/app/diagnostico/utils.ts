@@ -109,11 +109,17 @@ export const calculateTotalPointsForMedidas = (programaMedidas: ProgramaMedida[]
 
 export const calculateMaturityIndexForControle = (controle: Controle, programaControle: ProgramaControle, programaMedidas: ProgramaMedida[]): string => {
   const sumOfResponses = calculateSumOfResponses(programaMedidas, controle.diagnostico);
-  const numberOfMedidas = programaMedidas.filter((pm) => pm.resposta !== undefined && pm.resposta !== null).length;
   
-  if (numberOfMedidas === 0) return "0";
+  // ✅ CORREÇÃO: Usar total de medidas (incluindo não respondidas), excluindo apenas "Não se aplica"
+  const totalMedidas = programaMedidas.filter((pm) => {
+    // Excluir apenas medidas com resposta "Não se aplica" (id: 6)
+    if (pm.resposta === 6) return false;
+    return true; // Incluir todas as outras (respondidas e não respondidas)
+  }).length;
+  
+  if (totalMedidas === 0) return "0";
 
-  const baseIndex = sumOfResponses / numberOfMedidas;
+  const baseIndex = sumOfResponses / totalMedidas;
   const inccMultiplier = 1 + (((incc.find((incc) => incc.id === programaControle.nivel)?.nivel || 0)) * 1 / 5);
   
   return ((baseIndex / 2) * inccMultiplier).toFixed(2);

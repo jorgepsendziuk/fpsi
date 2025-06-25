@@ -142,9 +142,14 @@ export const useMaturityCache = (programaId: number) => {
         } else {
           // Fallback: cálculo simplificado usando pesos das respostas
           let totalScore = 0;
-          let validMedidas = 0;
+          let totalMedidas = 0;
 
           medidas.forEach(medida => {
+            // ✅ CORREÇÃO: Incluir todas as medidas no denominador, exceto "Não se aplica"
+            if (medida.resposta === 6) return; // Ignorar "Não se aplica"
+            
+            totalMedidas++; // Contar todas as medidas (respondidas e não respondidas)
+            
             if (medida.resposta !== null && medida.resposta !== undefined) {
               // Buscar o peso correto da resposta
               let peso = 0;
@@ -165,15 +170,13 @@ export const useMaturityCache = (programaId: number) => {
                 peso = respostaMapping[medida.resposta] || 0;
               }
               
-              if (medida.resposta !== 6) { // Ignorar "Não se aplica"
-                totalScore += peso;
-                validMedidas++;
-              }
+              totalScore += peso;
             }
+            // Se não tem resposta, contribui com 0 (já incluído em totalMedidas)
           });
 
-          if (validMedidas > 0) {
-            const baseIndex = totalScore / validMedidas;
+          if (totalMedidas > 0) {
+            const baseIndex = totalScore / totalMedidas;
             // Aplicar multiplicador INCC se disponível
             const inccLevel = programaControle?.nivel || 1;
             const inccMultiplier = 1 + ((inccLevel - 1) * 1 / 5);
