@@ -394,8 +394,8 @@ export default function DiagnosticoPage() {
     await loadMedidas(controleId);
   }, [loadMedidas]);
 
-  // Renderizar item da árvore
-  const renderTreeItem = useCallback((node: TreeNode, level: number = 0) => {
+  // Renderizar item da árvore com linhas conectoras
+  const renderTreeItem = useCallback((node: TreeNode, level: number = 0, isLast: boolean = false, parentPath: boolean[] = []) => {
     const isExpanded = expandedNodes.has(node.id);
     const isSelected = selectedNode?.id === node.id;
     const isLoading = (node.type === 'diagnostico' && loadingControles.has(node.data.id)) ||
@@ -422,9 +422,104 @@ export default function DiagnosticoPage() {
       }
     };
 
+    // Calcular o padding considerando as linhas conectoras
+    const paddingLeft = level * 24 + 8; // 24px por nível + 8px base
+
     return (
       <React.Fragment key={node.id}>
-        <ListItem disablePadding sx={{ pl: level * 2 }}>
+        <ListItem 
+          disablePadding 
+          sx={{ 
+            position: 'relative',
+            pl: 0,
+          }}
+        >
+          {/* Linhas conectoras */}
+          {level > 0 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: paddingLeft,
+                pointerEvents: 'none',
+                zIndex: 1,
+              }}
+            >
+              {/* Linhas verticais dos níveis pais */}
+              {parentPath.map((hasMore, index) => (
+                hasMore && (
+                  <Box
+                    key={`vertical-${index}`}
+                    sx={{
+                      position: 'absolute',
+                      left: index * 24 + 20,
+                      top: 0,
+                      bottom: 0,
+                      width: '1px',
+                      backgroundColor: alpha(theme.palette.divider, 0.4),
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: '-0.5px',
+                        top: 0,
+                        bottom: 0,
+                        width: '2px',
+                        backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                        zIndex: -1,
+                      }
+                    }}
+                  />
+                )
+              ))}
+              
+              {/* Linha horizontal para este item */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: (level - 1) * 24 + 20,
+                  top: '50%',
+                  width: '20px',
+                  height: '1px',
+                  backgroundColor: alpha(theme.palette.divider, 0.4),
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    right: '-2px',
+                    top: '-1px',
+                    width: '3px',
+                    height: '3px',
+                    borderRadius: '50%',
+                    backgroundColor: alpha(theme.palette.primary.main, 0.6),
+                  }
+                }}
+              />
+              
+              {/* Linha vertical para este item */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: (level - 1) * 24 + 20,
+                  top: 0,
+                  bottom: isLast ? '50%' : 0,
+                  width: '1px',
+                  backgroundColor: alpha(theme.palette.divider, 0.4),
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: '-0.5px',
+                    top: 0,
+                    bottom: 0,
+                    width: '2px',
+                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                    zIndex: -1,
+                  }
+                }}
+              />
+            </Box>
+          )}
+
           <ListItemButton
             selected={isSelected}
             onClick={handleItemClick}
@@ -435,6 +530,9 @@ export default function DiagnosticoPage() {
               py: 1.5,
               minHeight: 60,
               width: '100%',
+              ml: `${paddingLeft}px`,
+              position: 'relative',
+              zIndex: 2,
               '&.Mui-selected': {
                 bgcolor: alpha(theme.palette.primary.main, 0.1),
                 '&:hover': {
@@ -533,7 +631,11 @@ export default function DiagnosticoPage() {
         {isExpanded && node.children && node.children.length > 0 && (
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              {node.children.map(child => renderTreeItem(child, level + 1))}
+              {node.children.map((child, index) => {
+                const isLastChild = index === node.children!.length - 1;
+                const newParentPath = [...parentPath, !isLast];
+                return renderTreeItem(child, level + 1, isLastChild, newParentPath);
+              })}
             </List>
           </Collapse>
         )}
@@ -751,7 +853,10 @@ export default function DiagnosticoPage() {
           ) : (
             <>
               <List>
-                {treeData.map(node => renderTreeItem(node))}
+                {treeData.map((node, index) => {
+                  const isLastNode = index === treeData.length - 1;
+                  return renderTreeItem(node, 0, isLastNode, []);
+                })}
               </List>
               
               {/* Debug info */}

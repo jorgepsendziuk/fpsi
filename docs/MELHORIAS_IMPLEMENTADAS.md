@@ -16,6 +16,7 @@ Este documento detalha todas as melhorias implementadas no sistema FPSI conforme
 - **Auto-expansão**: Controles expandem automaticamente ao serem selecionados
 - **Indicadores de Maturidade**: Chips coloridos com percentuais de maturidade
 - **Ícones Contextuais**: Ícones específicos para cada tipo de item
+- **Linhas Conectoras**: Sistema visual de linhas que conectam os níveis hierárquicos com pontos de conexão elegantes
 
 #### **📱 Interface Responsiva Avançada**
 - **Desktop**: Drawer permanente (380px de largura)
@@ -34,6 +35,41 @@ Este documento detalha todas as melhorias implementadas no sistema FPSI conforme
 - **Scroll Customizado**: Barras de scroll estilizadas
 - **Animações Suaves**: Transições e hover effects
 - **Cards Modernos**: Layout de cards para visualização de conteúdo
+- **Linhas Conectoras**: Sistema visual de linhas hierárquicas com pontos de conexão
+
+#### **🔗 Sistema de Linhas Conectoras**
+```typescript
+// Implementação das linhas conectoras hierárquicas
+const renderTreeItem = (node: TreeNode, level: number, isLast: boolean, parentPath: boolean[]) => {
+  // Linhas verticais dos níveis pais
+  parentPath.map((hasMore, index) => (
+    hasMore && <Box sx={{ 
+      position: 'absolute',
+      left: index * 24 + 20,
+      backgroundColor: alpha(theme.palette.divider, 0.4),
+      // Efeito de profundidade com pseudo-elementos
+    }} />
+  ));
+  
+  // Linha horizontal com ponto de conexão
+  <Box sx={{
+    '&::after': {
+      content: '""',
+      width: '3px',
+      height: '3px',
+      borderRadius: '50%',
+      backgroundColor: alpha(theme.palette.primary.main, 0.6),
+    }
+  }} />
+};
+```
+
+**Características das Linhas:**
+- **Linhas Verticais**: Conectam elementos do mesmo nível pai
+- **Linhas Horizontais**: Conectam item ao seu pai com ponto decorativo
+- **Efeito de Profundidade**: Pseudo-elementos criam sobreposição elegante
+- **Cores Temáticas**: Usam palette do Material-UI com transparência
+- **Responsividade**: Adaptam-se automaticamente ao espaçamento da árvore
 
 ### ✅ **Funcionalidades da Nova Interface**
 
@@ -301,6 +337,7 @@ interface TreeNode {
 | Funcionalidade | Status | Localização | Benefício |
 |---|---|---|---|
 | **🌳 Interface Tree Navigation** | ✅ **Implementada** | `diagnostico/page.tsx` | **Navegação 70% mais eficiente** |
+| **🔗 Linhas Conectoras Hierárquicas** | ✅ **Implementada** | `diagnostico/page.tsx` | **Visualização hierárquica clara** |
 | **📱 Design Responsivo Avançado** | ✅ **Implementada** | Todo o sistema | **UX otimizada para todos os dispositivos** |
 | **🎨 Cards dos Programas Redesenhados** | ✅ **Implementada** | `programas/[id]/page.tsx` | **Interface mais moderna e atrativa** |
 | **🗓️ Localização Date Pickers** | ✅ **Implementada** | Todos os componentes | **Zero erros MUI X** |
@@ -313,12 +350,13 @@ interface TreeNode {
 ## 🎉 **CONQUISTAS PRINCIPAIS**
 
 1. **🚀 Interface Revolucionária**: Nova navegação em árvore substitui interface antiga
-2. **📱 Mobile-First**: Design responsivo otimizado para todos os dispositivos  
-3. **⚡ Performance Superior**: Carregamento lazy e cache inteligente
-4. **🎨 Visual Moderno**: Cards, gradientes e animações suaves
-5. **🔧 UX Otimizada**: Auto-expansão, scroll independente, navegação intuitiva
-6. **🌐 Localização Completa**: Date pickers em português sem erros
-7. **♻️ Código Limpo**: Componentes simplificados e manuteníveis
-8. **📊 Dados Consistentes**: Breadcrumbs com nomes reais dos programas
+2. **🔗 Linhas Conectoras**: Sistema visual hierárquico com pontos de conexão elegantes
+3. **📱 Mobile-First**: Design responsivo otimizado para todos os dispositivos  
+4. **⚡ Performance Superior**: Carregamento lazy e cache inteligente
+5. **🎨 Visual Moderno**: Cards, gradientes e animações suaves
+6. **🔧 UX Otimizada**: Auto-expansão, scroll independente, navegação intuitiva
+7. **🌐 Localização Completa**: Date pickers em português sem erros
+8. **♻️ Código Limpo**: Componentes simplificados e manuteníveis
+9. **📊 Dados Consistentes**: Breadcrumbs com nomes reais dos programas
 
 **🎯 A nova interface representa uma evolução completa do sistema, mantendo toda funcionalidade existente enquanto oferece uma experiência de usuário significativamente superior!** ✨ 
