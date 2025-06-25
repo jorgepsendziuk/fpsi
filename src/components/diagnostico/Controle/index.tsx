@@ -1,24 +1,18 @@
 // React and hooks
-import React, { useState } from 'react';
-import { useMediaQuery } from '@mui/material';
+import React from 'react';
 
 // Material UI components
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Typography,
   Select,
   MenuItem,
-  Tabs,
-  Tab,
   Box,
-  Paper,
+  Card,
+  CardContent,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 // Material UI icons
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
@@ -70,12 +64,7 @@ const infoLabels: Record<InfoType, string> = {
   aplicabilidade_privacidade: 'Aplicabilidade em privacidade'
 };
 
-const tabColors: Record<InfoType, string> = {
-  texto: '#E3F2FD', // azul claro
-  por_que_implementar: '#D8E6C3', // verde claro da imagem
-  fique_atento: '#E6E0ED', // roxo claro da imagem
-  aplicabilidade_privacidade: '#FFF3E0' // laranja claro
-};
+
 
 const tabIcons: Record<InfoType, React.ReactElement> = {
   texto: <DescriptionOutlinedIcon sx={{ mr: 1 }} />,
@@ -114,30 +103,11 @@ const ControleComponent: React.FC<ControleProps> = ({
   calculateMaturityIndex,
 }) => {
   const { accordionStyles } = useThemeColors();
-  const [selectedTab, setSelectedTab] = useState<InfoType>('texto');
-  const isMobile = useMediaQuery('(max-width:900px)');
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: InfoType) => {
-    setSelectedTab(newValue);
-  };
 
   return (
-    <Accordion
-      slotProps={{ transition: { unmountOnExit: true } }}
-      sx={{
-        ...accordionStyles,
-        width: '100%',
-        mb: 2,
-        '& .MuiAccordionDetails-root': {
-          padding: 2
-        }
-      }}
-    >
-      <AccordionSummary 
-        expandIcon={<ExpandMoreIcon />}
-        sx={controleStyles.accordionSummary}
-      >
-        <Grid container spacing={2}>
+    <Card sx={{ width: '100%', mb: 2 }}>
+      <CardContent sx={{ p: 2 }}>
+        <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid size={{ md: 4 }} alignItems="center">
             <Typography variant="caption" sx={controleStyles.titleCaption}>
               CONTROLE
@@ -153,7 +123,6 @@ const ControleComponent: React.FC<ControleProps> = ({
             <Select
               sx={controleStyles.niveisList}
               value={programaControle?.nivel || ""}
-              onClick={(event) => event.stopPropagation()}
               onChange={(event) => {
                 if (programaControle?.id && programaControle.id > 0) {
                   handleINCCChange(programaControle.id, diagnostico.id, parseInt(event.target.value.toString(), 10));
@@ -180,116 +149,69 @@ const ControleComponent: React.FC<ControleProps> = ({
             </Typography>
           </Grid>
         </Grid>
-      </AccordionSummary>
-      <AccordionDetails>
+
         <div style={controleStyles.medidasContainer}>
-          <Paper 
-            elevation={1}
-            sx={{ 
-              mb: 3,
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 2,
-              overflow: 'hidden'
-            }}
-          >
-            <Box sx={{ 
-              backgroundColor: 'background.default',
-              display: 'flex',
-              flexDirection: { xs: 'column', md: 'row' },
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'divider',
-              overflow: 'hidden'
-            }}>
-              <Tabs 
-                value={selectedTab} 
-                onChange={handleTabChange}
-                orientation={isMobile ? 'horizontal' : 'vertical'}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{
-                  borderRight: { xs: 'none', md: 1 },
-                  borderBottom: { xs: 1, md: 'none' },
-                  borderColor: 'divider',
-                  minWidth: { xs: '100%', md: '250px' },
-                  maxWidth: { xs: '100%', md: '250px' },
-                  '& .MuiTabs-flexContainer': {
-                    gap: { xs: '4px', md: 0 },
-                    '& .MuiTab-root': {
-                      borderBottom: { xs: 'none', md: '1px solid' },
-                      borderRight: { xs: '1px solid', md: 'none' },
-                      borderColor: 'divider',
-                      '&:last-child': {
-                        borderBottom: 'none',
-                        borderRight: 'none'
-                      }
-                    }
-                  },
-                  '& .MuiTabs-indicator': {
-                    display: 'none'
-                  },
-                  '& .MuiTab-root': {
-                    textTransform: 'uppercase',
-                    minHeight: '48px',
-                    padding: '8px 24px',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    color: '#1F2937',
-                    alignItems: 'center',
-                    textAlign: 'left',
-                    minWidth: { xs: 'auto', md: '100%' },
-                    flex: { xs: 1, md: 'none' },
-                    flexDirection: 'row',
-                    justifyContent: 'flex-start'
-                  }
-                }}
-              >
-                {(Object.keys(infoLabels) as InfoType[]).map((info) => (
-                  <Tab 
-                    key={info}
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {tabIcons[info]}
-                        {infoLabels[info]}
-                      </Box>
-                    }
-                    value={info}
-                    sx={{
-                      backgroundColor: getBackgroundColor(info),
-                      '&.Mui-selected': {
-                        backgroundColor: getBackgroundColor(info),
-                        fontWeight: 600,
-                        color: '#1F2937',
-                      },
-                      '&:hover': {
-                        opacity: 0.9
-                      }
-                    }}
-                  />
-                ))}
-              </Tabs>
-              <Box sx={{ 
-                p: { xs: 2, md: 3 }, 
-                flex: 1, 
-                bgcolor: getBackgroundColor(selectedTab),
-                transition: 'background-color 0.3s ease',
-                minHeight: { xs: '200px', md: 'auto' }
-              }}>
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    lineHeight: 1.6,
-                    color: '#000000 !important',
-                    display: 'block',
-                    fontSize: { xs: '0.875rem', md: '1rem' }
+          <Box sx={{ mb: 3 }}>
+            {(Object.keys(infoLabels) as InfoType[]).map((info) => {
+              const content = controle[info];
+              if (!content || content.trim() === '') return null;
+              
+              return (
+                <Box
+                  key={info}
+                  sx={{
+                    backgroundColor: getBackgroundColor(info),
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    mb: 2,
+                    overflow: 'hidden',
                   }}
                 >
-                  {controle[selectedTab] || 'Nenhuma informação registrada para este tópico'}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
+                  <Box
+                    sx={{
+                      backgroundColor: getBackgroundColor(info),
+                      padding: '12px 24px',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {tabIcons[info]}
+                      <Typography
+                        sx={{
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: '#1F2937',
+                        }}
+                      >
+                        {infoLabels[info]}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      backgroundColor: getBackgroundColor(info),
+                      padding: { xs: '16px', md: '24px' },
+                    }}
+                  >
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        lineHeight: 1.6,
+                        color: '#000000 !important',
+                        display: 'block',
+                        fontSize: { xs: '0.875rem', md: '1rem' }
+                      }}
+                    >
+                      {content}
+                    </Typography>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
 
           {medidas.map((medida) => (
             <MedidaContainer
@@ -303,8 +225,8 @@ const ControleComponent: React.FC<ControleProps> = ({
             />
           ))}
         </div>
-      </AccordionDetails>
-    </Accordion>
+      </CardContent>
+    </Card>
   );
 };
 

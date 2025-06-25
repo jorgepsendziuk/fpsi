@@ -234,7 +234,7 @@ export default function DiagnosticoV2Page() {
       const diagnosticoNode: TreeNode = {
         id: `diagnostico-${diagnostico.id}`,
         type: 'diagnostico',
-        label: `Diagnóstico de ${diagnostico.descricao}`,
+        label: `${diagnostico.descricao}`,
         icon: <AssessmentIcon />,
         data: diagnostico,
         maturityScore: maturityData.score,
@@ -247,8 +247,7 @@ export default function DiagnosticoV2Page() {
           return {
             id: `controle-${controle.id}`,
             type: 'controle',
-            label: controle.nome || `Controle ${controle.id}`,
-            description: controle.texto,
+            label: `${controle.numero} - ${controle.nome}`,
             icon: <SecurityIcon />,
             data: controle,
             expanded: expandedNodes.has(`controle-${controle.id}`),
@@ -256,7 +255,6 @@ export default function DiagnosticoV2Page() {
               id: `medida-${medida.id}-${controle.id}`,
               type: 'medida',
               label: `${medida.id_medida || medida.id} - ${medida.medida}`,
-              description: medida.descricao,
               icon: <PolicyIcon />,
               data: { 
                 medida, 
@@ -399,22 +397,38 @@ export default function DiagnosticoV2Page() {
       isLoading
     });
 
+    // Função para lidar com o clique no item
+    const handleItemClick = async () => {
+      // Sempre selecionar o nó
+      handleNodeSelect(node);
+      
+      // Se pode ser expandido, expandir/contrair
+      if (showExpandButton) {
+        await handleNodeToggle(node.id, node);
+      }
+    };
+
     return (
       <React.Fragment key={node.id}>
         <ListItem disablePadding sx={{ pl: level * 2 }}>
           <ListItemButton
             selected={isSelected}
-            onClick={() => handleNodeSelect(node)}
+            onClick={handleItemClick}
+            disabled={isLoading}
             sx={{
               borderRadius: 1,
               mx: 1,
               py: 1.5,
               minHeight: 60,
+              width: '100%',
               '&.Mui-selected': {
                 bgcolor: alpha(theme.palette.primary.main, 0.1),
                 '&:hover': {
                   bgcolor: alpha(theme.palette.primary.main, 0.15),
                 }
+              },
+              '&:hover': {
+                bgcolor: alpha(theme.palette.primary.main, 0.05),
               }
             }}
           >
@@ -466,30 +480,24 @@ export default function DiagnosticoV2Page() {
                 )
               }
             />
-            {/* Mostrar botão de expansão */}
+            {/* Mostrar indicador de expansão */}
             {showExpandButton && (
-              <IconButton 
-                size="medium" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log("Expand button clicked for:", node.id);
-                  handleNodeToggle(node.id, node);
-                }}
-                disabled={isLoading}
+              <Box 
                 sx={{ 
                   ml: 1,
-                  bgcolor: isExpanded ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.2)
-                  }
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 24,
+                  height: 24,
                 }}
               >
                 {isLoading ? (
-                  <Box sx={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Box sx={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Box
                       sx={{
-                        width: 16,
-                        height: 16,
+                        width: 14,
+                        height: 14,
                         border: '2px solid',
                         borderColor: 'primary.main',
                         borderTopColor: 'transparent',
@@ -503,7 +511,7 @@ export default function DiagnosticoV2Page() {
                     />
                   </Box>
                 ) : isExpanded ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
+              </Box>
             )}
           </ListItemButton>
         </ListItem>
@@ -661,7 +669,7 @@ export default function DiagnosticoV2Page() {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* Sidebar com árvore de navegação */}
       <Drawer
         variant={isMobile ? "temporary" : "permanent"}
@@ -675,28 +683,25 @@ export default function DiagnosticoV2Page() {
             boxSizing: 'border-box',
             position: isMobile ? 'fixed' : 'relative',
             borderRight: `1px solid ${theme.palette.divider}`,
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
           },
         }}
       >
+        {/* Header fixo do drawer */}
         <Box sx={{ 
           p: 2, 
           borderBottom: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          flexShrink: 0,
         }}>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
               Diagnósticos
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Programa {programaId}
-            </Typography>
-            {diagnosticos.length > 0 && (
-              <Typography variant="caption" color="text.secondary">
-                {diagnosticos.length} diagnóstico(s) disponível(is)
-              </Typography>
-            )}
           </Box>
           {isMobile && (
             <IconButton onClick={() => setDrawerOpen(false)}>
@@ -705,7 +710,24 @@ export default function DiagnosticoV2Page() {
           )}
         </Box>
         
-        <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
+        {/* Área de scroll independente do menu */}
+        <Box sx={{ 
+          overflow: 'auto', 
+          flexGrow: 1,
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: 'rgba(0,0,0,0.5)',
+          },
+        }}>
           {diagnosticos.length === 0 ? (
             <Box sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary">
@@ -736,12 +758,19 @@ export default function DiagnosticoV2Page() {
       </Drawer>
 
       {/* Área de trabalho principal */}
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Header com breadcrumbs */}
+      <Box sx={{ 
+        flexGrow: 1, 
+        display: 'flex', 
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden',
+      }}>
+        {/* Header fixo com breadcrumbs */}
         <Box sx={{ 
           p: 3, 
           borderBottom: `1px solid ${theme.palette.divider}`,
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+          flexShrink: 0,
         }}>
           <Container maxWidth="xl">
             <Stack spacing={2}>
@@ -760,7 +789,7 @@ export default function DiagnosticoV2Page() {
                 >
                   {programaId}
                 </Link>
-                <Typography color="text.primary">Diagnóstico V2</Typography>
+                <Typography color="text.primary">Diagnóstico</Typography>
               </Breadcrumbs>
               
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -784,7 +813,7 @@ export default function DiagnosticoV2Page() {
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    Diagnóstico Avançado
+                    Diagnóstico
                   </Typography>
                 </Box>
                 
@@ -802,11 +831,29 @@ export default function DiagnosticoV2Page() {
           </Container>
         </Box>
 
-        {/* Conteúdo principal */}
-        <Box sx={{ flexGrow: 1, p: 3, overflow: 'auto' }}>
-          <Container maxWidth="xl">
-            {renderWorkArea()}
-          </Container>
+        {/* Conteúdo principal com scroll independente */}
+        <Box sx={{ 
+          flexGrow: 1, 
+          overflow: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: 'rgba(0,0,0,0.5)',
+          },
+        }}>
+          <Box sx={{ p: 3 }}>
+            <Container maxWidth="xl">
+              {renderWorkArea()}
+            </Container>
+          </Box>
         </Box>
       </Box>
     </Box>

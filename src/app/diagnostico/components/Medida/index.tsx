@@ -82,31 +82,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-      <Accordion 
-        slotProps={{ transition: { unmountOnExit: true } }}
-        sx={{
-          ...accordionStyles,
-          width: '100%', // Garantir largura total
-          mb: 2, // Margem inferior consistente
-          '& .MuiAccordionDetails-root': {
-            padding: 2 // Ajuste específico para o conteúdo de medidas
-          }
-        }}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-label={medida.id_medida}
-          aria-controls={medida.id_medida}
-          id={medida.id_medida}
-          sx={{
-            width: '100%',
-            '& .MuiAccordionSummary-content': {
-              margin: '8px 0',
-              width: '100%',
-              justifyContent: 'space-between',
-            }
-          }}
-        >
+      
           <Grid container spacing={1} sx={{ width: '100%', alignItems: 'center' }}>
             <Grid size={{ md: 1, sm: 2, xs: 3 }}>
               <Typography sx={medidaStyles.idSection} variant="h6" align="center">
@@ -150,9 +126,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               />
             </Grid>
           </Grid>
-        </AccordionSummary>
-        
-        <AccordionDetails>
           <Typography align="justify" sx={medidaStyles.description}>
             &quot;{medida.descricao}&quot;
           </Typography>
@@ -302,8 +275,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Box>
             </Grid>
           </Grid>
-        </AccordionDetails>
-      </Accordion>
     </LocalizationProvider>
   );
 };
