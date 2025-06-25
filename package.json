@@ -37,6 +37,9 @@
     "@uiw/react-md-editor": "^4.0.5",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "i18next": "^25.2.1",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "i18next-http-backend": "^3.0.2",
     "input-mask-react": "^1.0.7",
     "js-cookie": "^3.0.5",
     "jspdf": "^2.5.1",
@@ -45,6 +48,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^15.5.3",
     "react-imask": "^7.6.1",
     "tinymce": "^7.9.1"
   },

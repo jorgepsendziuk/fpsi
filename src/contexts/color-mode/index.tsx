@@ -2,7 +2,8 @@
 
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ptBR } from "@mui/material/locale";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { RefineThemes } from "@refinedev/mui";
 import Cookies from "js-cookie";
@@ -52,6 +53,10 @@ export const ColorModeContextProvider: React.FC<
     Cookies.set("theme", nextTheme);
   };
 
+  // Criar tema com locale pt-BR
+  const baseTheme = mode === "light" ? RefineThemes.Blue : RefineThemes.BlueDark;
+  const themeWithLocale = createTheme(baseTheme, ptBR);
+
   return (
     <ColorModeContext.Provider
       value={{
@@ -59,10 +64,7 @@ export const ColorModeContextProvider: React.FC<
         mode,
       }}
     >
-      <ThemeProvider
-        // you can change the theme colors here. example: mode === "light" ? RefineThemes.Magenta : RefineThemes.MagentaDark
-        theme={mode === "light" ? RefineThemes.Blue : RefineThemes.BlueDark}
-      >
+      <ThemeProvider theme={themeWithLocale}>
         <CssBaseline />
         <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
         {children}

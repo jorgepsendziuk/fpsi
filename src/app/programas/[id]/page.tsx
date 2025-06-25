@@ -100,9 +100,6 @@ export default function ProgramaMainPage() {
 
       {/* Card de dados do programa */}
       <Paper elevation={3} sx={{ mb: 5, p: 3, borderRadius: 3 }}>
-        <Typography variant="h6" fontWeight="bold" mb={2} color="primary">
-          Dados do Programa
-        </Typography>
         <Grid container spacing={2}>
           {editableFields.map(field => (
             <Grid item xs={12} sm={6} key={field.key}>
