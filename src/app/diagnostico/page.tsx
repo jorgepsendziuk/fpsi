@@ -39,8 +39,17 @@ const DiagnosticoPage = () => {
     loadInitialData();
   }, []);
 
-  
-  const fetchControlesAndMedidas = async (programaId: number) => {
+  const handleControleFetch = React.useCallback(async (diagnosticoId: number, programaId: number): Promise<void> => {
+    const data = await dataService.fetchControles(diagnosticoId, programaId);
+    dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
+  }, []);
+
+  const handleMedidaFetch = React.useCallback(async (controleId: number, programaId: number): Promise<void> => {
+    const data = await dataService.fetchMedidas(controleId, programaId);
+    dispatch({ type: "SET_MEDIDAS", controleId, payload: data });
+  }, []);
+
+  const fetchControlesAndMedidas = React.useCallback(async (programaId: number) => {
     const diagnosticos = await dataService.fetchDiagnosticos();
     for (const diagnostico of diagnosticos) {
       const controles = await dataService.fetchControles(diagnostico.id, programaId);
@@ -49,7 +58,8 @@ const DiagnosticoPage = () => {
       }
       await handleControleFetch(diagnostico.id, programaId);
     }
-  };
+  }, [handleControleFetch, handleMedidaFetch]);
+
   useEffect(() => {
     const fetchData = async () => {
       const programaId = 1; // TODO: Get this from URL or context
@@ -62,16 +72,6 @@ const DiagnosticoPage = () => {
     };
     fetchData();
   }, [fetchControlesAndMedidas]);
-
-  const handleControleFetch = async (diagnosticoId: number, programaId: number): Promise<void> => {
-    const data = await dataService.fetchControles(diagnosticoId, programaId);
-    dispatch({ type: "SET_CONTROLES", diagnosticoId, payload: data });
-  };
-
-  const handleMedidaFetch = async (controleId: number, programaId: number): Promise<void> => {
-    const data = await dataService.fetchMedidas(controleId, programaId);
-    dispatch({ type: "SET_MEDIDAS", controleId, payload: data });
-  };
 
   const handleINCCChange = async (programaControleId: number, diagnosticoId: number, newValue: number): Promise<void> => {
     await dataService.updateControleNivel(programaControleId, newValue);

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Container, Typography, Card, CardContent, Grid, Box, Breadcrumbs, Link, Chip, Stack, Divider, Paper, CardActionArea, TextField, IconButton } from "@mui/material";
-import { Business, Group, Policy, CheckCircleOutline, ArrowBack, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, Assessment as AssessmentIcon } from "@mui/icons-material";
+import { Business, Group, Policy, CheckCircleOutline, ArrowBack, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
 import * as dataService from "@/app/diagnostico/services/dataService";
 
 const sections = [
@@ -26,13 +26,6 @@ const sections = [
     icon: <CheckCircleOutline fontSize="large" color="success" />,
     description: "Acesse o diagnóstico e maturidade do programa.",
     path: "diagnostico"
-  },
-  {
-    key: "diagnostico-v2",
-    title: "Diagnóstico Avançado",
-    icon: <AssessmentIcon fontSize="large" color="primary" />,
-    description: "Interface otimizada com navegação em árvore e carregamento sob demanda.",
-    path: "diagnostico-v2"
   }
 ];
 
@@ -90,7 +83,7 @@ export default function ProgramaMainPage() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 6 }}>
+    <Container maxWidth="lg" sx={{ py: 6 }}>
       {/* Breadcrumb e título */}
       <Box sx={{ mb: 3 }}>
         <Breadcrumbs sx={{ mb: 1 }}>
@@ -148,27 +141,66 @@ export default function ProgramaMainPage() {
       </Paper>
 
       {/* Grid de cards para as outras seções */}
-      <Grid container spacing={4}>
+      <Grid container spacing={3}>
         {sections.map(section => (
-          <Grid item xs={12} sm={6} md={3} key={section.key}>
-            <Card>
-              <CardContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 6 }}>
-                {section.icon}
-                <Typography variant="h6" fontWeight="bold" mt={2} mb={1} align="center">
-                  {section.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" align="center" mb={2}>
-                  {section.description}
-                </Typography>
-                <Box sx={{ flexGrow: 1 }} />
-                <Box sx={{ width: '100%' }}>
-                  <CardActionArea onClick={() => router.push(`/programas/${programaId}/${section.path}`)}>
-                    <Typography variant="button" color="primary" align="center" sx={{ width: '100%' }}>
-                      Acessar
-                    </Typography>
-                  </CardActionArea>
-                </Box>
-              </CardContent>
+          <Grid item xs={12} sm={6} md={4} key={section.key}>
+            <Card 
+              sx={{ 
+                height: '100%', 
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 6,
+                }
+              }}
+            >
+              <CardActionArea 
+                onClick={() => router.push(`/programas/${programaId}/${section.path}`)}
+                sx={{ height: '100%' }}
+              >
+                <CardContent sx={{ 
+                  display: "flex", 
+                  flexDirection: "column", 
+                  alignItems: "center", 
+                  py: 4,
+                  px: 3,
+                  height: '100%',
+                  minHeight: 200,
+                  justifyContent: 'center'
+                }}>
+                  <Box sx={{ mb: 2 }}>
+                    {section.icon}
+                  </Box>
+                  <Typography variant="h6" fontWeight="bold" mb={1} align="center">
+                    {section.title}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    align="center" 
+                    sx={{ 
+                      flexGrow: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      textAlign: 'center'
+                    }}
+                  >
+                    {section.description}
+                  </Typography>
+                  <Typography 
+                    variant="button" 
+                    color="primary" 
+                    sx={{ 
+                      mt: 2,
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5
+                    }}
+                  >
+                    Acessar →
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
             </Card>
           </Grid>
         ))}
