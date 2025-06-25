@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Container, Typography, Card, CardContent, Grid, Box, Breadcrumbs, Link, Chip, Stack, Divider, Paper, CardActionArea, TextField, IconButton } from "@mui/material";
-import { Business, Group, Policy, CheckCircleOutline, ArrowBack, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
+import { Business, Group, Policy, CheckCircleOutline, ArrowBack, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, Assessment as AssessmentIcon } from "@mui/icons-material";
 import * as dataService from "@/app/diagnostico/services/dataService";
 
 const sections = [
@@ -26,6 +26,13 @@ const sections = [
     icon: <CheckCircleOutline fontSize="large" color="success" />,
     description: "Acesse o diagnóstico e maturidade do programa.",
     path: "diagnostico"
+  },
+  {
+    key: "diagnostico-v2",
+    title: "Diagnóstico Avançado",
+    icon: <AssessmentIcon fontSize="large" color="primary" />,
+    description: "Interface otimizada com navegação em árvore e carregamento sob demanda.",
+    path: "diagnostico-v2"
   }
 ];
 
@@ -143,7 +150,7 @@ export default function ProgramaMainPage() {
       {/* Grid de cards para as outras seções */}
       <Grid container spacing={4}>
         {sections.map(section => (
-          <Grid item xs={12} sm={4} key={section.key}>
+          <Grid item xs={12} sm={6} md={3} key={section.key}>
             <Card>
               <CardContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 6 }}>
                 {section.icon}
