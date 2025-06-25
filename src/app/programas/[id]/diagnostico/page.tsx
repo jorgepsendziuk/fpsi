@@ -56,6 +56,8 @@ import * as dataService from "../../../diagnostico/services/dataService";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../diagnostico/types";
 import MedidaContainer from "../../../diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../diagnostico/containers/ControleContainer";
+import { useMaturityCache } from "../../../diagnostico/hooks/useMaturityCache";
+import MaturityChip from "../../../diagnostico/components/MaturityChip";
 
 const DRAWER_WIDTH = 380;
 
@@ -94,6 +96,18 @@ export default function DiagnosticoPage() {
   const [loadingControles, setLoadingControles] = useState<Set<number>>(new Set());
   const [loadingMedidas, setLoadingMedidas] = useState<Set<number>>(new Set());
   const [drawerOpen, setDrawerOpen] = useState(!isMobile);
+  const [autoLoadingMedidas, setAutoLoadingMedidas] = useState<Set<number>>(new Set());
+
+  // Hook de maturidade inteligente
+  const {
+    getControleMaturity,
+    getDiagnosticoMaturity,
+    invalidateCache,
+    preloadMaturity,
+    clearOldCache,
+    cacheStats,
+    MATURITY_COLORS
+  } = useMaturityCache(programaId);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -115,6 +129,8 @@ export default function DiagnosticoPage() {
         setDiagnosticos(diagnosticosData || []);
         setResponsaveis(responsaveisData || []);
         setPrograma(programaData);
+        
+
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
       } finally {
@@ -191,36 +207,23 @@ export default function DiagnosticoPage() {
     }
   }, [medidas, programaId]);
 
-  // Calcular maturidade simples
-  const calculateSimpleMaturity = useCallback((diagnosticoId: number) => {
-    const diagnosticoControles = controles[diagnosticoId] || [];
-    if (diagnosticoControles.length === 0) return { score: 0, label: "Inicial" };
-
-    let totalScore = 0;
-    let totalMedidas = 0;
-
-    diagnosticoControles.forEach(controle => {
-      const controleMedidas = medidas[controle.id] || [];
-      controleMedidas.forEach(medida => {
-        const programaMedida = medida.programa_medida || programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
-        if (programaMedida && programaMedida.resposta !== null && programaMedida.resposta !== undefined && typeof programaMedida.resposta === 'number') {
-          totalScore += programaMedida.resposta;
-          totalMedidas++;
-        }
-      });
-    });
-
-    const averageScore = totalMedidas > 0 ? totalScore / totalMedidas : 0;
-    const normalizedScore = Math.round(averageScore);
+  // Calcular maturidade inteligente com cache
+  const calculateMaturity = useCallback((diagnostico: Diagnostico) => {
+    const diagnosticoControles = controles[diagnostico.id] || [];
+    const maturityData = getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidas);
     
-    let label = "Inicial";
-    if (normalizedScore >= 90) label = "Aprimorado";
-    else if (normalizedScore >= 70) label = "Em Aprimoramento";
-    else if (normalizedScore >= 50) label = "Intermediário";
-    else if (normalizedScore >= 30) label = "Básico";
-    
-    return { score: normalizedScore, label };
-  }, [controles, medidas, programaMedidas, programaId]);
+    return { 
+      score: maturityData.score, // Usar valor decimal em vez de porcentagem
+      label: maturityData.label,
+      rawScore: maturityData.score
+    };
+  }, [controles, medidas, getDiagnosticoMaturity]);
+
+  // Limpar cache antigo periodicamente
+  useEffect(() => {
+    const interval = setInterval(clearOldCache, 60000); // A cada minuto
+    return () => clearInterval(interval);
+  }, [clearOldCache]);
 
   // Construir árvore de navegação
   const treeData = useMemo((): TreeNode[] => {
@@ -231,9 +234,9 @@ export default function DiagnosticoPage() {
 
     return diagnosticos.map(diagnostico => {
       const diagnosticoControles = controles[diagnostico.id] || [];
-      const maturityData = calculateSimpleMaturity(diagnostico.id);
+      const maturityData = calculateMaturity(diagnostico);
 
-      console.log(`Building tree for diagnostico ${diagnostico.id}: ${diagnosticoControles.length} controles`);
+
 
       const diagnosticoNode: TreeNode = {
         id: `diagnostico-${diagnostico.id}`,
@@ -246,14 +249,75 @@ export default function DiagnosticoPage() {
         expanded: expandedNodes.has(`diagnostico-${diagnostico.id}`),
         children: diagnosticoControles.map(controle => {
           const controleMedidas = medidas[controle.id] || [];
-          console.log(`Building tree for controle ${controle.id}: ${controleMedidas.length} medidas`);
 
-          return {
-            id: `controle-${controle.id}`,
-            type: 'controle',
-            label: `${controle.numero} - ${controle.nome}`,
-            icon: <SecurityIcon />,
-            data: controle,
+                      // Calcular maturidade do controle para definir cor do ícone
+            // Construir programaControle a partir dos dados do controle
+            const programaControle = {
+              id: controle.programa_controle_id || 0,
+              programa: programaId,
+              controle: controle.id,
+              nivel: controle.nivel || 1
+            };
+
+            // Se não há medidas carregadas, carregar automaticamente para avaliação
+            let controleMaturity;
+            if (controleMedidas.length === 0) {
+              // Carregar medidas assincronamente apenas se não estiver já carregando
+              if (!autoLoadingMedidas.has(controle.id) && !loadingMedidas.has(controle.id)) {
+                setAutoLoadingMedidas(prev => new Set(prev).add(controle.id));
+                
+                loadMedidas(controle.id).then(() => {
+                  setAutoLoadingMedidas(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(controle.id);
+                    return newSet;
+                  });
+                  invalidateCache('controle', controle.id);
+                }).catch(error => {
+                  console.error(`Erro ao carregar medidas para controle ${controle.id}:`, error);
+                  setAutoLoadingMedidas(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(controle.id);
+                    return newSet;
+                  });
+                });
+              }
+              
+              // Por enquanto, usar maturidade baseada no INCC disponível
+              const isLoading = autoLoadingMedidas.has(controle.id) || loadingMedidas.has(controle.id);
+              
+              if (isLoading) {
+                controleMaturity = {
+                  score: 0,
+                  label: 'Carregando...',
+                  color: '#9E9E9E',
+                  level: 'inicial' as const
+                };
+              } else {
+                // Estimativa básica baseada no nível INCC
+                const inccLevel = controle.nivel || 1;
+                const estimatedScore = (inccLevel - 1) * 0.15; // Estimativa conservadora
+                const maturityLabel = estimatedScore >= 0.3 ? 'Básico' : 'Inicial';
+                
+                controleMaturity = {
+                  score: estimatedScore,
+                  label: maturityLabel,
+                  color: estimatedScore >= 0.3 ? '#FF9800' : '#FF5252',
+                  level: estimatedScore >= 0.3 ? 'basico' as const : 'inicial' as const
+                };
+              }
+            } else {
+              controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
+            }
+
+            return {
+              id: `controle-${controle.id}`,
+              type: 'controle',
+              label: `${controle.numero} - ${controle.nome}`,
+              icon: <SecurityIcon sx={{ color: controleMaturity.color }} />,
+              data: controle,
+              maturityScore: controleMaturity.score, // Usar valor decimal
+              maturityLabel: controleMaturity.label,
             expanded: expandedNodes.has(`controle-${controle.id}`),
             children: controleMedidas.map(medida => ({
               id: `medida-${medida.id}-${controle.id}`,
@@ -270,54 +334,40 @@ export default function DiagnosticoPage() {
         })
       };
 
-      console.log(`Diagnostico ${diagnostico.id} node:`, {
-        id: diagnosticoNode.id,
-        type: diagnosticoNode.type,
-        label: diagnosticoNode.label,
-        hasChildren: diagnosticoNode.children?.length || 0,
-        expanded: diagnosticoNode.expanded
-      });
+
 
       return diagnosticoNode;
     });
-  }, [diagnosticos, controles, medidas, programaMedidas, expandedNodes, programaId, calculateSimpleMaturity]);
+  }, [diagnosticos, controles, medidas, expandedNodes, programaId, calculateMaturity, autoLoadingMedidas, loadingMedidas, loadMedidas, invalidateCache]);
 
   // Manipular expansão de nós
   const handleNodeToggle = useCallback(async (nodeId: string, node: TreeNode) => {
-    console.log("Toggling node:", nodeId, node.type, "Current expanded:", expandedNodes.has(nodeId));
     const newExpanded = new Set(expandedNodes);
     
     if (expandedNodes.has(nodeId)) {
       // Colapsando
       newExpanded.delete(nodeId);
-      console.log("Collapsing node:", nodeId);
     } else {
       // Expandindo
       newExpanded.add(nodeId);
-      console.log("Expanding node:", nodeId);
       
       // Carregar dados sob demanda
       if (node.type === 'diagnostico') {
-        console.log("Loading controles for diagnostico:", node.data.id);
         await loadControles(node.data.id);
       } else if (node.type === 'controle') {
-        console.log("Loading medidas for controle:", node.data.id);
         await loadMedidas(node.data.id);
       }
     }
     
-    console.log("New expanded set:", Array.from(newExpanded));
     setExpandedNodes(newExpanded);
   }, [expandedNodes, loadControles, loadMedidas]);
 
   // Manipular seleção de nó
   const handleNodeSelect = useCallback(async (node: TreeNode) => {
-    console.log("Selected node:", node.id, node.type);
     setSelectedNode(node);
     
     // Se for um controle, automaticamente expandir para mostrar as medidas
     if (node.type === 'controle' && !expandedNodes.has(node.id)) {
-      console.log("Auto-expanding controle to show medidas:", node.id);
       const newExpanded = new Set(expandedNodes);
       newExpanded.add(node.id);
       setExpandedNodes(newExpanded);
@@ -341,7 +391,6 @@ export default function DiagnosticoPage() {
     value: any
   ) => {
     try {
-      console.log("Updating medida:", { medidaId, controleId, programaId, field, value });
       await dataService.updateProgramaMedida(medidaId, controleId, programaId, { [field]: value });
       
       // Atualizar estado local
@@ -355,11 +404,23 @@ export default function DiagnosticoPage() {
       if (field === 'resposta') {
         const medidasData = await dataService.fetchMedidas(controleId, programaId);
         setMedidas(prev => ({ ...prev, [controleId]: medidasData || [] }));
+        
+        // Invalidar cache de maturidade do controle e diagnóstico afetados
+        invalidateCache('controle', controleId);
+        
+        // Encontrar e invalidar o diagnóstico correspondente
+        const diagnostico = diagnosticos.find(d => {
+          const diagnosticoControles = controles[d.id] || [];
+          return diagnosticoControles.some(c => c.id === controleId);
+        });
+        if (diagnostico) {
+          invalidateCache('diagnostico', diagnostico.id);
+        }
       }
     } catch (error) {
       console.error("Erro ao atualizar medida:", error);
     }
-  }, []);
+  }, [invalidateCache, diagnosticos, controles]);
 
   // Manipular mudanças no INCC
   const handleINCCChange = useCallback(async (
@@ -368,26 +429,35 @@ export default function DiagnosticoPage() {
     value: number
   ) => {
     try {
-      console.log("Updating INCC:", { programaControleId, diagnosticoId, value });
       // TODO: Implementar atualização do INCC no backend
       // await dataService.updateProgramaControle(programaControleId, { nivel: value });
+      
+      let controleId: number | null = null;
       
       // Atualizar estado local
       setControles(prev => {
         const newControles = { ...prev };
         if (newControles[diagnosticoId]) {
-          newControles[diagnosticoId] = newControles[diagnosticoId].map(controle => 
-            controle.programa_controle_id === programaControleId 
-              ? { ...controle, nivel: value }
-              : controle
-          );
+          newControles[diagnosticoId] = newControles[diagnosticoId].map(controle => {
+            if (controle.programa_controle_id === programaControleId) {
+              controleId = controle.id;
+              return { ...controle, nivel: value };
+            }
+            return controle;
+          });
         }
         return newControles;
       });
+      
+      // Invalidar cache do controle e diagnóstico afetados
+      if (controleId) {
+        invalidateCache('controle', controleId);
+        invalidateCache('diagnostico', diagnosticoId);
+      }
     } catch (error) {
       console.error("Erro ao atualizar INCC:", error);
     }
-  }, []);
+  }, [invalidateCache]);
 
   // Função para buscar medidas (necessária para o ControleContainer)
   const handleMedidaFetch = useCallback(async (controleId: number, programaId: number) => {
@@ -404,12 +474,7 @@ export default function DiagnosticoPage() {
     // Determinar se deve mostrar botão de expansão
     const showExpandButton = node.type === 'diagnostico' || node.type === 'controle';
 
-    console.log(`Rendering ${node.type} ${node.id}:`, {
-      isExpanded,
-      showExpandButton,
-      hasChildren: node.children?.length || 0,
-      isLoading
-    });
+
 
     // Função para lidar com o clique no item
     const handleItemClick = async () => {
@@ -563,11 +628,11 @@ export default function DiagnosticoPage() {
                     {node.label}
                   </Typography>
                   {node.maturityScore !== undefined && (
-                    <Chip 
-                      size="small" 
-                      label={`${node.maturityScore}%`}
-                      color={node.maturityScore >= 80 ? 'success' : node.maturityScore >= 60 ? 'warning' : 'error'}
-                      sx={{ fontSize: '0.75rem', height: 22 }}
+                    <MaturityChip
+                      score={node.maturityScore}
+                      label={node.maturityLabel || ''}
+                      size="small"
+                      animated={true}
                     />
                   )}
                 </Box>
@@ -680,11 +745,13 @@ export default function DiagnosticoPage() {
             }
             subheader={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                <Chip 
-                  label={`Maturidade: ${selectedNode.maturityScore ?? 0}%`}
-                  color={selectedNode.maturityScore && selectedNode.maturityScore >= 80 ? 'success' : selectedNode.maturityScore && selectedNode.maturityScore >= 60 ? 'warning' : 'error'}
+                <MaturityChip
+                  score={selectedNode.maturityScore ?? 0}
+                  label={selectedNode.maturityLabel ?? 'N/A'}
+                  size="medium"
+                  showLabel={true}
+                  animated={true}
                 />
-                <Chip label={selectedNode.maturityLabel ?? 'N/A'} variant="outlined" />
                 <Chip label={`${diagnosticoControles.length} controles`} variant="outlined" size="small" />
               </Box>
             }
@@ -859,18 +926,7 @@ export default function DiagnosticoPage() {
                 })}
               </List>
               
-              {/* Debug info */}
-              {process.env.NODE_ENV === 'development' && (
-                <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider', mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Debug: {diagnosticos.length} diagnósticos, {Object.keys(controles).length} controles carregados
-                  </Typography>
-                  <br />
-                  <Typography variant="caption" color="text.secondary">
-                    Expandidos: {Array.from(expandedNodes).join(', ') || 'nenhum'}
-                  </Typography>
-                </Box>
-              )}
+
             </>
           )}
         </Box>
