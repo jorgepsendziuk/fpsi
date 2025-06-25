@@ -499,8 +499,8 @@ export default function DiagnosticoPage() {
     value: number
   ) => {
     try {
-      // TODO: Implementar atualização do INCC no backend
-      // await dataService.updateProgramaControle(programaControleId, { nivel: value });
+      // Atualizar INCC no backend
+      await dataService.updateControleNivel(programaControleId, value);
       
       let controleId: number | null = null;
       
@@ -523,11 +523,21 @@ export default function DiagnosticoPage() {
       if (controleId) {
         invalidateCache('controle', controleId);
         invalidateCache('diagnostico', diagnosticoId);
+        
+        // Sincronizar selectedNode se for um controle atualizado
+        if (selectedNode?.type === 'controle' && selectedNode.data.id === controleId) {
+          setSelectedNode(prev => ({
+            ...prev!,
+            data: { ...prev!.data, nivel: value }
+          }));
+        }
       }
     } catch (error) {
       console.error("Erro ao atualizar INCC:", error);
+      // Em caso de erro, recarregar os controles para sincronizar
+      await loadControles(diagnosticoId);
     }
-  }, [invalidateCache]);
+  }, [invalidateCache, loadControles, selectedNode]);
 
   // Função para buscar medidas (necessária para o ControleContainer)
   const handleMedidaFetch = useCallback(async (controleId: number, programaId: number) => {
