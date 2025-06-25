@@ -97,6 +97,7 @@ export default function DiagnosticoPage() {
   const [loadingMedidas, setLoadingMedidas] = useState<Set<number>>(new Set());
   const [drawerOpen, setDrawerOpen] = useState(!isMobile);
   const [autoLoadingMedidas, setAutoLoadingMedidas] = useState<Set<number>>(new Set());
+  const [autoLoadingControles, setAutoLoadingControles] = useState<Set<number>>(new Set());
 
   // Hook de maturidade inteligente
   const {
@@ -207,9 +208,82 @@ export default function DiagnosticoPage() {
     }
   }, [medidas, programaId]);
 
-  // Calcular maturidade inteligente com cache
+  // Calcular maturidade inteligente com cache para diagnósticos
   const calculateMaturity = useCallback((diagnostico: Diagnostico) => {
     const diagnosticoControles = controles[diagnostico.id] || [];
+    
+    // Se não há controles carregados, carregar automaticamente
+    if (diagnosticoControles.length === 0) {
+      // Carregar controles assincronamente apenas se não estiver já carregando
+      if (!autoLoadingControles.has(diagnostico.id) && !loadingControles.has(diagnostico.id)) {
+        setAutoLoadingControles(prev => new Set(prev).add(diagnostico.id));
+        
+        loadControles(diagnostico.id).then(() => {
+          setAutoLoadingControles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(diagnostico.id);
+            return newSet;
+          });
+          invalidateCache('diagnostico', diagnostico.id);
+        }).catch(error => {
+          console.error(`Erro ao carregar controles para diagnóstico ${diagnostico.id}:`, error);
+          setAutoLoadingControles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(diagnostico.id);
+            return newSet;
+          });
+        });
+      }
+      
+      // Por enquanto, retornar estimativa básica
+      const isLoading = autoLoadingControles.has(diagnostico.id) || loadingControles.has(diagnostico.id);
+      
+      if (isLoading) {
+        return {
+          score: 0,
+          label: 'Carregando...',
+          rawScore: 0
+        };
+      } else {
+        // Estimativa muito básica (inicial)
+        return {
+          score: 0.0,
+          label: 'Inicial',
+          rawScore: 0.0
+        };
+      }
+    }
+    
+    // Se há controles mas poucos têm medidas carregadas, fazer estimativa baseada nos INCs
+    const controlComMedidas = diagnosticoControles.filter(controle => {
+      const controleMedidas = medidas[controle.id] || [];
+      return controleMedidas.length > 0;
+    });
+    
+    const percentualComMedidas = controlComMedidas.length / diagnosticoControles.length;
+    
+    // Se menos de 50% dos controles têm medidas carregadas, usar estimativa baseada em INCs
+    if (percentualComMedidas < 0.5) {
+      // Calcular maturidade estimada baseada nos níveis INCC dos controles
+      const mediaINCC = diagnosticoControles.reduce((sum, controle) => {
+        return sum + (controle.nivel || 1);
+      }, 0) / diagnosticoControles.length;
+      
+      // Converter nível INCC médio para score estimado (conservador)
+      const estimatedScore = Math.min(((mediaINCC - 1) * 0.15), 0.6); // Máximo 0.6 para estimativas
+      
+      let label = 'Inicial';
+      if (estimatedScore >= 0.5) label = 'Intermediário';
+      else if (estimatedScore >= 0.3) label = 'Básico';
+      
+      return {
+        score: estimatedScore,
+        label: `${label} (Estimativa)`,
+        rawScore: estimatedScore
+      };
+    }
+    
+    // Caso contrário, usar cálculo real
     const maturityData = getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidas);
     
     return { 
@@ -217,7 +291,7 @@ export default function DiagnosticoPage() {
       label: maturityData.label,
       rawScore: maturityData.score
     };
-  }, [controles, medidas, getDiagnosticoMaturity]);
+  }, [controles, medidas, getDiagnosticoMaturity, autoLoadingControles, loadingControles, loadControles, invalidateCache]);
 
   // Limpar cache antigo periodicamente
   useEffect(() => {
@@ -227,10 +301,6 @@ export default function DiagnosticoPage() {
 
   // Construir árvore de navegação
   const treeData = useMemo((): TreeNode[] => {
-    console.log("Building tree data...");
-    console.log("Diagnosticos:", diagnosticos.length);
-    console.log("Controles keys:", Object.keys(controles));
-    console.log("Medidas keys:", Object.keys(medidas));
 
     return diagnosticos.map(diagnostico => {
       const diagnosticoControles = controles[diagnostico.id] || [];
