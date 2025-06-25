@@ -308,25 +308,25 @@ export const useMaturityCache = (programaId: number) => {
 
     await Promise.all(promises);
     setCacheUpdateTrigger(prev => prev + 1);
-  }, [getDiagnosticoMaturity, getControleMaturity]);
+  }, [getDiagnosticoMaturity, getControleMaturity, programaId]);
 
   // Limpar cache antigo
   const clearOldCache = useCallback(() => {
     const now = Date.now();
     
     // Limpar cache de controles
-    for (const [key, entry] of controleMaturityCache.current.entries()) {
+    controleMaturityCache.current.forEach((entry, key) => {
       if (now - entry.timestamp > CACHE_DURATION) {
         controleMaturityCache.current.delete(key);
       }
-    }
+    });
     
     // Limpar cache de diagnósticos
-    for (const [key, entry] of diagnosticoMaturityCache.current.entries()) {
+    diagnosticoMaturityCache.current.forEach((entry, key) => {
       if (now - entry.timestamp > CACHE_DURATION) {
         diagnosticoMaturityCache.current.delete(key);
       }
-    }
+    });
   }, []);
 
   // Stats do cache para debug

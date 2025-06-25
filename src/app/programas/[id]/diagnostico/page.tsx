@@ -338,7 +338,7 @@ export default function DiagnosticoPage() {
 
       return diagnosticoNode;
     });
-  }, [diagnosticos, controles, medidas, expandedNodes, programaId, calculateMaturity, autoLoadingMedidas, loadingMedidas, loadMedidas, invalidateCache]);
+  }, [diagnosticos, controles, medidas, programaMedidas, expandedNodes, programaId, calculateMaturity, getControleMaturity, autoLoadingMedidas, loadingMedidas, loadMedidas, invalidateCache]);
 
   // Manipular expansão de nós
   const handleNodeToggle = useCallback(async (nodeId: string, node: TreeNode) => {
