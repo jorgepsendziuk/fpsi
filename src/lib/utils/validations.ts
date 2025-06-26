@@ -1,4 +1,4 @@
-import { Responsavel, Medida, Controle } from '../../../lib/types/types';
+import { Responsavel, Medida, Controle } from '../types/types';
 
 export interface ValidationResult {
   isValid: boolean;

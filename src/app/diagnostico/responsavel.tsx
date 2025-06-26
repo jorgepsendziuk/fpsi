@@ -4,7 +4,7 @@ import { DataGrid, GridColDef, GridRowModesModel, GridRowModes, GridActionsCellI
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { Save, Cancel, Edit, Delete, Add } from "@mui/icons-material";
 import { Button, Box } from "@mui/material";
-import type { Responsavel } from "./types";
+import type { Responsavel } from "../../lib/types/types";
 
 // Container
 import ResponsavelContainer from './containers/ResponsavelContainer';

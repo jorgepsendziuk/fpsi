@@ -1,6 +1,6 @@
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { Dispatch } from "react";
-import { Action } from "./types";
+import { Action } from "../../lib/types/types";
 import * as dataService from "../../lib/services/dataService";
 
 export const fetchDiagnosticos = async (dispatch: Dispatch<Action>) => {

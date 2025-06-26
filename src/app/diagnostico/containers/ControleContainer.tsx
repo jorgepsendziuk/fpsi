@@ -8,8 +8,8 @@ import { Controle, Diagnostico, Medida } from '../../../lib/types/types';
 import ControleComponent from '../../../components/diagnostico/Controle';
 
 // Utils
-import { calculateMaturityIndexForControle, calculateMaturityIndex } from '../utils/calculations';
-import { respostas, respostasimnao, incc } from '../utils';
+import { calculateMaturityIndexForControle, calculateMaturityIndex } from '../../../lib/utils/calculations';
+import { respostas, respostasimnao, incc } from '../../../lib/utils/utils';
 
 /**
  * Props for the ControleContainer component

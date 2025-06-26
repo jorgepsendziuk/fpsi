@@ -57,7 +57,7 @@ import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../.
 import MedidaContainer from "../../../diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../diagnostico/containers/ControleContainer";
 import { useMaturityCache } from "../../../diagnostico/hooks/useMaturityCache";
-import MaturityChip from "../../../diagnostico/components/MaturityChip";
+import MaturityChip from "../../../../components/diagnostico/MaturityChip";
 
 const DRAWER_WIDTH = 380;
 

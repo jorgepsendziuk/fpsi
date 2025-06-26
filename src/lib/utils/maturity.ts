@@ -5,7 +5,7 @@
  * do sistema, organizadas de forma estável e documentada.
  */
 
-import { State } from '../../../lib/types/types';
+import { State } from '../types/types';
 
 // Definição das faixas de maturidade
 export const MATURITY_LEVELS = [

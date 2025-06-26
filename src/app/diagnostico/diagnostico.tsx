@@ -2,7 +2,7 @@
 import React from 'react';
 
 // Types
-import { Diagnostico, Programa } from './types';
+import { Diagnostico, Programa } from '../../lib/types/types';
 
 // Container
 import DiagnosticoContainer from './containers/DiagnosticoContainer';

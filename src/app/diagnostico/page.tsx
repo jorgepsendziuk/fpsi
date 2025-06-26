@@ -9,10 +9,10 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
 import { initialState, reducer } from "./state";
 import * as dataService from "../../lib/services/dataService";
-import ProgramHeader from "./components/ProgramHeader";
-import ProgramCard from "./components/ProgramCard";
+import ProgramHeader from "../../components/diagnostico/ProgramHeader";
+import ProgramCard from "../../components/diagnostico/ProgramCard";
 import { useMediaQuery } from '@mui/material';
-import { Programa } from './types';
+import { Programa } from '../../lib/types/types';
 
 const DiagnosticoPage = () => {
   const isMobile = useMediaQuery('(max-width:600px)');

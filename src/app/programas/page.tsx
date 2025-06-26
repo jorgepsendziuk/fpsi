@@ -51,7 +51,7 @@ import Image from 'next/image';
 import * as dataService from "../../lib/services/dataService";
 import { Programa } from "../../lib/types/types";
 import { initialState, reducer } from "../diagnostico/state";
-import { calculateProgramaMaturityCached } from "../diagnostico/utils/maturity";
+import { calculateProgramaMaturityCached } from "../../lib/utils/maturity";
 
 export default function ProgramasPage() {
   const router = useRouter();

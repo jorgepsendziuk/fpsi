@@ -8,7 +8,7 @@ import { Diagnostico, Programa, Controle, State } from '../../../lib/types/types
 import DiagnosticoComponent from '../../../components/diagnostico/DiagnosticoComponent';
 
 // Utils
-import { calculateDiagnosticoMaturity } from '../utils/maturity';
+import { calculateDiagnosticoMaturity } from '../../../lib/utils/maturity';
 
 /**
  * Props for the DiagnosticoContainer component

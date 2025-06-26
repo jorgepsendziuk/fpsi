@@ -1,4 +1,4 @@
-import controlesJson from '../controles.json';
+import controlesJson from './controles.json';
 
 interface ControleJson {
   id: number;
