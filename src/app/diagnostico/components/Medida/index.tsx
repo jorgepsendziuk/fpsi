@@ -22,6 +22,7 @@ import Grid from '@mui/material/Grid2';
 // Material UI icons
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SaveIcon from '@mui/icons-material/Save';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 // Components
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -39,6 +40,7 @@ import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTex
 // Styles
 import { medidaStyles } from './styles';
 import { useThemeColors } from '../../hooks/useThemeColors';
+import { useTheme } from '@mui/material/styles';
 
 /**
  * Props for the Medida component
@@ -79,57 +81,101 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   handleSaveField,
 }) => {
   const { accordionStyles, getContrastTextColor } = useThemeColors();
+  const theme = useTheme();
+
+  // Buscar a cor do status do plano de ação do sistema existente
+  const statusInfo = status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-      
-          <Grid container spacing={1} sx={{ width: '100%', alignItems: 'center' }}>
-            <Grid size={{ md: 1, sm: 2, xs: 3 }}>
-              <Typography sx={medidaStyles.idSection} variant="h6" align="center">
-                {medida.id_medida}
+      <Box sx={medidaStyles.container(theme)}>
+        {/* Header da Medida */}
+        <Box sx={medidaStyles.header(theme)}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid size={{ xs: 12, sm: 12 }}>
+              <Box sx={medidaStyles.headerTitle(theme)}>
+                <AssignmentIcon />
+                <Typography variant="h6" component="span" sx={{ color: 'white', fontWeight: 700 }}>
+                  {medida.id_medida} - {medida.medida}
+                </Typography>
+              </Box>
+            </Grid>
+            
+          </Grid>
+        </Box>
+
+
+        {/* Cards de Resposta e Plano de Ação */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {/* Card de Resposta */}
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box sx={medidaStyles.responseCard(theme, false)}>
+              <Typography sx={medidaStyles.responseTitle(theme, false)}>
+                RESPOSTA
               </Typography>
-            </Grid>
-            <Grid size={{ md: 5, sm: 5, xs: 9 }}>
-              <Typography sx={medidaStyles.titleSection}>{medida.medida}</Typography>
-            </Grid>
-            <Grid size={{ md: 3, sm: 3, xs: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Select
-                sx={{ ...medidaStyles.selectSection, width: '100%' }}
-                value={programaMedida?.resposta || ""}
-                aria-label={medida.id_medida}
-                onClick={(event) => event.stopPropagation()}
-                onChange={(event) =>
-                  handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
-                }
-              >
-                {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
-                  <MenuItem key={resposta.id} value={resposta.id}>
-                    <ListItemText primary={resposta.label} sx={medidaStyles.selectItem} />
+              <Box sx={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
+                <Select
+                  sx={{ 
+                    width: '100%',
+                  }}
+                  value={programaMedida?.resposta || ""}
+                  displayEmpty
+                  onChange={(event) =>
+                    handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
+                  }
+                >
+                  <MenuItem value="">
+                    <em>Selecionar resposta...</em>
                   </MenuItem>
-                ))}
-              </Select>
-            </Grid>
-            <Grid size={{ md: 3, sm: 4, xs: 6 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Typography variant="caption" sx={{ fontWeight: '500', mb: 0 }}>
+                  {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
+                    <MenuItem key={resposta.id} value={resposta.id}>
+                      <ListItemText primary={resposta.label} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Card do Plano de Ação */}
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box sx={medidaStyles.actionPlanCard(theme, statusInfo?.color)}>
+              <Typography sx={medidaStyles.actionPlanTitle(theme)}>
                 PLANO DE AÇÃO
               </Typography>
-              <Chip
-                sx={{
-                  ...medidaStyles.statusChip,
-                  bgcolor: status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao)?.color || '#e9ecef',
-                  color: (programaMedida?.status_plano_acao === 3 || programaMedida?.status_plano_acao === 4) ? '#333333' : '#000000',
-                  fontWeight: 600
-                }}
-                label={
-                  status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao)?.label || "Não definido"
-                }
-              />
-            </Grid>
+              <Box sx={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
+                <Chip
+                  sx={{
+                    width: '100%',
+                    height: 'auto',
+                    py: 1,
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    border: '1px solid #ccc',
+                    backgroundColor: statusInfo?.color || '#e9ecef',
+                    color: '#000000',
+                    '& .MuiChip-label': {
+                      whiteSpace: 'normal',
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                    }
+                  }}
+                  label={statusInfo?.label || "Não definido"}
+                />
+              </Box>
+            </Box>
           </Grid>
-          <Typography align="justify" sx={medidaStyles.description}>
-            &quot;{medida.descricao}&quot;
-          </Typography>
-        
+        </Grid>
+
+        {/* Seção de Descrição */}
+        <Box sx={medidaStyles.descriptionSection(theme)}>
+                      <Typography sx={medidaStyles.descriptionText(theme)} align="justify">
+              &ldquo;{medida.descricao}&rdquo;
+            </Typography>
+        </Box>
+
+        {/* Formulário */}
+        <Box sx={medidaStyles.formSection(theme)}>
           <Grid container spacing={3}>
             {/* Responsável */}
             <Grid size={{ md: 4, sm: 12, xs: 12 }}>
@@ -275,6 +321,8 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Box>
             </Grid>
           </Grid>
+        </Box>
+      </Box>
     </LocalizationProvider>
   );
 };

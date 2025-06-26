@@ -446,8 +446,9 @@ export default function DiagnosticoPage() {
       await loadMedidas(node.data.id);
     }
     
-    // Fechar drawer em telas pequenas após seleção
-    if (isMobile) {
+    // No mobile, fechar drawer apenas para medidas (itens de último nível)
+    // Diagnósticos e controles mantêm o drawer aberto para navegação
+    if (isMobile && node.type === 'medida') {
       setDrawerOpen(false);
     }
   }, [isMobile, expandedNodes, loadMedidas]);
