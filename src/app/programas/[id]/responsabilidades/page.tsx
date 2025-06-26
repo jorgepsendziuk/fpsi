@@ -264,7 +264,7 @@ export default function ProgramaResponsaveisCRUDPage() {
       >
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
           <Person sx={{ mr: 1 }} />
-          Responsáveis Principais
+          Definição de Responsáveis
         </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>

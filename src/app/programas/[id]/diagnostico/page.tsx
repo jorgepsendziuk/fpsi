@@ -471,30 +471,29 @@ export default function DiagnosticoPage() {
         [key]: { ...prev[key], [field]: value }
       }));
       
-      // Para mudanças na resposta, recarregar dados completos para sincronizar
-      if (field === 'resposta') {
-        // Forçar recarga completa das medidas e programaMedidas
-        setMedidas(prev => {
-          const newMedidas = { ...prev };
-          delete newMedidas[controleId]; // Remove do cache para forçar reload
-          return newMedidas;
-        });
-        
-        // Recarregar usando loadMedidas que sincroniza tudo
-        await loadMedidas(controleId);
-        
-        // Sincronizar selectedNode se for uma medida atualizada
-        if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId) {
-          setSelectedNode(prev => ({
-            ...prev!,
-            data: {
-              ...prev!.data,
-              programaMedida: { ...prev!.data.programaMedida, [field]: value }
-            }
-          }));
-        }
-        
-        // Invalidar cache de maturidade do controle e diagnóstico afetados
+      // Forçar recarga completa das medidas e programaMedidas para sincronizar
+      setMedidas(prev => {
+        const newMedidas = { ...prev };
+        delete newMedidas[controleId]; // Remove do cache para forçar reload
+        return newMedidas;
+      });
+      
+      // Recarregar usando loadMedidas que sincroniza tudo
+      await loadMedidas(controleId);
+      
+      // Sincronizar selectedNode se for uma medida atualizada
+      if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId) {
+        setSelectedNode(prev => ({
+          ...prev!,
+          data: {
+            ...prev!.data,
+            programaMedida: { ...prev!.data.programaMedida, [field]: value }
+          }
+        }));
+      }
+      
+      // Invalidar cache de maturidade apenas para campos que impactam o cálculo
+      if (['resposta', 'status_medida'].includes(field)) {
         invalidateCache('controle', controleId);
         
         // Encontrar e invalidar o diagnóstico correspondente

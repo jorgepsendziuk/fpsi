@@ -27,23 +27,40 @@ if (field === 'resposta') {
 
 ## Correções Implementadas
 
-### 1. Recarregamento Completo Sincronizado
+### 1. Sincronização Completa de Todos os Campos
 
+**ANTES (Problema):**
 ```javascript
-// ✅ CORREÇÃO: Recarregamento completo usando loadMedidas
+// ❌ LIMITADO: Sincronização apenas para 'resposta'
 if (field === 'resposta') {
-  // Forçar recarga completa das medidas e programaMedidas
-  setMedidas(prev => {
-    const newMedidas = { ...prev };
-    delete newMedidas[controleId]; // Remove do cache para forçar reload
-    return newMedidas;
-  });
-  
-  // Recarregar usando loadMedidas que sincroniza tudo
-  await loadMedidas(controleId);
-  // ...
+  const medidasData = await dataService.fetchMedidas(controleId, programaId);
+  setMedidas(prev => ({ ...prev, [controleId]: medidasData || [] }));
 }
 ```
+
+**DEPOIS (Corrigido):**
+```javascript
+// ✅ COMPLETO: Sincronização para todos os campos
+// Forçar recarga completa das medidas e programaMedidas para sincronizar
+setMedidas(prev => {
+  const newMedidas = { ...prev };
+  delete newMedidas[controleId]; // Remove do cache para forçar reload
+  return newMedidas;
+});
+
+// Recarregar usando loadMedidas que sincroniza tudo
+await loadMedidas(controleId);
+```
+
+### 1.1. Campos Beneficiados
+
+Agora **todos os campos** das medidas são sincronizados automaticamente:
+- ✅ `resposta` - Resposta da medida
+- ✅ `responsavel` - Responsável designado
+- ✅ `previsao_inicio` - Data de início prevista  
+- ✅ `previsao_fim` - Data de conclusão prevista
+- ✅ `status_medida` - Status da medida
+- ✅ Campos de texto via `handleSaveField` (justificativa, encaminhamento_interno, observacao_orgao)
 
 ### 2. Sincronização do Node Selecionado
 
@@ -60,7 +77,25 @@ if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId)
 }
 ```
 
-### 3. Dependências Atualizadas
+### 3. Invalidação de Cache Inteligente
+
+```javascript
+// ✅ OTIMIZADO: Invalidação apenas para campos que impactam maturidade
+if (['resposta', 'status_medida'].includes(field)) {
+  invalidateCache('controle', controleId);
+  
+  // Encontrar e invalidar o diagnóstico correspondente
+  const diagnostico = diagnosticos.find(d => {
+    const diagnosticoControles = controles[d.id] || [];
+    return diagnosticoControles.some(c => c.id === controleId);
+  });
+  if (diagnostico) {
+    invalidateCache('diagnostico', diagnostico.id);
+  }
+}
+```
+
+### 4. Dependências Atualizadas
 
 ```javascript
 // ✅ CORREÇÃO: Dependências completas do useCallback
@@ -77,25 +112,29 @@ if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId)
 ## Comportamento Após Correção
 
 ### Antes (Problemático)
-1. ✅ Usuário altera resposta da medida
+1. ✅ Usuário altera **qualquer campo** da medida
 2. ✅ Dados salvos no banco
-3. ❌ Interface não reflete mudança
-4. ❌ Usuário precisa recarregar página
+3. ❌ Interface não reflete mudança (exceto 'resposta')
+4. ❌ Usuário precisa recarregar página para ver outros campos
 
 ### Depois (Corrigido)
-1. ✅ Usuário altera resposta da medida
+1. ✅ Usuário altera **qualquer campo** da medida (resposta, responsável, datas, status)
 2. ✅ Dados salvos no banco
 3. ✅ Estado local atualizado instantaneamente
 4. ✅ Dados recarregados para sincronização completa
-5. ✅ Interface reflete mudança automaticamente
+5. ✅ Interface reflete mudança automaticamente em **todos os campos**
 6. ✅ selectedNode sincronizado (se aplicável)
+7. ✅ Cache de maturidade invalidado apenas quando necessário
 
 ## Benefícios
 
-1. **Experiência do Usuário**: Mudanças aparecem instantaneamente
-2. **Consistência de Dados**: Todos os estados permanecem sincronizados
-3. **Confiabilidade**: Usuário tem certeza de que mudanças foram salvas
-4. **Performance**: Recarregamento inteligente apenas quando necessário
+1. **Experiência do Usuário Completa**: Mudanças em **todos os campos** aparecem instantaneamente
+2. **Consistência Total**: Todos os estados permanecem sincronizados para todos os campos
+3. **Confiabilidade Absoluta**: Usuário tem certeza de que mudanças foram salvas, independente do campo
+4. **Performance Otimizada**: 
+   - Recarregamento completo para garantir sincronização
+   - Cache de maturidade invalidado apenas para campos relevantes (`resposta`, `status_medida`)
+5. **Cobertura Completa**: Solução funciona para todos os tipos de campo (selects, datas, texto)
 
 ## Padrão Estabelecido
 
