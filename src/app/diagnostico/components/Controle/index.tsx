@@ -7,6 +7,11 @@ import {
   Select,
   MenuItem,
   Box,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  Paper,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
@@ -100,49 +105,185 @@ const ControleComponent: React.FC<ControleProps> = ({
 }) => {
   const { accordionStyles } = useThemeColors();
 
+  const maturityScore = calculateMaturityIndex(controle);
+  
+  // Função para obter cor baseada no score
+  const getMaturityColor = (score: number): string => {
+    if (score >= 0.9) return '#2E7D32';      // Verde escuro
+    if (score >= 0.7) return '#4CAF50';      // Verde
+    if (score >= 0.5) return '#FFC107';      // Amarelo
+    if (score >= 0.3) return '#FF9800';      // Laranja
+    return '#FF5252';                        // Vermelho
+  };
+
+  const getMaturityLevel = (score: number): string => {
+    if (score >= 0.9) return 'Aprimorado';
+    if (score >= 0.7) return 'Em Aprimoramento';
+    if (score >= 0.5) return 'Intermediário';
+    if (score >= 0.3) return 'Básico';
+    return 'Inicial';
+  };
+
   return (
-        <><Grid container spacing={2} sx={{ mb: 3 }}>
-      <Grid size={{ md: 4 }} alignItems="center">
-        <Typography variant="caption" sx={controleStyles.titleCaption}>
-          CONTROLE
-        </Typography>
-        <Typography sx={controleStyles.titleSection}>
-          ID {controle.numero} - {controle.nome}
-        </Typography>
-      </Grid>
-      <Grid size={{ md: 6 }}>
-        <Typography variant="caption" sx={controleStyles.titleCaption}>
-          NCC - NÍVEIS DE CAPACIDADE DO CONTROLE
-        </Typography>
-        <Select
-          sx={controleStyles.niveisList}
-          value={programaControle?.nivel || ""}
-          onChange={(event) => {
-            if (programaControle?.id && programaControle.id > 0) {
-              handleINCCChange(programaControle.id, diagnostico.id, parseInt(event.target.value.toString(), 10));
-            } else {
-              console.warn('Cannot update INCC: programaControle.id is not valid', programaControle);
-            }
-          } }
-        >
-          {incc.map((incc) => (
-            <MenuItem key={incc.id} value={incc.id}>
-              <Typography sx={controleStyles.niveisListItem}>
-                <b>{incc.nivel}</b> - {incc.label}
+    <>
+      {/* Header do Controle */}
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          p: 3, 
+          mb: 3, 
+          borderRadius: 2,
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <SecurityOutlinedIcon 
+              sx={{ 
+                fontSize: 32, 
+                color: 'primary.main',
+                p: 0.5,
+                borderRadius: 1,
+                backgroundColor: 'rgba(25, 118, 210, 0.1)'
+              }} 
+            />
+            <Box>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 700, 
+                  color: 'primary.main',
+                  mb: 0.5 
+                }}
+              >
+                Controle {controle.numero}
               </Typography>
-            </MenuItem>
-          ))}
-        </Select>
-      </Grid>
-      <Grid size={{ md: 2 }} alignItems="center" sx={controleStyles.indiceSection}>
-        <Typography variant="caption" align="center" sx={controleStyles.indiceCaption}>
-          ÍNDICE DE MATURIDADE DO CONTROLE
-        </Typography>
-        <Typography variant="h6" align="center" sx={controleStyles.indiceValue}>
-          {calculateMaturityIndex(controle)}
-        </Typography>
-      </Grid>
-    </Grid><div style={controleStyles.medidasContainer}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 500, 
+                  color: 'text.primary',
+                  lineHeight: 1.2 
+                }}
+              >
+                {controle.nome}
+              </Typography>
+            </Box>
+          </Box>
+          
+          {/* Card do Índice de Maturidade */}
+          <Card 
+            elevation={3}
+            sx={{ 
+              minWidth: 200,
+              background: `linear-gradient(135deg, ${getMaturityColor(maturityScore)}15 0%, ${getMaturityColor(maturityScore)}25 100%)`,
+              border: `2px solid ${getMaturityColor(maturityScore)}`,
+              borderRadius: 2
+            }}
+          >
+            <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  fontWeight: 700, 
+                  textTransform: 'uppercase',
+                  color: 'text.secondary',
+                  letterSpacing: 0.5
+                }}
+              >
+                Índice de Maturidade
+              </Typography>
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  fontWeight: 800, 
+                  color: getMaturityColor(maturityScore),
+                  my: 1 
+                }}
+              >
+                {maturityScore.toFixed(2)}
+              </Typography>
+              <Chip 
+                label={getMaturityLevel(maturityScore)}
+                size="small"
+                sx={{ 
+                  backgroundColor: getMaturityColor(maturityScore),
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.75rem'
+                }}
+              />
+            </CardContent>
+          </Card>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Seção do INCC */}
+        <Box>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 600, 
+              color: 'text.primary',
+              mb: 1.5 
+            }}
+          >
+            Nível de Capacidade do Controle (INCC)
+          </Typography>
+          <Select
+            fullWidth
+            value={programaControle?.nivel || ""}
+            onChange={(event) => {
+              if (programaControle?.id && programaControle.id > 0) {
+                handleINCCChange(programaControle.id, diagnostico.id, parseInt(event.target.value.toString(), 10));
+              } else {
+                console.warn('Cannot update INCC: programaControle.id is not valid', programaControle);
+              }
+            }}
+            sx={{
+              backgroundColor: 'white',
+              borderRadius: 1,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1,
+              },
+              '& .MuiSelect-select': {
+                py: 1.5
+              }
+            }}
+          >
+            {incc.map((incc) => (
+              <MenuItem key={incc.id} value={incc.id}>
+                <Box sx={{ py: 0.5 }}>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      fontWeight: 600,
+                      mb: 0.5 
+                    }}
+                  >
+                    Nível {incc.nivel} - {incc.indice}%
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontSize: '0.875rem',
+                      lineHeight: 1.3,
+                      whiteSpace: 'normal'
+                    }}
+                  >
+                    {incc.label}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+      </Paper>
+
+      {/* Seções de Informação do Controle */}
+      <div style={controleStyles.medidasContainer}>
         <Box sx={{ mb: 3 }}>
           {(Object.keys(infoLabels) as InfoType[]).map((info) => {
             const content = controle[info];
