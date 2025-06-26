@@ -10,7 +10,7 @@ import Grid from '@mui/material/Grid2';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CNPJMask from "./CNPJMask";
 import { sanitizeCNPJ, getEntityInitial } from "../../app/diagnostico/helpers/formatter";
-import { setor } from "../../app/diagnostico/utils";
+import { setor } from "../../lib/utils/utils";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
 

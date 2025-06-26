@@ -1,5 +1,8 @@
 import { DateTimeFieldOwnerState } from "@mui/x-date-pickers/DateTimeField/DateTimeField.types";
 
+/**
+ * Programa interface - represents a security program
+ */
 export interface Programa {
   id: number; 
   orgao: number;
@@ -22,6 +25,10 @@ export interface Programa {
   politica_inicio_vigencia: Date;
   politica_prazo_revisao: Date;
 }
+
+/**
+ * Diagnostico interface - represents a diagnostic area
+ */
 export interface Diagnostico {
   id: number;
   descricao: string;
@@ -30,6 +37,9 @@ export interface Diagnostico {
   maturidade: number;
 } 
 
+/**
+ * Controle interface - represents a security control
+ */
 export interface Controle {
   id: number;
   diagnostico: number;
@@ -44,6 +54,9 @@ export interface Controle {
   programa?: number;
 }
 
+/**
+ * ProgramaControle interface - represents the relationship between a program and control
+ */
 export interface ProgramaControle {
   id?: number;
   programa: number;
@@ -51,6 +64,10 @@ export interface ProgramaControle {
   nivel?: number;
 }
 
+/**
+ * Medida type - represents a security measure
+ * Consolidated version with all possible properties
+ */
 export type Medida = {
   id: number;
   id_medida: string;
@@ -60,6 +77,7 @@ export type Medida = {
   funcao_nist_csf: string;
   medida: string;
   descricao: string;
+  // Optional properties that may be present
   resposta?: number;
   justificativa?: string;
   observacao_orgao?: string;
@@ -70,9 +88,13 @@ export type Medida = {
   encaminhamento_interno?: string;
   status_medida?: number;
   status_plano_acao?: number;
+  // Relationship to ProgramaMedida
   programa_medida?: ProgramaMedida;
 };
 
+/**
+ * ProgramaMedida interface - represents the relationship between a program and measure
+ */
 export interface ProgramaMedida {
   id: number;
   programa: number;
@@ -89,29 +111,42 @@ export interface ProgramaMedida {
   nova_resposta: string;
 }
 
+/**
+ * Responsavel interface - represents a responsible person
+ */
 export interface Responsavel {
   id: number;
   programa: number;
   departamento: string;
-  email: string ;
+  email: string;
   nome: string;
 }
+
+/**
+ * Resposta interface - represents an answer option
+ */
 export interface Resposta {
   id: number;
   peso: number | null;
   label: string;
 }
 
+/**
+ * State interface - represents the application state
+ */
 export interface State {
-  responsaveis: any;
+  responsaveis: Responsavel[];
   programas: Programa[];
   diagnosticos: Diagnostico[];
-  controles: { [key: string]: any };
-  medidas: { [key: string]: any };
-  medidas_programas: any[];
-  respostas: any[];
+  controles: { [key: string]: Controle[] };
+  medidas: { [key: string]: Medida[] };
+  medidas_programas: ProgramaMedida[];
+  respostas: Resposta[];
 }
 
+/**
+ * Action interface - represents a state action
+ */
 export interface Action {
   type: string;
   payload?: any;
@@ -124,6 +159,9 @@ export interface Action {
   value?: any;
 }
 
+/**
+ * TextFieldsState interface - represents form text field states
+ */
 export interface TextFieldsState {
   justificativa: string;
   encaminhamento_interno: string;
@@ -131,4 +169,46 @@ export interface TextFieldsState {
   nova_resposta: string;
 }
 
+/**
+ * MedidaTextField type - represents available text fields for measures
+ */
 export type MedidaTextField = keyof TextFieldsState;
+
+/**
+ * Tree node types for navigation
+ */
+export type NodeType = 'diagnostico' | 'controle' | 'medida';
+
+/**
+ * Navigation tree node interface
+ */
+export interface TreeNode {
+  id: string;
+  type: NodeType;
+  data: any;
+  children?: TreeNode[];
+}
+
+/**
+ * Maturity calculation result
+ */
+export interface MaturityResult {
+  score: number;
+  label: string;
+  level: number;
+}
+
+/**
+ * Cache key for maturity calculations
+ */
+export type MaturityCacheKey = `controle-${number}` | `diagnostico-${number}` | `programa-${number}`;
+
+/**
+ * Loading states
+ */
+export interface LoadingState {
+  diagnosticos: boolean;
+  controles: boolean;
+  medidas: boolean;
+  responsaveis: boolean;
+}

@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from 'react';
 
 // Types
-import { Controle, Diagnostico, Medida } from '../types';
+import { Controle, Diagnostico, Medida } from '../../../lib/types/types';
 
 // Components
-import ControleComponent from '../components/Controle';
+import ControleComponent from '../../../components/diagnostico/Controle';
 
 // Utils
 import { calculateMaturityIndexForControle, calculateMaturityIndex } from '../utils/calculations';

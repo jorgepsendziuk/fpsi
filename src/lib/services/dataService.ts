@@ -25,13 +25,20 @@ export const fetchOrgaos = async () => {
   return data || [];
 };
 
-export const fetchResponsaveis = async (programaId: number) => {
-  const { data } = await supabaseBrowserClient
-    .from("responsavel")
-    .select("*")
-    .eq("programa", programaId)
-    .order("nome", { ascending: true });
-  return data || [];
+export const fetchResponsaveis = async (programaId: number, retries = 3): Promise<any[]> => {
+  try {
+    const { data, error } = await supabaseBrowserClient
+      .from("responsavel")
+      .select("id, nome, email, departamento, programa")
+      .eq("programa", programaId)
+      .order("nome", { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error(error);
+    return [];
+  }
 };
 
 export const fetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {
@@ -371,4 +378,72 @@ export const ensureProgramaControleRecords = async (programaId: number) => {
   }
   
   return { data, error };
+};
+
+export const fetchProgramaMedida = async (medidaId: number, controleId: number, programaId: number) => {
+  console.log(`fetchProgramaMedida: Fetching for medida ${medidaId}, controle ${controleId}, programa ${programaId}`);
+  
+  const { data, error } = await supabaseBrowserClient
+    .from("programa_medida")
+    .select("*")
+    .eq("medida", medidaId)
+    .eq("programa", programaId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+    console.error(`fetchProgramaMedida: Error fetching programa_medida:`, error);
+    throw error;
+  }
+
+  console.log(`fetchProgramaMedida: Found programa_medida:`, !!data);
+  return data;
+};
+
+export const updateProgramaMedida = async (medidaId: number, controleId: number, programaId: number, updates: any) => {
+  console.log(`updateProgramaMedida: Updating medida ${medidaId}, controle ${controleId}, programa ${programaId}`, updates);
+  
+  // Check if a record exists in programa_medida
+  const { data: existingRecord } = await supabaseBrowserClient
+    .from("programa_medida")
+    .select("id")
+    .eq("medida", medidaId)
+    .eq("programa", programaId)
+    .single();
+
+  if (existingRecord) {
+    // Update existing record
+    const { data, error } = await supabaseBrowserClient
+      .from("programa_medida")
+      .update(updates)
+      .eq("id", existingRecord.id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`updateProgramaMedida: Error updating existing record:`, error);
+      throw error;
+    }
+    
+    console.log(`updateProgramaMedida: Updated existing record`);
+    return data;
+  } else {
+    // Create new record
+    const { data, error } = await supabaseBrowserClient
+      .from("programa_medida")
+      .insert({
+        medida: medidaId,
+        programa: programaId,
+        ...updates
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`updateProgramaMedida: Error creating new record:`, error);
+      throw error;
+    }
+    
+    console.log(`updateProgramaMedida: Created new record`);
+    return data;
+  }
 };

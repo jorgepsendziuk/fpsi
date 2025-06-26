@@ -10,7 +10,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
 import DiagnosticoComponent from "./Diagnostico";
-import { calculateDiagnosticoMaturity } from "../../app/diagnostico/utils/maturity";
+import { calculateDiagnosticoMaturity } from "../../lib/utils/maturity";
 
 interface DiagnosticoSectionProps {
   programa: any;

@@ -1,4 +1,4 @@
-import { Action, State } from "../../app/diagnostico/types";
+import { Action, State } from "../types/types";
 
 export const initialState: State = {
   programas: [],

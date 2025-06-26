@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
-import { Controle, Diagnostico, ProgramaMedida } from '../types';
+import { Controle, Diagnostico, ProgramaMedida } from '../../../lib/types/types';
 import { calculateMaturityIndexForControle } from '../utils/calculations';
 import { calculateDiagnosticoMaturity } from '../utils/maturity';
 

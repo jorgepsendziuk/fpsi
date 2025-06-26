@@ -1,5 +1,5 @@
-import { State, Controle, ProgramaControle, ProgramaMedida } from '../types';
-import { respostas, respostasimnao, incc } from '../utils';
+import { State, Controle, ProgramaControle, ProgramaMedida } from '../../../lib/types/types';
+import { respostas, respostasimnao, incc } from './utils';
 
 export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, state: State): number => {
   const controles = state.controles?.[diagnosticoId] || [];

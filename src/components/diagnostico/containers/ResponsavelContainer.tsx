@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
 // Types
-import { Responsavel } from '../../../app/diagnostico/types';
+import { Responsavel } from '../../../lib/types/types';
 
 // Components
 import ResponsavelComponent from '../ResponsavelComponent';

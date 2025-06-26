@@ -32,10 +32,10 @@ import 'dayjs/locale/pt-br';
 
 // Utils
 import dayjs from 'dayjs';
-import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../../app/diagnostico/utils';
+import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../../lib/utils/utils';
 
 // Types
-import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../app/diagnostico/types';
+import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 
 // Styles
 import { medidaStyles } from './styles';

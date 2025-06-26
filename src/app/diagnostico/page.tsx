@@ -8,7 +8,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
 import { initialState, reducer } from "./state";
-import * as dataService from "./services/dataService";
+import * as dataService from "../../lib/services/dataService";
 import ProgramHeader from "./components/ProgramHeader";
 import ProgramCard from "./components/ProgramCard";
 import { useMediaQuery } from '@mui/material';

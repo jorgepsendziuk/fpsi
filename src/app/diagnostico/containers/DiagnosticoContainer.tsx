@@ -2,10 +2,10 @@
 import React, { useEffect } from 'react';
 
 // Types
-import { Diagnostico, Programa, Controle, State } from '../types';
+import { Diagnostico, Programa, Controle, State } from '../../../lib/types/types';
 
 // Components
-import DiagnosticoComponent from '../components/DiagnosticoComponent';
+import DiagnosticoComponent from '../../../components/diagnostico/DiagnosticoComponent';
 
 // Utils
 import { calculateDiagnosticoMaturity } from '../utils/maturity';

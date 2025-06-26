@@ -52,8 +52,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
 
-import * as dataService from "../../../diagnostico/services/dataService";
-import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../diagnostico/types";
+import * as dataService from "../../../../lib/services/dataService";
+import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../diagnostico/containers/ControleContainer";
 import { useMaturityCache } from "../../../diagnostico/hooks/useMaturityCache";

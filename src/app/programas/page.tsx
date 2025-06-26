@@ -48,8 +48,8 @@ import {
   Analytics as AnalyticsIcon,
 } from "@mui/icons-material";
 import Image from 'next/image';
-import * as dataService from "../diagnostico/services/dataService";
-import { Programa } from "../diagnostico/types";
+import * as dataService from "../../lib/services/dataService";
+import { Programa } from "../../lib/types/types";
 import { initialState, reducer } from "../diagnostico/state";
 import { calculateProgramaMaturityCached } from "../diagnostico/utils/maturity";
 

@@ -1,4 +1,4 @@
-import { State, Controle, Medida, Resposta, ProgramaMedida, ProgramaControle } from "./types";
+import { State, Controle, Medida, Resposta, ProgramaMedida, ProgramaControle } from "../types/types";
 
 export const maturidade = [
   { id: 1, min: 0, max: 0.29, label: "Inicial" },

@@ -22,13 +22,13 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 
 // Types
-import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '../../../app/diagnostico/types';
+import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '../../../lib/types/types';
 
 // Components
 import MedidaContainer from '../containers/MedidaContainer';
 
 // Utils
-import { incc } from '../../../app/diagnostico/utils';
+import { incc } from '../../../lib/utils/utils';
 
 // Styles
 import { controleStyles } from './styles';

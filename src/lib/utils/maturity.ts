@@ -1,6 +1,14 @@
-import { State, Controle, Medida, Resposta, ProgramaMedida, ProgramaControle } from "../../app/diagnostico/types";
+/**
+ * UTILITÁRIOS DE CÁLCULO DE MATURIDADE
+ * 
+ * Este módulo contém todas as funções relacionadas ao cálculo de maturidade
+ * do sistema, organizadas de forma estável e documentada.
+ */
 
-export const maturidade = [
+import { State } from '../../../lib/types/types';
+
+// Definição das faixas de maturidade
+export const MATURITY_LEVELS = [
   { id: 1, min: 0, max: 0.29, label: "Inicial" },
   { id: 2, min: 0.3, max: 0.49, label: "Básico" },
   { id: 3, min: 0.5, max: 0.69, label: "Intermediário" },
@@ -8,127 +16,221 @@ export const maturidade = [
   { id: 5, min: 0.9, max: 1, label: "Aprimorado" },
 ];
 
-export const respostas = [
-  { id: 1, peso: 1, label: "Adota em maior parte ou totalmente" },
-  { id: 2, peso: 0.75, label: "Adota em menor parte" },
-  { id: 3, peso: 0.5, label: "Adota parcialmente" },
-  { id: 4, peso: 0.25, label: "Há decisão formal ou plano aprovado para implementar" },
-  { id: 5, peso: 0, label: "A organização não adota essa medida" },
-  { id: 6, peso: null, label: "Não se aplica" },
-];
-
-export const incc = [
-  { id: 1, nivel: 0, indice: 0, label: "Ausência de capacidade para a implementação das medidas do controle, ou desconhecimento sobre o atendimento das medidas." },
-  { id: 2, nivel: 1, indice: 20, label: "O controle atinge mais ou menos seu objetivo, por meio da aplicação de um conjunto incompleto de atividades que podem ser caracterizadas como iniciais ou intuitivas (pouco organizadas)." },
-  { id: 3, nivel: 2, indice: 40, label: "O controle atinge seu objetivo por meio da aplicação de um conjunto básico, porém completo, de atividades que podem ser caracterizadas como realizadas." },
-  { id: 4, nivel: 3, indice: 60, label: "O controle atinge seu objetivo de forma muito mais organizada utilizando os recursos organizacionais. Além disso, o controle é formalizado por meio de uma política institucional, específica ou como parte de outra maior." },
-  { id: 5, nivel: 4, indice: 80, label: "O controle atinge seu objetivo, é bem definido e suas medidas são implementadas continuamente por meio de um processo decorrente da política formalizada." },
-  { id: 6, nivel: 5, indice: 100, label: "O controle atinge seu objetivo, é bem definido, suas medidas são implementadas continuamente por meio de um processo e seu desempenho é mensurado quantitativamente por meio de indicadores." },
-];
-
-export const respostasimnao = [
-  { id: 1, peso: 1, label: "Sim" },
-  { id: 2, peso: 0, label: "Não" },
-];
-
-export const setor = [
-  { id: 1, label: 'Público' },
-  { id: 2, label: 'Privado' }
-];
-
-export const status_medida = [
-  { id: 1, label: 'Finalizado' },
-  { id: 2, label: 'Não Finalizado' }
-];
-
-export const status_plano_acao = [
-  { id: 1, label: 'Datas inválidas', color: '#8ecae6' },
-  { id: 2, label: 'Concluído', color: '#95d5b2' },
-  { id: 3, label: 'Não iniciado', color: '#e9ecef' },
-  { id: 4, label: 'Em andamento', color: '#ffdd94' },
-  { id: 5, label: 'Atrasado', color: '#ffadad' }
-];
-
-export const calculateSumOfResponses = (programaMedidas: ProgramaMedida[], diagnostico: number): number => {
-  return programaMedidas.reduce((sum, programaMedida) => {
-    // ✅ CORREÇÃO: Medidas não respondidas são consideradas como peso 0
-    if (programaMedida.resposta === undefined || programaMedida.resposta === null) {
-      return sum + 0; // Contribui com 0 para o cálculo
-    }
-
-    let resposta: Resposta | undefined;
-    const respostaId = typeof programaMedida.resposta === 'string' ? parseInt(programaMedida.resposta, 10) : programaMedida.resposta;
-
-    if (diagnostico === 1) {
-      resposta = respostasimnao.find((resposta) => resposta.id === respostaId);
-    } else if (diagnostico === 2 || diagnostico === 3) {
-      resposta = respostas.find((resposta) => resposta.id === respostaId);
-    }
-
-    if (resposta?.peso === null) return sum; // "Não se aplica" continua sendo ignorado
-    return sum + (resposta?.peso || 0);
-  }, 0);
+/**
+ * Converte um score numérico para um label de maturidade
+ * @param score Score normalizado (0-1)
+ * @returns Label de maturidade correspondente
+ */
+export const getMaturityLabel = (score: number): string => {
+  const maturity = MATURITY_LEVELS.find(m => score >= m.min && score <= m.max);
+  return maturity ? maturity.label : "Inicial";
 };
 
-// Versão temporária simplificada - usar a versão em calculations.ts quando possível
-export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, state: State): number => {
+/**
+ * Calcula a maturidade de uma medida individual
+ * @param resposta Resposta da medida (0-100)
+ * @returns Score normalizado (0-1)
+ */
+export const calculateMedidaMaturity = (resposta: number): number => {
+  return Math.max(0, Math.min(1, resposta / 100));
+};
+
+/**
+ * Calcula a maturidade de um controle baseado em suas medidas
+ * @param medidas Array de medidas do controle
+ * @param inccLevel Nível INCC do controle (1-5)
+ * @returns Score normalizado (0-1)
+ */
+export const calculateControleMaturity = (medidas: any[], inccLevel: number = 1): number => {
+  if (!medidas || medidas.length === 0) return 0;
+
+  // Filtrar apenas medidas com respostas válidas
+  const validMedidas = medidas.filter(m => 
+    m.resposta !== null && 
+    m.resposta !== undefined && 
+    typeof m.resposta === 'number'
+  );
+
+  if (validMedidas.length === 0) return 0;
+
+  // Calcular média das respostas
+  const mediaSemPeso = validMedidas.reduce((sum, medida) => 
+    sum + calculateMedidaMaturity(medida.resposta), 0
+  ) / validMedidas.length;
+
+  // Aplicar fator INCC (quanto maior o INCC, maior o peso)
+  const fatorINCC = 1 + (inccLevel - 1) * 0.1; // 1.0 a 1.4
+  
+  return Math.min(1, mediaSemPeso * fatorINCC);
+};
+
+/**
+ * Calcula a maturidade de um diagnóstico baseado em seus controles
+ * @param diagnosticoId ID do diagnóstico
+ * @param programaId ID do programa
+ * @param state Estado da aplicação
+ * @returns Objeto com score e label de maturidade
+ */
+export const calculateDiagnosticoMaturity = (
+  diagnosticoId: number, 
+  programaId: number, 
+  state: State
+): { score: number; label: string } => {
   const controles = state.controles?.[diagnosticoId] || [];
   
-  if (controles.length === 0) {
-    return 0;
+  // Filtrar controles do programa específico
+  const controlesDoPrograma = controles.filter((controle: any) => 
+    controle.programa === programaId
+  );
+
+  if (controlesDoPrograma.length === 0) {
+    return { score: 0, label: "Inicial" };
   }
 
-  // Calculate sum based on controles data
-  let sum = 0;
-  controles.forEach((controle: any) => {
-    if (controle.incc && typeof controle.incc === 'number') {
-      sum += controle.incc;
+  let totalScore = 0;
+  let totalWeight = 0;
+
+  controlesDoPrograma.forEach((controle: any) => {
+    const medidas = state.medidas?.[controle.id] || [];
+    const controleScore = calculateControleMaturity(medidas, controle.incc || 1);
+    const peso = controle.incc || 1;
+    
+    totalScore += controleScore * peso;
+    totalWeight += peso;
+  });
+
+  const finalScore = totalWeight > 0 ? totalScore / totalWeight : 0;
+  const maturityLabel = getMaturityLabel(finalScore);
+
+  return { score: finalScore, label: maturityLabel };
+};
+
+/**
+ * Calcula a maturidade geral de um programa
+ * @param programaId ID do programa
+ * @param state Estado da aplicação
+ * @returns Objeto com score e label de maturidade
+ */
+export const calculateProgramaMaturity = (
+  programaId: number, 
+  state: State
+): { score: number; label: string } => {
+  const diagnosticos = state.diagnosticos || [];
+  
+  if (diagnosticos.length === 0) {
+    return { score: 0, label: "Inicial" };
+  }
+
+  let totalScore = 0;
+  let diagnosticoCount = 0;
+
+  diagnosticos.forEach((diagnostico: any) => {
+    const diagnosticoMaturity = calculateDiagnosticoMaturity(
+      diagnostico.id, 
+      programaId, 
+      state
+    );
+    
+    if (diagnosticoMaturity.score > 0) {
+      totalScore += diagnosticoMaturity.score;
+      diagnosticoCount++;
     }
   });
 
-  return sum;
+  const finalScore = diagnosticoCount > 0 ? totalScore / diagnosticoCount : 0;
+  const maturityLabel = getMaturityLabel(finalScore);
+
+  return { score: finalScore, label: maturityLabel };
 };
 
-// TODO: Esta função precisa ser refatorada para usar programaControle e programaMedidas
-// export const calculateSumOfResponsesForDiagnostico = (diagnosticoId: number, state: State): string | number => {
+/**
+ * Cache para evitar recálculos desnecessários
+ */
+const maturityCache = new Map<string, { score: number; label: string; timestamp: number }>();
+const CACHE_DURATION = 5000; // 5 segundos
 
-export const calculateTotalPointsForMedidas = (programaMedidas: ProgramaMedida[]): number => {
-  return programaMedidas.reduce((sum, programaMedida) => {
-    if (programaMedida.resposta === undefined || programaMedida.resposta === null) return sum;
-
-    const respostaId = typeof programaMedida.resposta === 'string' ? parseInt(programaMedida.resposta, 10) : programaMedida.resposta;
-
-    let resposta: Resposta | undefined;
-    if (respostaId === 1 || respostaId === 2 || respostaId === 3 || respostaId === 4 || respostaId === 5 || respostaId === 6) {
-      resposta = respostas.find((resposta) => resposta.id === respostaId);
-    } else if (respostaId === 7 || respostaId === 8) {
-      resposta = respostasimnao.find((resposta) => resposta.id === respostaId);
-    }
-
-    if (resposta?.peso === null) return sum;
-    return sum + (resposta?.peso || 0);
-  }, 0);
-};
-
-export const calculateMaturityIndexForControle = (controle: Controle, programaControle: ProgramaControle, programaMedidas: ProgramaMedida[]): string => {
-  const sumOfResponses = calculateSumOfResponses(programaMedidas, controle.diagnostico);
+/**
+ * Versão com cache do cálculo de maturidade do programa
+ * @param programaId ID do programa
+ * @param state Estado da aplicação
+ * @returns Objeto com score e label de maturidade (pode vir do cache)
+ */
+export const calculateProgramaMaturityCached = (
+  programaId: number, 
+  state: State
+): { score: number; label: string } => {
+  const cacheKey = `programa-${programaId}`;
+  const now = Date.now();
   
-  // ✅ CORREÇÃO: Usar total de medidas (incluindo não respondidas), excluindo apenas "Não se aplica"
-  const totalMedidas = programaMedidas.filter((pm) => {
-    // Excluir apenas medidas com resposta "Não se aplica" (id: 6)
-    if (pm.resposta === 6) return false;
-    return true; // Incluir todas as outras (respondidas e não respondidas)
-  }).length;
-  
-  if (totalMedidas === 0) return "0";
+  // Verificar se existe no cache e ainda é válido
+  const cached = maturityCache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return { score: cached.score, label: cached.label };
+  }
 
-  const baseIndex = sumOfResponses / totalMedidas;
-  const inccMultiplier = 1 + (((incc.find((incc) => incc.id === programaControle.nivel)?.nivel || 0)) * 1 / 5);
+  // Calcular novo valor
+  const result = calculateProgramaMaturity(programaId, state);
   
-  return ((baseIndex / 2) * inccMultiplier).toFixed(2);
+  // Salvar no cache
+  maturityCache.set(cacheKey, {
+    ...result,
+    timestamp: now
+  });
+
+  return result;
 };
 
-export const getMaturityLabel = (indice: number): string => {
-  const maturity = maturidade.find(m => indice >= m.min && indice <= m.max);
-  return maturity ? maturity.label : "";
+/**
+ * Versão com cache do cálculo de maturidade do diagnóstico
+ * @param diagnosticoId ID do diagnóstico
+ * @param programaId ID do programa
+ * @param state Estado da aplicação
+ * @returns Objeto com score e label de maturidade (pode vir do cache)
+ */
+export const calculateDiagnosticoMaturityCached = (
+  diagnosticoId: number, 
+  programaId: number, 
+  state: State
+): { score: number; label: string } => {
+  const cacheKey = `diagnostico-${diagnosticoId}-programa-${programaId}`;
+  const now = Date.now();
+  
+  // Verificar se existe no cache e ainda é válido
+  const cached = maturityCache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return { score: cached.score, label: cached.label };
+  }
+
+  // Calcular novo valor
+  const result = calculateDiagnosticoMaturity(diagnosticoId, programaId, state);
+  
+  // Salvar no cache
+  maturityCache.set(cacheKey, {
+    ...result,
+    timestamp: now
+  });
+
+  return result;
 };
+
+/**
+ * Limpa o cache de maturidade para um programa específico
+ * @param programaId ID do programa
+ */
+export const clearMaturityCache = (programaId?: number) => {
+  if (programaId) {
+    // Limpar cache do programa
+    maturityCache.delete(`programa-${programaId}`);
+    
+    // Limpar cache de todos os diagnósticos deste programa
+    const keysToDelete: string[] = [];
+    maturityCache.forEach((value, key) => {
+      if (key.includes(`programa-${programaId}`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => maturityCache.delete(key));
+  } else {
+    maturityCache.clear();
+  }
+}; 
