@@ -26,6 +26,7 @@ export const medidaStyles = {
       ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
       : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
     borderRadius: '12px',
+    fontWeight: 100,
     padding: 2,
     marginBottom: 2,
     boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)',
@@ -34,26 +35,14 @@ export const medidaStyles = {
   // Título do header
   headerTitle: (theme: Theme) => ({
     color: 'white',
-    fontWeight: 700,
+    fontWeight: 300,
     fontSize: '1.1rem',
     display: 'flex',
     alignItems: 'center',
     gap: 1,
   }),
 
-  // ID da medida em destaque
-  idBadge: (theme: Theme) => ({
-    background: theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, 0.2)'
-      : 'rgba(255, 255, 255, 0.3)',
-    color: 'white',
-    fontWeight: 700,
-    fontSize: '1rem',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    backdropFilter: 'blur(8px)',
-  }),
+
 
   // Card de resposta em destaque
   responseCard: (theme: Theme, hasResponse: boolean) => ({
@@ -66,7 +55,7 @@ export const medidaStyles = {
       ? '1px solid rgba(255, 255, 255, 0.1)'
       : '1px solid rgba(0, 0, 0, 0.1)',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-    minHeight: '120px',
+    minHeight: '100px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',

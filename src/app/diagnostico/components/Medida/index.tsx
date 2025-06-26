@@ -88,7 +88,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-      <Box sx={medidaStyles.container(theme)}>
         {/* Header da Medida */}
         <Box sx={medidaStyles.header(theme)}>
           <Grid container spacing={2} alignItems="center">
@@ -322,7 +321,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
             </Grid>
           </Grid>
         </Box>
-      </Box>
     </LocalizationProvider>
   );
 };
