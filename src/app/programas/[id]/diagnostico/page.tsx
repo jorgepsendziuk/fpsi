@@ -471,10 +471,28 @@ export default function DiagnosticoPage() {
         [key]: { ...prev[key], [field]: value }
       }));
       
-      // Recarregar as medidas para atualizar os dados
+      // Para mudanças na resposta, recarregar dados completos para sincronizar
       if (field === 'resposta') {
-        const medidasData = await dataService.fetchMedidas(controleId, programaId);
-        setMedidas(prev => ({ ...prev, [controleId]: medidasData || [] }));
+        // Forçar recarga completa das medidas e programaMedidas
+        setMedidas(prev => {
+          const newMedidas = { ...prev };
+          delete newMedidas[controleId]; // Remove do cache para forçar reload
+          return newMedidas;
+        });
+        
+        // Recarregar usando loadMedidas que sincroniza tudo
+        await loadMedidas(controleId);
+        
+        // Sincronizar selectedNode se for uma medida atualizada
+        if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId) {
+          setSelectedNode(prev => ({
+            ...prev!,
+            data: {
+              ...prev!.data,
+              programaMedida: { ...prev!.data.programaMedida, [field]: value }
+            }
+          }));
+        }
         
         // Invalidar cache de maturidade do controle e diagnóstico afetados
         invalidateCache('controle', controleId);
@@ -491,7 +509,7 @@ export default function DiagnosticoPage() {
     } catch (error) {
       console.error("Erro ao atualizar medida:", error);
     }
-  }, [invalidateCache, diagnosticos, controles]);
+  }, [invalidateCache, diagnosticos, controles, loadMedidas, selectedNode]);
 
   // Manipular mudanças no INCC
   const handleINCCChange = useCallback(async (
