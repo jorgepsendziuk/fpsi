@@ -152,15 +152,7 @@ export const medidaStyles = {
     backdropFilter: 'blur(8px)',
   }),
 
-  // Estilos originais mantidos para compatibilidade
-  accordion: {
-    border: '1px solid #ccc',
-    marginBottom: 2,
-  },
-  accordionSummary: {
-    minHeight: 64,
-    width: '100%',
-  },
+  // Estilos para medidas em layout direto (sem accordion)
   idSection: (theme: Theme) => ({
     marginTop: 2, 
     textAlign: 'center',

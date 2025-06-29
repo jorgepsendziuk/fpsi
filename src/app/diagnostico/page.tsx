@@ -53,12 +53,13 @@ const DiagnosticoPage = () => {
     const diagnosticos = await dataService.fetchDiagnosticos();
     for (const diagnostico of diagnosticos) {
       const controles = await dataService.fetchControles(diagnostico.id, programaId);
-      for (const controle of controles) {
-        await handleMedidaFetch(controle.id, programaId);
-      }
+      // Remover carregamento automático de medidas - serão carregadas apenas quando selecionadas
+      // for (const controle of controles) {
+      //   await handleMedidaFetch(controle.id, programaId);
+      // }
       await handleControleFetch(diagnostico.id, programaId);
     }
-  }, [handleControleFetch, handleMedidaFetch]);
+  }, [handleControleFetch]);
 
   useEffect(() => {
     const fetchData = async () => {
