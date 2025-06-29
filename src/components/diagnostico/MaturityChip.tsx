@@ -46,7 +46,7 @@ const MaturityChip: React.FC<MaturityChipProps> = ({
 }) => {
   const maturityColor = getMaturityColor(score);
   const maturityLabel = label || getMaturityLabel(score);
-  const scoreFormatted = `${(score * 100).toFixed(0)}%`;
+  const scoreFormatted = score.toFixed(2);
 
   const chipStyle = {
     backgroundColor: variant === 'filled' ? alpha(maturityColor.main, 0.1) : 'transparent',
@@ -62,7 +62,8 @@ const MaturityChip: React.FC<MaturityChipProps> = ({
     }
   };
 
-  const displayLabel = showLabel ? `${scoreFormatted} - ${maturityLabel}` : scoreFormatted;
+  // Para chips pequenos (menu árvore), só mostrar o score
+  const displayLabel = (size === 'small' || !showLabel) ? scoreFormatted : `${scoreFormatted} - ${maturityLabel}`;
 
   const chipElement = (
     <Chip
