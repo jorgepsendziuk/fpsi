@@ -349,17 +349,7 @@ const ControleComponent: React.FC<ControleProps> = ({
             })}
           </Box>
 
-          {medidas.map((medida) => (
-            <MedidaContainer
-              key={medida.id}
-              medida={medida}
-              programaMedida={medida.programa_medida}
-              controle={controle}
-              programaId={programaId}
-              handleMedidaChange={handleMedidaChange}
-              responsaveis={responsaveis}
-            />
-          ))}
+          
           </div>
         </Box>
       </CardContent>
