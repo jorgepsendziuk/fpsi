@@ -99,18 +99,23 @@ const DiagnosticoPage = () => {
         value,
       });
 
-      // Then refetch measures to ensure we have the latest data
-      await handleMedidaFetch(controleId, programaId);
+      // Para mudanças na resposta, recarregar dados para recalcular maturidade
+      if (field === 'resposta') {
+        // Refetch measures to ensure we have the latest data
+        await handleMedidaFetch(controleId, programaId);
 
-      // Find the diagnosticoId for this controle
-      const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
-        state.controles[key].some((c: any) => c.id === controleId)
-      ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
+        // Find the diagnosticoId for this controle
+        const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
+          state.controles[key].some((c: any) => c.id === controleId)
+        ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
 
-      if (diagnosticoId) {
-        // Refetch controles to trigger maturity recalculation
-        await handleControleFetch(diagnosticoId, programaId);
+        if (diagnosticoId) {
+          // Refetch controles to trigger maturity recalculation
+          await handleControleFetch(diagnosticoId, programaId);
+        }
       }
+      // Para outros campos (responsavel, datas, status, justificativa, etc), 
+      // apenas atualizar estado local - sem recarregar dados ou afetar score
 
       setToastMessage("Resposta atualizada");
       setToastSeverity("success");

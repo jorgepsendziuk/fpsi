@@ -471,7 +471,18 @@ export default function DiagnosticoPage() {
         [key]: { ...prev[key], [field]: value }
       }));
       
-      // Para mudanças na resposta, recarregar dados completos para sincronizar
+      // Sincronizar selectedNode se for uma medida atualizada (para todos os campos)
+      if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId) {
+        setSelectedNode(prev => ({
+          ...prev!,
+          data: {
+            ...prev!.data,
+            programaMedida: { ...prev!.data.programaMedida, [field]: value }
+          }
+        }));
+      }
+      
+      // Para mudanças na resposta, recarregar dados completos para sincronizar maturidade
       if (field === 'resposta') {
         // Forçar recarga completa das medidas e programaMedidas
         setMedidas(prev => {
@@ -482,17 +493,6 @@ export default function DiagnosticoPage() {
         
         // Recarregar usando loadMedidas que sincroniza tudo
         await loadMedidas(controleId);
-        
-        // Sincronizar selectedNode se for uma medida atualizada
-        if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId) {
-          setSelectedNode(prev => ({
-            ...prev!,
-            data: {
-              ...prev!.data,
-              programaMedida: { ...prev!.data.programaMedida, [field]: value }
-            }
-          }));
-        }
         
         // Invalidar cache de maturidade do controle e diagnóstico afetados
         invalidateCache('controle', controleId);
@@ -506,6 +506,9 @@ export default function DiagnosticoPage() {
           invalidateCache('diagnostico', diagnostico.id);
         }
       }
+      // Para outros campos (responsavel, datas, status, justificativa, etc), 
+      // apenas atualizar interface - sem afetar score/maturidade
+      
     } catch (error) {
       console.error("Erro ao atualizar medida:", error);
     }
