@@ -1,38 +1,69 @@
 # FPSI - FERRAMENTA DO FRAMEWORK DE PRIVACIDADE E SEGURANÇA DA INFORMAÇÃO
 
+## 🚀 Quick Start
+
 ### Running the development server.
 
 ```bash
-    npm run dev
+npm run dev
 ```
 
 ### Building for production.
 
 ```bash
-    npm run build
+npm run build
 ```
 
 ### Running the production server.
 
 ```bash
-    npm run start
+npm run start
 ```
 
-## Documentation
+## 📚 Documentation
 
-Para informações sobre o processo de refatoração e documentação do projeto, consulte:
-- [Guia de Refatoração e Documentação](./docs/REFACTORING_GUIDE.md)
-- [Product Requirements Document (PRD)](./docs/PRD.md)
-- [Technical Reference Document (TRD)](./docs/TRD.md)
-- [Functional Requirements Document (FRD)](./docs/FRD.md)
-- [Architectural Decision Records (ADR)](./docs/ADR.md)
-- [Engineering Guidelines](./docs/ENGINEERING_GUIDELINES.md)
-- [Documentação de Arquitetura](./docs/ARCHITECTURE.md)
-- [Documentação Operacional](./docs/OPERATIONAL.md)
-- [Plano de Refatoração](./docs/REFACTORING_PLAN.md)
-- [Plano de Refatoração de Componentes](./docs/COMPONENT_REFACTORING.md)
+A documentação completa do projeto está organizada na pasta `docs/` por categorias:
 
-## Testes
+### 🔧 **Setup & Getting Started**
+- [📖 Como Rodar Localmente](./docs/setup/COMO_RODAR_LOCALMENTE.md) - Guia completo de setup
+- [🔧 Node Version Fix](./docs/setup/NODE_VERSION_FIX.md) - Correção de versão do Node
+- [✅ Build Success](./docs/setup/BUILD_CORRIGIDO_SUCESSO.md) - Resolução de problemas de build
+
+### 🏗️ **Architecture & Design**
+- [🏛️ Architecture](./docs/architecture/ARCHITECTURE.md) - Arquitetura geral do sistema
+- [📋 ADR](./docs/architecture/ADR.md) - Architectural Decision Records
+- [⚙️ Engineering Guidelines](./docs/architecture/ENGINEERING_GUIDELINES.md) - Diretrizes de engenharia
+
+### 📝 **Requirements & Specifications**
+- [📊 PRD](./docs/requirements/PRD.md) - Product Requirements Document
+- [⚡ FRD](./docs/requirements/FRD.md) - Functional Requirements Document  
+- [🔧 TRD](./docs/requirements/TRD.md) - Technical Reference Document
+
+### 🧪 **Testing**
+- [🧪 Testing Guide](./docs/testing/TESTING.md) - Guia geral de testes
+- [📋 Testing Plan](./docs/testing/TESTING_PLAN.md) - Plano de testes
+- [🎯 Testing Patterns](./docs/testing/TESTING_PATTERNS.md) - Padrões de teste
+- [💡 Testing Examples](./docs/testing/TESTING_EXAMPLES.md) - Exemplos práticos
+
+## 📋 Índice Completo
+
+Para ver toda a documentação organizada por categoria, consulte:
+**[📚 Índice Completo da Documentação](./docs/README.md)**
+
+### Categorias Disponíveis:
+- 🏗️ **Arquitetura e Design**
+- 📝 **Especificações e Requisitos** 
+- 🔧 **Setup e Operação**
+- 🧪 **Testes**
+- 🔄 **Refatoração e Manutenção**
+- 🚀 **Melhorias e Correções**
+- 🐛 **Correções Específicas**
+- 🎨 **Melhorias Visuais**
+- 📊 **Sistemas e Funcionalidades**
+- 🔍 **Análises e Otimização**
+- 🗂️ **Organização**
+
+## 🧪 Testing
 
 ### Estrutura de Testes
 
@@ -50,31 +81,7 @@ src/
       hooks/
         __tests__/
           useDiagnosticoControles.test.ts
-      utils/
-        __tests__/
-          calculations.test.ts
-          maturity.test.ts
 ```
-
-### Tipos de Testes
-
-1. **Testes Unitários**
-   - Testam componentes isoladamente
-   - Verificam lógica de negócio
-   - Validam props e estados
-   - Cobrem casos de erro
-
-2. **Testes de Integração**
-   - Testam interação entre componentes
-   - Validam fluxo de dados
-   - Verificam atualizações de estado
-   - Testam cenários de erro
-
-3. **Testes de Utilitários**
-   - Testam funções puras
-   - Validam cálculos
-   - Verificam transformações
-   - Cobrem casos de borda
 
 ### Executando Testes
 
@@ -87,9 +94,6 @@ npm test -- --watch
 
 # Executar testes com cobertura
 npm test -- --coverage
-
-# Executar testes específicos
-npm test -- DiagnosticoContainer
 ```
 
 ### Cobertura de Testes
@@ -99,103 +103,20 @@ npm test -- DiagnosticoContainer
 - Utilitários: > 95%
 - Integração: > 70%
 
-### Convenções de Testes
+Para mais detalhes sobre testes, consulte a [documentação completa de testes](./docs/testing/).
 
-1. **Nomenclatura**
-   - Arquivos: `[nome].test.tsx`
-   - Integração: `[nome].integration.test.tsx`
-   - Snapshots: `[nome].snapshot.test.tsx`
+## 🤝 Contributing
 
-2. **Estrutura**
-   ```typescript
-   describe('Component', () => {
-     // Setup
-     beforeEach(() => {
-       // ...
-     });
+1. Consulte o [Engineering Guidelines](./docs/architecture/ENGINEERING_GUIDELINES.md)
+2. Siga os [Testing Patterns](./docs/testing/TESTING_PATTERNS.md)
+3. Use o [Refactoring Guide](./docs/refactoring/REFACTORING_GUIDE.md)
 
-     // Testes
-     it('should ...', () => {
-       // ...
-     });
-   });
-   ```
+## 📞 Support
 
-3. **Mocks**
-   - Usar `jest.mock()` para módulos
-   - Mockar apenas o necessário
-   - Documentar comportamento esperado
-   - Limpar mocks entre testes
-
-4. **Assertions**
-   - Usar matchers específicos
-   - Validar comportamento, não implementação
-   - Testar casos de erro
-   - Verificar side effects
-
-### Documentação
-
-- [Guia de Testes](./docs/TESTING.md)
-- [Padrões de Teste](./docs/TESTING_PATTERNS.md)
-- [Exemplos de Testes](./docs/TESTING_EXAMPLES.md)
-
-### Exemplos
-
-1. **Componentes**
-   - [DiagnosticoContainer](./src/app/diagnostico/containers/__tests__/DiagnosticoContainer.test.tsx)
-   - [DiagnosticoComponent](./src/app/diagnostico/components/__tests__/DiagnosticoComponent.test.tsx)
-
-2. **Hooks**
-   - [useDiagnosticoControles](./src/app/diagnostico/hooks/__tests__/useDiagnosticoControles.test.ts)
-
-3. **Utilitários**
-   - [calculations](./src/app/diagnostico/utils/__tests__/calculations.test.ts)
-   - [maturity](./src/app/diagnostico/utils/__tests__/maturity.test.ts)
-
-### Boas Práticas
-
-1. **Organização**
-   - Testes próximos ao código
-   - Nomenclatura clara
-   - Setup isolado
-   - Limpeza após testes
-
-2. **Isolamento**
-   - Mockar dependências
-   - Limpar estado
-   - Resetar mocks
-   - Evitar side effects
-
-3. **Assertions**
-   - Testar comportamento
-   - Evitar detalhes de implementação
-   - Cobrir casos de erro
-   - Validar side effects
-
-4. **Performance**
-   - Evitar testes lentos
-   - Usar mocks apropriados
-   - Limitar timeouts
-   - Otimizar setup
-
-### Troubleshooting
-
-1. **Erros Comuns**
-   - "Cannot find module"
-   - "Test environment"
-   - "Async operations"
-
-2. **Debugging**
-   - Console
-   - Debugger
-   - Screenshots
-
-### Referências
-
-- [Jest Documentation](https://jestjs.io/docs/getting-started)
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
-- [Testing Library Cheatsheet](https://testing-library.com/docs/react-testing-library/cheatsheet)
-- [Jest Cheatsheet](https://devhints.io/jest)
+Para dúvidas sobre:
+- **Setup**: Consulte [Como Rodar Localmente](./docs/setup/COMO_RODAR_LOCALMENTE.md)
+- **Debugging**: Veja [Correções Específicas](./docs/fixes/)
+- **Arquitetura**: Consulte [Architecture](./docs/architecture/ARCHITECTURE.md)
 
 ## License
 

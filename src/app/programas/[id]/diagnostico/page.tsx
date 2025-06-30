@@ -47,6 +47,7 @@ import {
   Save as SaveIcon,
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
+  Dashboard as DashboardIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -58,12 +59,13 @@ import MedidaContainer from "../../../diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../diagnostico/containers/ControleContainer";
 import { useMaturityCache } from "../../../diagnostico/hooks/useMaturityCache";
 import MaturityChip from "../../../../components/diagnostico/MaturityChip";
+import Dashboard from "../../../../components/diagnostico/Dashboard";
 
 const DRAWER_WIDTH = 380;
 
 interface TreeNode {
   id: string;
-  type: 'diagnostico' | 'controle' | 'medida';
+  type: 'dashboard' | 'diagnostico' | 'controle' | 'medida';
   label: string;
   description?: string;
   icon: React.ReactNode;
@@ -146,6 +148,20 @@ export default function DiagnosticoPage() {
   useEffect(() => {
     setDrawerOpen(!isMobile);
   }, [isMobile]);
+
+  // Selecionar dashboard por padrão quando não há nada selecionado
+  useEffect(() => {
+    if (!selectedNode && !loading) {
+      setSelectedNode({
+        id: 'dashboard',
+        type: 'dashboard',
+        label: 'Dashboard',
+        description: 'Visão geral consolidada dos diagnósticos',
+        icon: <DashboardIcon sx={{ color: theme.palette.primary.main }} />,
+        data: { type: 'dashboard' },
+      });
+    }
+  }, [selectedNode, loading, theme.palette.primary.main]);
 
   // Carregar controles de um diagnóstico
   const loadControles = useCallback(async (diagnosticoId: number) => {
@@ -301,8 +317,17 @@ export default function DiagnosticoPage() {
 
   // Construir árvore de navegação
   const treeData = useMemo((): TreeNode[] => {
+    // Dashboard como primeiro item
+    const dashboardNode: TreeNode = {
+      id: 'dashboard',
+      type: 'dashboard',
+      label: 'Dashboard',
+      description: 'Visão geral consolidada dos diagnósticos',
+      icon: <DashboardIcon sx={{ color: theme.palette.primary.main }} />,
+      data: { type: 'dashboard' },
+    };
 
-    return diagnosticos.map(diagnostico => {
+    const diagnosticoNodes = diagnosticos.map(diagnostico => {
       const diagnosticoControles = controles[diagnostico.id] || [];
       const maturityData = calculateMaturity(diagnostico);
 
@@ -408,7 +433,9 @@ export default function DiagnosticoPage() {
 
       return diagnosticoNode;
     });
-  }, [diagnosticos, controles, medidas, programaMedidas, expandedNodes, programaId, calculateMaturity, getControleMaturity, autoLoadingMedidas, loadingMedidas, loadMedidas, invalidateCache]);
+
+    return [dashboardNode, ...diagnosticoNodes];
+  }, [diagnosticos, controles, medidas, programaMedidas, expandedNodes, programaId, calculateMaturity, getControleMaturity, autoLoadingMedidas, loadingMedidas, loadMedidas, invalidateCache, theme.palette.primary.main]);
 
   // Manipular expansão de nós
   const handleNodeToggle = useCallback(async (nodeId: string, node: TreeNode) => {
@@ -446,9 +473,8 @@ export default function DiagnosticoPage() {
       await loadMedidas(node.data.id);
     }
     
-    // No mobile, fechar drawer apenas para medidas (itens de último nível)
-    // Diagnósticos e controles mantêm o drawer aberto para navegação
-    if (isMobile && node.type === 'medida') {
+    // No mobile, fechar drawer para itens de último nível (medidas e dashboard)
+    if (isMobile && (node.type === 'medida' || node.type === 'dashboard')) {
       setDrawerOpen(false);
     }
   }, [isMobile, expandedNodes, loadMedidas]);
@@ -830,6 +856,29 @@ export default function DiagnosticoPage() {
             {isMobile ? 'Toque no menu para navegar pelos' : 'Clique em um'} diagnóstico, controle ou medida no menu lateral para ver os detalhes
           </Typography>
         </Box>
+      );
+    }
+
+    if (selectedNode.type === 'dashboard') {
+      // Função wrapper para calculateMaturity
+      const getDiagnosticoMaturityWrapper = (diagnosticoId: number) => {
+        const diagnostico = diagnosticos.find(d => d.id === diagnosticoId);
+        if (!diagnostico) {
+          return { score: 0, label: 'N/A' };
+        }
+        return calculateMaturity(diagnostico);
+      };
+
+      return (
+        <Dashboard
+          diagnosticos={diagnosticos}
+          controles={controles}
+          medidas={medidas}
+          programaMedidas={programaMedidas}
+          getControleMaturity={getControleMaturity}
+          getDiagnosticoMaturity={getDiagnosticoMaturityWrapper}
+          programaId={programaId}
+        />
       );
     }
 
