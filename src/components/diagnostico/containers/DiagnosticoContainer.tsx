@@ -2,13 +2,13 @@
 import React, { useEffect } from 'react';
 
 // Types
-import { Diagnostico, Programa, Controle, State } from '../../../app/diagnostico/types';
+import { Diagnostico, Programa, Controle, State } from '../../../lib/types/types';
 
 // Components
 import DiagnosticoComponent from '../DiagnosticoComponent';
 
 // Utils
-import { calculateDiagnosticoMaturity } from '../../../app/diagnostico/utils/maturity';
+import { calculateDiagnosticoMaturity } from '../../../lib/utils/maturity';
 
 /**
  * Props for the DiagnosticoContainer component

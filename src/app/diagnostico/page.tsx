@@ -8,11 +8,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
 import { initialState, reducer } from "./state";
-import * as dataService from "./services/dataService";
-import ProgramHeader from "./components/ProgramHeader";
-import ProgramCard from "./components/ProgramCard";
+import * as dataService from "../../lib/services/dataService";
+import ProgramHeader from "../../components/diagnostico/ProgramHeader";
+import ProgramCard from "../../components/diagnostico/ProgramCard";
 import { useMediaQuery } from '@mui/material';
-import { Programa } from './types';
+import { Programa } from '../../lib/types/types';
 
 const DiagnosticoPage = () => {
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -99,18 +99,23 @@ const DiagnosticoPage = () => {
         value,
       });
 
-      // Then refetch measures to ensure we have the latest data
-      await handleMedidaFetch(controleId, programaId);
+      // Para mudanças na resposta, recarregar dados para recalcular maturidade
+      if (field === 'resposta') {
+        // Refetch measures to ensure we have the latest data
+        await handleMedidaFetch(controleId, programaId);
 
-      // Find the diagnosticoId for this controle
-      const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
-        state.controles[key].some((c: any) => c.id === controleId)
-      ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
+        // Find the diagnosticoId for this controle
+        const diagnosticoId = state.controles[Object.keys(state.controles).find(key => 
+          state.controles[key].some((c: any) => c.id === controleId)
+        ) || '']?.find((c: any) => c.id === controleId)?.diagnostico;
 
-      if (diagnosticoId) {
-        // Refetch controles to trigger maturity recalculation
-        await handleControleFetch(diagnosticoId, programaId);
+        if (diagnosticoId) {
+          // Refetch controles to trigger maturity recalculation
+          await handleControleFetch(diagnosticoId, programaId);
+        }
       }
+      // Para outros campos (responsavel, datas, status, justificativa, etc), 
+      // apenas atualizar estado local - sem recarregar dados ou afetar score
 
       setToastMessage("Resposta atualizada");
       setToastSeverity("success");

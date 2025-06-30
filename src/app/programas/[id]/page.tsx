@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Container, Typography, Card, CardContent, Grid, Box, Breadcrumbs, Link, Chip, Stack, Divider, Paper, CardActionArea, TextField, IconButton } from "@mui/material";
 import { Business, Group, Policy, CheckCircleOutline, ArrowBack, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
-import * as dataService from "@/app/diagnostico/services/dataService";
+import * as dataService from "@/lib/services/dataService";
 
 const sections = [
   {

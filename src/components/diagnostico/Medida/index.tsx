@@ -3,9 +3,6 @@ import React from 'react';
 
 // Material UI components
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   TextField,
   Typography,
   Chip,
@@ -20,7 +17,6 @@ import {
 import Grid from '@mui/material/Grid2';
 
 // Material UI icons
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SaveIcon from '@mui/icons-material/Save';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 
@@ -32,10 +28,10 @@ import 'dayjs/locale/pt-br';
 
 // Utils
 import dayjs from 'dayjs';
-import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../../app/diagnostico/utils';
+import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../../lib/utils/utils';
 
 // Types
-import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../app/diagnostico/types';
+import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 
 // Styles
 import { medidaStyles } from './styles';
@@ -80,7 +76,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   handleTextChange,
   handleSaveField,
 }) => {
-  const { accordionStyles, getContrastTextColor } = useThemeColors();
+  const { getContrastTextColor } = useThemeColors();
   const theme = useTheme();
 
   // Buscar a cor do status do plano de ação do sistema existente
@@ -88,75 +84,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-      <Accordion 
-        slotProps={{ transition: { unmountOnExit: true } }}
-        sx={{
-          ...accordionStyles,
-          width: '100%',
-          mb: 2,
-          '& .MuiAccordionDetails-root': {
-            padding: 0
-          }
-        }}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-label={medida.id_medida}
-          aria-controls={medida.id_medida}
-          id={medida.id_medida}
-          sx={{
-            width: '100%',
-            '& .MuiAccordionSummary-content': {
-              margin: '8px 0',
-              width: '100%',
-              justifyContent: 'space-between',
-            }
-          }}
-        >
-          <Grid container spacing={1} sx={{ width: '100%', alignItems: 'center' }}>
-            <Grid size={{ md: 1, sm: 2, xs: 3 }}>
-              <Typography sx={medidaStyles.idSection} variant="h6" align="center">
-                {medida.id_medida}
-              </Typography>
-            </Grid>
-            <Grid size={{ md: 5, sm: 5, xs: 9 }}>
-              <Typography sx={medidaStyles.titleSection}>{medida.medida}</Typography>
-            </Grid>
-            <Grid size={{ md: 3, sm: 3, xs: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Select
-                sx={{ ...medidaStyles.selectSection, width: '100%' }}
-                value={programaMedida?.resposta || ""}
-                aria-label={medida.id_medida}
-                onClick={(event) => event.stopPropagation()}
-                onChange={(event) =>
-                  handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
-                }
-              >
-                {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
-                  <MenuItem key={resposta.id} value={resposta.id}>
-                    <ListItemText primary={resposta.label} sx={medidaStyles.selectItem} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </Grid>
-            <Grid size={{ md: 3, sm: 4, xs: 6 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Typography variant="caption" sx={{ fontWeight: '500', mb: 0 }}>
-                PLANO DE AÇÃO
-              </Typography>
-              <Chip
-                sx={{
-                  ...medidaStyles.statusChip,
-                  bgcolor: statusInfo?.color || '#e9ecef',
-                  color: '#000000',
-                  fontWeight: 600
-                }}
-                label={statusInfo?.label || "Não definido"}
-              />
-            </Grid>
-          </Grid>
-        </AccordionSummary>
-        
-        <AccordionDetails>
           <Box sx={medidaStyles.container(theme)}>
             {/* Header da Medida */}
             <Box sx={medidaStyles.header(theme)}>
@@ -399,10 +326,8 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Grid>
             </Box>
           </Box>
-        </AccordionDetails>
-      </Accordion>
-    </LocalizationProvider>
-  );
-};
+      </LocalizationProvider>
+    );
+  };
 
 export default MedidaComponent;

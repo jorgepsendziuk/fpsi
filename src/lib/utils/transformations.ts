@@ -1,4 +1,4 @@
-import { Responsavel, Medida, Controle } from '../types';
+import { Responsavel, Medida, Controle } from '../types/types';
 
 export const transformResponsavel = (data: any): Responsavel => {
   return {

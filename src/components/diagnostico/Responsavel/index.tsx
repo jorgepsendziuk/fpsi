@@ -17,7 +17,7 @@ import {
 import { Save, Cancel, Edit, Delete, Add } from '@mui/icons-material';
 
 // Types
-import { Responsavel } from '../../../app/diagnostico/types';
+import { Responsavel } from '../../../lib/types/types';
 
 // Styles
 import { responsavelStyles } from './styles';

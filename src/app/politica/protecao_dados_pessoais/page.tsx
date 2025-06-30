@@ -6,7 +6,7 @@ import modelo from './modelo.json';
 import { Container, Paper, Typography, Box } from '@mui/material';
 import PDFDownloadButton from './PDFDownloadButton';
 import { useSearchParams } from 'next/navigation';
-import { fetchProgramaById } from '../../diagnostico/services/dataService';
+import { fetchProgramaById } from '../../../lib/services/dataService';
 
 interface Section {
   titulo: string;

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
-import { Controle, Diagnostico, ProgramaMedida } from '../types';
-import { calculateMaturityIndexForControle } from '../utils/calculations';
-import { calculateDiagnosticoMaturity } from '../utils/maturity';
+import { Controle, Diagnostico, ProgramaMedida } from '../../../lib/types/types';
+import { calculateMaturityIndexForControle } from '../../../lib/utils/calculations';
+import { calculateDiagnosticoMaturity } from '../../../lib/utils/maturity';
 
 // Interfaces para cache de maturidade
 interface MaturityCacheEntry {

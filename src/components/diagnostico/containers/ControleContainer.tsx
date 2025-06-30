@@ -2,14 +2,14 @@
 import React, { useEffect, useState } from 'react';
 
 // Types
-import { Controle, Diagnostico, Medida } from '../../../app/diagnostico/types';
+import { Controle, Diagnostico, Medida } from '../../../lib/types/types';
 
 // Components
 import ControleComponent from '../Controle';
 
 // Utils
-import { calculateMaturityIndexForControle, calculateMaturityIndex } from '../../../app/diagnostico/utils/calculations';
-import { respostas, respostasimnao, incc } from '../../../app/diagnostico/utils';
+import { calculateMaturityIndexForControle, calculateMaturityIndex } from '../../../lib/utils/calculations';
+import { respostas, respostasimnao, incc } from '../../../lib/utils/utils';
 
 /**
  * Props for the ControleContainer component

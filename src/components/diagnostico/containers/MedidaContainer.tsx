@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // Types
-import { Medida, Controle, Responsavel, MedidaTextField, ProgramaMedida } from '../../../app/diagnostico/types';
+import { Medida, Controle, Responsavel, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 
 // Components
 import MedidaComponent from '../Medida';

@@ -17,7 +17,7 @@ import Grid from '@mui/material/Grid2';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Types
-import { Controle, Diagnostico, Programa } from '../../../app/diagnostico/types';
+import { Controle, Diagnostico, Programa } from '../../../lib/types/types';
 
 // Components
 import ControleContainer from '../containers/ControleContainer';

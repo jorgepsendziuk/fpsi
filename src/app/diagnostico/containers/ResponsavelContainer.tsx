@@ -2,10 +2,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
 // Types
-import { Responsavel } from '../types';
+import { Responsavel } from '../../../lib/types/types';
 
 // Components
-import ResponsavelComponent from '../components/ResponsavelComponent';
+import ResponsavelComponent from '../../../components/diagnostico/ResponsavelComponent';
 
 // Database
 import { supabaseBrowserClient } from "@utils/supabase/client";

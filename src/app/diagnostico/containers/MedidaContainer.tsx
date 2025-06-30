@@ -2,10 +2,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // Types
-import { Medida, Controle, Responsavel, MedidaTextField, ProgramaMedida } from '../types';
+import { Medida, Controle, Responsavel, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 
 // Components
-import MedidaComponent from '../components/Medida';
+import MedidaComponent from '../../../components/diagnostico/Medida';
 
 // Utils
 import dayjs from 'dayjs';

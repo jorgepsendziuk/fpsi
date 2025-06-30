@@ -31,7 +31,7 @@ import {
   useTheme,
   useMediaQuery
 } from "@mui/material";
-import * as dataService from "@/app/diagnostico/services/dataService";
+import * as dataService from "@/lib/services/dataService";
 import { 
   Add, 
   Edit, 

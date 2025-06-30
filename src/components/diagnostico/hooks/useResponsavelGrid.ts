@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Responsavel } from '../../../app/diagnostico/types';
+import { Responsavel } from '../../../lib/types/types';
 
 interface ResponsavelGridData {
   responsaveis: Responsavel[];

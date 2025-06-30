@@ -52,12 +52,12 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
 
-import * as dataService from "../../../diagnostico/services/dataService";
-import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../diagnostico/types";
+import * as dataService from "../../../../lib/services/dataService";
+import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../diagnostico/containers/ControleContainer";
 import { useMaturityCache } from "../../../diagnostico/hooks/useMaturityCache";
-import MaturityChip from "../../../diagnostico/components/MaturityChip";
+import MaturityChip from "../../../../components/diagnostico/MaturityChip";
 
 const DRAWER_WIDTH = 380;
 
@@ -471,17 +471,7 @@ export default function DiagnosticoPage() {
         [key]: { ...prev[key], [field]: value }
       }));
       
-      // Forçar recarga completa das medidas e programaMedidas para sincronizar
-      setMedidas(prev => {
-        const newMedidas = { ...prev };
-        delete newMedidas[controleId]; // Remove do cache para forçar reload
-        return newMedidas;
-      });
-      
-      // Recarregar usando loadMedidas que sincroniza tudo
-      await loadMedidas(controleId);
-      
-      // Sincronizar selectedNode se for uma medida atualizada
+      // Sincronizar selectedNode se for uma medida atualizada (para todos os campos)
       if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId) {
         setSelectedNode(prev => ({
           ...prev!,
@@ -492,8 +482,19 @@ export default function DiagnosticoPage() {
         }));
       }
       
-      // Invalidar cache de maturidade apenas para campos que impactam o cálculo
-      if (['resposta', 'status_medida'].includes(field)) {
+      // Para mudanças na resposta, recarregar dados completos para sincronizar maturidade
+      if (field === 'resposta') {
+        // Forçar recarga completa das medidas e programaMedidas
+        setMedidas(prev => {
+          const newMedidas = { ...prev };
+          delete newMedidas[controleId]; // Remove do cache para forçar reload
+          return newMedidas;
+        });
+        
+        // Recarregar usando loadMedidas que sincroniza tudo
+        await loadMedidas(controleId);
+        
+        // Invalidar cache de maturidade do controle e diagnóstico afetados
         invalidateCache('controle', controleId);
         
         // Encontrar e invalidar o diagnóstico correspondente
@@ -505,6 +506,9 @@ export default function DiagnosticoPage() {
           invalidateCache('diagnostico', diagnostico.id);
         }
       }
+      // Para outros campos (responsavel, datas, status, justificativa, etc), 
+      // apenas atualizar interface - sem afetar score/maturidade
+      
     } catch (error) {
       console.error("Erro ao atualizar medida:", error);
     }

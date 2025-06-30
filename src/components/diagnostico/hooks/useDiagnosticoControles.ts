@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Controle } from '../../../app/diagnostico/types';
+import { Controle } from '../../../lib/types/types';
 
 interface DiagnosticoControlesData {
   controles: Controle[];
