@@ -65,9 +65,10 @@ interface SectionDisplayProps {
   section: Section;
   onTextChange: (sectionId: number, text: string) => void;
   nomeFantasia: string;
+  politicaCor?: string;
 }
 
-export default function SectionDisplay({ section, onTextChange, nomeFantasia }: SectionDisplayProps) {
+export default function SectionDisplay({ section, onTextChange, nomeFantasia, politicaCor = '#2196F3' }: SectionDisplayProps) {
   const [content, setContent] = useState(section.texto || '');
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -89,7 +90,7 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia }: 
   }, []);
 
   const displayContent = content
-    ? content.replace(/\[Órgão ou Entidade\]/g, nomeFantasia)
+    ? content.replace(/\[Órgão ou Entidade\]/g, nomeFantasia || '[Órgão ou Entidade]')
     : '';
 
   const handleEditorChange = (text: string) => {
@@ -98,25 +99,52 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia }: 
   };
 
   return (
-    <Accordion>
+    <Accordion sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         sx={{
           '& .MuiAccordionSummary-content': {
             flexDirection: 'column',
           },
+          bgcolor: `${politicaCor}15`,
+          borderRadius: '8px 8px 0 0',
+          borderBottom: `2px solid ${politicaCor}`,
         }}
       >
-        <Typography variant="h4" component="h2" sx={{ mb: 1, fontSize: '1.6rem', fontWeight: 'bold' }}>
+        <Typography 
+          variant="h4" 
+          component="h2" 
+          sx={{ 
+            mb: 1, 
+            fontSize: '1.6rem', 
+            fontWeight: 'bold',
+            color: politicaCor
+          }}
+        >
           {section.secao}
         </Typography>
-        <Typography variant="h5" component="h3" sx={{ color: 'text.secondary', fontSize: '1.3rem' }}>
+        <Typography 
+          variant="h5" 
+          component="h3" 
+          sx={{ 
+            color: 'text.secondary', 
+            fontSize: '1.3rem',
+            fontWeight: 500
+          }}
+        >
           {section.titulo}
         </Typography>
       </AccordionSummary>
-      <AccordionDetails>
+      <AccordionDetails sx={{ p: 3 }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              color: 'text.secondary',
+              lineHeight: 1.6,
+              fontSize: '1rem'
+            }}
+          >
             {section.descricao}
           </Typography>
         </Box>
@@ -174,10 +202,10 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia }: 
               bgcolor: 'grey.50'
             }}
           >
-            <CircularProgress />
+            <CircularProgress sx={{ color: politicaCor }} />
           </Box>
         )}
       </AccordionDetails>
     </Accordion>
   );
-} 
+}

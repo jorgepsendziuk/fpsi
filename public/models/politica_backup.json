@@ -1,0 +1,69 @@
+{
+  "secoes": [
+    {
+      "id": 0,
+      "secao": "Política de Backup",
+      "titulo": "Introdução",
+      "descricao": "IMPORTANTE: Este modelo deve ser utilizado exclusivamente como referência, devendo o órgão ou entidade considerar as particularidades técnicas específicas do seu ambiente de TI, bem como observar a boa aderência aos processos internos a fim de construir uma política que seja adequada a sua realidade.",
+      "texto": ""
+    },
+    {
+      "id": 1,
+      "secao": "Propósito",
+      "titulo": "Objetivo da Política",
+      "descricao": "Levando em consideração a natureza e a finalidade do órgão ou entidade, descreva os fatores ou circunstâncias que determinam a existência da política de backup. Além disso, demonstre os objetivos básicos da política e o que ela pretende alcançar.",
+      "texto": "<p>A Política de Backup tem por objetivo estabelecer diretrizes, procedimentos e responsabilidades para a realização de cópias de segurança dos dados e sistemas críticos do [Órgão ou Entidade], visando garantir a continuidade dos negócios e a recuperação de informações em caso de incidentes.</p><p style=\"color: #dc0000;\">[Acrescente aqui os objetivos específicos para a Política de Backup que julgar necessário.]</p>"
+    },
+    {
+      "id": 2,
+      "secao": "Escopo",
+      "titulo": "Amplitude e alcance da Política",
+      "descricao": "Defina a quem e a quais sistemas esta política se aplica. Liste os agentes públicos e colaboradores necessários para cumprir ou simplesmente indique \"todos\" se todos devem cumprir.",
+      "texto": "<p>Esta Política de Backup aplica-se a todos os sistemas, aplicações, bases de dados e informações críticas do <span style=\"background-color: yellow;\">[Órgão ou entidade]</span>, incluindo dados armazenados em servidores locais, ambientes de nuvem e dispositivos móveis institucionais.</p><p>São responsáveis pelo cumprimento desta política todos os colaboradores, prestadores de serviços de TI e terceiros que tenham acesso aos sistemas e dados institucionais.</p><p style=\"color: #dc0000;\">[Acrescente aqui mais definições sobre o escopo da Política de Backup que julgue necessárias.]</p>"
+    },
+    {
+      "id": 3,
+      "secao": "Termos e definições",
+      "titulo": "Glossário",
+      "descricao": "Defina quaisquer termos-chave, siglas ou conceitos que serão utilizados na política de backup.",
+      "texto": "<p><strong>BACKUP:</strong> Processo de criação de cópias de segurança de dados e sistemas para proteção contra perda de informações;</p><p><strong>BACKUP COMPLETO (FULL):</strong> Cópia de segurança que inclui todos os dados selecionados, independentemente de quando foram modificados;</p><p><strong>BACKUP INCREMENTAL:</strong> Cópia de segurança que inclui apenas os dados que foram alterados desde o último backup (completo ou incremental);</p><p><strong>BACKUP DIFERENCIAL:</strong> Cópia de segurança que inclui todos os dados alterados desde o último backup completo;</p><p><strong>RTO (Recovery Time Objective):</strong> Tempo máximo aceitável para restaurar um sistema após uma interrupção;</p><p><strong>RPO (Recovery Point Objective):</strong> Quantidade máxima aceitável de dados que podem ser perdidos em caso de incidente;</p><p><strong>RESTORE:</strong> Processo de recuperação de dados a partir de backups;</p><p style=\"color: #dc0000;\">[Acrescente aqui outros termos técnicos específicos do ambiente de TI da organização.]</p>"
+    },
+    {
+      "id": 4,
+      "secao": "Declarações da política",
+      "titulo": "Regras aplicáveis ao caso específico",
+      "descricao": "Descreva as regras que compõem a política de backup, incluindo frequência, retenção e responsabilidades.",
+      "texto": "<p>Art. 1º. Fica instituída a Política de Backup do <span style=\"background-color: yellow;\">[Órgão ou entidade]</span>, com a finalidade de estabelecer procedimentos para a proteção e recuperação de dados e sistemas críticos.</p><p>Art. 2º. Todos os sistemas críticos e dados essenciais devem ter backups realizados conforme cronograma estabelecido pela área de TI.</p><p>Art. 3º. A frequência dos backups deve ser definida considerando:</p><p>I. Criticidade dos dados e sistemas;</p><p>II. Frequência de alterações;</p><p>III. Objetivos de ponto de recuperação (RPO) e tempo de recuperação (RTO);</p><p>IV. Recursos disponíveis.</p><p>Art. 4º. Os backups devem ser armazenados em locais seguros, preferencialmente em locais diferentes do ambiente de produção.</p><p>Art. 5º. Testes de restauração devem ser realizados periodicamente para garantir a integridade e recuperabilidade dos backups.</p><p style=\"color: #dc0000;\">[Acrescente aqui outras regras específicas para backup que julgar necessário.]</p>"
+    },
+    {
+      "id": 5,
+      "secao": "CAPÍTULO I - Classificação e Frequência",
+      "titulo": "Classificação e Frequência de Backup",
+      "texto": "<p>Art. 6º. Os dados e sistemas devem ser classificados conforme sua criticidade:</p><p>I. <strong>CRÍTICOS:</strong> Dados essenciais para operação - backup diário;</p><p>II. <strong>IMPORTANTES:</strong> Dados relevantes para operação - backup semanal;</p><p>III. <strong>NORMAIS:</strong> Dados de rotina - backup quinzenal ou mensal.</p><p>Art. 7º. Para sistemas críticos, deve-se implementar estratégia 3-2-1:</p><p>I. 3 cópias dos dados (1 original + 2 backups);</p><p>II. 2 mídias de armazenamento diferentes;</p><p>III. 1 cópia em local remoto (offsite).</p><p style=\"color: #dc0000;\">[Defina aqui a classificação específica dos sistemas da organização.]</p>"
+    },
+    {
+      "id": 6,
+      "secao": "CAPÍTULO II - Retenção e Armazenamento",
+      "titulo": "Retenção e Armazenamento de Backups",
+      "texto": "<p>Art. 8º. Os períodos de retenção de backup devem considerar:</p><p>I. Requisitos legais e regulatórios;</p><p>II. Necessidades operacionais;</p><p>III. Capacidade de armazenamento disponível.</p><p>Art. 9º. Períodos mínimos de retenção:</p><p>I. Backups diários: 30 dias;</p><p>II. Backups semanais: 12 semanas;</p><p>III. Backups mensais: 12 meses;</p><p>IV. Backups anuais: conforme exigência legal.</p><p>Art. 10. Os backups devem ser armazenados com segurança adequada, incluindo:</p><p>I. Controle de acesso físico e lógico;</p><p>II. Criptografia quando necessário;</p><p>III. Proteção contra fatores ambientais.</p><p style=\"color: #dc0000;\">[Ajuste os períodos de retenção conforme necessidades da organização.]</p>"
+    },
+    {
+      "id": 7,
+      "secao": "CAPÍTULO III - Testes e Validação",
+      "titulo": "Testes e Validação de Backups",
+      "texto": "<p>Art. 11. Testes de restauração devem ser realizados com as seguintes frequências:</p><p>I. Sistemas críticos: mensalmente;</p><p>II. Sistemas importantes: trimestralmente;</p><p>III. Sistemas normais: semestralmente.</p><p>Art. 12. Os testes devem verificar:</p><p>I. Integridade dos dados;</p><p>II. Completude do backup;</p><p>III. Tempo de restauração;</p><p>IV. Funcionamento da aplicação após restauração.</p><p>Art. 13. Todos os testes devem ser documentados, incluindo resultados e ações corretivas quando necessárias.</p><p style=\"color: #dc0000;\">[Defina procedimentos específicos de teste conforme ambiente da organização.]</p>"
+    },
+    {
+      "id": 8,
+      "secao": "CAPÍTULO IV - Responsabilidades",
+      "titulo": "Responsabilidades",
+      "texto": "<p>Art. 14. Compete à área de Tecnologia da Informação:</p><p>I. Implementar e manter a infraestrutura de backup;</p><p>II. Executar os procedimentos de backup conforme cronograma;</p><p>III. Monitorar o sucesso das operações de backup;</p><p>IV. Realizar testes de restauração;</p><p>V. Manter documentação atualizada dos procedimentos.</p><p>Art. 15. Compete aos gestores de cada área:</p><p>I. Identificar dados críticos sob sua responsabilidade;</p><p>II. Definir requisitos de backup para seus sistemas;</p><p>III. Participar dos testes de restauração quando solicitado.</p><p>Art. 16. Compete aos usuários:</p><p>I. Manter dados organizados conforme orientações;</p><p>II. Reportar problemas relacionados a backups;</p><p>III. Colaborar nos testes de restauração.</p><p style=\"color: #dc0000;\">[Ajuste as responsabilidades conforme estrutura organizacional.]</p>"
+    },
+    {
+      "id": 9,
+      "secao": "CAPÍTULO V - Disposições Finais",
+      "titulo": "Disposições Finais",
+      "texto": "<p>Art. 17. Esta política será revisada anualmente ou quando necessário devido a mudanças tecnológicas ou operacionais.</p><p>Art. 18. O descumprimento desta política sujeitará o infrator às penalidades previstas na legislação vigente e nas normas internas da organização.</p><p>Art. 19. Os casos omissos serão resolvidos pela área de Tecnologia da Informação em conjunto com a alta administração.</p><p>Art. 20. Esta política entra em vigor na data de sua publicação.</p><p style=\"color: #dc0000;\">[Inclua outras disposições finais que julgar necessárias.]</p>"
+    }
+  ]
+}

@@ -497,6 +497,56 @@ export default function DiagnosticoPage() {
     }
   }, [isMobile]);
 
+  // Funções de navegação
+  const findNextPrevItems = useCallback((currentNode: TreeNode, itemType: 'diagnostico' | 'controle' | 'medida') => {
+    let allItems: TreeNode[] = [];
+    
+    if (itemType === 'diagnostico') {
+      allItems = treeData.filter(node => node.type === 'diagnostico');
+    } else if (itemType === 'controle') {
+      // Encontrar todos os controles do diagnóstico atual
+      const currentDiagnostico = diagnosticos.find(d => {
+        const diagnosticoControles = controles[d.id] || [];
+        return diagnosticoControles.some(c => c.id === currentNode.data.id);
+      });
+      if (currentDiagnostico) {
+        const diagnosticoNode = treeData.find(node => node.type === 'diagnostico' && node.data.id === currentDiagnostico.id);
+        allItems = diagnosticoNode?.children?.filter(child => child.type === 'controle') || [];
+      }
+    } else if (itemType === 'medida') {
+      // Encontrar todas as medidas do controle atual
+      const controleId = currentNode.data.controle?.id || currentNode.data.id;
+      const diagnostico = diagnosticos.find(d => {
+        const diagnosticoControles = controles[d.id] || [];
+        return diagnosticoControles.some(c => c.id === controleId);
+      });
+      if (diagnostico) {
+        const diagnosticoNode = treeData.find(node => node.type === 'diagnostico' && node.data.id === diagnostico.id);
+        const controleNode = diagnosticoNode?.children?.find(child => child.type === 'controle' && child.data.id === controleId);
+        allItems = controleNode?.children?.filter(child => child.type === 'medida') || [];
+      }
+    }
+    
+    const currentIndex = allItems.findIndex(item => {
+      if (itemType === 'medida') {
+        return item.data.medida?.id === currentNode.data.medida?.id;
+      }
+      return item.data.id === currentNode.data.id;
+    });
+    
+    const prevItem = currentIndex > 0 ? allItems[currentIndex - 1] : null;
+    const nextItem = currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null;
+    
+    return { prevItem, nextItem, currentIndex: currentIndex + 1, total: allItems.length };
+  }, [treeData, diagnosticos, controles]);
+
+  const navigateToItem = useCallback((targetNode: TreeNode) => {
+    setSelectedNode(targetNode);
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  }, [isMobile]);
+
   // Função para navegar para uma medida específica
   const handleMedidaNavigate = useCallback(async (medidaId: number, controleId: number) => {
     console.log("Navigating to medida:", medidaId, "from controle:", controleId);
@@ -948,6 +998,7 @@ export default function DiagnosticoPage() {
 
     if (selectedNode.type === 'diagnostico') {
       const diagnosticoControles = controles[selectedNode.data.id] || [];
+      const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'diagnostico');
       
       // Função para determinar cor baseada no score de maturidade
       const getMaturityColorForDiagnostico = (score: number) => {
@@ -959,66 +1010,160 @@ export default function DiagnosticoPage() {
       };
 
       return (
-        <Card>
-          <CardHeader
-            avatar={
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  backgroundColor: getMaturityColorForDiagnostico(selectedNode.maturityScore ?? 0),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '1.25rem'
-                }}
-              >
-                {selectedNode.data.id}
-              </Box>
-            }
-            title={
-              <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
+        <Box>
+          {/* Navegação entre diagnósticos */}
+          <Paper elevation={1} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <IconButton 
+              onClick={() => prevItem && navigateToItem(prevItem)}
+              disabled={!prevItem}
+              color="primary"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Diagnóstico {currentIndex} de {total}
+              </Typography>
+              <Typography variant="h6" color="primary" fontWeight="bold">
                 {selectedNode.data.descricao}
               </Typography>
-            }
-            subheader={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                <MaturityChip
-                  score={selectedNode.maturityScore ?? 0}
-                  label={selectedNode.maturityLabel ?? 'N/A'}
-                  size="medium"
-                  showLabel={true}
-                  animated={true}
-                />
-                <Chip label={`${diagnosticoControles.length} controles`} variant="outlined" size="small" />
-              </Box>
-            }
-          />
-          <CardContent>
-            <Typography variant="body1" paragraph>
-              {selectedNode.data.descricao}
-            </Typography>
-            {diagnosticoControles.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                Expanda este diagnóstico na árvore lateral para carregar os controles.
+            </Box>
+            
+            <IconButton 
+              onClick={() => nextItem && navigateToItem(nextItem)}
+              disabled={!nextItem}
+              color="primary"
+            >
+              <ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />
+            </IconButton>
+          </Paper>
+
+          <Card>
+            <CardHeader
+              avatar={
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    backgroundColor: getMaturityColorForDiagnostico(selectedNode.maturityScore ?? 0),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '1.25rem'
+                  }}
+                >
+                  {selectedNode.data.id}
+                </Box>
+              }
+              title={
+                <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  {selectedNode.data.descricao}
+                </Typography>
+              }
+              subheader={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <MaturityChip
+                    score={selectedNode.maturityScore ?? 0}
+                    label={selectedNode.maturityLabel ?? 'N/A'}
+                    size="medium"
+                    showLabel={true}
+                    animated={true}
+                  />
+                  <Chip label={`${diagnosticoControles.length} controles`} variant="outlined" size="small" />
+                </Box>
+              }
+            />
+            <CardContent>
+              <Typography variant="body1" paragraph>
+                {selectedNode.data.descricao}
               </Typography>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                Este diagnóstico possui {diagnosticoControles.length} controles. 
-                Clique em um controle na árvore lateral para visualizar suas medidas.
-              </Typography>
-            )}
-          </CardContent>
-        </Card>
+              
+              {/* Lista de Controles */}
+              {diagnosticoControles.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Expanda este diagnóstico na árvore lateral para carregar os controles.
+                </Typography>
+              ) : (
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
+                    Controles deste Diagnóstico
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {diagnosticoControles.map((controle) => {
+                      const controleMedidas = medidas[controle.id] || [];
+                      const programaControle = {
+                        id: controle.programa_controle_id || 0,
+                        programa: programaId,
+                        controle: controle.id,
+                        nivel: controle.nivel || 1
+                      };
+                      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
+                      
+                      return (
+                        <Grid size={{ xs: 12, md: 6 }} key={controle.id}>
+                          <Card 
+                            variant="outlined" 
+                            sx={{ 
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: 3
+                              }
+                            }}
+                            onClick={() => {
+                              const controleNode = treeData
+                                .find(node => node.type === 'diagnostico' && node.data.id === selectedNode.data.id)
+                                ?.children?.find(child => child.type === 'controle' && child.data.id === controle.id);
+                              if (controleNode) navigateToItem(controleNode);
+                            }}
+                          >
+                            <CardContent sx={{ p: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                                <SecurityIcon sx={{ color: controleMaturity.color, mt: 0.5 }} />
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                    {controle.numero} - {controle.nome}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    {controle.texto?.substring(0, 100)}...
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                    <MaturityChip
+                                      score={controleMaturity.score}
+                                      label={controleMaturity.label}
+                                      size="small"
+                                    />
+                                    <Chip 
+                                      label={`${controleMedidas.length} medidas`} 
+                                      size="small" 
+                                      variant="outlined" 
+                                    />
+                                  </Box>
+                                </Box>
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
       );
     }
 
     if (selectedNode.type === 'controle') {
       const controle = selectedNode.data;
       const controleMedidas = medidas[controle.id] || [];
+      const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'controle');
       
       // Encontrar o diagnóstico pai
       const diagnostico = diagnosticos.find(d => {
@@ -1044,37 +1189,255 @@ export default function DiagnosticoPage() {
         responsaveis: responsaveis
       };
 
+      const programaControle = {
+        id: controle.programa_controle_id || 0,
+        programa: programaId,
+        controle: controle.id,
+        nivel: controle.nivel || 1
+      };
+      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
+
       return (
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-          <ControleContainer
-            controle={controle}
-            diagnostico={diagnostico}
-            programaId={programaId}
-            state={controleState}
-            handleINCCChange={handleINCCChange}
-            handleMedidaFetch={handleMedidaFetch}
-            handleMedidaChange={handleMedidaChange}
-            responsaveis={responsaveis}
-            onMedidaNavigate={handleMedidaNavigate}
-          />
-        </LocalizationProvider>
+        <Box>
+          {/* Navegação entre controles */}
+          <Paper elevation={1} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <IconButton 
+              onClick={() => prevItem && navigateToItem(prevItem)}
+              disabled={!prevItem}
+              color="primary"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Controle {currentIndex} de {total} • {diagnostico.descricao}
+              </Typography>
+              <Typography variant="h6" color="primary" fontWeight="bold">
+                {controle.numero} - {controle.nome}
+              </Typography>
+            </Box>
+            
+            <IconButton 
+              onClick={() => nextItem && navigateToItem(nextItem)}
+              disabled={!nextItem}
+              color="primary"
+            >
+              <ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />
+            </IconButton>
+          </Paper>
+
+          {/* Lista de medidas do controle */}
+          {controleMedidas.length > 0 && (
+            <Card sx={{ mb: 2 }}>
+              <CardHeader
+                title={
+                  <Typography variant="h6" color="primary" fontWeight="600">
+                    Medidas deste Controle
+                  </Typography>
+                }
+                subheader={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <MaturityChip
+                      score={controleMaturity.score}
+                      label={controleMaturity.label}
+                      size="small"
+                    />
+                    <Chip label={`${controleMedidas.length} medidas`} variant="outlined" size="small" />
+                  </Box>
+                }
+              />
+              <CardContent>
+                                 <Grid container spacing={2}>
+                   {controleMedidas.map((medida) => {
+                     const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
+                     
+                     return (
+                       <Grid size={{ xs: 12, md: 6 }} key={medida.id}>
+                        <Card 
+                          variant="outlined" 
+                          sx={{ 
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: 3
+                            }
+                          }}
+                          onClick={() => {
+                            const medidaNode = treeData
+                              .find(node => node.type === 'diagnostico' && node.data.id === diagnostico.id)
+                              ?.children?.find(child => child.type === 'controle' && child.data.id === controle.id)
+                              ?.children?.find(child => child.type === 'medida' && child.data.medida.id === medida.id);
+                            if (medidaNode) navigateToItem(medidaNode);
+                          }}
+                        >
+                          <CardContent sx={{ p: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                              <PolicyIcon sx={{ color: 'primary.main', mt: 0.5 }} />
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                  {medida.id_medida || medida.id} - {medida.medida}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                  {medida.descricao?.substring(0, 100)}...
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                  {programaMedida?.resposta && (
+                                    <Chip 
+                                      label={String(programaMedida.resposta) === 'S' ? 'Sim' : String(programaMedida.resposta) === 'N' ? 'Não' : 'Parcial'} 
+                                      size="small"
+                                      color={String(programaMedida.resposta) === 'S' ? 'success' : String(programaMedida.resposta) === 'N' ? 'error' : 'warning'}
+                                    />
+                                  )}
+                                  {programaMedida?.status_plano_acao && (
+                                    <Chip 
+                                      label={programaMedida.status_plano_acao} 
+                                      size="small" 
+                                      variant="outlined" 
+                                    />
+                                  )}
+                                </Box>
+                              </Box>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Componente original do controle */}
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+            <ControleContainer
+              controle={controle}
+              diagnostico={diagnostico}
+              programaId={programaId}
+              state={controleState}
+              handleINCCChange={handleINCCChange}
+              handleMedidaFetch={handleMedidaFetch}
+              handleMedidaChange={handleMedidaChange}
+              responsaveis={responsaveis}
+              onMedidaNavigate={handleMedidaNavigate}
+            />
+          </LocalizationProvider>
+        </Box>
       );
     }
 
     if (selectedNode.type === 'medida') {
       const { medida, controle, programaMedida } = selectedNode.data;
+      const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'medida');
+      
+      // Encontrar o diagnóstico pai
+      const diagnostico = diagnosticos.find(d => {
+        const diagnosticoControles = controles[d.id] || [];
+        return diagnosticoControles.some(c => c.id === controle.id);
+      });
       
       return (
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-          <MedidaContainer
-            medida={medida}
-            programaMedida={programaMedida}
-            controle={controle}
-            programaId={programaId}
-            handleMedidaChange={handleMedidaChange}
-            responsaveis={responsaveis}
-          />
-        </LocalizationProvider>
+        <Box>
+          {/* Navegação entre medidas */}
+          <Paper elevation={1} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <IconButton 
+              onClick={() => prevItem && navigateToItem(prevItem)}
+              disabled={!prevItem}
+              color="primary"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Medida {currentIndex} de {total} • {controle.numero} - {controle.nome}
+              </Typography>
+              <Typography variant="h6" color="primary" fontWeight="bold">
+                {medida.id_medida || medida.id} - {medida.medida}
+              </Typography>
+            </Box>
+            
+            <IconButton 
+              onClick={() => nextItem && navigateToItem(nextItem)}
+              disabled={!nextItem}
+              color="primary"
+            >
+              <ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />
+            </IconButton>
+          </Paper>
+
+          {/* Lista de outras medidas do mesmo controle */}
+          {controle && (
+            <Card sx={{ mb: 2 }}>
+              <CardHeader
+                avatar={<PolicyIcon color="primary" />}
+                title={
+                                      <Typography variant="h6" color="primary" fontWeight="600">
+                      Outras medidas do controle &quot;{controle.nome}&quot;
+                    </Typography>
+                }
+                subheader={
+                  <Typography variant="body2" color="text.secondary">
+                    {diagnostico?.descricao} • {controle.numero}
+                  </Typography>
+                }
+              />
+              <CardContent>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {(medidas[controle.id] || []).map((outraMedida) => {
+                    const isCurrentMedida = outraMedida.id === medida.id;
+                    const outraProgramaMedida = programaMedidas[`${outraMedida.id}-${controle.id}-${programaId}`];
+                    
+                    return (
+                      <Chip
+                        key={outraMedida.id}
+                        label={`${outraMedida.id_medida || outraMedida.id} - ${outraMedida.medida.substring(0, 30)}...`}
+                        variant={isCurrentMedida ? "filled" : "outlined"}
+                        color={isCurrentMedida ? "primary" : "default"}
+                        onClick={() => {
+                          if (!isCurrentMedida) {
+                            const medidaNode = treeData
+                              .find(node => node.type === 'diagnostico' && node.data.id === diagnostico?.id)
+                              ?.children?.find(child => child.type === 'controle' && child.data.id === controle.id)
+                              ?.children?.find(child => child.type === 'medida' && child.data.medida.id === outraMedida.id);
+                            if (medidaNode) navigateToItem(medidaNode);
+                          }
+                        }}
+                        sx={{ 
+                          cursor: isCurrentMedida ? 'default' : 'pointer',
+                          maxWidth: 250
+                        }}
+                        icon={
+                          outraProgramaMedida?.resposta ? (
+                            String(outraProgramaMedida.resposta) === 'S' ? 
+                              <CheckCircleOutlineIcon color="success" fontSize="small" /> :
+                              String(outraProgramaMedida.resposta) === 'N' ?
+                                <RadioButtonUncheckedIcon color="error" fontSize="small" /> :
+                                <RadioButtonUncheckedIcon color="warning" fontSize="small" />
+                          ) : undefined
+                        }
+                      />
+                    );
+                  })}
+                </Box>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Componente original da medida */}
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+            <MedidaContainer
+              medida={medida}
+              programaMedida={programaMedida}
+              controle={controle}
+              programaId={programaId}
+              handleMedidaChange={handleMedidaChange}
+              responsaveis={responsaveis}
+            />
+          </LocalizationProvider>
+        </Box>
       );
     }
 

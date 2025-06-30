@@ -1,0 +1,75 @@
+{
+  "secoes": [
+    {
+      "id": 0,
+      "secao": "Política de Controle de Acesso",
+      "titulo": "Introdução",
+      "descricao": "IMPORTANTE: Este modelo deve ser utilizado exclusivamente como referência para elaboração da política de controle de acesso, devendo o órgão ou entidade considerar as particularidades técnicas específicas do seu ambiente de TI e observar a boa aderência aos processos internos.",
+      "texto": ""
+    },
+    {
+      "id": 1,
+      "secao": "Propósito",
+      "titulo": "Objetivo da Política",
+      "descricao": "Descreva os objetivos básicos da política de controle de acesso e o que ela pretende alcançar em termos de segurança da informação.",
+      "texto": "<p>A Política de Controle de Acesso tem por objetivo estabelecer diretrizes, princípios e procedimentos para a gestão de credenciais, privilégios e acessos aos sistemas, dados e recursos de TI do [Órgão ou Entidade], garantindo que apenas usuários autorizados tenham acesso às informações necessárias para o desempenho de suas funções.</p><p style=\"color: #dc0000;\">[Acrescente aqui os objetivos específicos para a Política de Controle de Acesso que julgar necessário.]</p>"
+    },
+    {
+      "id": 2,
+      "secao": "Escopo",
+      "titulo": "Amplitude e alcance da Política",
+      "descricao": "Defina a quem e a quais sistemas esta política se aplica, incluindo usuários internos, externos e diferentes tipos de acesso.",
+      "texto": "<p>Esta Política de Controle de Acesso aplica-se a:</p><p>I. Todos os colaboradores, prestadores de serviços e terceiros do <span style=\"background-color: yellow;\">[Órgão ou entidade]</span>;</p><p>II. Todos os sistemas de informação, aplicações, bases de dados e recursos de TI;</p><p>III. Acessos físicos e lógicos aos ambientes e informações institucionais;</p><p>IV. Dispositivos móveis corporativos e BYOD (Bring Your Own Device);</p><p>V. Acessos remotos e conexões VPN.</p><p style=\"color: #dc0000;\">[Acrescente aqui mais definições sobre o escopo da Política de Controle de Acesso que julgue necessárias.]</p>"
+    },
+    {
+      "id": 3,
+      "secao": "Termos e definições",
+      "titulo": "Glossário",
+      "descricao": "Defina os termos técnicos e conceitos relacionados ao controle de acesso que serão utilizados na política.",
+      "texto": "<p><strong>CONTROLE DE ACESSO:</strong> Conjunto de procedimentos e tecnologias para limitar o acesso a recursos computacionais;</p><p><strong>AUTENTICAÇÃO:</strong> Processo de verificação da identidade de um usuário;</p><p><strong>AUTORIZAÇÃO:</strong> Processo de determinação dos privilégios de acesso de um usuário autenticado;</p><p><strong>PRINCÍPIO DO MENOR PRIVILÉGIO:</strong> Usuários devem ter apenas os acessos mínimos necessários para suas funções;</p><p><strong>SEGREGAÇÃO DE FUNÇÕES:</strong> Separação de responsabilidades para evitar conflitos de interesse;</p><p><strong>SINGLE SIGN-ON (SSO):</strong> Tecnologia que permite acesso a múltiplos sistemas com uma única autenticação;</p><p><strong>MULTI-FACTOR AUTHENTICATION (MFA):</strong> Método de autenticação que requer dois ou mais fatores de verificação;</p><p><strong>RBAC (Role-Based Access Control):</strong> Modelo de controle de acesso baseado em funções;</p><p><strong>PROVISIONING:</strong> Processo de criação e configuração de contas de usuário;</p><p><strong>DEPROVISIONING:</strong> Processo de desativação e remoção de contas de usuário;</p><p style=\"color: #dc0000;\">[Acrescente aqui outros termos específicos do ambiente da organização.]</p>"
+    },
+    {
+      "id": 4,
+      "secao": "Princípios Fundamentais",
+      "titulo": "Princípios do Controle de Acesso",
+      "descricao": "Estabeleça os princípios fundamentais que norteiam o controle de acesso na organização.",
+      "texto": "<p>Art. 1º. O controle de acesso no <span style=\"background-color: yellow;\">[Órgão ou entidade]</span> deve obedecer aos seguintes princípios:</p><p>I. <strong>Menor Privilégio:</strong> Usuários devem ter apenas os acessos mínimos necessários;</p><p>II. <strong>Segregação de Funções:</strong> Funções críticas devem ser distribuídas entre diferentes usuários;</p><p>III. <strong>Need-to-Know:</strong> Acesso a informações apenas quando necessário para a função;</p><p>IV. <strong>Revisão Regular:</strong> Privilégios devem ser revisados periodicamente;</p><p>V. <strong>Rastreabilidade:</strong> Todas as ações de acesso devem ser registradas;</p><p>VI. <strong>Responsabilidade:</strong> Usuários são responsáveis pelo uso de suas credenciais.</p><p style=\"color: #dc0000;\">[Adicione outros princípios específicos da organização.]</p>"
+    },
+    {
+      "id": 5,
+      "secao": "CAPÍTULO I - Gestão de Identidades",
+      "titulo": "Gestão de Identidades e Contas",
+      "texto": "<p>Art. 2º. A criação de contas de usuário deve seguir processo formal de solicitação, aprovação e configuração.</p><p>Art. 3º. Cada usuário deve possuir conta única e individual, sendo vedado o compartilhamento de credenciais.</p><p>Art. 4º. As contas devem ser classificadas conforme o tipo de usuário:</p><p>I. <strong>Usuários Padrão:</strong> Colaboradores internos com acessos básicos;</p><p>II. <strong>Usuários Privilegiados:</strong> Administradores e gestores com acessos elevados;</p><p>III. <strong>Contas de Serviço:</strong> Utilizadas por aplicações e sistemas;</p><p>IV. <strong>Usuários Externos:</strong> Prestadores de serviços e parceiros;</p><p>V. <strong>Contas Temporárias:</strong> Para necessidades específicas e por tempo limitado.</p><p>Art. 5º. O processo de provisionamento deve incluir:</p><p>I. Solicitação formal pelo gestor imediato;</p><p>II. Aprovação conforme matriz de responsabilidades;</p><p>III. Configuração baseada em templates de função;</p><p>IV. Comunicação ao usuário e orientações iniciais.</p><p style=\"color: #dc0000;\">[Defina processos específicos de gestão de identidades da organização.]</p>"
+    },
+    {
+      "id": 6,
+      "secao": "CAPÍTULO II - Autenticação",
+      "titulo": "Métodos de Autenticação",
+      "texto": "<p>Art. 6º. A autenticação deve ser proporcional ao nível de criticidade do recurso acessado.</p><p>Art. 7º. Para sistemas críticos e dados sensíveis é obrigatório o uso de autenticação multifator (MFA).</p><p>Art. 8º. As senhas devem atender aos seguintes critérios:</p><p>I. Mínimo de 8 caracteres para usuários padrão;</p><p>II. Mínimo de 12 caracteres para usuários privilegiados;</p><p>III. Combinação de letras maiúsculas, minúsculas, números e símbolos;</p><p>IV. Alteração obrigatória a cada 90 dias para contas privilegiadas;</p><p>V. Não reutilização das últimas 12 senhas;</p><p>VI. Bloqueio após 5 tentativas incorretas.</p><p>Art. 9º. Métodos de autenticação aceitos:</p><p>I. Senha + token/SMS (MFA);</p><p>II. Certificados digitais;</p><p>III. Biometria (quando disponível);</p><p>IV. Smart cards institucionais.</p><p style=\"color: #dc0000;\">[Ajuste os critérios conforme política de senhas da organização.]</p>"
+    },
+    {
+      "id": 7,
+      "secao": "CAPÍTULO III - Autorização e Privilégios",
+      "titulo": "Gestão de Autorizações",
+      "texto": "<p>Art. 10. A autorização de acesso deve ser baseada nas funções e responsabilidades do usuário.</p><p>Art. 11. Deve ser implementado modelo de controle de acesso baseado em funções (RBAC).</p><p>Art. 12. Os privilégios administrativos devem ser concedidos apenas quando estritamente necessário.</p><p>Art. 13. Contas administrativas devem ser separadas das contas de uso cotidiano.</p><p>Art. 14. Acessos temporários ou emergenciais devem:</p><p>I. Ser aprovados por autoridade competente;</p><p>II. Ter prazo de validade definido;</p><p>III. Ser monitorados continuamente;</p><p>IV. Ser revogados automaticamente após o prazo.</p><p>Art. 15. A elevação de privilégios deve ser registrada e justificada.</p><p style=\"color: #dc0000;\">[Defina critérios específicos para autorização na organização.]</p>"
+    },
+    {
+      "id": 8,
+      "secao": "CAPÍTULO IV - Revisão e Monitoramento",
+      "titulo": "Revisão de Acessos e Monitoramento",
+      "texto": "<p>Art. 16. Deve ser realizada revisão periódica dos acessos concedidos:</p><p>I. Acessos padrão: semestralmente;</p><p>II. Acessos privilegiados: trimestralmente;</p><p>III. Contas administrativas: mensalmente;</p><p>IV. Acessos externos: mensalmente.</p><p>Art. 17. A revisão deve verificar:</p><p>I. Adequação dos privilégios às funções atuais;</p><p>II. Contas inativas ou desnecessárias;</p><p>III. Conformidade com princípio do menor privilégio;</p><p>IV. Segregação adequada de funções.</p><p>Art. 18. Deve ser implementado monitoramento contínuo para detectar:</p><p>I. Tentativas de acesso não autorizado;</p><p>II. Uso anômalo de contas;</p><p>III. Elevação não autorizada de privilégios;</p><p>IV. Acesso a recursos sensíveis.</p><p>Art. 19. Incidentes de segurança relacionados a acesso devem ser reportados imediatamente.</p><p style=\"color: #dc0000;\">[Ajuste frequências de revisão conforme necessidades da organização.]</p>"
+    },
+    {
+      "id": 9,
+      "secao": "CAPÍTULO V - Responsabilidades",
+      "titulo": "Responsabilidades",
+      "texto": "<p>Art. 20. Compete à área de Tecnologia da Informação:</p><p>I. Implementar e manter a infraestrutura de controle de acesso;</p><p>II. Executar provisionamento e desprovisionamento de contas;</p><p>III. Configurar e manter sistemas de autenticação;</p><p>IV. Monitorar acessos e investigar incidentes;</p><p>V. Realizar revisões técnicas de segurança.</p><p>Art. 21. Compete aos gestores:</p><p>I. Solicitar acessos para sua equipe;</p><p>II. Aprovar alterações de privilégios;</p><p>III. Comunicar transferências e desligamentos;</p><p>IV. Participar das revisões de acesso.</p><p>Art. 22. Compete aos usuários:</p><p>I. Proteger suas credenciais;</p><p>II. Usar acessos apenas para fins institucionais;</p><p>III. Reportar suspeitas de comprometimento;</p><p>IV. Cumprir políticas de segurança.</p><p style=\"color: #dc0000;\">[Defina responsabilidades específicas conforme estrutura organizacional.]</p>"
+    },
+    {
+      "id": 10,
+      "secao": "CAPÍTULO VI - Disposições Finais",
+      "titulo": "Disposições Finais",
+      "texto": "<p>Art. 23. O descumprimento desta política sujeitará o infrator às penalidades previstas na legislação vigente e nas normas internas.</p><p>Art. 24. Esta política será revisada anualmente ou quando necessário devido a mudanças tecnológicas ou organizacionais.</p><p>Art. 25. Casos específicos não contemplados nesta política devem ser submetidos à análise da área de Segurança da Informação.</p><p>Art. 26. Esta política entra em vigor na data de sua publicação, revogando disposições em contrário.</p><p style=\"color: #dc0000;\">[Inclua outras disposições finais conforme necessário.]</p>"
+    }
+  ]
+}
