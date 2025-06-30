@@ -48,6 +48,8 @@ import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
   Dashboard as DashboardIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -463,21 +465,11 @@ export default function DiagnosticoPage() {
   const handleNodeSelect = useCallback(async (node: TreeNode) => {
     setSelectedNode(node);
     
-    // Se for um controle, automaticamente expandir para mostrar as medidas
-    if (node.type === 'controle' && !expandedNodes.has(node.id)) {
-      const newExpanded = new Set(expandedNodes);
-      newExpanded.add(node.id);
-      setExpandedNodes(newExpanded);
-      
-      // Carregar medidas se ainda não foram carregadas
-      await loadMedidas(node.data.id);
-    }
-    
     // No mobile, fechar drawer para itens de último nível (medidas e dashboard)
     if (isMobile && (node.type === 'medida' || node.type === 'dashboard')) {
       setDrawerOpen(false);
     }
-  }, [isMobile, expandedNodes, loadMedidas]);
+  }, [isMobile]);
 
   // Manipular mudanças em medidas
   const handleMedidaChange = useCallback(async (
@@ -604,15 +596,19 @@ export default function DiagnosticoPage() {
 
 
 
-    // Função para lidar com o clique no item
+    // Função para lidar com o clique no item (apenas seleção)
     const handleItemClick = async () => {
-      // Sempre selecionar o nó
+      // Apenas selecionar o nó, sem expandir
       await handleNodeSelect(node);
+    };
+
+    // Função para lidar com o clique no botão de expansão
+    const handleExpandClick = async (event: React.MouseEvent) => {
+      // Prevenir que o clique propague para o item pai
+      event.stopPropagation();
       
-      // Se pode ser expandido, expandir/contrair
-      if (showExpandButton) {
-        await handleNodeToggle(node.id, node);
-      }
+      // Expandir/contrair
+      await handleNodeToggle(node.id, node);
     };
 
     // Calcular o padding considerando as linhas conectoras
@@ -785,38 +781,49 @@ export default function DiagnosticoPage() {
                 )
               }
             />
-            {/* Mostrar indicador de expansão */}
+            {/* Botão de expansão/contração */}
             {showExpandButton && (
-              <Box 
+              <IconButton
+                size="small"
+                onClick={handleExpandClick}
+                disabled={isLoading}
                 sx={{ 
                   ml: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
+                  border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
+                  backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                    borderColor: alpha(theme.palette.primary.main, 0.5),
+                  },
+                  '&.Mui-disabled': {
+                    backgroundColor: alpha(theme.palette.action.disabled, 0.1),
+                  }
                 }}
               >
                 {isLoading ? (
-                  <Box sx={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Box
-                      sx={{
-                        width: 14,
-                        height: 14,
-                        border: '2px solid',
-                        borderColor: 'primary.main',
-                        borderTopColor: 'transparent',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                        '@keyframes spin': {
-                          '0%': { transform: 'rotate(0deg)' },
-                          '100%': { transform: 'rotate(360deg)' }
-                        }
-                      }}
-                    />
-                  </Box>
-                ) : isExpanded ? <ExpandLess /> : <ExpandMore />}
-              </Box>
+                  <Box
+                    sx={{
+                      width: 14,
+                      height: 14,
+                      border: '2px solid',
+                      borderColor: 'primary.main',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                      '@keyframes spin': {
+                        '0%': { transform: 'rotate(0deg)' },
+                        '100%': { transform: 'rotate(360deg)' }
+                      }
+                    }}
+                  />
+                ) : isExpanded ? (
+                  <RemoveIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                ) : (
+                  <AddIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                )}
+              </IconButton>
             )}
           </ListItemButton>
         </ListItem>
