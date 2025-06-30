@@ -22,10 +22,9 @@ export const fetchControlesAndMedidas = async (programaId: number, dispatch: Dis
       .select("id")
       .eq("diagnostico", diagnostico.id)
       .order("numero", { ascending: true });
-    // Remover carregamento automático de medidas - serão carregadas apenas quando selecionadas
-    // for (const controle of controles.data || []) {
-    //   await handleMedidaFetch(controle.id, programaId, dispatch);
-    // }
+    for (const controle of controles.data || []) {
+      await handleMedidaFetch(controle.id, programaId, dispatch);
+    }
     await handleControleFetch(diagnostico.id, programaId, dispatch);
   }
 };

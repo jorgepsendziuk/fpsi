@@ -64,13 +64,13 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
     }
   }, [state.medidas, controle.id]);
 
-  // Log control data without automatically loading measures
+  // Load measures when the component mounts
   useEffect(() => {
     console.log(`ControleContainer: Controle data:`, controle);
     console.log(`ControleContainer: Controle nivel:`, controle.nivel);
     console.log(`ControleContainer: Controle programa_controle_id:`, controle.programa_controle_id);
-    // handleMedidaFetch removido - medidas devem ser carregadas apenas quando selecionadas na árvore
-  }, [controle]);
+    handleMedidaFetch(controle.id, programaId);
+  }, [controle, controle.id, programaId, handleMedidaFetch]);
 
   /**
    * Calculate the maturity index for this control using the correct formula

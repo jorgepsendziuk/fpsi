@@ -329,20 +329,53 @@ export default function DiagnosticoPage() {
               nivel: controle.nivel || 1
             };
 
-            // Calcular maturidade apenas com dados já disponíveis (sem carregamento automático)
+            // Se não há medidas carregadas, carregar automaticamente para avaliação
             let controleMaturity;
             if (controleMedidas.length === 0) {
-              // Usar estimativa básica baseada no nível INCC sem carregar medidas
-              const inccLevel = controle.nivel || 1;
-              const estimatedScore = (inccLevel - 1) * 0.15; // Estimativa conservadora
-              const maturityLabel = estimatedScore >= 0.3 ? 'Básico' : 'Inicial';
+              // Carregar medidas assincronamente apenas se não estiver já carregando
+              if (!autoLoadingMedidas.has(controle.id) && !loadingMedidas.has(controle.id)) {
+                setAutoLoadingMedidas(prev => new Set(prev).add(controle.id));
+                
+                loadMedidas(controle.id).then(() => {
+                  setAutoLoadingMedidas(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(controle.id);
+                    return newSet;
+                  });
+                  invalidateCache('controle', controle.id);
+                }).catch(error => {
+                  console.error(`Erro ao carregar medidas para controle ${controle.id}:`, error);
+                  setAutoLoadingMedidas(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(controle.id);
+                    return newSet;
+                  });
+                });
+              }
               
-              controleMaturity = {
-                score: estimatedScore,
-                label: maturityLabel,
-                color: estimatedScore >= 0.3 ? '#FF9800' : '#FF5252',
-                level: estimatedScore >= 0.3 ? 'basico' as const : 'inicial' as const
-              };
+              // Por enquanto, usar maturidade baseada no INCC disponível
+              const isLoading = autoLoadingMedidas.has(controle.id) || loadingMedidas.has(controle.id);
+              
+              if (isLoading) {
+                controleMaturity = {
+                  score: 0,
+                  label: 'Carregando...',
+                  color: '#9E9E9E',
+                  level: 'inicial' as const
+                };
+              } else {
+                // Estimativa básica baseada no nível INCC
+                const inccLevel = controle.nivel || 1;
+                const estimatedScore = (inccLevel - 1) * 0.15; // Estimativa conservadora
+                const maturityLabel = estimatedScore >= 0.3 ? 'Básico' : 'Inicial';
+                
+                controleMaturity = {
+                  score: estimatedScore,
+                  label: maturityLabel,
+                  color: estimatedScore >= 0.3 ? '#FF9800' : '#FF5252',
+                  level: estimatedScore >= 0.3 ? 'basico' as const : 'inicial' as const
+                };
+              }
             } else {
               controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
             }
