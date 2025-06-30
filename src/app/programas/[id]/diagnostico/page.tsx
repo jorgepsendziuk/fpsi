@@ -335,11 +335,37 @@ export default function DiagnosticoPage() {
 
 
 
+      // Função para determinar cor baseada no score de maturidade
+      const getMaturityColor = (score: number) => {
+        if (score < 0.3) return '#FF5252'; // Vermelho
+        if (score < 0.5) return '#FF9800'; // Laranja
+        if (score < 0.7) return '#FFC107'; // Amarelo
+        if (score < 0.9) return '#4CAF50'; // Verde
+        return '#2E7D32'; // Verde escuro
+      };
+
       const diagnosticoNode: TreeNode = {
         id: `diagnostico-${diagnostico.id}`,
         type: 'diagnostico',
         label: `${diagnostico.descricao}`,
-        icon: <AssessmentIcon />,
+        icon: (
+          <Box
+            sx={{
+              width: 24,
+              height: 24,
+              borderRadius: '50%',
+              backgroundColor: getMaturityColor(maturityData.score),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '0.875rem'
+            }}
+          >
+            {diagnostico.id}
+          </Box>
+        ),
         data: diagnostico,
         maturityScore: maturityData.score,
         maturityLabel: maturityData.label,
@@ -892,10 +918,36 @@ export default function DiagnosticoPage() {
     if (selectedNode.type === 'diagnostico') {
       const diagnosticoControles = controles[selectedNode.data.id] || [];
       
+      // Função para determinar cor baseada no score de maturidade
+      const getMaturityColorForDiagnostico = (score: number) => {
+        if (score < 0.3) return '#FF5252'; // Vermelho
+        if (score < 0.5) return '#FF9800'; // Laranja
+        if (score < 0.7) return '#FFC107'; // Amarelo
+        if (score < 0.9) return '#4CAF50'; // Verde
+        return '#2E7D32'; // Verde escuro
+      };
+
       return (
         <Card>
           <CardHeader
-            avatar={<AssessmentIcon color="primary" />}
+            avatar={
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  backgroundColor: getMaturityColorForDiagnostico(selectedNode.maturityScore ?? 0),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '1.25rem'
+                }}
+              >
+                {selectedNode.data.id}
+              </Box>
+            }
             title={
               <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 {selectedNode.data.descricao}

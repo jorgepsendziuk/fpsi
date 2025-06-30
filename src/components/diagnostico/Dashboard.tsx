@@ -9,20 +9,14 @@ import {
   LinearProgress,
   Chip,
   Stack,
-  Divider,
   Paper,
-  IconButton,
-  Tooltip,
   alpha,
   useTheme
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   Assessment as AssessmentIcon,
-  Security as SecurityIcon,
-  Policy as PolicyIcon,
   TrendingUp as TrendingUpIcon,
-  BarChart as BarChartIcon,
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
@@ -155,113 +149,74 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <Box sx={{ p: 0 }}>
-      {/* Header da Dashboard */}
-      <Card sx={{ mb: 3, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)` }}>
-        <CardHeader
-          avatar={<DashboardIcon sx={{ fontSize: 40, color: 'primary.main' }} />}
-          title={
-            <Typography variant="h4" sx={{ 
-              fontWeight: 700, 
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>
-              Dashboard de Diagnósticos
-            </Typography>
-          }
-          subheader={
-            <Typography variant="h6" color="text.secondary">
-              Visão geral consolidada do programa de conformidade
-            </Typography>
-          }
-        />
-      </Card>
+      
 
       <Grid container spacing={3}>
-        {/* Cards de Estatísticas Principais */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%', background: `linear-gradient(135deg, ${alpha('#2196F3', 0.1)} 0%, ${alpha('#2196F3', 0.05)} 100%)` }}>
+        {/* Resumo Executivo */}
+        <Grid item xs={12}>
+          <Card>
+            <CardHeader
+              title="Resumo Executivo"
+              subheader="Indicadores chave de performance do programa"
+            />
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <AssessmentIcon sx={{ fontSize: 40, color: '#2196F3' }} />
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                    {stats.totalDiagnosticos}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Diagnósticos
-                  </Typography>
-                </Box>
-              </Box>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: alpha('#2196F3', 0.05) }}>
+                    <Typography variant="h6" color="primary" gutterBottom>
+                      Cobertura de Avaliação
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
+                      {stats.percentualRespostas.toFixed(1)}%
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      das medidas avaliadas
+                    </Typography>
+                  </Paper>
+                </Grid>
+                
+                <Grid item xs={12} sm={6} md={4}>
+                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: alpha('#4CAF50', 0.05) }}>
+                    <Typography variant="h6" color="success.main" gutterBottom>
+                      Maturidade Média
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
+                      {(stats.avgMaturityDiagnosticos * 100).toFixed(0)}%
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      nível de conformidade
+                    </Typography>
+                  </Paper>
+                </Grid>
+                
+                <Grid item xs={12} sm={6} md={4}>
+                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: alpha('#FF9800', 0.05) }}>
+                    <Typography variant="h6" sx={{ color: '#FF9800' }} gutterBottom>
+                      Medidas Pendentes
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
+                      {stats.totalMedidas - stats.medidasRespondidas}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      aguardando avaliação
+                    </Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%', background: `linear-gradient(135deg, ${alpha('#4CAF50', 0.1)} 0%, ${alpha('#4CAF50', 0.05)} 100%)` }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <SecurityIcon sx={{ fontSize: 40, color: '#4CAF50' }} />
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                    {stats.totalControles}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Controles
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%', background: `linear-gradient(135deg, ${alpha('#FF9800', 0.1)} 0%, ${alpha('#FF9800', 0.05)} 100%)` }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <PolicyIcon sx={{ fontSize: 40, color: '#FF9800' }} />
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
-                    {stats.totalMedidas}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Medidas
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%', background: `linear-gradient(135deg, ${alpha('#9C27B0', 0.1)} 0%, ${alpha('#9C27B0', 0.05)} 100%)` }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <BarChartIcon sx={{ fontSize: 40, color: '#9C27B0' }} />
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#9C27B0' }}>
-                    {stats.percentualRespostas.toFixed(0)}%
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Completude
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Gráfico de Progresso */}
-        <Grid item xs={12} md={8}>
+        {/* Gráfico de Progresso Melhorado */}
+        <Grid item xs={12}>
           <Card sx={{ height: '100%' }}>
             <CardHeader
               title="Progresso de Implementação"
-              subheader="Status de resposta das medidas por diagnóstico"
+              subheader="Status de resposta das medidas por diagnóstico com nível de maturidade"
               avatar={<TrendingUpIcon color="primary" />}
             />
             <CardContent>
-              <Stack spacing={3}>
+              <Stack spacing={4}>
                 {diagnosticos.map(diagnostico => {
                   const diagnosticoControles = controles[diagnostico.id] || [];
                   let totalMedidasDiag = 0;
@@ -283,42 +238,122 @@ const Dashboard: React.FC<DashboardProps> = ({
                   const maturityData = getDiagnosticoMaturity(diagnostico.id);
 
                   return (
-                    <Box key={diagnostico.id}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Paper key={diagnostico.id} sx={{ p: 3, border: '1px solid', borderColor: 'divider' }}>
+                      {/* Header com título e nível de maturidade destacado */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {diagnostico.descricao}
-                          </Typography>
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              backgroundColor: getMaturityColor(maturityData.score),
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: '1rem'
+                            }}
+                          >
+                            {diagnostico.id}
+                          </Box>
+                          <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                              {diagnostico.descricao}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Diagnóstico {diagnostico.id}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
                           <MaturityChip
                             score={maturityData.score}
                             label={maturityData.label}
-                            size="small"
+                            size="medium"
+                            showLabel={true}
+                            animated={true}
                           />
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {getStatusIcon(percentualDiag)}
-                          <Typography variant="body2" sx={{ minWidth: 50, textAlign: 'right' }}>
-                            {percentualDiag.toFixed(0)}%
-                          </Typography>
-                        </Box>
                       </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={percentualDiag} 
-                        sx={{ 
-                          height: 8, 
-                          borderRadius: 4,
-                          backgroundColor: alpha(getMaturityColor(maturityData.score), 0.2),
-                          '& .MuiLinearProgress-bar': {
-                            backgroundColor: getMaturityColor(maturityData.score),
-                            borderRadius: 4,
-                          }
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        {medidasRespondidasDiag} de {totalMedidasDiag} medidas implementadas
-                      </Typography>
-                    </Box>
+
+                      {/* Barra de progresso com informações melhoradas */}
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                              {medidasRespondidasDiag} de {totalMedidasDiag} medidas implementadas
+                            </Typography>
+                            <Chip 
+                              label={`${percentualDiag.toFixed(1)}%`}
+                              size="small"
+                              sx={{ 
+                                backgroundColor: getMaturityColor(maturityData.score),
+                                color: 'white',
+                                fontWeight: 600,
+                                fontSize: '0.875rem'
+                              }}
+                            />
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {getStatusIcon(percentualDiag)}
+                            <Typography variant="body2" color="text.secondary">
+                              Status: {percentualDiag >= 80 ? 'Excelente' : 
+                                      percentualDiag >= 60 ? 'Bom' : 
+                                      percentualDiag >= 40 ? 'Regular' : 'Crítico'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={percentualDiag} 
+                          sx={{ 
+                            height: 12, 
+                            borderRadius: 6,
+                            backgroundColor: alpha(getMaturityColor(maturityData.score), 0.15),
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: getMaturityColor(maturityData.score),
+                              borderRadius: 6,
+                            }
+                          }}
+                        />
+                      </Box>
+
+                      {/* Estatísticas adicionais */}
+                      <Grid container spacing={2}>
+                        <Grid item xs={4}>
+                          <Box sx={{ textAlign: 'center', p: 1 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#2196F3' }}>
+                              {diagnosticoControles.length}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Controles
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={4}>
+                          <Box sx={{ textAlign: 'center', p: 1 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: getMaturityColor(maturityData.score) }}>
+                              {(maturityData.score * 100).toFixed(0)}%
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Maturidade
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={4}>
+                          <Box sx={{ textAlign: 'center', p: 1 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#FF9800' }}>
+                              {totalMedidasDiag - medidasRespondidasDiag}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Pendentes
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Paper>
                   );
                 })}
               </Stack>
@@ -326,131 +361,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Card>
         </Grid>
 
-        {/* Distribuição de Maturidade */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ height: '100%' }}>
-            <CardHeader
-              title="Distribuição de Maturidade"
-              subheader="Níveis de maturidade dos diagnósticos"
-              avatar={<AssessmentIcon color="primary" />}
-            />
-            <CardContent>
-              <Stack spacing={2}>
-                {Object.entries(stats.maturityLevels).map(([level, data]) => (
-                  <Box key={level} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box
-                        sx={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: '50%',
-                          backgroundColor: data.color,
-                        }}
-                      />
-                      <Typography variant="body2">{data.label}</Typography>
-                    </Box>
-                    <Chip 
-                      label={data.count} 
-                      size="small" 
-                      sx={{ 
-                        backgroundColor: alpha(data.color, 0.1),
-                        color: data.color,
-                        fontWeight: 600
-                      }}
-                    />
-                  </Box>
-                ))}
-              </Stack>
-              
-              <Divider sx={{ my: 2 }} />
-              
-              {/* Métricas de Maturidade Média */}
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Maturidade Média Geral
-                </Typography>
-                <MaturityChip
-                  score={stats.avgMaturityDiagnosticos}
-                  label={stats.avgMaturityDiagnosticos >= 0.9 ? 'Aprimorado' : 
-                         stats.avgMaturityDiagnosticos >= 0.7 ? 'Em Aprimoramento' :
-                         stats.avgMaturityDiagnosticos >= 0.5 ? 'Intermediário' :
-                         stats.avgMaturityDiagnosticos >= 0.3 ? 'Básico' : 'Inicial'}
-                  size="medium"
-                  showLabel={true}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
 
-        {/* Resumo Executivo */}
-        <Grid item xs={12}>
-          <Card>
-            <CardHeader
-              title="Resumo Executivo"
-              subheader="Indicadores chave de performance do programa"
-            />
-            <CardContent>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: alpha('#2196F3', 0.05) }}>
-                    <Typography variant="h6" color="primary" gutterBottom>
-                      Cobertura de Avaliação
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      {stats.percentualRespostas.toFixed(1)}%
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      das medidas avaliadas
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: alpha('#4CAF50', 0.05) }}>
-                    <Typography variant="h6" color="success.main" gutterBottom>
-                      Maturidade Média
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                      {(stats.avgMaturityDiagnosticos * 100).toFixed(0)}%
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      nível de conformidade
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: alpha('#FF9800', 0.05) }}>
-                    <Typography variant="h6" sx={{ color: '#FF9800' }} gutterBottom>
-                      Medidas Pendentes
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
-                      {stats.totalMedidas - stats.medidasRespondidas}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      aguardando avaliação
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: alpha('#9C27B0', 0.05) }}>
-                    <Typography variant="h6" sx={{ color: '#9C27B0' }} gutterBottom>
-                      Controles Ativos
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#9C27B0' }}>
-                      {stats.totalControles}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      em implementação
-                    </Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
     </Box>
   );
