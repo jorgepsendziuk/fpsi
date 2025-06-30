@@ -12,9 +12,7 @@ import {
   Chip,
   Divider,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  IconButton,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
@@ -23,14 +21,13 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PolicyIcon from '@mui/icons-material/Policy';
+import EditIcon from '@mui/icons-material/Edit';
 
 // Types
 import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '../../../lib/types/types';
 
 // Components
-import MedidaContainer from '../containers/MedidaContainer';
 import MaturityChip from '../MaturityChip';
 
 // Utils
@@ -62,6 +59,8 @@ export interface ControleProps {
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** Function to calculate the maturity index */
   calculateMaturityIndex: (controle: Controle) => number;
+  /** Optional function to handle navigation to a measure */
+  onMedidaNavigate?: (medidaId: number, controleId: number) => void;
 }
 
 type InfoType = 'texto' | 'por_que_implementar' | 'fique_atento' | 'aplicabilidade_privacidade';
@@ -110,6 +109,7 @@ const ControleComponent: React.FC<ControleProps> = ({
   handleINCCChange,
   handleMedidaChange,
   calculateMaturityIndex,
+  onMedidaNavigate,
 }) => {
   const { accordionStyles } = useThemeColors();
   
@@ -371,150 +371,144 @@ const ControleComponent: React.FC<ControleProps> = ({
             Medidas ({medidas.length})
           </Typography>
 
-          {/* Medidas em accordions */}
-          {medidas.map((medida, index) => {
-            // Determinar status da medida
-            const resposta = medida.programa_medida?.resposta;
-            const hasResponse = resposta !== undefined && resposta !== null;
-            const isComplete = hasResponse;
-            
-            // Determinar cor baseada no status
-            const getStatusColor = () => {
-              if (!hasResponse) return '#9E9E9E'; // Cinza para não respondida
-              if (diagnostico.id === 1) {
-                // Diagnóstico 1: Sim/Não
-                return resposta === 1 ? '#4CAF50' : '#FF5252'; // Verde para Sim, Vermelho para Não
-              } else {
-                // Diagnósticos 2-3: Escala de maturidade
-                if (resposta === 1) return '#4CAF50';      // Verde - Adota totalmente
-                if (resposta === 2) return '#8BC34A';      // Verde claro - Adota em menor parte
-                if (resposta === 3) return '#FFC107';      // Amarelo - Adota parcialmente
-                if (resposta === 4) return '#FF9800';      // Laranja - Há plano
-                if (resposta === 5) return '#FF5252';      // Vermelho - Não adota
-                if (resposta === 6) return '#9E9E9E';      // Cinza - Não se aplica
-              }
-              return '#9E9E9E';
-            };
+          {/* Lista simples de medidas */}
+          <Box>
+            {medidas.map((medida) => {
+              // Determinar status da medida
+              const resposta = medida.programa_medida?.resposta;
+              const hasResponse = resposta !== undefined && resposta !== null;
+              
+              // Determinar cor baseada no status
+              const getStatusColor = () => {
+                if (!hasResponse) return '#9E9E9E'; // Cinza para não respondida
+                if (diagnostico.id === 1) {
+                  // Diagnóstico 1: Sim/Não
+                  return resposta === 1 ? '#4CAF50' : '#FF5252'; // Verde para Sim, Vermelho para Não
+                } else {
+                  // Diagnósticos 2-3: Escala de maturidade
+                  if (resposta === 1) return '#4CAF50';      // Verde - Adota totalmente
+                  if (resposta === 2) return '#8BC34A';      // Verde claro - Adota em menor parte
+                  if (resposta === 3) return '#FFC107';      // Amarelo - Adota parcialmente
+                  if (resposta === 4) return '#FF9800';      // Laranja - Há plano
+                  if (resposta === 5) return '#FF5252';      // Vermelho - Não adota
+                  if (resposta === 6) return '#9E9E9E';      // Cinza - Não se aplica
+                }
+                return '#9E9E9E';
+              };
 
-            const getStatusLabel = () => {
-              if (!hasResponse) return 'Não Respondida';
-              if (diagnostico.id === 1) {
-                return resposta === 1 ? 'Sim' : 'Não';
-              } else {
-                if (resposta === 1) return 'Adota Totalmente';
-                if (resposta === 2) return 'Adota em Menor Parte';
-                if (resposta === 3) return 'Adota Parcialmente';
-                if (resposta === 4) return 'Há Plano Aprovado';
-                if (resposta === 5) return 'Não Adota';
-                if (resposta === 6) return 'Não se Aplica';
-              }
-              return 'Não Respondida';
-            };
+              const getStatusLabel = () => {
+                if (!hasResponse) return 'Não Respondida';
+                if (diagnostico.id === 1) {
+                  return resposta === 1 ? 'Sim' : 'Não';
+                } else {
+                  if (resposta === 1) return 'Adota Totalmente';
+                  if (resposta === 2) return 'Adota em Menor Parte';
+                  if (resposta === 3) return 'Adota Parcialmente';
+                  if (resposta === 4) return 'Há Plano Aprovado';
+                  if (resposta === 5) return 'Não Adota';
+                  if (resposta === 6) return 'Não se Aplica';
+                }
+                return 'Não Respondida';
+              };
 
-            return (
-              <Accordion 
-                key={medida.id}
-                sx={{
-                  mb: 1,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: '8px !important',
-                  '&:before': {
-                    display: 'none',
-                  },
-                  '&.Mui-expanded': {
-                    margin: '0 0 8px 0',
-                  },
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                }}
-              >
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
+              return (
+                <Card 
+                  key={medida.id}
                   sx={{
-                    backgroundColor: hasResponse ? `${getStatusColor()}10` : 'background.paper',
-                    borderRadius: '8px',
-                    '&.Mui-expanded': {
-                      borderBottomLeftRadius: 0,
-                      borderBottomRightRadius: 0,
+                    mb: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    cursor: onMedidaNavigate ? 'pointer' : 'default',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      ...(onMedidaNavigate && {
+                        boxShadow: 2,
+                        transform: 'translateY(-1px)',
+                      })
                     },
-                    minHeight: 64,
-                    '& .MuiAccordionSummary-content': {
-                      alignItems: 'center',
-                      py: 1,
-                    }
+                    backgroundColor: hasResponse ? `${getStatusColor()}08` : 'background.paper',
                   }}
+                  onClick={() => onMedidaNavigate && onMedidaNavigate(medida.id, controle.id)}
                 >
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    pr: 1
-                  }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                          backgroundColor: getStatusColor(),
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                          fontWeight: 600,
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        {medida.id_medida || medida.id}
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ 
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      gap: 2
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            backgroundColor: getStatusColor(),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
                             fontWeight: 600,
-                            lineHeight: 1.3,
-                            color: 'text.primary'
+                            fontSize: '0.875rem'
                           }}
                         >
-                          {medida.medida}
-                        </Typography>
-                        <Typography 
-                          variant="body2" 
-                          color="text.secondary"
-                          sx={{ mt: 0.5 }}
-                        >
-                          Medida {medida.id_medida || medida.id}
-                        </Typography>
+                          {medida.id_medida || medida.id}
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography 
+                            variant="subtitle1" 
+                            sx={{ 
+                              fontWeight: 600,
+                              lineHeight: 1.3,
+                              color: 'text.primary',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                            }}
+                          >
+                            {medida.medida}
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{ mt: 0.5 }}
+                          >
+                            Medida {medida.id_medida || medida.id}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                        <Chip
+                          label={getStatusLabel()}
+                          size="small"
+                          sx={{
+                            backgroundColor: getStatusColor(),
+                            color: 'white',
+                            fontWeight: 500,
+                            minWidth: 120
+                          }}
+                        />
+                        {onMedidaNavigate && (
+                          <IconButton 
+                            size="small" 
+                            sx={{ 
+                              color: 'primary.main',
+                              '&:hover': { backgroundColor: 'primary.light', color: 'white' }
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        )}
                       </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip
-                        label={getStatusLabel()}
-                        size="small"
-                        sx={{
-                          backgroundColor: getStatusColor(),
-                          color: 'white',
-                          fontWeight: 500,
-                          minWidth: 100
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails sx={{ p: 0 }}>
-                  <MedidaContainer
-                    medida={medida}
-                    programaMedida={medida.programa_medida}
-                    controle={controle}
-                    programaId={programaId}
-                    handleMedidaChange={handleMedidaChange}
-                    responsaveis={responsaveis}
-                  />
-                </AccordionDetails>
-              </Accordion>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </Box>
           </div>
         </Box>
       </CardContent>

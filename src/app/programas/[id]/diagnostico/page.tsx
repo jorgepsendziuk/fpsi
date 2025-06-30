@@ -497,6 +497,37 @@ export default function DiagnosticoPage() {
     }
   }, [isMobile]);
 
+  // Função para navegar para uma medida específica
+  const handleMedidaNavigate = useCallback(async (medidaId: number, controleId: number) => {
+    console.log("Navigating to medida:", medidaId, "from controle:", controleId);
+    
+    // Primeiro, garantir que as medidas estão carregadas
+    if (!medidas[controleId]) {
+      await loadMedidas(controleId);
+    }
+    
+    // Encontrar a medida na árvore
+    const medidaNode = treeData
+      .flatMap(diagnostic => diagnostic.children || [])
+      .flatMap(controle => controle.children || [])
+      .find(medida => 
+        medida.type === 'medida' && 
+        medida.data.medida.id === medidaId &&
+        medida.data.controle.id === controleId
+      );
+
+    if (medidaNode) {
+      setSelectedNode(medidaNode);
+      
+      // No mobile, fechar drawer
+      if (isMobile) {
+        setDrawerOpen(false);
+      }
+    } else {
+      console.error("Medida não encontrada na árvore:", medidaId, controleId);
+    }
+  }, [medidas, loadMedidas, treeData, isMobile]);
+
   // Manipular mudanças em medidas
   const handleMedidaChange = useCallback(async (
     medidaId: number, 
@@ -1024,6 +1055,7 @@ export default function DiagnosticoPage() {
             handleMedidaFetch={handleMedidaFetch}
             handleMedidaChange={handleMedidaChange}
             responsaveis={responsaveis}
+            onMedidaNavigate={handleMedidaNavigate}
           />
         </LocalizationProvider>
       );

@@ -35,6 +35,8 @@ export interface ControleContainerProps {
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
   responsaveis: any[];
+  /** Optional function to handle navigation to a measure */
+  onMedidaNavigate?: (medidaId: number, controleId: number) => void;
 }
 
 /**
@@ -49,6 +51,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   handleMedidaFetch,
   handleMedidaChange,
   responsaveis,
+  onMedidaNavigate,
 }) => {
   // Store measures locally
   const [medidas, setMedidas] = useState<Medida[]>([]);
@@ -146,6 +149,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
       handleINCCChange={handleINCCChange}
       handleMedidaChange={handleMedidaChange}
       calculateMaturityIndex={calculateMaturityIndexLocal}
+      onMedidaNavigate={onMedidaNavigate}
     />
   );
 };
