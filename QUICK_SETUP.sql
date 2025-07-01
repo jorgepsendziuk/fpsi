@@ -34,7 +34,7 @@ CREATE TABLE programa_invites (
 INSERT INTO programa_users (programa_id, user_id, role, permissions) 
 VALUES (
     1,
-    'SEU_EMAIL_AQUI@gmail.com', -- MUDE AQUI!
+    'jimxxx@gmail.com', -- MUDE AQUI!
     'admin',
     '{
         "can_view_diagnosticos": true,
