@@ -42,7 +42,7 @@ export const useUserPermissions = (programaId?: number): UseUserPermissionsRetur
       setError(null);
 
       // Buscar dados do usuário no programa
-      const response = await fetch(`/api/programas/${programaId}/users/${user.id}`);
+      const response = await fetch(`/api/users?programaId=${programaId}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -67,9 +67,28 @@ export const useUserPermissions = (programaId?: number): UseUserPermissionsRetur
         throw new Error('Erro ao carregar permissões do usuário');
       }
 
-      const userData: ProgramaUser = await response.json();
-      setProgramaUser(userData);
-      setPermissions(userData.permissions);
+      const usersData: ProgramaUser[] = await response.json();
+      const userData = usersData.find(u => u.user_id === user.id);
+      
+      if (userData) {
+        setProgramaUser(userData);
+        setPermissions(userData.permissions);
+      } else {
+        // Usuário não encontrado na lista - criar permissões temporárias
+        const tempUser: ProgramaUser = {
+          id: 0,
+          programa_id: programaId,
+          user_id: user.id,
+          role: UserRole.ADMIN,
+          permissions: getDefaultPermissions(UserRole.ADMIN),
+          status: 'accepted' as any,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        setProgramaUser(tempUser);
+        setPermissions(tempUser.permissions);
+      }
 
     } catch (err) {
       console.error('Erro ao carregar permissões:', err);

@@ -101,20 +101,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     try {
       setLoading(true);
       
-      const [usersResponse, invitesResponse] = await Promise.all([
-        fetch(`/api/programas/${programaId}/users`),
-        fetch(`/api/programas/${programaId}/invites`)
-      ]);
+      const usersResponse = await fetch(`/api/users?programaId=${programaId}`);
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
         setUsers(usersData);
       }
 
-      if (invitesResponse.ok) {
-        const invitesData = await invitesResponse.json();
-        setInvites(invitesData);
-      }
+      // Convites ainda não implementados na nova API
+      setInvites([]);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
     } finally {
@@ -124,16 +119,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
   const handleInviteUser = async () => {
     try {
-      const response = await fetch(`/api/programas/${programaId}/invites`, {
+      const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: inviteData.email,
+          programaId,
+          userId: inviteData.email,
           role: inviteData.role,
-          permissions: getDefaultPermissions(inviteData.role),
-          message: inviteData.message
+          action: 'add'
         }),
       });
 
@@ -142,23 +137,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         setInviteData({ email: '', role: UserRole.ANALISTA, message: '' });
         await loadUsersAndInvites();
       } else {
-        throw new Error('Erro ao enviar convite');
+        throw new Error('Erro ao adicionar usuário');
       }
     } catch (error) {
-      console.error('Erro ao convidar usuário:', error);
+      console.error('Erro ao adicionar usuário:', error);
     }
   };
 
   const handleChangeUserRole = async (userId: string, newRole: UserRole) => {
     try {
-      const response = await fetch(`/api/programas/${programaId}/users/${userId}/role`, {
-        method: 'PUT',
+      const response = await fetch('/api/users', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          programaId,
+          userId,
           role: newRole,
-          permissions: getDefaultPermissions(newRole)
+          action: 'update_role'
         }),
       });
 
@@ -178,7 +175,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     }
 
     try {
-      const response = await fetch(`/api/programas/${programaId}/users/${userId}`, {
+      const response = await fetch(`/api/users?programaId=${programaId}&userId=${userId}`, {
         method: 'DELETE',
       });
 
@@ -193,19 +190,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   };
 
   const handleCancelInvite = async (inviteId: number) => {
-    try {
-      const response = await fetch(`/api/programas/${programaId}/invites/${inviteId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await loadUsersAndInvites();
-      } else {
-        throw new Error('Erro ao cancelar convite');
-      }
-    } catch (error) {
-      console.error('Erro ao cancelar convite:', error);
-    }
+    // Função temporariamente desabilitada - convites não implementados na nova API
+    console.log('Cancelar convite:', inviteId);
   };
 
   const getRoleIcon = (role: UserRole) => {
