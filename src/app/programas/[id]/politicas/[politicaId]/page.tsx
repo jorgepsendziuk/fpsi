@@ -158,6 +158,7 @@ export default function PoliticaPage() {
     } finally {
       setLoadingModel(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [politicaId, politicaConfig]);
 
   useEffect(() => {

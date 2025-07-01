@@ -35,7 +35,7 @@ import { incc } from '../../../lib/utils/utils';
 
 // Styles
 import { controleStyles } from './styles';
-import { useThemeColors } from '../../../app/diagnostico/hooks/useThemeColors';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 /**
  * Props for the Controle component

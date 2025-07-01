@@ -11,7 +11,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
-import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
+import { useThemeColors } from "./hooks/useThemeColors";
 import ProgramSummaryContent from "./ProgramSummaryContent";
 import ResponsaveisSection from "./ResponsaveisSection";
 import DiagnosticoSection from "./DiagnosticoSection";

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Container, Typography, Card, CardContent, Grid, Box, Breadcrumbs, Link, Chip, Stack, Divider, Paper, CardActionArea, TextField, IconButton } from "@mui/material";
-import { Business, Group, Policy, CheckCircleOutline, ArrowBack, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
+import { Business, Group, Policy, CheckCircleOutline, ArrowBack, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, People as PeopleIcon, Assignment as AssignmentIcon } from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
 
 const sections = [
@@ -12,6 +12,20 @@ const sections = [
     icon: <Group fontSize="large" color="secondary" />,
     description: "Gestão dos responsáveis pelo programa.",
     path: "responsabilidades"
+  },
+  {
+    key: "usuarios",
+    title: "Usuários e Permissões",
+    icon: <PeopleIcon fontSize="large" color="warning" />,
+    description: "Gerencie usuários e suas permissões no programa.",
+    path: "usuarios"
+  },
+  {
+    key: "planos-acao",
+    title: "Planos de Ação",
+    icon: <AssignmentIcon fontSize="large" color="primary" />,
+    description: "Gerencie planos de ação, marcos e cronogramas.",
+    path: "planos-acao"
   },
   {
     key: "politicas",

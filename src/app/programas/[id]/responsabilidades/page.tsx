@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { 
   Container, 
@@ -88,16 +88,16 @@ export default function ProgramaResponsaveisCRUDPage() {
   const isMounted = useRef(true);
 
   // Buscar responsáveis do programa
-  const fetchResponsaveis = async () => {
+  const fetchResponsaveis = useCallback(async () => {
     setLoading(true);
     const data = await dataService.fetchResponsaveis(programaId);
     if (!isMounted.current) return;
     setResponsaveis(data);
     setLoading(false);
-  };
+  }, [programaId]);
 
   // Buscar dados do programa para os campos principais
-  const fetchProgramaCamposPrincipais = async () => {
+  const fetchProgramaCamposPrincipais = useCallback(async () => {
     const programa = await dataService.fetchProgramaById(programaId);
     if (!isMounted.current) return;
     
@@ -108,14 +108,14 @@ export default function ProgramaResponsaveisCRUDPage() {
     setSI(programa.responsavel_si ? String(programa.responsavel_si) : "");
     setPrivacidade(programa.responsavel_privacidade ? String(programa.responsavel_privacidade) : "");
     setTI(programa.responsavel_ti ? String(programa.responsavel_ti) : "");
-  };
+  }, [programaId]);
 
   useEffect(() => {
     isMounted.current = true;
     fetchResponsaveis();
     fetchProgramaCamposPrincipais();
     return () => { isMounted.current = false; };
-  }, [programaId]);
+  }, [programaId, fetchResponsaveis, fetchProgramaCamposPrincipais]);
 
   // Salvar campo de responsável principal
   const handleSaveResponsavel = async (field: string, value: string) => {

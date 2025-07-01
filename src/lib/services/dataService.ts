@@ -1,7 +1,25 @@
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { mergeControleData } from "./controlesData";
+import { demoDataService, shouldUseDemoData } from "./demoDataService";
 
-export const fetchProgramas = async () => {
+// Wrapper function to check if we should use demo data
+const withDemoCheck = (originalFunction: any, demoFunction: any) => {
+  return async (...args: any[]) => {
+    // Check if we should use demo data
+    const programaId = args.find(arg => typeof arg === 'number' && arg === 999999);
+    const shouldUseDemo = shouldUseDemoData(programaId);
+    
+    if (shouldUseDemo) {
+      console.log('[DEMO MODE] Using demo data service');
+      return await demoFunction(...args);
+    }
+    
+    return await originalFunction(...args);
+  };
+};
+
+// Original functions
+const originalFetchProgramas = async () => {
   const { data } = await supabaseBrowserClient
     .from("programa")
     .select("*")
@@ -9,7 +27,16 @@ export const fetchProgramas = async () => {
   return data || [];
 };
 
-export const fetchDiagnosticos = async () => {
+const originalFetchProgramaById = async (programaId: number) => {
+  const { data } = await supabaseBrowserClient
+    .from("programa")
+    .select("*")
+    .eq("id", programaId)
+    .single();
+  return data;
+};
+
+const originalFetchDiagnosticos = async () => {
   const { data } = await supabaseBrowserClient
     .from("diagnostico")
     .select("*") 
@@ -17,7 +44,7 @@ export const fetchDiagnosticos = async () => {
   return data || [];
 };
 
-export const fetchOrgaos = async () => {
+const originalFetchOrgaos = async () => {
   const { data } = await supabaseBrowserClient
     .from("orgao")
     .select("*")
@@ -25,7 +52,7 @@ export const fetchOrgaos = async () => {
   return data || [];
 };
 
-export const fetchResponsaveis = async (programaId: number, retries = 3): Promise<any[]> => {
+const originalFetchResponsaveis = async (programaId: number, retries = 3): Promise<any[]> => {
   try {
     const { data, error } = await supabaseBrowserClient
       .from("responsavel")
@@ -41,7 +68,7 @@ export const fetchResponsaveis = async (programaId: number, retries = 3): Promis
   }
 };
 
-export const fetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {
+const originalFetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {
   console.log(`fetchControles: Fetching controles for diagnostico ${diagnosticoId}, programa ${programaId}`);
   
   // First, ensure programa_controle records exist for this program
@@ -92,69 +119,7 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
   return finalData;
 };
 
-// New function to ensure programa_medida records exist
-export const ensureProgramaMedidaRecords = async (programaId: number) => {
-  console.log(`ensureProgramaMedidaRecords: Checking programa ${programaId}`);
-  
-  // Get all medidas in the system
-  const { data: allMedidas } = await supabaseBrowserClient
-    .from("medida")
-    .select("id");
-    
-  if (!allMedidas || allMedidas.length === 0) {
-    console.log(`ensureProgramaMedidaRecords: No medidas found in system`);
-    return { data: null, error: null };
-  }
-  
-  // Check which programa_medida records already exist for this program
-  const { data: existingRecords } = await supabaseBrowserClient
-    .from("programa_medida")
-    .select("medida")
-    .eq("programa", programaId);
-  
-  const existingMedidaIds = new Set(existingRecords?.map(r => r.medida) || []);
-  const missingMedidas = allMedidas.filter(m => !existingMedidaIds.has(m.id));
-  
-  console.log(`ensureProgramaMedidaRecords: Found ${existingRecords?.length || 0} existing records, ${missingMedidas.length} missing`);
-  console.log(`existingRecords:`, existingRecords);
-  if (missingMedidas.length === 0) {
-    console.log(`ensureProgramaMedidaRecords: All programa_medida records already exist`);
-    return { data: existingRecords, error: null };
-  }
-  
-  console.log(`ensureProgramaMedidaRecords: Creating ${missingMedidas.length} missing programa_medida records`);
-  
-  // Create missing programa_medida records
-  const recordsToCreate = missingMedidas.map(medida => ({
-    programa: programaId,
-    medida: medida.id,
-    resposta: null, // Default empty response
-    justificativa: null,
-    observacao_orgao: null,
-    responsavel: null,
-    previsao_inicio: null,
-    previsao_fim: null,
-    nova_resposta: null,
-    encaminhamento_interno: null,
-    status_medida: null,
-    status_plano_acao: null
-  }));
-  
-  const { data, error } = await supabaseBrowserClient
-    .from("programa_medida")
-    .insert(recordsToCreate)
-    .select();
-  
-  if (error) {
-    console.error(`ensureProgramaMedidaRecords: Error creating records:`, error);
-  } else {
-    console.log(`ensureProgramaMedidaRecords: Successfully created ${data?.length || 0} records`);
-  }
-  
-  return { data, error };
-};
-
-export const fetchMedidas = async (controleId: number, programaId: number): Promise<any[]> => {
+const originalFetchMedidas = async (controleId: number, programaId: number): Promise<any[]> => {
   console.log(`fetchMedidas: Fetching medidas for controle ${controleId}, programa ${programaId}`);
   
   // First fetch the static measure data
@@ -221,166 +186,7 @@ export const fetchMedidas = async (controleId: number, programaId: number): Prom
   return mergedData;
 };
 
-export const updateControleNivel = async (programaControleId: number, newValue: number) => {
-  return await supabaseBrowserClient
-    .from("programa_controle")
-    .update({ nivel: newValue })
-    .eq("id", programaControleId);
-};
-
-export const updateMedida = async (medidaId: number, programaId: number, field: string, value: any) => {
-  // Check if a record exists in programa_medida
-  const { data: existingRecord } = await supabaseBrowserClient
-    .from("programa_medida")
-    .select("id")
-    .eq("medida", medidaId)
-    .eq("programa", programaId)
-    .single();
-
-  const updatePayload = { [field]: value };
-
-  if (existingRecord) {
-    // Update existing record
-    return await supabaseBrowserClient
-      .from("programa_medida")
-      .update(updatePayload)
-      .eq("id", existingRecord.id);
-  } else {
-    // Create new record
-    return await supabaseBrowserClient
-      .from("programa_medida")
-      .insert({
-        medida: medidaId,
-        programa: programaId,
-        ...updatePayload
-      });
-  }
-};
-
-export const updateProgramaSetor = async (programaId: number, setor: number) => {
-  return await supabaseBrowserClient
-    .from("programa")
-    .update({ setor })
-    .eq("id", programaId);
-};
-
-export const updateProgramaOrgao = async (programaId: number, orgao: number) => {
-  return await supabaseBrowserClient
-    .from("programa")
-    .update({ orgao })
-    .eq("id", programaId);
-};
-
-export const createPrograma = async () => {
-  return await supabaseBrowserClient
-    .from("programa")
-    .insert({})
-    .select()
-    .single();
-};
-
-export const deletePrograma = async (programaId: number) => {
-  return await supabaseBrowserClient
-    .from("programa")
-    .delete()
-    .eq("id", programaId);
-};
-
-export const updateProgramaDetails = async (programaId: number, updates: { cnpj?: string; razao_social?: string }) => {
-  const { data, error } = await supabaseBrowserClient
-    .from("programa")
-    .update(updates)
-    .eq("id", programaId);
-  return { data, error };
-};
-
-export const updateProgramaField = async (programaId: number, field: string, value: any) => {
-  const { data, error } = await supabaseBrowserClient
-    .from("programa")
-    .update({ [field]: value })
-    .eq("id", programaId);
-  return { data, error };
-};
-
-export const fetchProgramaById = async (programaId: number) => {
-  const { data } = await supabaseBrowserClient
-    .from("programa")
-    .select("*")
-    .eq("id", programaId)
-    .single();
-  return data;
-};
-
-export const createProgramaControlesForProgram = async (programaId: number) => {
-  // Get all existing controles
-  const { data: controles } = await supabaseBrowserClient
-    .from("controle")
-    .select("id");
-
-  if (!controles || controles.length === 0) return { data: null, error: null };
-
-  // Create programa_controle records for all controles
-  const programaControles = controles.map(controle => ({
-    programa: programaId,
-    controle: controle.id
-  }));
-
-  return await supabaseBrowserClient
-    .from("programa_controle")
-    .insert(programaControles);
-};
-
-// New function to ensure programa_controle records exist
-export const ensureProgramaControleRecords = async (programaId: number) => {
-  console.log(`ensureProgramaControleRecords: Checking programa ${programaId}`);
-  
-  // Check if programa_controle records already exist for this program
-  const { data: existingRecords } = await supabaseBrowserClient
-    .from("programa_controle")
-    .select("controle")
-    .eq("programa", programaId);
-  
-  console.log(`ensureProgramaControleRecords: Found ${existingRecords?.length || 0} existing records for programa ${programaId}`);
-  
-  if (existingRecords && existingRecords.length > 0) {
-    console.log(`ensureProgramaControleRecords: Records already exist, skipping creation`);
-    return { data: existingRecords, error: null };
-  }
-  
-  // Get all controles to create programa_controle records
-  const { data: allControles } = await supabaseBrowserClient
-    .from("controle")
-    .select("id");
-  
-  if (!allControles || allControles.length === 0) {
-    console.log(`ensureProgramaControleRecords: No controles found in system`);
-    return { data: null, error: null };
-  }
-  
-  console.log(`ensureProgramaControleRecords: Creating programa_controle records for ${allControles.length} controles`);
-  
-  // Create programa_controle records for all controles
-  const programaControles = allControles.map(controle => ({
-    programa: programaId,
-    controle: controle.id,
-    nivel: 1 // Default INCC level
-  }));
-  
-  const { data, error } = await supabaseBrowserClient
-    .from("programa_controle")
-    .insert(programaControles)
-    .select();
-  
-  if (error) {
-    console.error(`ensureProgramaControleRecords: Error creating records:`, error);
-  } else {
-    console.log(`ensureProgramaControleRecords: Successfully created ${data?.length || 0} records`);
-  }
-  
-  return { data, error };
-};
-
-export const fetchProgramaMedida = async (medidaId: number, controleId: number, programaId: number) => {
+const originalFetchProgramaMedida = async (medidaId: number, controleId: number, programaId: number) => {
   console.log(`fetchProgramaMedida: Fetching for medida ${medidaId}, controle ${controleId}, programa ${programaId}`);
   
   const { data, error } = await supabaseBrowserClient
@@ -399,7 +205,7 @@ export const fetchProgramaMedida = async (medidaId: number, controleId: number, 
   return data;
 };
 
-export const updateProgramaMedida = async (medidaId: number, controleId: number, programaId: number, updates: any) => {
+const originalUpdateProgramaMedida = async (medidaId: number, controleId: number, programaId: number, updates: any) => {
   console.log(`updateProgramaMedida: Updating medida ${medidaId}, controle ${controleId}, programa ${programaId}`, updates);
   
   // Check if a record exists in programa_medida
@@ -446,4 +252,263 @@ export const updateProgramaMedida = async (medidaId: number, controleId: number,
     console.log(`updateProgramaMedida: Created new record`);
     return data;
   }
+};
+
+const originalUpdateControleNivel = async (programaControleId: number, newValue: number) => {
+  return await supabaseBrowserClient
+    .from("programa_controle")
+    .update({ nivel: newValue })
+    .eq("id", programaControleId);
+};
+
+// Export wrapped functions
+export const fetchProgramas = withDemoCheck(originalFetchProgramas, demoDataService.fetchProgramas);
+export const fetchProgramaById = withDemoCheck(originalFetchProgramaById, demoDataService.fetchProgramaById);
+export const fetchDiagnosticos = withDemoCheck(originalFetchDiagnosticos, demoDataService.fetchDiagnosticos);
+export const fetchOrgaos = withDemoCheck(originalFetchOrgaos, demoDataService.fetchOrgaos);
+export const fetchResponsaveis = withDemoCheck(originalFetchResponsaveis, demoDataService.fetchResponsaveis);
+export const fetchControles = withDemoCheck(originalFetchControles, demoDataService.fetchControles);
+export const fetchMedidas = withDemoCheck(originalFetchMedidas, demoDataService.fetchMedidas);
+export const fetchProgramaMedida = withDemoCheck(originalFetchProgramaMedida, demoDataService.fetchProgramaMedida);
+export const updateProgramaMedida = withDemoCheck(originalUpdateProgramaMedida, demoDataService.updateProgramaMedida);
+export const updateControleNivel = withDemoCheck(originalUpdateControleNivel, demoDataService.updateControleNivel);
+
+// New function to ensure programa_medida records exist
+export const ensureProgramaMedidaRecords = async (programaId: number) => {
+  // Skip for demo mode
+  if (shouldUseDemoData(programaId)) {
+    return { data: null, error: null };
+  }
+
+  console.log(`ensureProgramaMedidaRecords: Checking programa ${programaId}`);
+  
+  // Get all medidas in the system
+  const { data: allMedidas } = await supabaseBrowserClient
+    .from("medida")
+    .select("id");
+    
+  if (!allMedidas || allMedidas.length === 0) {
+    console.log(`ensureProgramaMedidaRecords: No medidas found in system`);
+    return { data: null, error: null };
+  }
+  
+  // Check which programa_medida records already exist for this program
+  const { data: existingRecords } = await supabaseBrowserClient
+    .from("programa_medida")
+    .select("medida")
+    .eq("programa", programaId);
+  
+  const existingMedidaIds = new Set(existingRecords?.map(r => r.medida) || []);
+  const missingMedidas = allMedidas.filter(m => !existingMedidaIds.has(m.id));
+  
+  console.log(`ensureProgramaMedidaRecords: Found ${existingRecords?.length || 0} existing records, ${missingMedidas.length} missing`);
+  console.log(`existingRecords:`, existingRecords);
+  if (missingMedidas.length === 0) {
+    console.log(`ensureProgramaMedidaRecords: All programa_medida records already exist`);
+    return { data: existingRecords, error: null };
+  }
+  
+  console.log(`ensureProgramaMedidaRecords: Creating ${missingMedidas.length} missing programa_medida records`);
+  
+  // Create missing programa_medida records
+  const recordsToCreate = missingMedidas.map(medida => ({
+    programa: programaId,
+    medida: medida.id,
+    resposta: null, // Default empty response
+    justificativa: null,
+    observacao_orgao: null,
+    responsavel: null,
+    previsao_inicio: null,
+    previsao_fim: null,
+    nova_resposta: null,
+    encaminhamento_interno: null,
+    status_medida: null,
+    status_plano_acao: null
+  }));
+  
+  const { data, error } = await supabaseBrowserClient
+    .from("programa_medida")
+    .insert(recordsToCreate)
+    .select();
+  
+  if (error) {
+    console.error(`ensureProgramaMedidaRecords: Error creating records:`, error);
+  } else {
+    console.log(`ensureProgramaMedidaRecords: Successfully created ${data?.length || 0} records`);
+  }
+  
+  return { data, error };
+};
+
+export const updateMedida = async (medidaId: number, programaId: number, field: string, value: any) => {
+  // Check if demo mode
+  if (shouldUseDemoData(programaId)) {
+    return demoDataService.updateProgramaMedida(medidaId, { [field]: value });
+  }
+
+  // Check if a record exists in programa_medida
+  const { data: existingRecord } = await supabaseBrowserClient
+    .from("programa_medida")
+    .select("id")
+    .eq("medida", medidaId)
+    .eq("programa", programaId)
+    .single();
+
+  const updatePayload = { [field]: value };
+
+  if (existingRecord) {
+    // Update existing record
+    return await supabaseBrowserClient
+      .from("programa_medida")
+      .update(updatePayload)
+      .eq("id", existingRecord.id);
+  } else {
+    // Create new record
+    return await supabaseBrowserClient
+      .from("programa_medida")
+      .insert({
+        medida: medidaId,
+        programa: programaId,
+        ...updatePayload
+      });
+  }
+};
+
+export const updateProgramaSetor = async (programaId: number, setor: number) => {
+  if (shouldUseDemoData(programaId)) {
+    return demoDataService.updatePrograma(programaId, { setor });
+  }
+
+  return await supabaseBrowserClient
+    .from("programa")
+    .update({ setor })
+    .eq("id", programaId);
+};
+
+export const updateProgramaOrgao = async (programaId: number, orgao: number) => {
+  if (shouldUseDemoData(programaId)) {
+    return demoDataService.updatePrograma(programaId, { orgao });
+  }
+
+  return await supabaseBrowserClient
+    .from("programa")
+    .update({ orgao })
+    .eq("id", programaId);
+};
+
+export const createPrograma = async () => {
+  return await supabaseBrowserClient
+    .from("programa")
+    .insert({})
+    .select()
+    .single();
+};
+
+export const deletePrograma = async (programaId: number) => {
+  return await supabaseBrowserClient
+    .from("programa")
+    .delete()
+    .eq("id", programaId);
+};
+
+export const updateProgramaDetails = async (programaId: number, updates: { cnpj?: string; razao_social?: string }) => {
+  if (shouldUseDemoData(programaId)) {
+    return demoDataService.updatePrograma(programaId, updates);
+  }
+
+  const { data, error } = await supabaseBrowserClient
+    .from("programa")
+    .update(updates)
+    .eq("id", programaId);
+  return { data, error };
+};
+
+export const updateProgramaField = async (programaId: number, field: string, value: any) => {
+  if (shouldUseDemoData(programaId)) {
+    return demoDataService.updatePrograma(programaId, { [field]: value });
+  }
+
+  const { data, error } = await supabaseBrowserClient
+    .from("programa")
+    .update({ [field]: value })
+    .eq("id", programaId);
+  return { data, error };
+};
+
+export const createProgramaControlesForProgram = async (programaId: number) => {
+  if (shouldUseDemoData(programaId)) {
+    return { data: null, error: null };
+  }
+
+  // Get all existing controles
+  const { data: controles } = await supabaseBrowserClient
+    .from("controle")
+    .select("id");
+
+  if (!controles || controles.length === 0) return { data: null, error: null };
+
+  // Create programa_controle records for all controles
+  const programaControles = controles.map(controle => ({
+    programa: programaId,
+    controle: controle.id
+  }));
+
+  return await supabaseBrowserClient
+    .from("programa_controle")
+    .insert(programaControles);
+};
+
+// New function to ensure programa_controle records exist
+export const ensureProgramaControleRecords = async (programaId: number) => {
+  // Skip for demo mode
+  if (shouldUseDemoData(programaId)) {
+    return { data: null, error: null };
+  }
+
+  console.log(`ensureProgramaControleRecords: Checking programa ${programaId}`);
+  
+  // Check if programa_controle records already exist for this program
+  const { data: existingRecords } = await supabaseBrowserClient
+    .from("programa_controle")
+    .select("controle")
+    .eq("programa", programaId);
+  
+  console.log(`ensureProgramaControleRecords: Found ${existingRecords?.length || 0} existing records for programa ${programaId}`);
+  
+  if (existingRecords && existingRecords.length > 0) {
+    console.log(`ensureProgramaControleRecords: Records already exist, skipping creation`);
+    return { data: existingRecords, error: null };
+  }
+  
+  // Get all controles to create programa_controle records
+  const { data: allControles } = await supabaseBrowserClient
+    .from("controle")
+    .select("id");
+  
+  if (!allControles || allControles.length === 0) {
+    console.log(`ensureProgramaControleRecords: No controles found in system`);
+    return { data: null, error: null };
+  }
+  
+  console.log(`ensureProgramaControleRecords: Creating programa_controle records for ${allControles.length} controles`);
+  
+  // Create programa_controle records for all controles
+  const programaControles = allControles.map(controle => ({
+    programa: programaId,
+    controle: controle.id,
+    nivel: 1 // Default INCC level
+  }));
+  
+  const { data, error } = await supabaseBrowserClient
+    .from("programa_controle")
+    .insert(programaControles)
+    .select();
+  
+  if (error) {
+    console.error(`ensureProgramaControleRecords: Error creating records:`, error);
+  } else {
+    console.log(`ensureProgramaControleRecords: Successfully created ${data?.length || 0} records`);
+  }
+  
+  return { data, error };
 };

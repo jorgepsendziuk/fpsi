@@ -35,7 +35,7 @@ import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTex
 
 // Styles
 import { medidaStyles } from './styles';
-import { useThemeColors } from '../../../app/diagnostico/hooks/useThemeColors';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { useTheme } from '@mui/material/styles';
 
 /**

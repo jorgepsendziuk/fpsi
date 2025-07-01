@@ -9,10 +9,9 @@ import {
 import Grid from '@mui/material/Grid2';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CNPJMask from "./CNPJMask";
-import { sanitizeCNPJ, getEntityInitial } from "../../app/diagnostico/helpers/formatter";
 import { setor } from "../../lib/utils/utils";
 import { supabaseBrowserClient } from "@utils/supabase/client";
-import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
+import { useThemeColors } from "./hooks/useThemeColors";
 
 interface ProgramSummaryContentProps {
   programa: any;
@@ -75,7 +74,7 @@ const ProgramSummaryContent = ({
               fontSize: { xs: '2rem', sm: '1.75rem' }
             }}
           >
-            {getEntityInitial(programa, orgaos)}
+            {programa?.nome_fantasia?.charAt(0) || programa?.razao_social?.charAt(0) || 'P'}
           </Typography>
         </Box>
         <Box sx={{ 
@@ -252,7 +251,7 @@ const ProgramSummaryContent = ({
                 }}
                 onClick={(event) => event.stopPropagation()}
                 onChange={(event) => {
-                  const sanitizedValue = sanitizeCNPJ(event.target.value);
+                                          const sanitizedValue = event.target.value.replace(/\D/g, '');
                   setEditedValues((prev) => ({
                     ...prev,
                     [programa.id]: {

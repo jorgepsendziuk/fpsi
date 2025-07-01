@@ -24,7 +24,7 @@ import ControleContainer from '../containers/ControleContainer';
 
 // Styles
 import { diagnosticoStyles } from './styles';
-import { useThemeColors } from '../../../app/diagnostico/hooks/useThemeColors';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 /**
  * Retorna a cor para o índice de maturidade com base no valor

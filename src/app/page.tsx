@@ -37,6 +37,7 @@ import {
   Dashboard as DashboardIcon,
   DarkModeOutlined,
   LightModeOutlined,
+  PlayArrow as PlayArrowIcon,
 } from "@mui/icons-material";
 import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
 import Image from 'next/image';
@@ -262,38 +263,80 @@ export default function HomePage() {
                 }
               </Typography>
               
-              {user ? (
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={handleGoToPrograms}
-                  startIcon={<DashboardIcon />}
-                  sx={{ 
-                    px: 4, 
-                    py: 1.5, 
-                    fontSize: '1.1rem',
-                    borderRadius: 2,
-                    boxShadow: 3
-                  }}
-                >
-                  Acessar Meus Programas
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={handleLogin}
-                  sx={{ 
-                    px: 4, 
-                    py: 1.5, 
-                    fontSize: '1.1rem',
-                    borderRadius: 2,
-                    boxShadow: 3
-                  }}
-                >
-                  Começar Diagnóstico
-                </Button>
-              )}
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {user ? (
+                  <>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={handleGoToPrograms}
+                      startIcon={<DashboardIcon />}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5, 
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        boxShadow: 3
+                      }}
+                    >
+                      Acessar Meus Programas
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={() => router.push('/demo')}
+                      startIcon={<PlayArrowIcon />}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5, 
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        borderWidth: 2,
+                        '&:hover': {
+                          borderWidth: 2
+                        }
+                      }}
+                    >
+                      Ver Demonstração
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={handleLogin}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5, 
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        boxShadow: 3
+                      }}
+                    >
+                      Começar Diagnóstico
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={() => router.push('/demo')}
+                      startIcon={<PlayArrowIcon />}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5, 
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        borderWidth: 2,
+                        '&:hover': {
+                          borderWidth: 2
+                        }
+                      }}
+                    >
+                      Ver Demonstração
+                    </Button>
+                  </>
+                )}
+              </Box>
             </Box>
           </Fade>
         </Container>

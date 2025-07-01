@@ -9,7 +9,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupIcon from '@mui/icons-material/Group';
 import ResponsavelContainer from "./containers/ResponsavelContainer";
-import { useThemeColors } from "../../app/diagnostico/hooks/useThemeColors";
+import { useThemeColors } from "./hooks/useThemeColors";
 
 interface ResponsaveisSectionProps {
   programa: number;

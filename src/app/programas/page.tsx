@@ -50,7 +50,7 @@ import {
 import Image from 'next/image';
 import * as dataService from "../../lib/services/dataService";
 import { Programa } from "../../lib/types/types";
-import { initialState, reducer } from "../diagnostico/state";
+import { initialState, reducer } from "../../lib/state/state";
 import { calculateProgramaMaturityCached } from "../../lib/utils/maturity";
 
 export default function ProgramasPage() {
@@ -69,6 +69,7 @@ export default function ProgramasPage() {
 
   useEffect(() => {
     loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAllData = async () => {

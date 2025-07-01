@@ -57,9 +57,9 @@ import 'dayjs/locale/pt-br';
 
 import * as dataService from "../../../../lib/services/dataService";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
-import MedidaContainer from "../../../diagnostico/containers/MedidaContainer";
-import ControleContainer from "../../../diagnostico/containers/ControleContainer";
-import { useMaturityCache } from "../../../diagnostico/hooks/useMaturityCache";
+import MedidaContainer from "../../../../components/diagnostico/containers/MedidaContainer";
+import ControleContainer from "../../../../components/diagnostico/containers/ControleContainer";
+import { useMaturityCache } from "../../../../components/diagnostico/hooks/useMaturityCache";
 import MaturityChip from "../../../../components/diagnostico/MaturityChip";
 import Dashboard from "../../../../components/diagnostico/Dashboard";
 
