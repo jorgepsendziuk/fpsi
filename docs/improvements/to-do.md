@@ -1,11 +1,13 @@
 - implementar estrategia de multiplos usuarios e atribuir os projetos para usuarios.
 - plano de ação: 
     - esta demorando muito pra carregar
+    - nao esta carregando os titulos dos diagnosticos e controles
     - mudar nome para plano de trabalho
-    - diminuir altura das linhas
+    - diminuir altura geral da pagina, diminuir altura das linhas, condensar informacao, printer-friendly
+    - colocar botao de pdf com icone de impressao
 
 - ajustes nos paineis de medidas:
-    -  box Informações Técnicas: tirar esse nome Informações Técnicas, dividir em 3 cards com popup onmouseover explicando o que significa cada um.
+    -  nos cards tem que ter os valores dos campos id_cisv8  grupo_imple text e funcao_nist_csftext
 
 - 
 - ajustes no modo demonstração:
