@@ -5,12 +5,8 @@
     - diminuir altura das linhas
 
 - ajustes nos paineis de medidas:
-    - adicionar os seguintes campos da tabela medida, somente leitura, antes das descricoes das medidas:
-        - id_cisv8
-        - grupo_imple
-        - funcao_nist_csf
-    - tirar esse box de “Outras medidas do controle”
-    - as respostas dos diagnosticos 2 e 3 tem descrições, conforme figura anexa. ajuste para aparecer
+    -  box Informações Técnicas: tirar esse nome Informações Técnicas, dividir em 3 cards com popup onmouseover explicando o que significa cada um.
+
 - 
 - ajustes no modo demonstração:
     - faça uma página de login(copie da atual) para o modo demo, com os dados ja preenchidos: usuario [demo@fpsi.com.br](mailto:demo@fpsi.com.br) senha: demo. a página inicial do modo de demonstração deve ser a página inicial de um programa normal, portanto ajuste os links

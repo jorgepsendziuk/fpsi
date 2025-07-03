@@ -99,26 +99,9 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
           <Box sx={medidaStyles.container(theme)}>
-            {/* Header da Medida */}
-            <Box sx={medidaStyles.header(theme)}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid size={{ xs: 12, sm: 8 }}>
-                  <Box sx={medidaStyles.headerTitle(theme)}>
-                    <AssignmentIcon />
-                    <Typography variant="h6" component="span" sx={{ color: 'white', fontWeight: 700 }}>
-                      Medida {medida.id_medida}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }} sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
-                  <Box sx={medidaStyles.idBadge(theme)}>
-                    {medida.id_medida}
-                  </Box>
-                </Grid>
-              </Grid>
-            </Box>
 
             {/* Título da Medida */}
+            <AssignmentIcon />
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.text.primary }}>
               {medida.medida}
             </Typography>
@@ -203,7 +186,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                         <MenuItem key={resposta.id} value={resposta.id}>
                           <ListItemText 
                             primary={resposta.label}
-                            secondary={(resposta as any).descricao && controle.diagnostico !== 1 ? (resposta as any).descricao : undefined}
                           />
                         </MenuItem>
                       ))}
