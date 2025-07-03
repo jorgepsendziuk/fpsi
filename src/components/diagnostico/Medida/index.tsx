@@ -13,12 +13,19 @@ import {
   Button,
   InputLabel,
   FormControl,
+  Divider,
+  Tooltip,
+  Alert,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 // Material UI icons
 import SaveIcon from '@mui/icons-material/Save';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import InfoIcon from '@mui/icons-material/Info';
+import SecurityIcon from '@mui/icons-material/Security';
+import CategoryIcon from '@mui/icons-material/Category';
+import FunctionsIcon from '@mui/icons-material/Functions';
 
 // Components
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -82,6 +89,13 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   // Buscar a cor do status do plano de ação do sistema existente
   const statusInfo = status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao);
 
+  // Obter descrição da resposta selecionada
+  const getRespostaDescricao = (respostaId: number) => {
+    const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
+    const resposta = respostasArray.find(r => r.id === respostaId);
+    return (resposta as any)?.descricao;
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
           <Box sx={medidaStyles.container(theme)}>
@@ -109,6 +123,60 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               {medida.medida}
             </Typography>
 
+            {/* Campos Técnicos da Medida */}
+            <Box sx={{ 
+              mb: 3, 
+              p: 2, 
+              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              borderRadius: 2,
+              border: `1px solid ${theme.palette.divider}`
+            }}>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+                Informações Técnicas
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SecurityIcon fontSize="small" color="primary" />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight="500">
+                        CIS v8
+                      </Typography>
+                      <Typography variant="body2" fontWeight="600">
+                        {medida.id_cisv8}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CategoryIcon fontSize="small" color="secondary" />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight="500">
+                        Grupo de Implementação
+                      </Typography>
+                      <Typography variant="body2" fontWeight="600">
+                        {medida.grupo_imple}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FunctionsIcon fontSize="small" color="info" />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight="500">
+                        Função NIST CSF
+                      </Typography>
+                      <Typography variant="body2" fontWeight="600">
+                        {medida.funcao_nist_csf}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+
             {/* Cards de Resposta e Plano de Ação */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
               {/* Card de Resposta */}
@@ -133,7 +201,10 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       </MenuItem>
                       {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
                         <MenuItem key={resposta.id} value={resposta.id}>
-                          <ListItemText primary={resposta.label} />
+                          <ListItemText 
+                            primary={resposta.label}
+                            secondary={(resposta as any).descricao && controle.diagnostico !== 1 ? (resposta as any).descricao : undefined}
+                          />
                         </MenuItem>
                       ))}
                     </Select>
@@ -169,6 +240,20 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 </Box>
               </Grid>
             </Grid>
+
+            {/* Descrição da Resposta Selecionada */}
+            {programaMedida?.resposta && controle.diagnostico !== 1 && (
+              <Alert 
+                severity="info" 
+                icon={<InfoIcon />}
+                sx={{ mb: 2 }}
+              >
+                <Typography variant="body2">
+                  <strong>Descrição da resposta selecionada:</strong><br />
+                  {getRespostaDescricao(programaMedida.resposta)}
+                </Typography>
+              </Alert>
+            )}
 
             {/* Seção de Descrição */}
             <Box sx={medidaStyles.descriptionSection(theme)}>

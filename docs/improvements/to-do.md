@@ -18,16 +18,8 @@
 - 
 - 
 
-**Nível de Implementação Descrição**
 
-Há decisão formal ou plano aprovado, e a medida na organização
-
-**Adota em maior parte ou totalmente**
-
-é implementada integralmente em mais de 50% ou em todos os:
-
-- ativos no caso de medida de segurança da informação; ou
-- processos/serviços no caso de medida de privacidade.
+Há decisão formal ou plano aprovado, e a medida na organização é implementada integralmente em mais de 50% ou em todos os: - ativos no caso de medida de segurança da informação; ou - processos/serviços no caso de medida de privacidade.
 
 **Adota em menor parte**
 

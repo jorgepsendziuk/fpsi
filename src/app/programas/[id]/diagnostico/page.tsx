@@ -1368,63 +1368,7 @@ export default function DiagnosticoPage() {
             </IconButton>
           </Paper>
 
-          {/* Lista de outras medidas do mesmo controle */}
-          {controle && (
-            <Card sx={{ mb: 2 }}>
-              <CardHeader
-                avatar={<PolicyIcon color="primary" />}
-                title={
-                                      <Typography variant="h6" color="primary" fontWeight="600">
-                      Outras medidas do controle &quot;{controle.nome}&quot;
-                    </Typography>
-                }
-                subheader={
-                  <Typography variant="body2" color="text.secondary">
-                    {diagnostico?.descricao} • {controle.numero}
-                  </Typography>
-                }
-              />
-              <CardContent>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  {(medidas[controle.id] || []).map((outraMedida) => {
-                    const isCurrentMedida = outraMedida.id === medida.id;
-                    const outraProgramaMedida = programaMedidas[`${outraMedida.id}-${controle.id}-${programaId}`];
-                    
-                    return (
-                      <Chip
-                        key={outraMedida.id}
-                        label={`${outraMedida.id_medida || outraMedida.id} - ${outraMedida.medida.substring(0, 30)}...`}
-                        variant={isCurrentMedida ? "filled" : "outlined"}
-                        color={isCurrentMedida ? "primary" : "default"}
-                        onClick={() => {
-                          if (!isCurrentMedida) {
-                            const medidaNode = treeData
-                              .find(node => node.type === 'diagnostico' && node.data.id === diagnostico?.id)
-                              ?.children?.find(child => child.type === 'controle' && child.data.id === controle.id)
-                              ?.children?.find(child => child.type === 'medida' && child.data.medida.id === outraMedida.id);
-                            if (medidaNode) navigateToItem(medidaNode);
-                          }
-                        }}
-                        sx={{ 
-                          cursor: isCurrentMedida ? 'default' : 'pointer',
-                          maxWidth: 250
-                        }}
-                        icon={
-                          outraProgramaMedida?.resposta ? (
-                            String(outraProgramaMedida.resposta) === 'S' ? 
-                              <CheckCircleOutlineIcon color="success" fontSize="small" /> :
-                              String(outraProgramaMedida.resposta) === 'N' ?
-                                <RadioButtonUncheckedIcon color="error" fontSize="small" /> :
-                                <RadioButtonUncheckedIcon color="warning" fontSize="small" />
-                          ) : undefined
-                        }
-                      />
-                    );
-                  })}
-                </Box>
-              </CardContent>
-            </Card>
-          )}
+
 
           {/* Componente original da medida */}
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">

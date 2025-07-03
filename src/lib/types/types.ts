@@ -129,6 +129,7 @@ export interface Resposta {
   id: number;
   peso: number | null;
   label: string;
+  descricao?: string;
 }
 
 /**
