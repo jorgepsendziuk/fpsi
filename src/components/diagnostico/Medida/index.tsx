@@ -198,7 +198,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       </MenuItem>
                       {responsaveis.map((responsavel) => (
                         <MenuItem key={responsavel.id} value={responsavel.id}>
-                          <ListItemText primary={responsavel.nome} />
+                          <ListItemText primary={`${responsavel.nome} (${responsavel.departamento || 'Sem setor'})`} />
                         </MenuItem>
                       ))}
                     </Select>

@@ -47,7 +47,7 @@ export default function DemoPage() {
   }, []);
 
   const handleEnterDemo = () => {
-    router.push(`/programas/${DEMO_PROGRAMA.id}/diagnostico`);
+    router.push(`/programas/${DEMO_PROGRAMA.id}`);
   };
 
   const handleViewPolicies = () => {

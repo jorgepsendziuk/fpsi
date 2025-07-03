@@ -3,6 +3,16 @@ import { getDemoData } from '../data/demoData';
 
 const demoData = getDemoData();
 
+// Import do dataService real para buscar dados padrão
+let realDataService: any = null;
+const getRealDataService = async () => {
+  if (!realDataService) {
+    const dataService = await import('./dataService');
+    realDataService = dataService;
+  }
+  return realDataService;
+};
+
 // Simulação de delay de rede para realismo
 const simulateDelay = (ms: number = 300) => 
   new Promise(resolve => setTimeout(resolve, ms));
@@ -25,7 +35,15 @@ export const demoDataService = {
   // Diagnósticos
   fetchDiagnosticos: async () => {
     await simulateDelay();
-    return demoData.diagnosticos;
+    // Para o modo demo, usar dados reais do banco de dados
+    try {
+      const realService = await getRealDataService();
+      const realDiagnosticos = await realService.fetchDiagnosticos();
+      return realDiagnosticos;
+    } catch (error) {
+      console.warn('[DEMO MODE] Falha ao buscar diagnósticos reais, usando dados sintéticos:', error);
+      return demoData.diagnosticos;
+    }
   },
 
   // Controles
@@ -34,7 +52,15 @@ export const demoDataService = {
     if (programaId !== 999999) {
       throw new Error('Programa não encontrado no modo demo');
     }
-    return (demoData.controles as any)[diagnosticoId] || [];
+    // Para o modo demo, usar dados reais do banco de dados
+    try {
+      const realService = await getRealDataService();
+      const realControles = await realService.fetchControles(diagnosticoId, programaId);
+      return realControles;
+    } catch (error) {
+      console.warn('[DEMO MODE] Falha ao buscar controles reais, usando dados sintéticos:', error);
+      return (demoData.controles as any)[diagnosticoId] || [];
+    }
   },
 
   // Medidas
@@ -43,7 +69,15 @@ export const demoDataService = {
     if (programaId !== 999999) {
       throw new Error('Programa não encontrado no modo demo');
     }
-    return (demoData.medidas as any)[controleId] || [];
+    // Para o modo demo, usar dados reais do banco de dados
+    try {
+      const realService = await getRealDataService();
+      const realMedidas = await realService.fetchMedidas(controleId, programaId);
+      return realMedidas;
+    } catch (error) {
+      console.warn('[DEMO MODE] Falha ao buscar medidas reais, usando dados sintéticos:', error);
+      return (demoData.medidas as any)[controleId] || [];
+    }
   },
 
   // Programa Medidas

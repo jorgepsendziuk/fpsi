@@ -12,7 +12,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { DashboardPlanosAcao } from '../../../../components/planos-acao/DashboardPlanosAcao';
+import PlanoAcaoResumo from '../../../../components/planos-acao/PlanoAcaoResumo';
 import { useUserPermissions, useDemoPermissions } from '../../../../hooks/useUserPermissions';
 import { shouldUseDemoData } from '../../../../lib/services/demoDataService';
 import * as dataService from '../../../../lib/services/dataService';
@@ -149,8 +149,8 @@ export default function PlanosAcaoPage() {
         </Alert>
       )}
 
-      {/* Dashboard de Planos de Ação */}
-      <DashboardPlanosAcao 
+      {/* Plano de Ação Resumido */}
+      <PlanoAcaoResumo 
         programaId={programaId}
         programaName={programaName}
       />
