@@ -16,6 +16,9 @@ import {
   Divider,
   Tooltip,
   Alert,
+  Card,
+  CardContent,
+  alpha,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
@@ -96,69 +99,159 @@ const MedidaComponent: React.FC<MedidaProps> = ({
     return (resposta as any)?.descricao;
   };
 
+  // Tooltips explicativos para os campos técnicos
+  const tooltips = {
+    cisv8: "CIS v8 (Center for Internet Security Controls v8): Identificador único da medida de segurança baseado nos controles CIS versão 8, que são as melhores práticas de segurança cibernética reconhecidas mundialmente.",
+    grupoImple: "Grupo de Implementação: Categoriza as medidas em grupos (G1, G2, G3) baseados na complexidade e prioridade de implementação. G1 são medidas básicas, G2 intermediárias e G3 avançadas.",
+    nistCsf: "Função NIST CSF (Cybersecurity Framework): Classifica a medida dentro das 5 funções principais do framework de segurança cibernética do NIST: Identificar, Proteger, Detectar, Responder e Recuperar."
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
           <Box sx={medidaStyles.container(theme)}>
-
-            {/* Título da Medida */}
-            <AssignmentIcon />
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.text.primary }}>
-              {medida.medida}
-            </Typography>
-
-            {/* Campos Técnicos da Medida */}
-            <Box sx={{ 
-              mb: 3, 
-              p: 2, 
-              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-              borderRadius: 2,
-              border: `1px solid ${theme.palette.divider}`
-            }}>
-              <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
-                Informações Técnicas
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <SecurityIcon fontSize="small" color="primary" />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" fontWeight="500">
-                        CIS v8
-                      </Typography>
-                      <Typography variant="body2" fontWeight="600">
-                        {medida.id_cisv8}
-                      </Typography>
-                    </Box>
+            {/* Header da Medida */}
+            <Box sx={medidaStyles.header(theme)}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid size={{ xs: 12, sm: 8 }}>
+                  <Box sx={medidaStyles.headerTitle(theme)}>
+                    <AssignmentIcon />
+                    <Typography variant="h6" component="span" sx={{ color: 'white', fontWeight: 700 }}>
+                      Medida {medida.id_medida}
+                    </Typography>
                   </Box>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CategoryIcon fontSize="small" color="secondary" />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" fontWeight="500">
-                        Grupo de Implementação
-                      </Typography>
-                      <Typography variant="body2" fontWeight="600">
-                        {medida.grupo_imple}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <FunctionsIcon fontSize="small" color="info" />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" fontWeight="500">
-                        Função NIST CSF
-                      </Typography>
-                      <Typography variant="body2" fontWeight="600">
-                        {medida.funcao_nist_csf}
-                      </Typography>
-                    </Box>
+                <Grid size={{ xs: 12, sm: 4 }} sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+                  <Box sx={medidaStyles.idBadge(theme)}>
+                    {medida.id_medida}
                   </Box>
                 </Grid>
               </Grid>
             </Box>
+
+            {/* Título da Medida */}
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.text.primary }}>
+              {medida.medida}
+            </Typography>
+
+            {/* Cards Técnicos da Medida */}
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              {/* Card CIS v8 */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Tooltip 
+                  title={tooltips.cisv8}
+                  arrow
+                  placement="top"
+                  enterDelay={300}
+                  leaveDelay={200}
+                >
+                  <Card 
+                    sx={{ 
+                      cursor: 'help',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 4,
+                        borderColor: 'primary.main'
+                      },
+                      border: `1px solid ${theme.palette.divider}`,
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`
+                    }}
+                  >
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <SecurityIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            CIS v8
+                          </Typography>
+                          <Typography variant="h6" fontWeight="bold" color="primary.main">
+                            {medida.id_cisv8}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Tooltip>
+              </Grid>
+
+              {/* Card Grupo de Implementação */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Tooltip 
+                  title={tooltips.grupoImple}
+                  arrow
+                  placement="top"
+                  enterDelay={300}
+                  leaveDelay={200}
+                >
+                  <Card 
+                    sx={{ 
+                      cursor: 'help',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 4,
+                        borderColor: 'secondary.main'
+                      },
+                      border: `1px solid ${theme.palette.divider}`,
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.secondary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.02)} 100%)`
+                    }}
+                  >
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <CategoryIcon sx={{ color: 'secondary.main', fontSize: 24 }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            Grupo
+                          </Typography>
+                          <Typography variant="h6" fontWeight="bold" color="secondary.main">
+                            {medida.grupo_imple}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Tooltip>
+              </Grid>
+
+              {/* Card Função NIST CSF */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Tooltip 
+                  title={tooltips.nistCsf}
+                  arrow
+                  placement="top"
+                  enterDelay={300}
+                  leaveDelay={200}
+                >
+                  <Card 
+                    sx={{ 
+                      cursor: 'help',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 4,
+                        borderColor: 'info.main'
+                      },
+                      border: `1px solid ${theme.palette.divider}`,
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.05)} 0%, ${alpha(theme.palette.info.main, 0.02)} 100%)`
+                    }}
+                  >
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <FunctionsIcon sx={{ color: 'info.main', fontSize: 24 }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            NIST CSF
+                          </Typography>
+                          <Typography variant="h6" fontWeight="bold" color="info.main">
+                            {medida.funcao_nist_csf}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Tooltip>
+              </Grid>
+            </Grid>
 
             {/* Cards de Resposta e Plano de Ação */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -186,6 +279,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                         <MenuItem key={resposta.id} value={resposta.id}>
                           <ListItemText 
                             primary={resposta.label}
+                            secondary={(resposta as any).descricao && controle.diagnostico !== 1 ? (resposta as any).descricao : undefined}
                           />
                         </MenuItem>
                       ))}
