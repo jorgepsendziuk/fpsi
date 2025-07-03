@@ -15,7 +15,11 @@ import {
   Alert,
   CircularProgress,
   useTheme,
-  alpha
+  alpha,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider
 } from '@mui/material';
 import {
   Assignment as AssignmentIcon,
@@ -23,7 +27,9 @@ import {
   Schedule as ScheduleIcon,
   Warning as WarningIcon,
   PlayArrow as PlayArrowIcon,
-  Pause as PauseIcon
+  ExpandMore as ExpandMoreIcon,
+  Assessment as DiagnosticoIcon,
+  Security as ControleIcon
 } from '@mui/icons-material';
 import * as dataService from '../../lib/services/dataService';
 import { shouldUseDemoData } from '../../lib/services/demoDataService';
@@ -38,16 +44,31 @@ interface MedidaPlanoAcao {
   id: number;
   id_medida: string;
   medida: string;
+  controle_id: number;
   controle_nome: string;
+  diagnostico_id: number;
   diagnostico_nome: string;
-  resposta: number;
-  responsavel: number;
+  resposta?: number;
+  responsavel?: number;
   responsavel_nome?: string;
-  previsao_inicio: string;
-  previsao_fim: string;
-  status_medida: number;
-  status_plano_acao: number;
-  justificativa: string;
+  previsao_inicio?: string;
+  previsao_fim?: string;
+  status_medida?: number;
+  status_plano_acao?: number;
+  justificativa?: string;
+  programa_medida?: any;
+}
+
+interface DiagnosticoGroup {
+  id: number;
+  nome: string;
+  controles: ControleGroup[];
+}
+
+interface ControleGroup {
+  id: number;
+  nome: string;
+  medidas: MedidaPlanoAcao[];
 }
 
 const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
@@ -55,10 +76,11 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
   programaName
 }) => {
   const theme = useTheme();
-  const [medidas, setMedidas] = useState<MedidaPlanoAcao[]>([]);
+  const [diagnosticos, setDiagnosticos] = useState<DiagnosticoGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [responsaveis, setResponsaveis] = useState<any[]>([]);
+  const [totalMedidas, setTotalMedidas] = useState(0);
 
   useEffect(() => {
     loadPlanoAcaoData();
@@ -76,12 +98,12 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
 
       // Se for modo demo, usar dados sintéticos
       if (shouldUseDemoData(programaId)) {
-        const medidasDemoData = await loadDemoMedidas();
-        setMedidas(medidasDemoData);
+        const diagnosticosDemo = await loadDemoData();
+        setDiagnosticos(diagnosticosDemo);
       } else {
-        // Carregar medidas reais
-        const medidasData = await loadMedidasReais();
-        setMedidas(medidasData);
+        // Carregar dados reais
+        const diagnosticosReais = await loadRealData();
+        setDiagnosticos(diagnosticosReais);
       }
     } catch (err) {
       console.error('Erro ao carregar plano de ação:', err);
@@ -91,70 +113,184 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
     }
   };
 
-  const loadDemoMedidas = async (): Promise<MedidaPlanoAcao[]> => {
-    // Simular dados para o modo demo
-    return [
+  const loadRealData = async (): Promise<DiagnosticoGroup[]> => {
+    try {
+      // 1. Carregar todos os diagnósticos
+      const diagnosticosData = await dataService.fetchDiagnosticos();
+      console.log('Diagnósticos carregados:', diagnosticosData);
+
+      const diagnosticosResult: DiagnosticoGroup[] = [];
+      let totalMedidasCount = 0;
+
+      for (const diagnostico of diagnosticosData) {
+        // 2. Carregar controles do diagnóstico
+        const controlesData = await dataService.fetchControles(diagnostico.id, programaId);
+        console.log(`Controles do diagnóstico ${diagnostico.id}:`, controlesData);
+
+        const controlesResult: ControleGroup[] = [];
+
+        for (const controle of controlesData) {
+          // 3. Carregar medidas do controle
+          const medidasData = await dataService.fetchMedidas(controle.id, programaId);
+          console.log(`Medidas do controle ${controle.id}:`, medidasData);
+
+          const medidasResult: MedidaPlanoAcao[] = [];
+
+          for (const medida of medidasData) {
+            // 4. Carregar programa_medida para cada medida
+            try {
+              const programaMedida = await dataService.fetchProgramaMedida(medida.id, controle.id, programaId);
+              console.log(`ProgramaMedida para medida ${medida.id}:`, programaMedida);
+
+              const medidaCompleta: MedidaPlanoAcao = {
+                id: medida.id,
+                id_medida: medida.id_medida,
+                medida: medida.medida,
+                controle_id: controle.id,
+                controle_nome: controle.controle,
+                diagnostico_id: diagnostico.id,
+                diagnostico_nome: diagnostico.diagnostico,
+                resposta: programaMedida?.resposta,
+                responsavel: programaMedida?.responsavel,
+                previsao_inicio: programaMedida?.previsao_inicio,
+                previsao_fim: programaMedida?.previsao_fim,
+                status_medida: programaMedida?.status_medida,
+                status_plano_acao: programaMedida?.status_plano_acao,
+                justificativa: programaMedida?.justificativa,
+                programa_medida: programaMedida
+              };
+
+              medidasResult.push(medidaCompleta);
+              totalMedidasCount++;
+            } catch (error) {
+              console.warn(`Erro ao carregar programa_medida para medida ${medida.id}:`, error);
+              // Adicionar medida mesmo sem programa_medida
+              const medidaCompleta: MedidaPlanoAcao = {
+                id: medida.id,
+                id_medida: medida.id_medida,
+                medida: medida.medida,
+                controle_id: controle.id,
+                controle_nome: controle.controle,
+                diagnostico_id: diagnostico.id,
+                diagnostico_nome: diagnostico.diagnostico
+              };
+              medidasResult.push(medidaCompleta);
+              totalMedidasCount++;
+            }
+          }
+
+          if (medidasResult.length > 0) {
+            controlesResult.push({
+              id: controle.id,
+              nome: controle.controle,
+              medidas: medidasResult
+            });
+          }
+        }
+
+        if (controlesResult.length > 0) {
+          diagnosticosResult.push({
+            id: diagnostico.id,
+            nome: diagnostico.diagnostico,
+            controles: controlesResult
+          });
+        }
+      }
+
+      setTotalMedidas(totalMedidasCount);
+      return diagnosticosResult;
+    } catch (error) {
+      console.error('Erro ao carregar dados reais:', error);
+      throw error;
+    }
+  };
+
+  const loadDemoData = async (): Promise<DiagnosticoGroup[]> => {
+    // Dados demo organizados por diagnóstico e controle
+    const demoData: DiagnosticoGroup[] = [
       {
         id: 1,
-        id_medida: 'M001',
-        medida: 'Implementar política de senhas seguras',
-        controle_nome: 'Controle de Acesso',
-        diagnostico_nome: 'Diagnóstico de Segurança Básica',
-        resposta: 4,
-        responsavel: 1,
-        responsavel_nome: 'João Silva (TI)',
-        previsao_inicio: '2024-01-15',
-        previsao_fim: '2024-03-15',
-        status_medida: 2,
-        status_plano_acao: 4,
-        justificativa: 'Implementação necessária para melhorar a segurança de acesso'
+        nome: 'Diagnóstico de Segurança Básica',
+        controles: [
+          {
+            id: 1,
+            nome: 'Controle de Acesso',
+            medidas: [
+              {
+                id: 1,
+                id_medida: '1.1',
+                medida: 'Implementar política de senhas seguras',
+                controle_id: 1,
+                controle_nome: 'Controle de Acesso',
+                diagnostico_id: 1,
+                diagnostico_nome: 'Diagnóstico de Segurança Básica',
+                resposta: 4,
+                responsavel: 1,
+                responsavel_nome: 'João Silva (TI)',
+                previsao_inicio: '2024-01-15',
+                previsao_fim: '2024-03-15',
+                status_medida: 2,
+                status_plano_acao: 4,
+                justificativa: 'Implementação necessária para melhorar a segurança de acesso'
+              }
+            ]
+          }
+        ]
       },
       {
         id: 2,
-        id_medida: 'M002',
-        medida: 'Realizar backup diário dos dados críticos',
-        controle_nome: 'Backup e Recuperação',
-        diagnostico_nome: 'Diagnóstico de Continuidade',
-        resposta: 2,
-        responsavel: 2,
-        responsavel_nome: 'Maria Santos (Operações)',
-        previsao_inicio: '2024-02-01',
-        previsao_fim: '2024-02-28',
-        status_medida: 1,
-        status_plano_acao: 2,
-        justificativa: 'Backup automatizado implementado com sucesso'
-      },
-      {
-        id: 3,
-        id_medida: 'M003',
-        medida: 'Treinar usuários em segurança da informação',
-        controle_nome: 'Conscientização',
-        diagnostico_nome: 'Diagnóstico de Recursos Humanos',
-        resposta: 5,
-        responsavel: 3,
-        responsavel_nome: 'Pedro Costa (RH)',
-        previsao_inicio: '2024-03-01',
-        previsao_fim: '2024-06-30',
-        status_medida: 3,
-        status_plano_acao: 5,
-        justificativa: 'Treinamento em andamento, com previsão de conclusão no prazo'
+        nome: 'Diagnóstico de Continuidade',
+        controles: [
+          {
+            id: 2,
+            nome: 'Backup e Recuperação',
+            medidas: [
+              {
+                id: 2,
+                id_medida: '2.1',
+                medida: 'Realizar backup diário dos dados críticos',
+                controle_id: 2,
+                controle_nome: 'Backup e Recuperação',
+                diagnostico_id: 2,
+                diagnostico_nome: 'Diagnóstico de Continuidade',
+                resposta: 2,
+                responsavel: 2,
+                responsavel_nome: 'Maria Santos (Operações)',
+                previsao_inicio: '2024-02-01',
+                previsao_fim: '2024-02-28',
+                status_medida: 1,
+                status_plano_acao: 2,
+                justificativa: 'Backup automatizado implementado com sucesso'
+              }
+            ]
+          }
+        ]
       }
     ];
+
+    setTotalMedidas(2);
+    return demoData;
   };
 
-  const loadMedidasReais = async (): Promise<MedidaPlanoAcao[]> => {
-    // Implementar carregamento de dados reais
-    // Por enquanto, retornar array vazio
-    return [];
+  const getAllMedidas = (): MedidaPlanoAcao[] => {
+    const allMedidas: MedidaPlanoAcao[] = [];
+    diagnosticos.forEach(diagnostico => {
+      diagnostico.controles.forEach(controle => {
+        allMedidas.push(...controle.medidas);
+      });
+    });
+    return allMedidas;
   };
 
   const getRespostaLabel = (resposta: number, diagnosticoId: number = 2) => {
+    if (!resposta) return 'Não respondida';
     const respostasArray = diagnosticoId === 1 ? respostasimnao : respostas;
     const respostaObj = respostasArray.find(r => r.id === resposta);
     return respostaObj?.label || 'Não definido';
   };
 
   const getRespostaColor = (resposta: number, diagnosticoId: number = 2) => {
+    if (!resposta) return 'default';
     if (diagnosticoId === 1) {
       return resposta === 1 ? 'success' : 'error';
     } else {
@@ -169,17 +305,20 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
     }
   };
 
-  const getStatusMedidaInfo = (statusId: number) => {
+  const getStatusMedidaInfo = (statusId?: number) => {
+    if (!statusId) return { label: 'Não definido', color: '#9e9e9e' };
     const status = status_medida.find(s => s.id === statusId);
     return status ? { label: status.label, color: (status as any).color || '#9e9e9e' } : { label: 'Não definido', color: '#9e9e9e' };
   };
 
-  const getStatusPlanoAcaoInfo = (statusId: number) => {
+  const getStatusPlanoAcaoInfo = (statusId?: number) => {
+    if (!statusId) return { label: 'Não definido', color: '#9e9e9e' };
     const status = status_plano_acao.find(s => s.id === statusId);
     return status ? { label: status.label, color: (status as any).color || '#9e9e9e' } : { label: 'Não definido', color: '#9e9e9e' };
   };
 
-  const getStatusIcon = (statusId: number) => {
+  const getStatusIcon = (statusId?: number) => {
+    if (!statusId) return <ScheduleIcon fontSize="small" />;
     switch (statusId) {
       case 1: return <WarningIcon fontSize="small" />;
       case 2: return <CheckCircleIcon fontSize="small" />;
@@ -190,13 +329,14 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
     if (!dateString) return 'Não definido';
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const getResponsavelDisplay = (responsavelId: number, responsavelNome?: string) => {
+  const getResponsavelDisplay = (responsavelId?: number, responsavelNome?: string) => {
     if (responsavelNome) return responsavelNome;
+    if (!responsavelId) return 'Não definido';
     
     const responsavel = responsaveis.find(r => r.id === responsavelId);
     if (responsavel) {
@@ -221,6 +361,12 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
     );
   }
 
+  const allMedidas = getAllMedidas();
+  const medidasComResposta = allMedidas.filter(m => m.resposta);
+  const medidasConcluidas = allMedidas.filter(m => m.status_plano_acao === 2);
+  const medidasEmAndamento = allMedidas.filter(m => m.status_plano_acao === 4);
+  const medidasAtrasadas = allMedidas.filter(m => m.status_plano_acao === 5);
+
   return (
     <Box>
       {/* Header */}
@@ -230,7 +376,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
           Plano de Ação
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {programaName} • Acompanhamento resumido das medidas
+          {programaName} • Acompanhamento resumido das medidas por diagnóstico e controle
         </Typography>
       </Box>
 
@@ -239,7 +385,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography variant="h6" color="primary">
-              {medidas.length}
+              {totalMedidas}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Total de Medidas
@@ -249,8 +395,19 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
+            <Typography variant="h6" color="info.main">
+              {medidasComResposta.length}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Com Resposta
+            </Typography>
+          </CardContent>
+        </Card>
+        
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
             <Typography variant="h6" color="success.main">
-              {medidas.filter(m => m.status_plano_acao === 2).length}
+              {medidasConcluidas.length}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Concluídas
@@ -261,7 +418,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography variant="h6" color="warning.main">
-              {medidas.filter(m => m.status_plano_acao === 4).length}
+              {medidasEmAndamento.length}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Em Andamento
@@ -272,7 +429,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography variant="h6" color="error.main">
-              {medidas.filter(m => m.status_plano_acao === 5).length}
+              {medidasAtrasadas.length}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Atrasadas
@@ -281,128 +438,162 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         </Card>
       </Box>
 
-      {/* Tabela de Medidas */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            Acompanhamento das Medidas
-          </Typography>
-          
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><strong>Medida</strong></TableCell>
-                  <TableCell><strong>Resposta</strong></TableCell>
-                  <TableCell><strong>Plano de Ação</strong></TableCell>
-                  <TableCell><strong>Responsável</strong></TableCell>
-                  <TableCell><strong>Data Início</strong></TableCell>
-                  <TableCell><strong>Data Conclusão</strong></TableCell>
-                  <TableCell><strong>Status da Medida</strong></TableCell>
-                  <TableCell><strong>Justificativa</strong></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {medidas.map((medida) => {
-                  const statusPlanoInfo = getStatusPlanoAcaoInfo(medida.status_plano_acao);
-                  const statusMedidaInfo = getStatusMedidaInfo(medida.status_medida);
-                  
-                  return (
-                    <TableRow 
-                      key={medida.id}
-                      sx={{
-                        backgroundColor: alpha(statusPlanoInfo.color || '#9e9e9e', 0.1),
-                        '&:hover': {
-                          backgroundColor: alpha(statusPlanoInfo.color || '#9e9e9e', 0.2),
-                        }
-                      }}
-                    >
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2" fontWeight="500">
-                            {medida.id_medida}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {medida.medida}
-                          </Typography>
-                          <br />
-                          <Typography variant="caption" color="text.secondary">
-                            {medida.controle_nome}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      
-                      <TableCell>
-                        <Chip
-                          label={getRespostaLabel(medida.resposta)}
-                          color={getRespostaColor(medida.resposta) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      
-                      <TableCell>
-                        <Chip
-                          icon={getStatusIcon(medida.status_plano_acao)}
-                          label={statusPlanoInfo.label}
-                                                     sx={{
-                             backgroundColor: statusPlanoInfo.color || '#9e9e9e',
-                             color: theme.palette.getContrastText(statusPlanoInfo.color || '#9e9e9e'),
-                             fontWeight: 'bold'
-                           }}
-                          size="small"
-                        />
-                      </TableCell>
-                      
-                      <TableCell>
-                        <Typography variant="body2">
-                          {getResponsavelDisplay(medida.responsavel, medida.responsavel_nome)}
-                        </Typography>
-                      </TableCell>
-                      
-                      <TableCell>
-                        <Typography variant="body2">
-                          {formatDate(medida.previsao_inicio)}
-                        </Typography>
-                      </TableCell>
-                      
-                      <TableCell>
-                        <Typography variant="body2">
-                          {formatDate(medida.previsao_fim)}
-                        </Typography>
-                      </TableCell>
-                      
-                      <TableCell>
-                                                 <Chip
-                           label={statusMedidaInfo.label}
-                           sx={{
-                             backgroundColor: statusMedidaInfo.color || '#9e9e9e',
-                             color: theme.palette.getContrastText(statusMedidaInfo.color || '#9e9e9e')
-                           }}
-                           size="small"
-                         />
-                      </TableCell>
-                      
-                      <TableCell>
-                        <Typography variant="body2" sx={{ maxWidth: 200 }}>
-                          {medida.justificativa || 'Não informado'}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          
-          {medidas.length === 0 && (
+      {/* Accordions por Diagnóstico */}
+      {diagnosticos.map((diagnostico) => (
+        <Accordion key={diagnostico.id} sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <DiagnosticoIcon color="primary" />
+              <Typography variant="h6" fontWeight="bold">
+                {diagnostico.nome}
+              </Typography>
+              <Chip 
+                label={`${diagnostico.controles.reduce((total, controle) => total + controle.medidas.length, 0)} medidas`}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {/* Accordions por Controle */}
+            {diagnostico.controles.map((controle) => (
+              <Accordion key={controle.id} sx={{ mb: 1 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <ControleIcon color="secondary" />
+                    <Typography variant="subtitle1" fontWeight="600">
+                      {controle.nome}
+                    </Typography>
+                    <Chip 
+                      label={`${controle.medidas.length} medidas`}
+                      size="small"
+                      color="secondary"
+                      variant="outlined"
+                    />
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {/* Tabela de Medidas do Controle */}
+                  <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell><strong>Medida</strong></TableCell>
+                          <TableCell><strong>Resposta</strong></TableCell>
+                          <TableCell><strong>Plano de Ação</strong></TableCell>
+                          <TableCell><strong>Responsável</strong></TableCell>
+                          <TableCell><strong>Início</strong></TableCell>
+                          <TableCell><strong>Conclusão</strong></TableCell>
+                          <TableCell><strong>Status</strong></TableCell>
+                          <TableCell><strong>Justificativa</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {controle.medidas.map((medida) => {
+                          const statusPlanoInfo = getStatusPlanoAcaoInfo(medida.status_plano_acao);
+                          const statusMedidaInfo = getStatusMedidaInfo(medida.status_medida);
+                          
+                          return (
+                            <TableRow 
+                              key={medida.id}
+                              sx={{
+                                backgroundColor: alpha(statusPlanoInfo.color || '#9e9e9e', 0.1),
+                                '&:hover': {
+                                  backgroundColor: alpha(statusPlanoInfo.color || '#9e9e9e', 0.2),
+                                }
+                              }}
+                            >
+                              <TableCell>
+                                <Box>
+                                  <Typography variant="body2" fontWeight="500">
+                                    {medida.id_medida}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {medida.medida}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              
+                              <TableCell>
+                                <Chip
+                                  label={getRespostaLabel(medida.resposta || 0, diagnostico.id)}
+                                  color={getRespostaColor(medida.resposta || 0, diagnostico.id) as any}
+                                  size="small"
+                                />
+                              </TableCell>
+                              
+                              <TableCell>
+                                <Chip
+                                  icon={getStatusIcon(medida.status_plano_acao)}
+                                  label={statusPlanoInfo.label}
+                                  sx={{
+                                    backgroundColor: statusPlanoInfo.color || '#9e9e9e',
+                                    color: theme.palette.getContrastText(statusPlanoInfo.color || '#9e9e9e'),
+                                    fontWeight: 'bold'
+                                  }}
+                                  size="small"
+                                />
+                              </TableCell>
+                              
+                              <TableCell>
+                                <Typography variant="body2">
+                                  {getResponsavelDisplay(medida.responsavel, medida.responsavel_nome)}
+                                </Typography>
+                              </TableCell>
+                              
+                              <TableCell>
+                                <Typography variant="body2">
+                                  {formatDate(medida.previsao_inicio)}
+                                </Typography>
+                              </TableCell>
+                              
+                              <TableCell>
+                                <Typography variant="body2">
+                                  {formatDate(medida.previsao_fim)}
+                                </Typography>
+                              </TableCell>
+                              
+                              <TableCell>
+                                <Chip
+                                  label={statusMedidaInfo.label}
+                                  sx={{
+                                    backgroundColor: statusMedidaInfo.color || '#9e9e9e',
+                                    color: theme.palette.getContrastText(statusMedidaInfo.color || '#9e9e9e')
+                                  }}
+                                  size="small"
+                                />
+                              </TableCell>
+                              
+                              <TableCell>
+                                <Typography variant="body2" sx={{ maxWidth: 200 }}>
+                                  {medida.justificativa || 'Não informado'}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </AccordionDetails>
+        </Accordion>
+      ))}
+
+      {diagnosticos.length === 0 && (
+        <Card>
+          <CardContent>
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography variant="body1" color="text.secondary">
                 Nenhuma medida encontrada para este programa.
               </Typography>
             </Box>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </Box>
   );
 };
