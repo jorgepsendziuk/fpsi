@@ -109,30 +109,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
           <Box sx={medidaStyles.container(theme)}>
-            {/* Header da Medida */}
-            <Box sx={medidaStyles.header(theme)}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid size={{ xs: 12, sm: 8 }}>
-                  <Box sx={medidaStyles.headerTitle(theme)}>
-                    <AssignmentIcon />
-                    <Typography variant="h6" component="span" sx={{ color: 'white', fontWeight: 700 }}>
-                      Medida {medida.id_medida}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }} sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
-                  <Box sx={medidaStyles.idBadge(theme)}>
-                    {medida.id_medida}
-                  </Box>
-                </Grid>
-              </Grid>
-            </Box>
-
-            {/* Título da Medida */}
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.text.primary }}>
-              {medida.medida}
-            </Typography>
-
+            
             {/* Cards Técnicos da Medida */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
               {/* Card CIS v8 */}
