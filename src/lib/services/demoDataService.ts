@@ -1,9 +1,7 @@
-// Service que substitui as chamadas de API por dados sintéticos no modo demo
-import { getDemoData } from '../data/demoData';
+// Service que substitui as chamadas de API por dados reais no modo demo
+// O modo demo agora usa dados reais do banco de dados, apenas simula delays
 
-const demoData = getDemoData();
-
-// Import do dataService real para buscar dados padrão
+// Import do dataService real
 let realDataService: any = null;
 const getRealDataService = async () => {
   if (!realDataService) {
@@ -14,95 +12,111 @@ const getRealDataService = async () => {
 };
 
 // Simulação de delay de rede para realismo
-const simulateDelay = (ms: number = 300) => 
+const simulateDelay = (ms: number = 200) => 
   new Promise(resolve => setTimeout(resolve, ms));
 
 export const demoDataService = {
   // Programas
   fetchProgramaById: async (id: number) => {
     await simulateDelay();
-    if (id === 999999) {
-      return demoData.programa;
+    try {
+      const realService = await getRealDataService();
+      const programa = await realService.fetchProgramaById(id);
+      return programa;
+    } catch (error) {
+      console.error('[DEMO MODE] Erro ao buscar programa:', error);
+      throw error;
     }
-    throw new Error('Programa não encontrado no modo demo');
   },
 
   fetchProgramas: async () => {
     await simulateDelay();
-    return [demoData.programa];
+    try {
+      const realService = await getRealDataService();
+      const programas = await realService.fetchProgramas();
+      return programas;
+    } catch (error) {
+      console.error('[DEMO MODE] Erro ao buscar programas:', error);
+      throw error;
+    }
   },
 
   // Diagnósticos
   fetchDiagnosticos: async () => {
     await simulateDelay();
-    // Para o modo demo, usar dados reais do banco de dados
     try {
       const realService = await getRealDataService();
-      const realDiagnosticos = await realService.fetchDiagnosticos();
-      return realDiagnosticos;
+      const diagnosticos = await realService.fetchDiagnosticos();
+      return diagnosticos;
     } catch (error) {
-      console.warn('[DEMO MODE] Falha ao buscar diagnósticos reais, usando dados sintéticos:', error);
-      return demoData.diagnosticos;
+      console.error('[DEMO MODE] Erro ao buscar diagnósticos:', error);
+      throw error;
     }
   },
 
   // Controles
   fetchControles: async (diagnosticoId: number, programaId: number) => {
     await simulateDelay();
-    if (programaId !== 999999) {
-      throw new Error('Programa não encontrado no modo demo');
-    }
-    // Para o modo demo, usar dados reais do banco de dados
     try {
       const realService = await getRealDataService();
-      const realControles = await realService.fetchControles(diagnosticoId, programaId);
-      return realControles;
+      const controles = await realService.fetchControles(diagnosticoId, programaId);
+      return controles;
     } catch (error) {
-      console.warn('[DEMO MODE] Falha ao buscar controles reais, usando dados sintéticos:', error);
-      return (demoData.controles as any)[diagnosticoId] || [];
+      console.error('[DEMO MODE] Erro ao buscar controles:', error);
+      throw error;
     }
   },
 
   // Medidas
   fetchMedidas: async (controleId: number, programaId: number) => {
     await simulateDelay();
-    if (programaId !== 999999) {
-      throw new Error('Programa não encontrado no modo demo');
-    }
-    // Para o modo demo, usar dados reais do banco de dados
     try {
       const realService = await getRealDataService();
-      const realMedidas = await realService.fetchMedidas(controleId, programaId);
-      return realMedidas;
+      const medidas = await realService.fetchMedidas(controleId, programaId);
+      return medidas;
     } catch (error) {
-      console.warn('[DEMO MODE] Falha ao buscar medidas reais, usando dados sintéticos:', error);
-      return (demoData.medidas as any)[controleId] || [];
+      console.error('[DEMO MODE] Erro ao buscar medidas:', error);
+      throw error;
     }
   },
 
   // Programa Medidas
   fetchProgramaMedida: async (medidaId: number, controleId: number, programaId: number) => {
     await simulateDelay();
-    if (programaId !== 999999) {
+    try {
+      const realService = await getRealDataService();
+      const programaMedida = await realService.fetchProgramaMedida(medidaId, controleId, programaId);
+      return programaMedida;
+    } catch (error) {
+      console.warn('[DEMO MODE] ProgramaMedida não encontrada:', error);
       return null;
     }
-    const key = `${medidaId}-${controleId}-${programaId}`;
-    return (demoData.programaMedidas as any)[key] || null;
   },
 
   // Responsáveis
   fetchResponsaveis: async (programaId: number) => {
     await simulateDelay();
-    if (programaId !== 999999) {
+    try {
+      const realService = await getRealDataService();
+      const responsaveis = await realService.fetchResponsaveis(programaId);
+      return responsaveis;
+    } catch (error) {
+      console.error('[DEMO MODE] Erro ao buscar responsáveis:', error);
       return [];
     }
-    return demoData.responsaveis;
   },
 
   // Órgãos
   fetchOrgaos: async () => {
     await simulateDelay();
-    return demoData.orgaos;
+    try {
+      const realService = await getRealDataService();
+      const orgaos = await realService.fetchOrgaos();
+      return orgaos;
+    } catch (error) {
+      console.error('[DEMO MODE] Erro ao buscar órgãos:', error);
+      return [];
+    }
   },
 
   // Operações de escrita (simuladas - não persistem)
@@ -151,18 +165,24 @@ export const demoDataService = {
   // Campos principais do programa
   fetchProgramaCamposPrincipais: async (programaId: number) => {
     await simulateDelay();
-    if (programaId !== 999999) {
+    try {
+      const realService = await getRealDataService();
+      const programa = await realService.fetchProgramaById(programaId);
+      if (!programa) return null;
+      
+      return {
+        id: programa.id,
+        nome: programa.nome,
+        nome_fantasia: programa.nome_fantasia,
+        razao_social: programa.razao_social,
+        cnpj: programa.cnpj,
+        setor: programa.setor,
+        orgao: programa.orgao
+      };
+    } catch (error) {
+      console.error('[DEMO MODE] Erro ao buscar campos principais:', error);
       return null;
     }
-    return {
-      id: demoData.programa.id,
-      nome: demoData.programa.nome,
-      nome_fantasia: demoData.programa.nome_fantasia,
-      razao_social: demoData.programa.razao_social,
-      cnpj: demoData.programa.cnpj,
-      setor: demoData.programa.setor,
-      orgao: demoData.programa.orgao
-    };
   }
 };
 

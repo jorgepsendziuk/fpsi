@@ -284,7 +284,7 @@ export default function HomePage() {
                     <Button
                       variant="outlined"
                       size="large"
-                      onClick={() => router.push('/demo')}
+                      onClick={() => router.push('/demo/login')}
                       startIcon={<PlayArrowIcon />}
                       sx={{ 
                         px: 4, 
@@ -319,7 +319,7 @@ export default function HomePage() {
                     <Button
                       variant="outlined"
                       size="large"
-                      onClick={() => router.push('/demo')}
+                      onClick={() => router.push('/demo/login')}
                       startIcon={<PlayArrowIcon />}
                       sx={{ 
                         px: 4, 

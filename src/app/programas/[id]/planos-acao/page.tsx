@@ -91,7 +91,7 @@ export default function PlanosAcaoPage() {
             >
               {programa?.nome_fantasia || `Programa #${programaId}`}
             </Link>
-            <Typography color="text.primary">Planos de Ação</Typography>
+            <Typography color="text.primary">Plano de Trabalho</Typography>
           </Breadcrumbs>
         </Box>
 
@@ -135,7 +135,7 @@ export default function PlanosAcaoPage() {
           >
             {programaName}
           </Link>
-          <Typography color="text.primary">Planos de Ação</Typography>
+          <Typography color="text.primary">Plano de Trabalho</Typography>
         </Breadcrumbs>
       </Box>
 
@@ -144,12 +144,12 @@ export default function PlanosAcaoPage() {
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
             <strong>Modo Demonstração:</strong> Este é um ambiente de demonstração. 
-            Os planos de ação exibidos são fictícios e as operações são simuladas.
+            O plano de trabalho exibido é fictício e as operações são simuladas.
           </Typography>
         </Alert>
       )}
 
-      {/* Plano de Ação Resumido */}
+      {/* Plano de Trabalho Resumido */}
       <PlanoAcaoResumo 
         programaId={programaId}
         programaName={programaName}

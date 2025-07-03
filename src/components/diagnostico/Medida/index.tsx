@@ -164,9 +164,9 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                           <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                             CIS v8
                           </Typography>
-                          <Typography variant="h6" fontWeight="bold" color="primary.main">
-                            {medida.id_cisv8}
-                          </Typography>
+                                                     <Typography variant="h6" fontWeight="bold" color="primary.main">
+                             {medida.id_cisv8 || 'N/A'}
+                           </Typography>
                         </Box>
                       </Box>
                     </CardContent>
@@ -203,9 +203,9 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                           <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                             Grupo
                           </Typography>
-                          <Typography variant="h6" fontWeight="bold" color="secondary.main">
-                            {medida.grupo_imple}
-                          </Typography>
+                                                     <Typography variant="h6" fontWeight="bold" color="secondary.main">
+                             {medida.grupo_imple || 'N/A'}
+                           </Typography>
                         </Box>
                       </Box>
                     </CardContent>
@@ -242,9 +242,9 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                           <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                             NIST CSF
                           </Typography>
-                          <Typography variant="h6" fontWeight="bold" color="info.main">
-                            {medida.funcao_nist_csf}
-                          </Typography>
+                                                     <Typography variant="h6" fontWeight="bold" color="info.main">
+                             {medida.funcao_nist_csf || 'N/A'}
+                           </Typography>
                         </Box>
                       </Box>
                     </CardContent>
