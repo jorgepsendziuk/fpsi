@@ -75,10 +75,8 @@ export default function ProgramasPage() {
   const loadAllData = async () => {
     try {
       setLoading(true);
-  // Carregar dados necessários para cálculos de maturidade
-
       
-      // Carregar dados em paralelo
+      // Para a página de listagem, carregamos apenas os dados básicos
       const [programasData, diagnosticosData] = await Promise.all([
         dataService.fetchProgramas(),
         dataService.fetchDiagnosticos()
@@ -88,10 +86,8 @@ export default function ProgramasPage() {
       dispatch({ type: "SET_PROGRAMAS", payload: programasData });
       dispatch({ type: "SET_DIAGNOSTICOS", payload: diagnosticosData });
       
-      // Carregar controles e medidas para cada programa
-      for (const programa of programasData) {
-        await loadProgramaData(programa.id);
-      }
+      // Para a página de listagem, não precisamos carregar todos os detalhes
+      // Os dados detalhados serão carregados quando o usuário acessar um programa específico
       
       setDataLoaded(true);
     } catch (error) {
@@ -103,14 +99,13 @@ export default function ProgramasPage() {
     }
   };
 
-  const loadProgramaData = async (programaId: number) => {
+  const loadProgramaData = async (programaId: number, diagnosticos: any[] = []) => {
     try {
       // Carregar responsáveis
       const responsaveis = await dataService.fetchResponsaveis(programaId);
       dispatch({ type: "SET_RESPONSAVEIS", payload: responsaveis });
 
       // Carregar controles e medidas para cada diagnóstico
-      const diagnosticos = state.diagnosticos || [];
       for (const diagnostico of diagnosticos) {
         try {
           const controles = await dataService.fetchControles(diagnostico.id, programaId);
@@ -147,18 +142,20 @@ export default function ProgramasPage() {
     }
   };
 
-  // Memoizar cálculos de maturidade para evitar recálculos desnecessários
+  // Memoizar cálculos de maturidade simplificados para a página de listagem
   const programaMaturityData = useMemo(() => {
     if (!dataLoaded) return new Map();
     
     const maturityMap = new Map();
     programas.forEach(programa => {
-      const maturity = calculateProgramaMaturityCached(programa.id, state);
+      // Para a página de listagem, usamos uma maturidade padrão
+      // O cálculo detalhado será feito na página individual do programa
+      const maturity = { score: 0, label: "Inicial" };
       maturityMap.set(programa.id, maturity);
     });
     
     return maturityMap;
-  }, [programas, state, dataLoaded]);
+  }, [programas, dataLoaded]);
 
   const handleCreatePrograma = async () => {
     try {
@@ -472,7 +469,7 @@ export default function ProgramasPage() {
                         }
                       }}
                     >
-                      Acessar Diagnóstico
+                      Acessar Programa
                     </Button>
                   </CardActions>
                 </Card>
