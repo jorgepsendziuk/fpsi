@@ -230,30 +230,9 @@ export default function DiagnosticoPage() {
   const calculateMaturity = useCallback((diagnostico: Diagnostico) => {
     const diagnosticoControles = controles[diagnostico.id] || [];
     
-    // Se não há controles carregados, carregar automaticamente
+    // Se não há controles carregados, retornar estimativa básica SEM carregar automaticamente
     if (diagnosticoControles.length === 0) {
-      // Carregar controles assincronamente apenas se não estiver já carregando
-      if (!autoLoadingControles.has(diagnostico.id) && !loadingControles.has(diagnostico.id)) {
-        setAutoLoadingControles(prev => new Set(prev).add(diagnostico.id));
-        
-        loadControles(diagnostico.id).then(() => {
-          setAutoLoadingControles(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(diagnostico.id);
-            return newSet;
-          });
-          invalidateCache('diagnostico', diagnostico.id);
-        }).catch(error => {
-          console.error(`Erro ao carregar controles para diagnóstico ${diagnostico.id}:`, error);
-          setAutoLoadingControles(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(diagnostico.id);
-            return newSet;
-          });
-        });
-      }
-      
-      // Por enquanto, retornar estimativa básica
+      // Verificar se está carregando
       const isLoading = autoLoadingControles.has(diagnostico.id) || loadingControles.has(diagnostico.id);
       
       if (isLoading) {
@@ -263,7 +242,7 @@ export default function DiagnosticoPage() {
           rawScore: 0
         };
       } else {
-        // Estimativa muito básica (inicial)
+        // Estimativa muito básica (inicial) - SEM carregar automaticamente
         return {
           score: 0.0,
           label: 'Inicial',
@@ -309,7 +288,7 @@ export default function DiagnosticoPage() {
       label: maturityData.label,
       rawScore: maturityData.score
     };
-  }, [controles, medidas, getDiagnosticoMaturity, autoLoadingControles, loadingControles, loadControles, invalidateCache]);
+  }, [controles, medidas, getDiagnosticoMaturity, autoLoadingControles, loadingControles]);
 
   // Limpar cache antigo periodicamente
   useEffect(() => {
@@ -382,31 +361,10 @@ export default function DiagnosticoPage() {
               nivel: controle.nivel || 1
             };
 
-            // Se não há medidas carregadas, carregar automaticamente para avaliação
+            // Se não há medidas carregadas, usar estimativa baseada no INCC SEM carregar automaticamente
             let controleMaturity;
             if (controleMedidas.length === 0) {
-              // Carregar medidas assincronamente apenas se não estiver já carregando
-              if (!autoLoadingMedidas.has(controle.id) && !loadingMedidas.has(controle.id)) {
-                setAutoLoadingMedidas(prev => new Set(prev).add(controle.id));
-                
-                loadMedidas(controle.id).then(() => {
-                  setAutoLoadingMedidas(prev => {
-                    const newSet = new Set(prev);
-                    newSet.delete(controle.id);
-                    return newSet;
-                  });
-                  invalidateCache('controle', controle.id);
-                }).catch(error => {
-                  console.error(`Erro ao carregar medidas para controle ${controle.id}:`, error);
-                  setAutoLoadingMedidas(prev => {
-                    const newSet = new Set(prev);
-                    newSet.delete(controle.id);
-                    return newSet;
-                  });
-                });
-              }
-              
-              // Por enquanto, usar maturidade baseada no INCC disponível
+              // Verificar se está carregando
               const isLoading = autoLoadingMedidas.has(controle.id) || loadingMedidas.has(controle.id);
               
               if (isLoading) {
@@ -463,7 +421,7 @@ export default function DiagnosticoPage() {
     });
 
     return [dashboardNode, ...diagnosticoNodes];
-  }, [diagnosticos, controles, medidas, programaMedidas, expandedNodes, programaId, calculateMaturity, getControleMaturity, autoLoadingMedidas, loadingMedidas, loadMedidas, invalidateCache, theme.palette.primary.main]);
+  }, [diagnosticos, controles, medidas, programaMedidas, expandedNodes, programaId, calculateMaturity, getControleMaturity, autoLoadingMedidas, loadingMedidas, theme.palette.primary.main]);
 
   // Manipular expansão de nós
   const handleNodeToggle = useCallback(async (nodeId: string, node: TreeNode) => {
