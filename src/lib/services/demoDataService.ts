@@ -188,8 +188,8 @@ export const demoDataService = {
 
 // Função para verificar se deve usar dados demo
 export const shouldUseDemoData = (programaId?: number) => {
-  // Usar dados demo se o programaId é 999999 ou se está na rota /demo
-  return programaId === 999999 || 
+  // Usar dados demo se o programaId é 1 ou se está na rota /demo
+  return programaId === 1 || 
          (typeof window !== 'undefined' && window.location.pathname.includes('/demo'));
 };
 

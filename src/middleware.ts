@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   // Allow access to demo routes without authentication
   if (request.nextUrl.pathname.startsWith('/demo') || 
-      request.nextUrl.pathname.includes('/programas/999999')) {
+      request.nextUrl.pathname.includes('/programas/1')) {
     return NextResponse.next();
   }
   

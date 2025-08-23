@@ -65,3 +65,25 @@ VALUES (
 
 -- 4. Verificar se funcionou
 SELECT * FROM programa_users;
+
+-- 5. Criar programa demo (ID 1)
+INSERT INTO programa (id, nome, nome_fantasia, razao_social, cnpj, setor, created_at, updated_at)
+VALUES (
+    1,
+    'Programa de Demonstração - FPSI',
+    'Empresa Demo Tech Ltda',
+    'Empresa Demo Tech Ltda',
+    '12.345.678/0001-99',
+    2, -- Empresa privada
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO UPDATE SET
+    nome = EXCLUDED.nome,
+    nome_fantasia = EXCLUDED.nome_fantasia,
+    razao_social = EXCLUDED.razao_social,
+    cnpj = EXCLUDED.cnpj,
+    setor = EXCLUDED.setor,
+    updated_at = NOW();
+
+-- 6. Verificar se o programa demo foi criado
+SELECT * FROM programa WHERE id = 1;

@@ -6,11 +6,12 @@ import { demoDataService, shouldUseDemoData } from "./demoDataService";
 const withDemoCheck = (originalFunction: any, demoFunction: any) => {
   return async (...args: any[]) => {
     // Check if we should use demo data
-    const programaId = args.find(arg => typeof arg === 'number' && arg === 999999);
+    // Look for programaId in the arguments - it's usually the first number argument
+    const programaId = args.find(arg => typeof arg === 'number');
     const shouldUseDemo = shouldUseDemoData(programaId);
     
     if (shouldUseDemo) {
-      console.log('[DEMO MODE] Using demo data service');
+      console.log('[DEMO MODE] Using demo data service for programaId:', programaId);
       return await demoFunction(...args);
     }
     

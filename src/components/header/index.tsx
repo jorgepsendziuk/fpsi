@@ -87,6 +87,45 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   const { mutate: logout } = useLogout();
   const router = useRouter();
   const pathname = usePathname();
+  // Detecta se está dentro de um programa: /programas/[algum id] ou subrotas
+  const isProgramaContext = /^\/programas\/[\w-]+(\/|$)/.test(pathname);
+  // Extrai o programaId da URL se estiver no contexto de programa
+  const programaIdMatch = pathname.match(/^\/programas\/([\w-]+)(\/|$)/);
+  const programaId = programaIdMatch ? programaIdMatch[1] : null;
+
+  // Itens de menu dinâmicos
+  const dynamicNavigationItems = programaId ? [
+    {
+      label: "Programa",
+      icon: <DashboardIcon />,
+      path: `/programas/${programaId}`,
+      description: "Visão geral do programa"
+    },
+    {
+      label: "Diagnósticos",
+      icon: <SecurityIcon />,
+      path: `/programas/${programaId}/diagnostico`,
+      description: "Avaliações de segurança"
+    },
+    {
+      label: "Políticas",
+      icon: <PolicyIcon />,
+      path: `/programas/${programaId}/politicas`,
+      description: "Políticas de segurança"
+    },
+    {
+      label: "Responsáveis",
+      icon: <PeopleIcon />,
+      path: `/programas/${programaId}/responsabilidades`,
+      description: "Gestão de responsáveis"
+    },
+    {
+      label: "Plano de Trabalho",
+      icon: <AssignmentIcon />,
+      path: `/programas/${programaId}/planos-acao`,
+      description: "Acompanhamento de ações"
+    }
+  ] : [];
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
@@ -173,9 +212,9 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
             </Stack>
 
             {/* Menu de navegação para desktop */}
-            {!isMobile && (
+            {!isMobile && isProgramaContext && (
               <Stack direction="row" spacing={1}>
-                {navigationItems.map((item) => (
+                {dynamicNavigationItems.map((item) => (
                   <Tooltip key={item.label} title={item.description}>
                     <Button
                       color="inherit"
@@ -336,21 +375,23 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
           <Divider />
         </Box>
 
-        <List>
-          {navigationItems.map((item) => (
-            <ListItem key={item.label} disablePadding>
-              <ListItemButton onClick={() => handleNavigate(item.path)}>
-                <ListItemIcon>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.label}
-                  secondary={item.description}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        {isProgramaContext && (
+          <List>
+            {dynamicNavigationItems.map((item) => (
+              <ListItem key={item.label} disablePadding>
+                <ListItemButton onClick={() => handleNavigate(item.path)}>
+                  <ListItemIcon>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.label}
+                    secondary={item.description}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        )}
 
         {user && (
           <>

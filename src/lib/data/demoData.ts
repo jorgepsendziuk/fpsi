@@ -1,6 +1,6 @@
 // Dados sintéticos para modo de demonstração
 export const DEMO_PROGRAMA = {
-  id: 999999,
+  id: 1,
   nome: "Programa de Demonstração - FPSI",
   nome_fantasia: "Empresa Demo Tech Ltda",
   razao_social: "Empresa Demo Tech Ltda",

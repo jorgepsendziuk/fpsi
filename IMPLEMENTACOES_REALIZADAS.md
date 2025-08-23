@@ -31,7 +31,7 @@ Todas as melhorias solicitadas foram implementadas com sucesso:
 ### 3. ✅ Modo Demonstração Aprimorado
 - **Problema**: Página demo redirecionava para diagnóstico, não mostrava dados reais
 - **Soluções implementadas**:
-  - ✅ **Redirecionamento correto**: Agora vai para página inicial do programa (`/programas/999999`)
+  - ✅ **Redirecionamento correto**: Agora vai para página inicial do programa (`/programas/1`)
   - ✅ **Dados do banco**: Modificado `demoDataService.ts` para buscar diagnósticos, controles e medidas reais
   - ✅ **Fallback inteligente**: Se falhar, usa dados sintéticos como backup
 

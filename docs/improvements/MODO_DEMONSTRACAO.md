@@ -6,7 +6,7 @@ O modo de demonstração permite que usuários explorem o sistema FPSI sem neces
 ## Funcionalidades Implementadas
 
 ### 1. Dados Sintéticos Completos
-- **Programa Demo**: ID 999999 - "Empresa Demo Tech Ltda"
+- **Programa Demo**: ID 1 - "Empresa Demo Tech Ltda"
 - **5 Diagnósticos**: Gestão de Ativos, Controle de Acesso, Proteção de Dados, Continuidade de Negócios, Resposta a Incidentes
 - **8 Controles**: Distribuídos pelos diagnósticos com diferentes níveis de maturidade
 - **15 Medidas**: Com respostas variadas (Sim, Não, Parcial) e planos de ação
@@ -49,7 +49,7 @@ src/middleware.ts                 # Permitir acesso sem auth
 ### Detecção de Modo Demo
 ```typescript
 // Método 1: ID do programa
-const isDemoProgram = programaId === 999999;
+const isDemoProgram = programaId === 1;
 
 // Método 2: URL
 const isDemoRoute = window.location.pathname.includes('/demo');
@@ -92,7 +92,7 @@ return { success: true };
 ## Dados Pré-configurados
 
 ### Programa Demo
-- **ID**: 999999
+- **ID**: 1
 - **Nome**: "Programa de Demonstração - FPSI"
 - **Empresa**: "Empresa Demo Tech Ltda"
 - **CNPJ**: "12.345.678/0001-99"
@@ -115,7 +115,7 @@ return { success: true };
 ```typescript
 // Permite acesso sem autenticação
 if (request.nextUrl.pathname.startsWith('/demo') || 
-    request.nextUrl.pathname.includes('/programas/999999')) {
+    request.nextUrl.pathname.includes('/programas/1')) {
   return NextResponse.next();
 }
 ```
@@ -135,7 +135,7 @@ if (request.nextUrl.pathname.startsWith('/demo') ||
 - 💡 **Performance real**: Simula delays de rede
 
 ### Para Desenvolvedores
-- ⚠️ **ID reservado**: 999999 é exclusivo para demo
+- ⚠️ **ID reservado**: 1 é exclusivo para demo
 - ⚠️ **Não usar em produção**: Apenas para demonstração
 - ⚠️ **Monitoramento**: Logs identificam operações demo
 - ⚠️ **Manutenção**: Dados demo devem ser atualizados periodicamente

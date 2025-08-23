@@ -73,7 +73,7 @@ NEXTAUTH_URL=https://seu-dominio.vercel.app
 - **Login**: `https://seu-app.vercel.app/login`
 - **Programas**: `https://seu-app.vercel.app/programas`
 
-### Funcionalidades Demo (ID: 999999)
+### Funcionalidades Demo (ID: 1)
 - **Diagnósticos**: Dados completos com 5 diagnósticos
 - **Controles**: 8 controles implementados
 - **Medidas**: 15 medidas de segurança

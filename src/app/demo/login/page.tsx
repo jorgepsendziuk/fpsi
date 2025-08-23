@@ -58,7 +58,7 @@ export default function DemoLoginPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Redirecionar para o programa demo
-      router.push('/programas/999999');
+      router.push('/programas/1');
     } catch (err) {
       setError('Erro ao fazer login no modo demonstração');
     } finally {

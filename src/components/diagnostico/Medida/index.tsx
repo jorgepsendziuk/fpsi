@@ -230,7 +230,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Grid>
             </Grid>
 
-            {/* Cards de Resposta e Plano de Ação */}
+            {/* Cards de Resposta e Plano de Trabalho */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
               {/* Card de Resposta */}
               <Grid size={{ xs: 12, md: 6 }}>
@@ -265,11 +265,11 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 </Box>
               </Grid>
 
-              {/* Card do Plano de Ação */}
+              {/* Card do Plano de Trabalho */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Box sx={medidaStyles.actionPlanCard(theme, statusInfo?.color)}>
                   <Typography sx={medidaStyles.actionPlanTitle(theme)}>
-                    PLANO DE AÇÃO
+                    PLANO DE TRABALHO
                   </Typography>
                   <Box sx={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
                     <Chip
