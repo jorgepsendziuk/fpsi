@@ -51,7 +51,7 @@ export interface ProgramaPermissions {
   can_edit_medidas: boolean;
   can_approve_medidas: boolean;
 
-  // Planos de Ação
+  // Plano de Trabalho
   can_view_planos: boolean;
   can_edit_planos: boolean;
   can_approve_planos: boolean;
@@ -274,7 +274,7 @@ export const getRoleDescription = (role: UserRole): string => {
   const descriptions = {
     [UserRole.ADMIN]: 'Acesso completo ao sistema, pode gerenciar usuários e configurações',
     [UserRole.COORDENADOR]: 'Pode gerenciar equipe, aprovar medidas e coordenar atividades',
-    [UserRole.ANALISTA]: 'Pode responder medidas, criar planos de ação e editar políticas',
+    [UserRole.ANALISTA]: 'Pode responder medidas, criar plano de trabalho e editar políticas',
     [UserRole.CONSULTOR]: 'Acesso apenas para visualização e comentários',
     [UserRole.AUDITOR]: 'Acesso para auditoria, revisão e exportação de relatórios'
   };

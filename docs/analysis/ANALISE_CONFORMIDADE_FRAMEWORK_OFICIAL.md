@@ -31,7 +31,7 @@ Esta análise compara o sistema FPSI desenvolvido com o Framework de Privacidade
 - **✅ Cache Inteligente**: Sistema de cache para otimização de performance
 - **✅ Mobile Responsivo**: Interface otimizada para dispositivos móveis
 
-### **4. Sistema de Planos de Ação**
+### **4. Sistema de Plano de Trabalho**
 - **✅ Gestão Completa**: Status, prioridades, marcos, atividades
 - **✅ Controle Orçamentário**: Orçamento previsto vs utilizado
 - **✅ Sistema de Responsáveis**: Atribuição clara de responsabilidades
@@ -177,7 +177,7 @@ enum GrupoImplementacao {
 - Cálculos de maturidade precisos e conformes
 - Interface de diagnóstico avançada e intuitiva
 - Gestão completa de controles e medidas
-- Sistema de planos de ação robusto
+- Sistema de plano de trabalho robusto
 - Políticas estruturadas e editáveis
 
 ### **Pontos de Melhoria**

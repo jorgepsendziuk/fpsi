@@ -111,7 +111,7 @@ export const DashboardPlanosAcao: React.FC<DashboardPlanosAcaoProps> = ({
       }
     } catch (err) {
       console.error('Erro ao carregar dashboard de planos:', err);
-      setError('Erro ao carregar dados dos planos de ação');
+      setError('Erro ao carregar dados do plano de trabalho');
     } finally {
       setLoading(false);
     }
@@ -142,7 +142,7 @@ export const DashboardPlanosAcao: React.FC<DashboardPlanosAcaoProps> = ({
   if (!canViewResource('planos')) {
     return (
       <Alert severity="warning">
-        Você não tem permissão para visualizar planos de ação deste programa.
+        Você não tem permissão para visualizar o plano de trabalho deste programa.
       </Alert>
     );
   }
@@ -172,7 +172,7 @@ export const DashboardPlanosAcao: React.FC<DashboardPlanosAcaoProps> = ({
             <Box>
               <Typography variant="h4" fontWeight="bold" gutterBottom>
                 <AssignmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Planos de Ação
+                Plano de Trabalho
               </Typography>
               <Typography variant="body1" color="text.secondary">
                 {programaName}
@@ -422,7 +422,7 @@ export const DashboardPlanosAcao: React.FC<DashboardPlanosAcaoProps> = ({
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  Lista de Planos de Ação
+                  Lista do Plano de Trabalho
                 </Typography>
                 <Stack direction="row" spacing={1}>
                   <Button startIcon={<TimelineIcon />} size="small">

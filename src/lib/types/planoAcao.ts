@@ -1,4 +1,4 @@
-// Tipos para sistema de planos de ação aprimorado
+// Tipos para sistema de plano de trabalho aprimorado
 
 export interface PlanoAcao {
   id: number;

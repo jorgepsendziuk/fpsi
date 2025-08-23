@@ -1,7 +1,7 @@
-# 📋 Planos de Ação Aprimorados - FPSI
+# 📋 Plano de Trabalho Aprimorado - FPSI
 
 ## Visão Geral
-O sistema de planos de ação aprimorado oferece um controle completo sobre o ciclo de vida dos planos, desde a criação até a conclusão, com recursos avançados de gerenciamento de projeto.
+O sistema de plano de trabalho aprimorado oferece um controle completo sobre o ciclo de vida do plano, desde a criação até a conclusão, com recursos avançados de gerenciamento de projeto.
 
 ## Funcionalidades Implementadas
 
@@ -329,7 +329,7 @@ const formatarData = (data: string): string => {
 
 ## Conclusão
 
-O sistema de planos de ação aprimorado foi implementado com:
+O sistema de plano de trabalho aprimorado foi implementado com:
 - ✅ **Arquitetura escalável**: Suporte a crescimento futuro
 - ✅ **Interface moderna**: UX intuitiva e responsiva
 - ✅ **Métricas avançadas**: KPIs e dashboards executivos

@@ -8,7 +8,7 @@ O sistema de múltiplos usuários permite que diferentes pessoas colaborem no me
 ### 1. Sistema de Funções (Roles)
 - **🔴 Administrador**: Acesso completo ao sistema
 - **🔵 Coordenador**: Pode gerenciar equipe e aprovar atividades
-- **🟢 Analista**: Pode responder medidas e criar planos de ação
+- **🟢 Analista**: Pode responder medidas e criar plano de trabalho
 - **🟡 Consultor**: Acesso apenas para visualização e comentários
 - **🟣 Auditor**: Acesso para auditoria e exportação de relatórios
 
@@ -26,7 +26,7 @@ interface ProgramaPermissions {
   can_edit_medidas: boolean;
   can_approve_medidas: boolean;
 
-  // Planos de Ação
+  // Plano de Trabalho
   can_view_planos: boolean;
   can_edit_planos: boolean;
   can_approve_planos: boolean;
@@ -132,7 +132,7 @@ if (canEditResource('politicas')) {
 - ✅ **Acesso total**: Todas as permissões habilitadas
 - ✅ **Gerenciar usuários**: Convidar, remover, alterar funções
 - ✅ **Configurações**: Editar e deletar programa
-- ✅ **Aprovações**: Aprovar medidas e planos de ação
+- ✅ **Aprovações**: Aprovar medidas e plano de trabalho
 
 ### 🔵 Coordenador
 - ✅ **Gestão operacional**: Editar diagnósticos e políticas
@@ -142,7 +142,7 @@ if (canEditResource('politicas')) {
 - ❌ **Administração**: Não pode deletar programa
 
 ### 🟢 Analista
-- ✅ **Execução**: Editar medidas e planos de ação
+- ✅ **Execução**: Editar medidas e plano de trabalho
 - ✅ **Visualização**: Ver diagnósticos, políticas e relatórios
 - ✅ **Colaboração**: Ver outros usuários
 - ❌ **Aprovações**: Não pode aprovar

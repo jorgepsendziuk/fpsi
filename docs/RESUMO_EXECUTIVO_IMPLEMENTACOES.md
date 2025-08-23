@@ -56,11 +56,11 @@ Sistema completo de gestão de usuários com controle granular de permissões ba
 
 ---
 
-### 3. 📋 **Planos de Ação Aprimorados**
+### 3. 📋 **Plano de Trabalho Aprimorado**
 **Status**: ✅ **CONCLUÍDO**
 
 #### **Resumo**
-Sistema avançado de gestão de planos de ação com recursos de gerenciamento de projeto.
+Sistema avançado de gestão do plano de trabalho com recursos de gerenciamento de projeto.
 
 #### **Principais Funcionalidades**
 - 📊 **Dashboard executivo**: Métricas em tempo real e KPIs
@@ -101,7 +101,7 @@ Sistema avançado de gestão de planos de ação com recursos de gerenciamento d
 ├── src/components/user-management/UserManagement.tsx
 └── src/app/programas/[id]/usuarios/page.tsx
 
-📁 Planos de Ação (3 arquivos)
+📁 Plano de Trabalho (3 arquivos)
 ├── src/lib/types/planoAcao.ts
 ├── src/components/planos-acao/DashboardPlanosAcao.tsx
 └── src/app/programas/[id]/planos-acao/page.tsx
@@ -153,7 +153,7 @@ Sistema avançado de gestão de planos de ação com recursos de gerenciamento d
 ### **Funcionalidades Implementadas**
 - ✅ **Modo Demonstração**: 100% funcional
 - ✅ **Múltiplos Usuários**: 100% funcional
-- ✅ **Planos de Ação**: 100% funcional (dashboard)
+- ✅ **Plano de Trabalho**: 100% funcional (dashboard)
 
 ### **Cobertura de Requisitos**
 - ✅ **Funcionais**: 100% dos requisitos atendidos
@@ -172,7 +172,7 @@ Sistema avançado de gestão de planos de ação com recursos de gerenciamento d
 
 ### **Fase 1 - APIs Backend** (Prioridade Alta)
 - 🔗 **Endpoints de usuários**: APIs para operações CRUD
-- 📊 **APIs de planos**: Backend para planos de ação
+- 📊 **APIs de planos**: Backend para plano de trabalho
 - 🔔 **Sistema de notificações**: Emails e alertas
 - 📈 **Analytics**: Métricas avançadas
 

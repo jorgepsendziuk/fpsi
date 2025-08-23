@@ -72,7 +72,7 @@ const navigationItems = [
     description: "Gestão de responsáveis"
   },
   {
-    label: "Planos de Ação",
+    label: "Plano de Trabalho",
     icon: <AssignmentIcon />,
     path: "/programas",
     description: "Acompanhamento de ações"
@@ -158,7 +158,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
     if (pathname.includes('/diagnostico')) return 'Diagnóstico';
     if (pathname.includes('/politicas')) return 'Políticas';
     if (pathname.includes('/responsabilidades')) return 'Responsáveis';
-    if (pathname.includes('/planos-acao')) return 'Planos de Ação';
+    if (pathname.includes('/planos-acao')) return 'Plano de Trabalho';
     if (pathname.includes('/usuarios')) return 'Usuários';
     if (pathname === '/programas') return 'Programas';
     return 'FPSI';

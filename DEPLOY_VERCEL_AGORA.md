@@ -67,7 +67,7 @@ vercel --prod
 - **📝 Medidas**: 15 medidas de segurança
 - **👥 Responsáveis**: 3 responsáveis cadastrados
 - **📜 Políticas**: 10 políticas configuradas
-- **📅 Planos de Ação**: Dashboard executivo completo
+- **📅 Plano de Trabalho**: Dashboard executivo completo
 - **👤 Usuários**: Interface de gerenciamento
 
 ## 🛠️ **Configurações de Build (Automáticas):**
@@ -126,7 +126,7 @@ https://seu-app.vercel.app/login
 - **Interface completa**: Convites, alteração de funções, remoção
 - **Fallback inteligente**: Funciona sem banco configurado
 
-### **Planos de Ação:**
+### **Plano de Trabalho:**
 - **Dashboard executivo**: Gráficos e métricas
 - **Sistema de marcos**: Cronogramas detalhados
 - **Gestão de riscos**: Identificação e mitigação

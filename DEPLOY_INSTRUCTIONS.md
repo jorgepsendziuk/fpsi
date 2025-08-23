@@ -10,7 +10,7 @@
 1. **✅ Sistema de Diagnósticos** - Completo com cálculos de maturidade
 2. **✅ Modo Demonstração** - Dados sintéticos (ID: 999999)
 3. **✅ Sistema de Múltiplos Usuários** - 5 funções com permissões granulares
-4. **✅ Planos de Ação Aprimorados** - Dashboard executivo completo
+4. **✅ Plano de Trabalho Aprimorado** - Dashboard executivo completo
 5. **✅ Gestão de Políticas** - Editor avançado com templates
 6. **✅ Sistema de Responsabilidades** - CRUD completo
 7. **✅ Relatórios e PDFs** - Geração automática
@@ -79,7 +79,7 @@ NEXTAUTH_URL=https://seu-dominio.vercel.app
 - **Medidas**: 15 medidas de segurança
 - **Responsáveis**: 3 responsáveis cadastrados
 - **Políticas**: 10 políticas configuradas
-- **Planos de Ação**: Dashboard executivo completo
+- **Plano de Trabalho**: Dashboard executivo completo
 
 ## 🛠 Troubleshooting
 

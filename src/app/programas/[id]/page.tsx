@@ -66,9 +66,9 @@ const sections = [
   },
   {
     key: "planos-acao",
-    title: "Planos de Ação",
+    title: "Plano de Trabalho",
     icon: <AssignmentIcon fontSize="large" />,
-    description: "Gerencie planos de ação e acompanhe o progresso",
+    description: "Gerencie o plano de trabalho e acompanhe o progresso",
     path: "planos-acao",
     color: "#2196f3",
     gradient: "linear-gradient(135deg, #2196f3 0%, #42a5f5 100%)"

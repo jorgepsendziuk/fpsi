@@ -13,7 +13,7 @@ O usuário solicitou que fosse aplicado um processo parecido com o do componente
 - Plano de ação
 - Descrição
 
-**Feedback do usuário**: As cores estavam muito fortes e não seguiam a lógica correta. Foi solicitado uso de cores mais suaves (como no controle) e lógica adequada para planos de ação.
+**Feedback do usuário**: As cores estavam muito fortes e não seguiam a lógica correta. Foi solicitado uso de cores mais suaves (como no controle) e lógica adequada para plano de trabalho.
 
 ## Melhorias Implementadas
 

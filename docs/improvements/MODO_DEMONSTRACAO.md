@@ -9,7 +9,7 @@ O modo de demonstração permite que usuários explorem o sistema FPSI sem neces
 - **Programa Demo**: ID 1 - "Empresa Demo Tech Ltda"
 - **5 Diagnósticos**: Gestão de Ativos, Controle de Acesso, Proteção de Dados, Continuidade de Negócios, Resposta a Incidentes
 - **8 Controles**: Distribuídos pelos diagnósticos com diferentes níveis de maturidade
-- **15 Medidas**: Com respostas variadas (Sim, Não, Parcial) e planos de ação
+- **15 Medidas**: Com respostas variadas (Sim, Não, Parcial) e plano de trabalho
 - **3 Responsáveis**: Equipe fictícia com diferentes perfis
 - **10 Políticas**: Todas as políticas de segurança pré-configuradas
 
@@ -104,7 +104,7 @@ return { success: true };
 - **Não implementadas**: 1 medida (7%)
 - **Sem resposta**: 7 medidas (46%)
 
-### Status dos Planos de Ação
+### Status do Plano de Trabalho
 - **Concluído**: 4 planos
 - **Em andamento**: 3 planos
 - **Não iniciado**: 1 plano

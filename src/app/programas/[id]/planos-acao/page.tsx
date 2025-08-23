@@ -56,7 +56,7 @@ export default function PlanosAcaoPage() {
   // Verificar se o usuário tem permissão para visualizar planos
   useEffect(() => {
     if (!permissions.isLoading && !permissions.canViewResource('planos')) {
-      setError('Você não tem permissão para acessar os planos de ação deste programa');
+      setError('Você não tem permissão para acessar o plano de trabalho deste programa');
     }
   }, [permissions.isLoading, permissions.canViewResource, permissions]);
 
