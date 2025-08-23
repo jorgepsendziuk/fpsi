@@ -167,7 +167,7 @@ export default function DiagnosticoPage() {
 
   // Carregar controles de um diagnóstico
   const loadControles = useCallback(async (diagnosticoId: number) => {
-    if (controles[diagnosticoId]) return; // Já carregado
+    if (controles[diagnosticoId] !== undefined) return; // Já carregado (mesmo que seja array vazio)
     
     console.log("Loading controles for diagnostico:", diagnosticoId);
     setLoadingControles(prev => new Set(prev).add(diagnosticoId));
@@ -190,7 +190,7 @@ export default function DiagnosticoPage() {
 
   // Carregar medidas de um controle
   const loadMedidas = useCallback(async (controleId: number) => {
-    if (medidas[controleId]) return; // Já carregado
+    if (medidas[controleId] !== undefined) return; // Já carregado (mesmo que seja array vazio)
     
     console.log("Loading medidas for controle:", controleId);
     setLoadingMedidas(prev => new Set(prev).add(controleId));
