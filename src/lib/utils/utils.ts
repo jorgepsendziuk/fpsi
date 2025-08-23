@@ -13,37 +13,37 @@ export const respostas = [
     id: 1, 
     peso: 1, 
     label: "Adota em maior parte ou totalmente",
-    descricao: "A organização implementa a medida de segurança de forma abrangente e consistente, atendendo a todos ou quase todos os requisitos estabelecidos."
+    descricao: "Há decisão formal ou plano aprovado, e a medida na organização é implementada integralmente em mais de 50% ou em todos os: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
   },
   { 
     id: 2, 
     peso: 0.75, 
     label: "Adota em menor parte",
-    descricao: "A organização implementa a medida de segurança de forma limitada, atendendo apenas a alguns dos requisitos estabelecidos, mas com lacunas significativas."
+    descricao: "Há decisão formal ou plano aprovado, e a medida na organização é implementada integralmente em menos de 50% dos: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
   },
   { 
     id: 3, 
     peso: 0.5, 
     label: "Adota parcialmente",
-    descricao: "A organização implementa a medida de segurança de forma incompleta, atendendo aproximadamente metade dos requisitos ou de forma inconsistente."
+    descricao: "Há decisão formal ou plano aprovado, e a medida na organização é implementada parcialmente em mais de 50% ou em todos os: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
   },
   { 
     id: 4, 
     peso: 0.25, 
     label: "Há decisão formal ou plano aprovado para implementar",
-    descricao: "A organização reconhece a necessidade da medida e possui um plano formal aprovado para sua implementação, mas ainda não iniciou a execução."
+    descricao: "Há decisão formal ou plano aprovado, porém não há na organização implementação ou está parcialmente implementado em menos de 50% dos: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
   },
   { 
     id: 5, 
     peso: 0, 
     label: "A organização não adota essa medida",
-    descricao: "A organização não implementa a medida de segurança e não possui planos para sua implementação no momento."
+    descricao: "Não há qualquer decisão formal ou plano aprovado, tampouco implementação da medida."
   },
   { 
     id: 6, 
     peso: null, 
     label: "Não se aplica",
-    descricao: "A medida de segurança não é aplicável ao contexto ou às características específicas da organização."
+    descricao: "A medida não se aplica em nenhum ativo no caso de medida de segurança da informação ou processo/serviço no caso de medida de privacidade, por entendimento dos gestores ou considerando alguma particularidade do contexto de atuação da organização. A não aplicabilidade deverá seguir de uma motivação baseada em uma análise de riscos."
   },
 ];
 

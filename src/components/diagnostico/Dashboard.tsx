@@ -152,13 +152,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       
 
       <Grid container spacing={3}>
-        {/* Resumo Executivo */}
+        {/* Cards de Indicadores */}
         <Grid item xs={12}>
           <Card>
-            <CardHeader
-              title="Resumo Executivo"
-              subheader="Indicadores chave de performance do programa"
-            />
             <CardContent>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6} md={4}>

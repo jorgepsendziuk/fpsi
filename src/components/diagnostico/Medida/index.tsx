@@ -93,9 +93,10 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   const statusInfo = status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao);
 
   // Obter descrição da resposta selecionada
-  const getRespostaDescricao = (respostaId: number) => {
+  const getRespostaDescricao = (respostaId: number | string) => {
     const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
-    const resposta = respostasArray.find(r => r.id === respostaId);
+    const id = typeof respostaId === 'string' ? parseInt(respostaId, 10) : respostaId;
+    const resposta = respostasArray.find(r => r.id === id);
     return (resposta as any)?.descricao;
   };
 
@@ -254,10 +255,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       </MenuItem>
                       {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
                         <MenuItem key={resposta.id} value={resposta.id}>
-                          <ListItemText 
-                            primary={resposta.label}
-                            secondary={(resposta as any).descricao && controle.diagnostico !== 1 ? (resposta as any).descricao : undefined}
-                          />
+                          {resposta.label}
                         </MenuItem>
                       ))}
                     </Select>
@@ -295,7 +293,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
             </Grid>
 
             {/* Descrição da Resposta Selecionada */}
-            {programaMedida?.resposta && controle.diagnostico !== 1 && (
+            {programaMedida?.resposta && controle.diagnostico !== 1 && getRespostaDescricao(programaMedida.resposta) && (
               <Alert 
                 severity="info" 
                 icon={<InfoIcon />}
