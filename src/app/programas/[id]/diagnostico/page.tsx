@@ -136,6 +136,7 @@ export default function DiagnosticoPage() {
         setPrograma(programaData);
         
 
+
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
       } finally {
@@ -225,6 +226,26 @@ export default function DiagnosticoPage() {
       });
     }
   }, [medidas, programaId]);
+
+  // Carregar controles automaticamente para dashboard após carregar diagnósticos
+  useEffect(() => {
+    const loadControlesForDashboard = async () => {
+      if (diagnosticos.length > 0 && !loading) {
+        for (const diagnostico of diagnosticos) {
+          // Carregar apenas se ainda não foi carregado
+          if (!controles[diagnostico.id]) {
+            try {
+              await loadControles(diagnostico.id);
+            } catch (error) {
+              console.error(`Erro ao carregar controles do diagnóstico ${diagnostico.id}:`, error);
+            }
+          }
+        }
+      }
+    };
+
+    loadControlesForDashboard();
+  }, [diagnosticos, loading, controles, loadControles]);
 
   // Calcular maturidade inteligente com cache para diagnósticos
   const calculateMaturity = useCallback((diagnostico: Diagnostico) => {
