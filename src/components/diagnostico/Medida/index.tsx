@@ -29,6 +29,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import SecurityIcon from '@mui/icons-material/Security';
 import CategoryIcon from '@mui/icons-material/Category';
 import FunctionsIcon from '@mui/icons-material/Functions';
+import CircleIcon from '@mui/icons-material/Circle';
 
 // Components
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -98,6 +99,25 @@ const MedidaComponent: React.FC<MedidaProps> = ({
     const id = typeof respostaId === 'string' ? parseInt(respostaId, 10) : respostaId;
     const resposta = respostasArray.find(r => r.id === id);
     return (resposta as any)?.descricao;
+  };
+
+  // Obter cor baseada na resposta
+  const getRespostaColor = (respostaId: number) => {
+    // Para diagnóstico 1 (sim/não)
+    if (controle.diagnostico === 1) {
+      return respostaId === 1 ? '#4CAF50' : respostaId === 2 ? '#FF5252' : '#9E9E9E';
+    }
+    
+    // Para outros diagnósticos (escala 1-6)
+    switch (respostaId) {
+      case 1: return '#4CAF50'; // Verde - Adota totalmente
+      case 2: return '#8BC34A'; // Verde claro - Adota em maior parte
+      case 3: return '#FFC107'; // Amarelo - Adota parcialmente  
+      case 4: return '#FF9800'; // Laranja - Adota em menor parte
+      case 5: return '#FF5722'; // Vermelho claro - Há plano
+      case 6: return '#9E9E9E'; // Cinza - Não se aplica
+      default: return '#9E9E9E';
+    }
   };
 
   // Tooltips explicativos para os campos técnicos
@@ -249,13 +269,31 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       onChange={(event) =>
                         handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
                       }
+                      renderValue={(selected) => {
+                        if (!selected) {
+                          return <em>Selecionar resposta...</em>;
+                        }
+                        
+                        const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
+                        const resposta = respostasArray.find(r => r.id === selected);
+                        
+                        return (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selected as number) }} />
+                            <Typography>{resposta?.label}</Typography>
+                          </Box>
+                        );
+                      }}
                     >
                       <MenuItem value="">
                         <em>Selecionar resposta...</em>
                       </MenuItem>
                       {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
                         <MenuItem key={resposta.id} value={resposta.id}>
-                          {resposta.label}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
+                            <Typography>{resposta.label}</Typography>
+                          </Box>
                         </MenuItem>
                       ))}
                     </Select>
