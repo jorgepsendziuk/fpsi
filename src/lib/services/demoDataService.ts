@@ -188,9 +188,8 @@ export const demoDataService = {
 
 // Função para verificar se deve usar dados demo
 export const shouldUseDemoData = (programaId?: number) => {
-  // Usar dados demo se o programaId é 1 ou se está na rota /demo
-  return programaId === 1 || 
-         (typeof window !== 'undefined' && window.location.pathname.includes('/demo'));
+  // Usar dados demo APENAS se está na rota /demo
+  return (typeof window !== 'undefined' && window.location.pathname.includes('/demo'));
 };
 
 // Factory function que retorna o service apropriado
