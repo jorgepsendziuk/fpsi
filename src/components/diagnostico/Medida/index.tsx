@@ -103,18 +103,19 @@ const MedidaComponent: React.FC<MedidaProps> = ({
 
   // Obter cor baseada na resposta
   const getRespostaColor = (respostaId: number) => {
-    // Para diagnóstico 1 (sim/não)
+    // Para diagnóstico 1 (sim/não) - usando respostasimnao
     if (controle.diagnostico === 1) {
+      // respostasimnao: { id: 1, label: "Sim" }, { id: 2, label: "Não" }
       return respostaId === 1 ? '#4CAF50' : respostaId === 2 ? '#FF5252' : '#9E9E9E';
     }
     
-    // Para outros diagnósticos (escala 1-6)
+    // Para outros diagnósticos (escala 1-6) - usando respostas
     switch (respostaId) {
       case 1: return '#4CAF50'; // Verde - Adota totalmente
-      case 2: return '#8BC34A'; // Verde claro - Adota em maior parte
+      case 2: return '#8BC34A'; // Verde claro - Adota em menor parte
       case 3: return '#FFC107'; // Amarelo - Adota parcialmente  
-      case 4: return '#FF9800'; // Laranja - Adota em menor parte
-      case 5: return '#FF5722'; // Vermelho claro - Há plano
+      case 4: return '#FF9800'; // Laranja - Há plano aprovado
+      case 5: return '#FF5722'; // Vermelho claro - Não adota
       case 6: return '#9E9E9E'; // Cinza - Não se aplica
       default: return '#9E9E9E';
     }
