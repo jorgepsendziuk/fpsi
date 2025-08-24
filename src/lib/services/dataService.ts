@@ -75,6 +75,14 @@ const originalFetchControles = async (diagnosticoId: number, programaId: number)
   // First, ensure programa_controle records exist for this program
   await ensureProgramaControleRecords(programaId);
   
+  // Debug: Check if controles exist for this diagnostico first
+  const { data: allControlesForDiag } = await supabaseBrowserClient
+    .from("controle")
+    .select("id, numero, nome, diagnostico")
+    .eq("diagnostico", diagnosticoId);
+  
+  console.log(`fetchControles: Found ${allControlesForDiag?.length || 0} controles for diagnostico ${diagnosticoId}:`, allControlesForDiag);
+  
   const { data, error } = await supabaseBrowserClient
     .from("controle")
     .select(`
@@ -94,6 +102,7 @@ const originalFetchControles = async (diagnosticoId: number, programaId: number)
   }
   
   console.log(`fetchControles: Raw data from Supabase:`, data?.length || 0);
+  console.log(`fetchControles: Full data:`, data);
   
   if (!data || data.length === 0) {
     console.log(`fetchControles: No controles found for diagnostico ${diagnosticoId}, programa ${programaId}`);
