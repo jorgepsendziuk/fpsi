@@ -289,14 +289,18 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       <MenuItem value="">
                         <em>Selecionar resposta...</em>
                       </MenuItem>
-                      {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
-                        <MenuItem key={resposta.id} value={resposta.id}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
-                            <Typography>{resposta.label}</Typography>
-                          </Box>
-                        </MenuItem>
-                      ))}
+                      {(() => {
+                        const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
+                        console.log('Respostas para controle', controle.id, 'diagnostico', controle.diagnostico, ':', respostasArray);
+                        return respostasArray.map((resposta) => (
+                          <MenuItem key={resposta.id} value={resposta.id}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
+                              <Typography>{resposta.label}</Typography>
+                            </Box>
+                          </MenuItem>
+                        ));
+                      })()}
                     </Select>
                   </Box>
                 </Box>
