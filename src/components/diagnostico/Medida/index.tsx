@@ -277,13 +277,9 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                         
                         const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
                         const resposta = respostasArray.find(r => r.id === selected);
+                        console.log('renderValue - selected:', selected, 'resposta encontrada:', resposta);
                         
-                        return (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selected as number) }} />
-                            <Typography>{resposta?.label}</Typography>
-                          </Box>
-                        );
+                        return resposta?.label || 'Resposta não encontrada';
                       }}
                     >
                       <MenuItem value="">
@@ -292,14 +288,17 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       {(() => {
                         const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
                         console.log('Respostas para controle', controle.id, 'diagnostico', controle.diagnostico, ':', respostasArray);
-                        return respostasArray.map((resposta) => (
-                          <MenuItem key={resposta.id} value={resposta.id}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
-                              <Typography>{resposta.label}</Typography>
-                            </Box>
-                          </MenuItem>
-                        ));
+                        console.log('Renderizando', respostasArray.length, 'MenuItems');
+                        
+                        return respostasArray.map((resposta, index) => {
+                          console.log('Renderizando MenuItem', index, ':', resposta);
+                          return (
+                            <MenuItem key={resposta.id} value={resposta.id}>
+                              <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id), mr: 1 }} />
+                              {resposta.label}
+                            </MenuItem>
+                          );
+                        });
                       })()}
                     </Select>
                   </Box>
