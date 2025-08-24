@@ -121,6 +121,12 @@ const MedidaComponent: React.FC<MedidaProps> = ({
     }
   };
 
+  // Preparar array de respostas com logs para debug
+  const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
+  console.log('MedidaComponent - Controle:', controle.id, 'Diagnóstico:', controle.diagnostico);
+  console.log('MedidaComponent - Respostas disponíveis:', respostasArray);
+  console.log('MedidaComponent - Valor atual:', programaMedida?.resposta);
+
   // Tooltips explicativos para os campos técnicos
   const tooltips = {
     cisv8: "CIS v8 (Center for Internet Security Controls v8): Identificador único da medida de segurança baseado nos controles CIS versão 8, que são as melhores práticas de segurança cibernética reconhecidas mundialmente.",
@@ -271,17 +277,22 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                         handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
                       }
                       renderValue={(selected) => {
+                        console.log('renderValue chamado com:', selected);
                         if (!selected) {
                           return <em>Selecionar resposta...</em>;
                         }
                         
-                        const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
                         const resposta = respostasArray.find(r => r.id === selected);
+                        console.log('renderValue - resposta encontrada:', resposta);
+                        
+                        if (!resposta) {
+                          return 'Resposta inválida';
+                        }
                         
                         return (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selected as number) }} />
-                            <Typography>{resposta?.label}</Typography>
+                            <Typography>{resposta.label}</Typography>
                           </Box>
                         );
                       }}
@@ -289,14 +300,17 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       <MenuItem value="">
                         <em>Selecionar resposta...</em>
                       </MenuItem>
-                      {(controle.diagnostico === 1 ? respostasimnao : respostas).map((resposta) => (
-                        <MenuItem key={resposta.id} value={resposta.id}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
-                            <Typography>{resposta.label}</Typography>
-                          </Box>
-                        </MenuItem>
-                      ))}
+                      {respostasArray.map((resposta) => {
+                        console.log('Renderizando MenuItem:', resposta);
+                        return (
+                          <MenuItem key={resposta.id} value={resposta.id}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
+                              <Typography>{resposta.label}</Typography>
+                            </Box>
+                          </MenuItem>
+                        );
+                      })}
                     </Select>
                   </Box>
                 </Box>
