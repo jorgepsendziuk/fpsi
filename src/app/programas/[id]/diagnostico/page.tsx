@@ -421,17 +421,49 @@ export default function DiagnosticoPage() {
               maturityScore: controleMaturity.score, // Usar valor decimal
               maturityLabel: controleMaturity.label,
             expanded: expandedNodes.has(`controle-${controle.id}`),
-            children: controleMedidas.map(medida => ({
-              id: `medida-${medida.id}-${controle.id}`,
-              type: 'medida',
-              label: `${medida.id_medida || medida.id} - ${medida.medida}`,
-              icon: <PolicyIcon />,
-              data: { 
-                medida, 
-                controle, 
-                programaMedida: programaMedidas[`${medida.id}-${controle.id}-${programaId}`] 
-              },
-            }))
+            children: controleMedidas.map(medida => {
+              const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
+              
+              // Determinar cor baseada na resposta
+              const getMedidaColor = () => {
+                if (!programaMedida?.resposta) {
+                  return '#9E9E9E'; // Cinza para não respondida
+                }
+                
+                const resposta = String(programaMedida.resposta);
+                
+                // Para diagnóstico 1 (sim/não)
+                if (controle.diagnostico === 1) {
+                  return resposta === 'S' ? '#4CAF50' : resposta === 'N' ? '#FF5252' : '#9E9E9E';
+                }
+                
+                // Para outros diagnósticos (escala 1-6)
+                const respostaNum = parseInt(resposta, 10);
+                if (isNaN(respostaNum)) return '#9E9E9E';
+                
+                switch (respostaNum) {
+                  case 1: return '#4CAF50'; // Verde - Adota totalmente
+                  case 2: return '#8BC34A'; // Verde claro - Adota em maior parte
+                  case 3: return '#FFC107'; // Amarelo - Adota parcialmente  
+                  case 4: return '#FF9800'; // Laranja - Adota em menor parte
+                  case 5: return '#FF5722'; // Vermelho claro - Há plano
+                  case 6: return '#9E9E9E'; // Cinza - Não se aplica
+                  default: return '#9E9E9E';
+                }
+              };
+
+              return {
+                id: `medida-${medida.id}-${controle.id}`,
+                type: 'medida',
+                label: `${medida.id_medida || medida.id} - ${medida.medida}`,
+                icon: <PolicyIcon sx={{ color: getMedidaColor() }} />,
+                data: { 
+                  medida, 
+                  controle, 
+                  programaMedida 
+                },
+              };
+            })
           };
         })
       };
