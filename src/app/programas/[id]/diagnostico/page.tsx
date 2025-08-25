@@ -636,6 +636,11 @@ export default function DiagnosticoPage() {
         const controleNodeId = `controle-${controleId}`;
         const wasExpanded = expandedNodes.has(controleNodeId);
         
+        console.log('handleMedidaChange - Preservando estado expandido:');
+        console.log('- controleNodeId:', controleNodeId);
+        console.log('- wasExpanded:', wasExpanded);
+        console.log('- expandedNodes antes:', Array.from(expandedNodes));
+        
         // Forçar recarga completa das medidas e programaMedidas
         setMedidas(prev => {
           const newMedidas = { ...prev };
@@ -648,7 +653,13 @@ export default function DiagnosticoPage() {
         
         // Restaurar estado expandido se estava expandido antes
         if (wasExpanded) {
-          setExpandedNodes(prev => new Set(prev).add(controleNodeId));
+          console.log('- Restaurando estado expandido...');
+          setExpandedNodes(prev => {
+            const newExpanded = new Set(prev);
+            newExpanded.add(controleNodeId);
+            console.log('- expandedNodes depois:', Array.from(newExpanded));
+            return newExpanded;
+          });
         }
         
         // Invalidar cache de maturidade do controle e diagnóstico afetados
