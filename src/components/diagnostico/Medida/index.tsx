@@ -277,21 +277,30 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                         handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
                       }
                       renderValue={(selected) => {
-                        console.log('renderValue chamado com:', selected);
+                        console.log('renderValue chamado com:', selected, 'tipo:', typeof selected);
                         if (!selected) {
                           return <em>Selecionar resposta...</em>;
                         }
                         
-                        const resposta = respostasArray.find(r => r.id === selected);
+                        // Converter para number para comparação
+                        const selectedId = typeof selected === 'string' ? parseInt(selected, 10) : selected;
+                        console.log('renderValue - selectedId convertido:', selectedId);
+                        console.log('renderValue - respostasArray:', respostasArray);
+                        
+                        const resposta = respostasArray.find(r => {
+                          console.log('Comparando:', r.id, '===', selectedId, '?', r.id === selectedId);
+                          return r.id === selectedId;
+                        });
+                        
                         console.log('renderValue - resposta encontrada:', resposta);
                         
                         if (!resposta) {
-                          return 'Resposta inválida';
+                          return `Resposta inválida (ID: ${selectedId})`;
                         }
                         
                         return (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selected as number) }} />
+                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selectedId) }} />
                             <Typography>{resposta.label}</Typography>
                           </Box>
                         );
