@@ -632,6 +632,10 @@ export default function DiagnosticoPage() {
       
       // Para mudanças na resposta, recarregar dados completos para sincronizar maturidade
       if (field === 'resposta') {
+        // Preservar estado expandido atual antes da atualização
+        const controleNodeId = `controle-${controleId}`;
+        const wasExpanded = expandedNodes.has(controleNodeId);
+        
         // Forçar recarga completa das medidas e programaMedidas
         setMedidas(prev => {
           const newMedidas = { ...prev };
@@ -641,6 +645,11 @@ export default function DiagnosticoPage() {
         
         // Recarregar usando loadMedidas que sincroniza tudo
         await loadMedidas(controleId);
+        
+        // Restaurar estado expandido se estava expandido antes
+        if (wasExpanded) {
+          setExpandedNodes(prev => new Set(prev).add(controleNodeId));
+        }
         
         // Invalidar cache de maturidade do controle e diagnóstico afetados
         invalidateCache('controle', controleId);
