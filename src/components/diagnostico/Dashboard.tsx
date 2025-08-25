@@ -108,7 +108,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             nivel: controle.nivel || 1
           };
           
-          const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
+          const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle, programaMedidas);
           somaMaturityControles += controleMaturity.score;
         }
       });

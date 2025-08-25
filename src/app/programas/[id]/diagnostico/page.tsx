@@ -409,7 +409,7 @@ export default function DiagnosticoPage() {
                 };
               }
             } else {
-              controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
+              controleMaturity = getControleMaturity(controle, controleMedidas, programaControle, programaMedidas);
             }
 
             return {
@@ -1114,7 +1114,7 @@ export default function DiagnosticoPage() {
                         controle: controle.id,
                         nivel: controle.nivel || 1
                       };
-                      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
+                      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle, programaMedidas);
                       
                       return (
                         <Grid size={{ xs: 12, md: 6 }} key={controle.id}>
@@ -1208,7 +1208,7 @@ export default function DiagnosticoPage() {
         controle: controle.id,
         nivel: controle.nivel || 1
       };
-      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle);
+      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle, programaMedidas);
 
       return (
         <Box>

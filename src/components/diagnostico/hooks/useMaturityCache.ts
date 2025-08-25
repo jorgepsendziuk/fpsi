@@ -24,19 +24,37 @@ export const useMaturityCache = (programaId: number) => {
   const getControleMaturity = useCallback((
     controle: Controle,
     medidas: Medida[],
-    programaControle: any
+    programaControle: any,
+    programaMedidas?: { [key: string]: any }
   ): MaturityData => {
     // ✅ CORREÇÃO: Calcular baseado nos PESOS das respostas, não quantidade
     let somaRespostas = 0;
     let totalMedidas = 0;
 
-    medidas.forEach(medida => {
+    medidas.forEach((medida, index) => {
+      // Buscar a resposta nos programaMedidas se fornecido
+      let respostaMedida = medida.resposta;
+      
+      if (programaMedidas) {
+        const key = `${medida.id}-${controle.id}-${programaId}`;
+        const programaMedida = programaMedidas[key];
+        if (programaMedida?.resposta !== undefined) {
+          respostaMedida = programaMedida.resposta;
+        }
+      }
+      
+      console.log(`Medida ${index + 1} (ID: ${medida.id}):`, {
+        respostaOriginal: medida.resposta,
+        respostaUsada: respostaMedida,
+        tipo: typeof respostaMedida
+      });
+      
       // Ignorar "Não se aplica" (resposta 6)
-      if (medida.resposta === 6) return;
+      if (respostaMedida === 6) return;
       
       totalMedidas++; // Contar todas as medidas (respondidas e não respondidas)
       
-      if (medida.resposta) {
+      if (respostaMedida) {
         // Buscar o peso correto da resposta
         let resposta: any;
         if (controle.diagnostico === 1) {
@@ -44,7 +62,7 @@ export const useMaturityCache = (programaId: number) => {
           resposta = [
             { id: 1, peso: 1 }, // Sim
             { id: 2, peso: 0 }  // Não
-          ].find(r => r.id === medida.resposta);
+          ].find(r => r.id === respostaMedida);
         } else {
           // Outros diagnósticos: respostas com escala
           resposta = [
@@ -53,7 +71,7 @@ export const useMaturityCache = (programaId: number) => {
             { id: 3, peso: 0.5 },  // Adota parcialmente
             { id: 4, peso: 0.25 }, // Há plano
             { id: 5, peso: 0 }     // Não adota
-          ].find(r => r.id === medida.resposta);
+          ].find(r => r.id === respostaMedida);
         }
         
         if (resposta && resposta.peso !== null) {
