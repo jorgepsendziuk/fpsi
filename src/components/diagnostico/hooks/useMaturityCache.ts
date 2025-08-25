@@ -50,11 +50,16 @@ export const useMaturityCache = (programaId: number) => {
       });
       
       // Ignorar "Não se aplica" (resposta 6)
-      if (respostaMedida === 6) return;
+      const respostaNumCheck = typeof respostaMedida === 'string' ? parseInt(respostaMedida, 10) : respostaMedida;
+      if (respostaNumCheck === 6) return;
       
       totalMedidas++; // Contar todas as medidas (respondidas e não respondidas)
       
       if (respostaMedida) {
+        // Converter resposta para number para comparação
+        const respostaId = typeof respostaMedida === 'string' ? parseInt(respostaMedida, 10) : respostaMedida;
+        console.log(`- Convertendo resposta: ${respostaMedida} -> ${respostaId}`);
+        
         // Buscar o peso correto da resposta
         let resposta: any;
         if (controle.diagnostico === 1) {
@@ -62,7 +67,7 @@ export const useMaturityCache = (programaId: number) => {
           resposta = [
             { id: 1, peso: 1 }, // Sim
             { id: 2, peso: 0 }  // Não
-          ].find(r => r.id === respostaMedida);
+          ].find(r => r.id === respostaId);
         } else {
           // Outros diagnósticos: respostas com escala
           resposta = [
@@ -71,11 +76,15 @@ export const useMaturityCache = (programaId: number) => {
             { id: 3, peso: 0.5 },  // Adota parcialmente
             { id: 4, peso: 0.25 }, // Há plano
             { id: 5, peso: 0 }     // Não adota
-          ].find(r => r.id === respostaMedida);
+          ].find(r => r.id === respostaId);
         }
         
+        console.log(`- Resposta encontrada:`, resposta);
         if (resposta && resposta.peso !== null) {
+          console.log(`- Adicionando peso: ${resposta.peso}`);
           somaRespostas += resposta.peso;
+        } else {
+          console.log(`- Peso não encontrado ou null`);
         }
       }
       // Se não tem resposta, contribui com 0 (peso 0)
