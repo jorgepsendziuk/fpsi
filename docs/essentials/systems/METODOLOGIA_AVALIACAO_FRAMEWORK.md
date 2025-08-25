@@ -200,6 +200,86 @@ iMC = (3,00 / (7-0)) / 2 * (1 + 40/100)
 
 **Resultado**: O indicador de maturidade do Controle 0 seria **0,30** ou nível de maturidade **Básico**.
 
+### **5.2 Avaliação do Controle 05 – Gestão de Contas**
+
+| **Medida** | **Nível de Implementação** | **∑PMC** | **QMC** | **QMNAC** | **Nível de Capacidade** | **iNCC** |
+|------------|---------------------------|----------|---------|-----------|------------------------|----------|
+| Medida 5.1 | Adota em maior parte ou totalmente (1) | | | | | |
+| Medida 5.2 | Adota em maior parte ou totalmente (1) | | | | | |
+| Medida 5.3 | Adota em menor parte (0,75) | 3,00 | 6 | 0 | Nível 3 | 60 |
+| Medida 5.4 | Há decisão formal ou plano aprovado para implementar (0,25) | | | | | |
+| Medida 5.5 | A organização não adota essa medida (0) | | | | | |
+| Medida 5.6 | A organização não adota essa medida (0) | | | | | |
+
+**Aplicando a fórmula:**
+```
+iMC = (3,00 / (6-0)) / 2 * (1 + 60/100)
+    = (3,00 / 6) / 2 * (1 + 60/100)
+    = (0,50 / 2) * (1 + 60/100)
+    = 0,25 * (1 + 60/100)
+    = 0,25 * 1,60
+    = 0,40
+```
+
+**Resultado**: O indicador de maturidade do Controle 05 seria **0,40** ou nível de maturidade **Básico**.
+
+### **5.3 Avaliação do Controle 18 – Testes de Invasão**
+
+| **Medida** | **Nível de Implementação** | **∑PMC** | **QMC** | **QMNAC** | **Nível de Capacidade** | **iNCC** |
+|------------|---------------------------|----------|---------|-----------|------------------------|----------|
+| Medida 18.1 | Adota em maior parte ou totalmente (1) | | | | | |
+| Medida 18.2 | Adota em maior parte ou totalmente (1) | | | | | |
+| Medida 18.3 | Adota em maior parte ou totalmente (1) | 4,00 | 5 | 1 | Nível 4 | 80 |
+| Medida 18.4 | Adota em maior parte ou totalmente (1) | | | | | |
+| Medida 18.5 | Não se aplica (-) | | | | | |
+
+**Aplicando a fórmula:**
+```
+iMC = (4,00 / (5-1)) / 2 * (1 + 80/100)
+    = (4,00 / 4) / 2 * (1 + 80/100)
+    = (1,00 / 2) * (1 + 80/100)
+    = 0,50 * (1 + 80/100)
+    = 0,50 * 1,80
+    = 0,90
+```
+
+**Resultado**: O indicador de maturidade do Controle 18 seria **0,90** ou nível de maturidade **Aprimorado**.
+
+### **5.4 Observações dos Exemplos**
+
+#### **Controle 0 (Diagnóstico 1)**
+- Utiliza respostas binárias (Sim/Não)
+- 3 medidas atendidas de 7 total
+- INCC Nível 2 (40%) resulta em multiplicador 1,40
+- Score final: 0,30 (Básico)
+
+#### **Controle 05 (Diagnóstico 2)**
+- Utiliza escala completa de implementação
+- Mix de níveis de implementação (1, 1, 0.75, 0.25, 0, 0)
+- INCC Nível 3 (60%) resulta em multiplicador 1,60
+- Score final: 0,40 (Básico)
+
+#### **Controle 18 (Diagnóstico 2)**
+- 4 medidas com implementação total (1,0 cada)
+- 1 medida "Não se aplica" (excluída do denominador)
+- INCC Nível 4 (80%) resulta em multiplicador 1,80
+- Score final: 0,90 (Aprimorado)
+
+#### **Pontos-Chave Demonstrados**
+
+1. **Tratamento de "Não se aplica"**: No Controle 18, a Medida 18.5 é excluída tanto do numerador (∑PMC) quanto do denominador (QMC - QMNAC)
+
+2. **Impacto do INCC**: O nível de capacidade amplifica significativamente o resultado:
+   - Controle 0: INCC 2 → multiplicador 1,40
+   - Controle 05: INCC 3 → multiplicador 1,60
+   - Controle 18: INCC 4 → multiplicador 1,80
+
+3. **Diferentes escalas por diagnóstico**:
+   - Diagnóstico 1: Escala binária (0 ou 1)
+   - Diagnósticos 2 e 3: Escala gradual (0, 0.25, 0.5, 0.75, 1)
+
+4. **Divisão por 2**: Todos os cálculos aplicam a divisão por 2 conforme fórmula oficial, resultando em scores mais conservadores
+
 ---
 
 ## 🔧 **6. VALIDAÇÃO E CONFORMIDADE**
@@ -238,6 +318,7 @@ iMC = (3,00 / (7-0)) / 2 * (1 + 40/100)
 | 1.0 | 2024-01-XX | Documentação inicial baseada no guia oficial |
 | 1.1 | 2024-01-XX | Correções de conformidade com framework |
 | 1.2 | 2024-01-XX | Validação completa da implementação |
+| 1.3 | 2024-01-XX | Adição de exemplos práticos dos Controles 05 e 18 |
 
 ---
 
