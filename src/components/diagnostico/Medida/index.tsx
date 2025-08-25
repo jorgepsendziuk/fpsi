@@ -121,11 +121,8 @@ const MedidaComponent: React.FC<MedidaProps> = ({
     }
   };
 
-  // Preparar array de respostas com logs para debug
+  // Preparar array de respostas
   const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
-  console.log('MedidaComponent - Controle:', controle.id, 'Diagnóstico:', controle.diagnostico);
-  console.log('MedidaComponent - Respostas disponíveis:', respostasArray);
-  console.log('MedidaComponent - Valor atual:', programaMedida?.resposta);
 
   // Tooltips explicativos para os campos técnicos
   const tooltips = {

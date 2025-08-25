@@ -14,5 +14,5 @@ quando clica em expandir o controle, tudo é recalculado e fica em "1.0".
 vamos entender e documentar esse cálculo para não haver mais dúvidas, a partir das concluões vamos tirar novas ações.
 lembrando que o cálculo da maturidade 
 
-reveja a estruturacao dessa documentacao, tem muitos arquivos MD desorganizados na raiz do projeto, e muitos arquivos com log de alteracoes, que nao sao tao necessarios assim...
+
 

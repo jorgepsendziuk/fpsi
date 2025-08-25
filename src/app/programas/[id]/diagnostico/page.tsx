@@ -651,15 +651,18 @@ export default function DiagnosticoPage() {
         // Recarregar usando loadMedidas que sincroniza tudo
         await loadMedidas(controleId);
         
-        // Restaurar estado expandido se estava expandido antes
+        // Restaurar estado expandido se estava expandido antes (com delay para evitar conflitos)
         if (wasExpanded) {
           console.log('- Restaurando estado expandido...');
-          setExpandedNodes(prev => {
-            const newExpanded = new Set(prev);
-            newExpanded.add(controleNodeId);
-            console.log('- expandedNodes depois:', Array.from(newExpanded));
-            return newExpanded;
-          });
+          // Usar setTimeout para garantir que a restauração aconteça após todas as re-renderizações
+          setTimeout(() => {
+            setExpandedNodes(prev => {
+              const newExpanded = new Set(prev);
+              newExpanded.add(controleNodeId);
+              console.log('- expandedNodes depois (delayed):', Array.from(newExpanded));
+              return newExpanded;
+            });
+          }, 100);
         }
         
         // Invalidar cache de maturidade do controle e diagnóstico afetados
