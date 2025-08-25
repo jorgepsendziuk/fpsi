@@ -65,6 +65,11 @@ export const useMaturityCache = (programaId: number) => {
 
     const percentual = totalMedidas > 0 ? somaRespostas / totalMedidas : 0;
     
+    console.log(`useMaturityCache - Controle ${controle.id}:`);
+    console.log('- Total medidas:', totalMedidas);
+    console.log('- Soma respostas:', somaRespostas);
+    console.log('- Percentual calculado:', percentual);
+    
     let level: MaturityData['level'] = 'inicial';
     let label = 'Inicial';
     let color = MATURITY_COLORS.inicial;
@@ -87,6 +92,9 @@ export const useMaturityCache = (programaId: number) => {
       color = MATURITY_COLORS.basico;
     }
 
+    console.log(`- Nível determinado: ${level} (${label})`);
+    console.log(`- Cor: ${color}`);
+    
     return {
       score: percentual,
       label,
