@@ -409,7 +409,11 @@ export default function DiagnosticoPage() {
                 };
               }
             } else {
+              console.log(`treeData - Calculando maturidade para controle ${controle.id}:`);
+              console.log('- controleMedidas.length:', controleMedidas.length);
+              console.log('- programaMedidas keys:', Object.keys(programaMedidas).filter(k => k.includes(`-${controle.id}-`)));
               controleMaturity = getControleMaturity(controle, controleMedidas, programaControle, programaMedidas);
+              console.log('- Resultado maturidade:', controleMaturity);
             }
 
             return {
@@ -502,6 +506,12 @@ export default function DiagnosticoPage() {
 
   // Manipular seleção de nó
   const handleNodeSelect = useCallback(async (node: TreeNode) => {
+    console.log('handleNodeSelect - Selecionando nó:', node.type, node.id);
+    if (node.type === 'controle') {
+      console.log('handleNodeSelect - Dados do controle:', node.data);
+      console.log('handleNodeSelect - Maturidade do nó:', node.maturityScore, node.maturityLabel);
+    }
+    
     setSelectedNode(node);
     
     // No mobile, fechar drawer para itens de último nível (medidas e dashboard)
