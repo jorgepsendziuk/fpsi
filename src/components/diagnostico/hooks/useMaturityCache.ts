@@ -26,10 +26,44 @@ export const useMaturityCache = (programaId: number) => {
     medidas: Medida[],
     programaControle: any
   ): MaturityData => {
-    // Cálculo simples baseado no número de medidas respondidas
-    const medidasRespondidas = medidas.filter(m => m.resposta && m.resposta !== 6).length;
-    const totalMedidas = medidas.length;
-    const percentual = totalMedidas > 0 ? medidasRespondidas / totalMedidas : 0;
+    // ✅ CORREÇÃO: Calcular baseado nos PESOS das respostas, não quantidade
+    let somaRespostas = 0;
+    let totalMedidas = 0;
+
+    medidas.forEach(medida => {
+      // Ignorar "Não se aplica" (resposta 6)
+      if (medida.resposta === 6) return;
+      
+      totalMedidas++; // Contar todas as medidas (respondidas e não respondidas)
+      
+      if (medida.resposta) {
+        // Buscar o peso correto da resposta
+        let resposta: any;
+        if (controle.diagnostico === 1) {
+          // Diagnóstico 1: respostasimnao
+          resposta = [
+            { id: 1, peso: 1 }, // Sim
+            { id: 2, peso: 0 }  // Não
+          ].find(r => r.id === medida.resposta);
+        } else {
+          // Outros diagnósticos: respostas com escala
+          resposta = [
+            { id: 1, peso: 1 },    // Adota totalmente
+            { id: 2, peso: 0.75 }, // Adota em maior parte
+            { id: 3, peso: 0.5 },  // Adota parcialmente
+            { id: 4, peso: 0.25 }, // Há plano
+            { id: 5, peso: 0 }     // Não adota
+          ].find(r => r.id === medida.resposta);
+        }
+        
+        if (resposta && resposta.peso !== null) {
+          somaRespostas += resposta.peso;
+        }
+      }
+      // Se não tem resposta, contribui com 0 (peso 0)
+    });
+
+    const percentual = totalMedidas > 0 ? somaRespostas / totalMedidas : 0;
     
     let level: MaturityData['level'] = 'inicial';
     let label = 'Inicial';
