@@ -44,3 +44,21 @@
 - **Tarefas concluídas**: Mova para seção "Concluída" com data
 
 **Última atualização**: Reorganização da documentação concluída
+
+
+- implementar estrategia de multiplos usuarios e atribuir os projetos para usuarios.
+
+- plano de ação: 
+    - esta demorando muito pra carregar
+    - nao esta carregando os titulos dos diagnosticos e controles
+    - mudar nome para plano de trabalho
+    - diminuir altura geral da pagina, diminuir altura das linhas, condensar informacao, printer-friendly
+    - colocar botao de pdf com icone de impressao
+
+
+reveja a estrategia de cálculo dos indices de maturidades exibidos no menu árvore
+vamos entender e documentar esse cálculo para não haver mais dúvidas, a partir das conclusões vamos tirar novas ações.
+lembrando que o cálculo da maturidade 
+
+
+
