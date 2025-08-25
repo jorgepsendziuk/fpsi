@@ -283,6 +283,54 @@ export const fetchProgramaMedida = withDemoCheck(originalFetchProgramaMedida, de
 export const updateProgramaMedida = withDemoCheck(originalUpdateProgramaMedida, demoDataService.updateProgramaMedida);
 export const updateControleNivel = withDemoCheck(originalUpdateControleNivel, demoDataService.updateControleNivel);
 
+// Nova função para carregar todos os programaMedidas de uma vez para dashboard
+const originalFetchAllProgramaMedidas = async (programaId: number) => {
+  console.log(`📊 fetchAllProgramaMedidas: Fetching all for programa ${programaId}`);
+  
+  // Ensure all records exist first
+  await ensureProgramaMedidaRecords(programaId);
+  
+  const { data, error } = await supabaseBrowserClient
+    .from("programa_medida")
+    .select("*")
+    .eq("programa", programaId);
+
+  if (error) {
+    console.error(`fetchAllProgramaMedidas: Error fetching:`, error);
+    throw error;
+  }
+
+  console.log(`📊 fetchAllProgramaMedidas: Found ${data?.length || 0} programa_medida records`);
+  
+  // Convert to key-value format expected by the frontend
+  const programaMedidasMap: { [key: string]: any } = {};
+  
+  if (data) {
+    // Get medida details to construct proper keys
+    const medidaIds = data.map(pm => pm.medida);
+    const { data: medidasData } = await supabaseBrowserClient
+      .from("medida")
+      .select("id, id_controle")
+      .in("id", medidaIds);
+    
+    data.forEach(programaMedida => {
+      const medida = medidasData?.find(m => m.id === programaMedida.medida);
+      if (medida) {
+        const key = `${programaMedida.medida}-${medida.id_controle}-${programaId}`;
+        programaMedidasMap[key] = programaMedida;
+      }
+    });
+  }
+  
+  console.log(`📊 fetchAllProgramaMedidas: Created ${Object.keys(programaMedidasMap).length} mapped records`);
+  return programaMedidasMap;
+};
+
+export const fetchAllProgramaMedidas = withDemoCheck(originalFetchAllProgramaMedidas, async (programaId: number) => {
+  // Para modo demo, retornar dados simulados
+  return {};
+});
+
 // New function to ensure programa_medida records exist
 export const ensureProgramaMedidaRecords = async (programaId: number) => {
   // Skip for demo mode

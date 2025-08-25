@@ -29,7 +29,7 @@ interface DashboardProps {
   controles: { [key: number]: any[] };
   medidas: { [key: number]: any[] };
   programaMedidas: { [key: string]: any };
-  getControleMaturity: (controle: any, medidas: any[], programaControle: any) => any;
+  getControleMaturity: (controle: any, medidas: any[], programaControle: any, programaMedidas?: { [key: string]: any }) => any;
   getDiagnosticoMaturity: (diagnosticoId: number) => any;
   programaId: number;
 }
@@ -51,6 +51,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     let totalControles = 0;
     let totalMedidas = 0;
     let medidasRespondidas = 0;
+    let medidasImplementadas = 0; // Nova métrica: medidas com peso > 0
     let somaMaturityDiagnosticos = 0;
     let somaMaturityControles = 0;
     let controlesComDados = 0;
@@ -92,11 +93,31 @@ const Dashboard: React.FC<DashboardProps> = ({
         if (controleMedidas.length > 0) {
           controlesComDados++;
           
-          // Contar medidas respondidas
+          // Contar medidas respondidas e implementadas
           controleMedidas.forEach(medida => {
             const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
-            if (programaMedida?.resposta !== undefined && programaMedida?.resposta !== null) {
+            const respostaId = programaMedida?.resposta;
+            
+            // Ignorar "Não se aplica" (resposta 6)
+            if (respostaId === 6) return;
+            
+            if (respostaId !== undefined && respostaId !== null) {
               medidasRespondidas++;
+              
+              // Verificar se é realmente implementada (peso > 0)
+              let peso = 0;
+              if (diagnostico.id === 1) {
+                // Diagnóstico 1: Sim/Não
+                peso = respostaId === 1 ? 1 : 0;
+              } else {
+                // Diagnósticos 2 e 3: Escala
+                const pesos = { 1: 1, 2: 0.75, 3: 0.5, 4: 0.25, 5: 0 };
+                peso = pesos[respostaId as keyof typeof pesos] || 0;
+              }
+              
+              if (peso > 0) {
+                medidasImplementadas++;
+              }
             }
           });
 
@@ -117,13 +138,16 @@ const Dashboard: React.FC<DashboardProps> = ({
     const avgMaturityDiagnosticos = totalDiagnosticos > 0 ? somaMaturityDiagnosticos / totalDiagnosticos : 0;
     const avgMaturityControles = controlesComDados > 0 ? somaMaturityControles / controlesComDados : 0;
     const percentualRespostas = totalMedidas > 0 ? (medidasRespondidas / totalMedidas) * 100 : 0;
+    const percentualImplementacao = totalMedidas > 0 ? (medidasImplementadas / totalMedidas) * 100 : 0;
 
     return {
       totalDiagnosticos,
       totalControles,
       totalMedidas,
       medidasRespondidas,
+      medidasImplementadas, // Nova métrica
       percentualRespostas,
+      percentualImplementacao, // Nova métrica
       avgMaturityDiagnosticos,
       avgMaturityControles,
       maturityLevels
@@ -216,21 +240,55 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {diagnosticos.map(diagnostico => {
                   const diagnosticoControles = controles[diagnostico.id] || [];
                   let totalMedidasDiag = 0;
-                  let medidasRespondidasDiag = 0;
+                  let medidasImplementadasDiag = 0; // Mudança: implementadas (com peso > 0)
+                  let medidasRespondidasDiag = 0; // Separar: apenas respondidas
+                  let somaPesosRespostas = 0; // Para cálculo de qualidade
 
                   diagnosticoControles.forEach(controle => {
                     const controleMedidas = medidas[controle.id] || [];
-                    totalMedidasDiag += controleMedidas.length;
                     
                     controleMedidas.forEach(medida => {
                       const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
-                      if (programaMedida?.resposta !== undefined && programaMedida?.resposta !== null) {
-                        medidasRespondidasDiag++;
+                      const respostaId = programaMedida?.resposta;
+                      
+                      // Ignorar "Não se aplica" (resposta 6)
+                      if (respostaId === 6) return;
+                      
+                      totalMedidasDiag++; // Contar todas as medidas aplicáveis
+                      
+                      if (respostaId !== undefined && respostaId !== null) {
+                        medidasRespondidasDiag++; // Contar respondidas
+                        
+                        // Buscar o peso correto da resposta
+                        let peso = 0;
+                        if (diagnostico.id === 1) {
+                          // Diagnóstico 1: Sim/Não
+                          peso = respostaId === 1 ? 1 : 0; // Sim = 1, Não = 0
+                        } else {
+                          // Diagnósticos 2 e 3: Escala
+                          const pesos = { 1: 1, 2: 0.75, 3: 0.5, 4: 0.25, 5: 0 };
+                          peso = pesos[respostaId as keyof typeof pesos] || 0;
+                        }
+                        
+                        somaPesosRespostas += peso;
+                        
+                        // Considerar "implementada" apenas se peso > 0
+                        if (peso > 0) {
+                          medidasImplementadasDiag++;
+                        }
                       }
                     });
                   });
 
-                  const percentualDiag = totalMedidasDiag > 0 ? (medidasRespondidasDiag / totalMedidasDiag) * 100 : 0;
+                  // Percentual baseado em medidas REALMENTE implementadas (peso > 0)
+                  const percentualImplementacao = totalMedidasDiag > 0 ? (medidasImplementadasDiag / totalMedidasDiag) * 100 : 0;
+                  
+                  // Percentual de respostas (para informação adicional)
+                  const percentualRespostas = totalMedidasDiag > 0 ? (medidasRespondidasDiag / totalMedidasDiag) * 100 : 0;
+                  
+                  // Score de qualidade baseado nos pesos
+                  const scoreQualidade = totalMedidasDiag > 0 ? (somaPesosRespostas / totalMedidasDiag) * 100 : 0;
+                  
                   const maturityData = getDiagnosticoMaturity(diagnostico.id);
 
                   return (
@@ -279,10 +337,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                              {medidasRespondidasDiag} de {totalMedidasDiag} medidas implementadas
+                              {medidasImplementadasDiag} de {totalMedidasDiag} medidas implementadas
                             </Typography>
                             <Chip 
-                              label={`${percentualDiag.toFixed(1)}%`}
+                              label={`${percentualImplementacao.toFixed(1)}%`}
                               size="small"
                               sx={{ 
                                 backgroundColor: getMaturityColor(maturityData.score),
@@ -293,17 +351,26 @@ const Dashboard: React.FC<DashboardProps> = ({
                             />
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {getStatusIcon(percentualDiag)}
+                            {getStatusIcon(scoreQualidade)}
                             <Typography variant="body2" color="text.secondary">
-                              Status: {percentualDiag >= 80 ? 'Excelente' : 
-                                      percentualDiag >= 60 ? 'Bom' : 
-                                      percentualDiag >= 40 ? 'Regular' : 'Crítico'}
+                              Status: {scoreQualidade >= 80 ? 'Excelente' : 
+                                      scoreQualidade >= 60 ? 'Bom' : 
+                                      scoreQualidade >= 40 ? 'Regular' : 'Crítico'}
                             </Typography>
                           </Box>
                         </Box>
+                        
+                        {/* Informação adicional sobre respostas */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {medidasRespondidasDiag} respondidas ({percentualRespostas.toFixed(1)}%) • 
+                            Qualidade: {scoreQualidade.toFixed(1)}%
+                          </Typography>
+                        </Box>
+                        
                         <LinearProgress 
                           variant="determinate" 
-                          value={percentualDiag} 
+                          value={scoreQualidade} 
                           sx={{ 
                             height: 12, 
                             borderRadius: 6,

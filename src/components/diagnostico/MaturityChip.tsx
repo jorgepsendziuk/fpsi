@@ -1,6 +1,7 @@
 import React from 'react';
 import { Chip, Tooltip, Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import MaturityCalculationTooltip from './MaturityCalculationTooltip';
 
 interface MaturityChipProps {
   score: number;
@@ -9,6 +10,30 @@ interface MaturityChipProps {
   showLabel?: boolean;
   animated?: boolean;
   variant?: 'filled' | 'outlined';
+  calculationData?: {
+    medidas: {
+      total: number;
+      respondidas: number;
+      naoSeAplica: number;
+      somaRespostas: number;
+    };
+    incc: {
+      nivel: number;
+      multiplicador: number;
+    };
+    calculo: {
+      baseIndex: number;
+      finalScore: number;
+      formula: string;
+    };
+    resultado: {
+      score: number;
+      label: string;
+      color: string;
+    };
+  };
+  controleId?: number;
+  controleNome?: string;
 }
 
 /**
@@ -42,7 +67,10 @@ const MaturityChip: React.FC<MaturityChipProps> = ({
   size = 'medium',
   showLabel = true,
   animated = false,
-  variant = 'filled'
+  variant = 'filled',
+  calculationData,
+  controleId,
+  controleNome
 }) => {
   const maturityColor = getMaturityColor(score);
   const maturityLabel = label || getMaturityLabel(score);
@@ -74,7 +102,20 @@ const MaturityChip: React.FC<MaturityChipProps> = ({
     />
   );
 
-  // Se tem tooltip informativo, envolver com Tooltip
+  // Se tem dados de cálculo, usar tooltip detalhado
+  if (calculationData) {
+    return (
+      <MaturityCalculationTooltip
+        calculationData={calculationData}
+        controleId={controleId}
+        controleNome={controleNome}
+      >
+        {chipElement}
+      </MaturityCalculationTooltip>
+    );
+  }
+
+  // Senão, usar tooltip simples
   const tooltipContent = (
     <Box>
       <Box component="div" sx={{ fontWeight: 600 }}>

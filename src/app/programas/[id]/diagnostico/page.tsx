@@ -227,25 +227,84 @@ export default function DiagnosticoPage() {
     }
   }, [medidas, programaId]);
 
-  // Carregar controles automaticamente para dashboard após carregar diagnósticos
+  // Carregar dados completos para dashboard - OTIMIZADO
   useEffect(() => {
-    const loadControlesForDashboard = async () => {
-      if (diagnosticos.length > 0 && !loading) {
+    const loadDataForDashboard = async () => {
+      if (diagnosticos.length > 0 && !loading && selectedNode?.type === 'dashboard') {
+        console.log("🎯 Dashboard: Iniciando carregamento de dados completos");
+        
+        // Carregar controles para todos os diagnósticos (necessário para dashboard)
         for (const diagnostico of diagnosticos) {
-          // Carregar apenas se ainda não foi carregado
-          if (!controles[diagnostico.id]) {
+          if (!controles[diagnostico.id] && !loadingControles.has(diagnostico.id)) {
             try {
+              console.log(`📊 Dashboard: Carregando controles para diagnóstico ${diagnostico.id}`);
               await loadControles(diagnostico.id);
             } catch (error) {
               console.error(`Erro ao carregar controles do diagnóstico ${diagnostico.id}:`, error);
             }
           }
         }
+        
+        // Após carregar controles, carregar medidas e programaMedidas para cálculos precisos
+        console.log("🎯 Dashboard: Iniciando carregamento de medidas para cálculos");
+        // Chamar loadMedidasForDashboard separadamente para evitar dependência circular
       }
     };
 
-    loadControlesForDashboard();
-  }, [diagnosticos, loading, controles, loadControles]);
+    // Usar setTimeout para evitar execução imediata e permitir que o estado se estabilize
+    const timer = setTimeout(loadDataForDashboard, 100);
+    return () => clearTimeout(timer);
+  }, [diagnosticos, loading, selectedNode?.type, controles, loadControles, loadingControles]);
+
+  // Função para carregar dados completos para dashboard de forma otimizada
+  const loadMedidasForDashboard = useCallback(async () => {
+    console.log("📊 Dashboard: Carregando dados completos de forma otimizada");
+    
+    try {
+      // 1. Carregar todos os programaMedidas de uma vez (mais eficiente)
+      console.log("📊 Dashboard: Carregando todos os programaMedidas...");
+      const allProgramaMedidas = await dataService.fetchAllProgramaMedidas(programaId);
+      setProgramaMedidas(prev => ({ ...prev, ...allProgramaMedidas }));
+      console.log(`✅ Dashboard: Carregados ${Object.keys(allProgramaMedidas).length} programaMedidas`);
+      
+      // 2. Carregar medidas apenas para controles que ainda não têm dados
+      for (const diagnostico of diagnosticos) {
+        const diagnosticoControles = controles[diagnostico.id] || [];
+        
+        for (const controle of diagnosticoControles) {
+          // Carregar medidas apenas se não estão carregadas e não estão sendo carregadas
+          if (!medidas[controle.id] && !loadingMedidas.has(controle.id)) {
+            try {
+              console.log(`📊 Dashboard: Carregando medidas para controle ${controle.id}`);
+              await loadMedidas(controle.id);
+            } catch (error) {
+              console.error(`Erro ao carregar medidas do controle ${controle.id}:`, error);
+            }
+          }
+        }
+      }
+      
+      console.log("✅ Dashboard: Carregamento de dados completo concluído");
+    } catch (error) {
+      console.error("❌ Dashboard: Erro ao carregar dados:", error);
+    }
+  }, [diagnosticos, controles, medidas, loadingMedidas, loadMedidas, programaId]);
+
+  // Carregar medidas para dashboard quando controles estiverem carregados
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (selectedNode?.type === 'dashboard' && diagnosticos.length > 0) {
+        // Verificar se temos controles carregados
+        const hasControles = diagnosticos.some(d => controles[d.id] && controles[d.id].length > 0);
+        if (hasControles) {
+          await loadMedidasForDashboard();
+        }
+      }
+    };
+
+    const timer = setTimeout(loadDashboardData, 200);
+    return () => clearTimeout(timer);
+  }, [selectedNode?.type, diagnosticos, controles, loadMedidasForDashboard]);
 
   // Calcular maturidade inteligente com cache para diagnósticos
   const calculateMaturity = useCallback((diagnostico: Diagnostico) => {
@@ -421,7 +480,10 @@ export default function DiagnosticoPage() {
               type: 'controle',
               label: `${controle.numero} - ${controle.nome}`,
               icon: <SecurityIcon sx={{ color: controleMaturity.color }} />,
-              data: controle,
+              data: { 
+                ...controle, 
+                calculationData: controleMaturity.calculationData 
+              },
               maturityScore: controleMaturity.score, // Usar valor decimal
               maturityLabel: controleMaturity.label,
             expanded: expandedNodes.has(`controle-${controle.id}`),
@@ -561,7 +623,7 @@ export default function DiagnosticoPage() {
     const nextItem = currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null;
     
     return { prevItem, nextItem, currentIndex: currentIndex + 1, total: allItems.length };
-  }, [treeData, diagnosticos, controles]);
+  }, [treeData, diagnosticos, controles, expandedNodes]);
 
   const navigateToItem = useCallback((targetNode: TreeNode) => {
     setSelectedNode(targetNode);
@@ -910,6 +972,9 @@ export default function DiagnosticoPage() {
                       label={node.maturityLabel || ''}
                       size="small"
                       animated={true}
+                      calculationData={node.type === 'controle' ? node.data.calculationData : undefined}
+                      controleId={node.type === 'controle' ? node.data.id : undefined}
+                      controleNome={node.type === 'controle' ? node.data.nome : undefined}
                     />
                   )}
                 </Box>
@@ -1118,6 +1183,9 @@ export default function DiagnosticoPage() {
                     size="medium"
                     showLabel={true}
                     animated={true}
+                    calculationData={selectedNode.data?.calculationData}
+                    controleId={selectedNode.data?.id}
+                    controleNome={selectedNode.data?.nome}
                   />
                   <Chip label={`${diagnosticoControles.length} controles`} variant="outlined" size="small" />
                 </Box>
@@ -1183,6 +1251,9 @@ export default function DiagnosticoPage() {
                                       score={controleMaturity.score}
                                       label={controleMaturity.label}
                                       size="small"
+                                      calculationData={controleMaturity.calculationData}
+                                      controleId={controle.id}
+                                      controleNome={controle.nome}
                                     />
                                     <Chip 
                                       label={`${controleMedidas.length} medidas`} 

@@ -6,6 +6,28 @@ interface MaturityData {
   label: string;
   color: string;
   level: 'inicial' | 'basico' | 'intermediario' | 'aprimoramento' | 'aprimorado';
+  calculationData?: {
+    medidas: {
+      total: number;
+      respondidas: number;
+      naoSeAplica: number;
+      somaRespostas: number;
+    };
+    incc: {
+      nivel: number;
+      multiplicador: number;
+    };
+    calculo: {
+      baseIndex: number;
+      finalScore: number;
+      formula: string;
+    };
+    resultado: {
+      score: number;
+      label: string;
+      color: string;
+    };
+  };
 }
 
 export const useMaturityCache = (programaId: number) => {
@@ -27,7 +49,7 @@ export const useMaturityCache = (programaId: number) => {
     programaControle: any,
     programaMedidas?: { [key: string]: any }
   ): MaturityData => {
-    // ✅ CORREÇÃO: Calcular baseado nos PESOS das respostas, não quantidade
+    // ✅ USAR FÓRMULA OFICIAL DO FRAMEWORK
     let somaRespostas = 0;
     let totalMedidas = 0;
 
@@ -43,12 +65,6 @@ export const useMaturityCache = (programaId: number) => {
         }
       }
       
-      console.log(`Medida ${index + 1} (ID: ${medida.id}):`, {
-        respostaOriginal: medida.resposta,
-        respostaUsada: respostaMedida,
-        tipo: typeof respostaMedida
-      });
-      
       // Ignorar "Não se aplica" (resposta 6)
       const respostaNumCheck = typeof respostaMedida === 'string' ? parseInt(respostaMedida, 10) : respostaMedida;
       if (respostaNumCheck === 6) return;
@@ -58,7 +74,6 @@ export const useMaturityCache = (programaId: number) => {
       if (respostaMedida) {
         // Converter resposta para number para comparação
         const respostaId = typeof respostaMedida === 'string' ? parseInt(respostaMedida, 10) : respostaMedida;
-        console.log(`- Convertendo resposta: ${respostaMedida} -> ${respostaId}`);
         
         // Buscar o peso correto da resposta
         let resposta: any;
@@ -72,63 +87,114 @@ export const useMaturityCache = (programaId: number) => {
           // Outros diagnósticos: respostas com escala
           resposta = [
             { id: 1, peso: 1 },    // Adota totalmente
-            { id: 2, peso: 0.75 }, // Adota em maior parte
+            { id: 2, peso: 0.75 }, // Adota em menor parte
             { id: 3, peso: 0.5 },  // Adota parcialmente
             { id: 4, peso: 0.25 }, // Há plano
             { id: 5, peso: 0 }     // Não adota
           ].find(r => r.id === respostaId);
         }
         
-        console.log(`- Resposta encontrada:`, resposta);
         if (resposta && resposta.peso !== null) {
-          console.log(`- Adicionando peso: ${resposta.peso}`);
           somaRespostas += resposta.peso;
-        } else {
-          console.log(`- Peso não encontrado ou null`);
         }
       }
       // Se não tem resposta, contribui com 0 (peso 0)
     });
 
-    const percentual = totalMedidas > 0 ? somaRespostas / totalMedidas : 0;
+    // ✅ APLICAR FÓRMULA OFICIAL DO FRAMEWORK
+    const baseIndex = totalMedidas > 0 ? somaRespostas / totalMedidas : 0;
     
-    console.log(`useMaturityCache - Controle ${controle.id}:`);
-    console.log('- Total medidas:', totalMedidas);
-    console.log('- Soma respostas:', somaRespostas);
-    console.log('- Percentual calculado:', percentual);
+    // ✅ APLICAR MULTIPLICADOR INCC CORRETO
+    const inccLevel = [
+      { id: 1, nivel: 0 }, // Nível 0
+      { id: 2, nivel: 1 }, // Nível 1 
+      { id: 3, nivel: 2 }, // Nível 2
+      { id: 4, nivel: 3 }, // Nível 3
+      { id: 5, nivel: 4 }, // Nível 4
+      { id: 6, nivel: 5 }  // Nível 5
+    ].find(incc => incc.id === programaControle.nivel);
     
+    const inccNivel = inccLevel?.nivel || 0;
+    const inccMultiplier = 1 + (inccNivel * 1 / 5);
+    
+    // ✅ FÓRMULA OFICIAL: (baseIndex / 2) * multiplicador_incc
+    const finalScore = (baseIndex / 2) * inccMultiplier;
+    
+    // ✅ USAR FAIXAS OFICIAIS DO FRAMEWORK
     let level: MaturityData['level'] = 'inicial';
     let label = 'Inicial';
     let color = MATURITY_COLORS.inicial;
     
-    if (percentual >= 0.8) {
+    if (finalScore >= 0.9) {
       level = 'aprimorado';
       label = 'Aprimorado';
       color = MATURITY_COLORS.aprimorado;
-    } else if (percentual >= 0.6) {
+    } else if (finalScore >= 0.7) {
       level = 'aprimoramento';
       label = 'Em Aprimoramento';
       color = MATURITY_COLORS.aprimoramento;
-    } else if (percentual >= 0.4) {
+    } else if (finalScore >= 0.5) {
       level = 'intermediario';
       label = 'Intermediário';
       color = MATURITY_COLORS.intermediario;
-    } else if (percentual >= 0.2) {
+    } else if (finalScore >= 0.3) {
       level = 'basico';
       label = 'Básico';
       color = MATURITY_COLORS.basico;
     }
 
-    console.log(`- Nível determinado: ${level} (${label})`);
-    console.log(`- Cor: ${color}`);
+    // Contar medidas respondidas e não se aplica para dados de cálculo
+    let medidasRespondidas = 0;
+    let medidasNaoSeAplica = 0;
+    
+    medidas.forEach(medida => {
+      let respostaMedida = medida.resposta;
+      
+      if (programaMedidas) {
+        const key = `${medida.id}-${controle.id}-${programaId}`;
+        const programaMedida = programaMedidas[key];
+        if (programaMedida?.resposta !== undefined) {
+          respostaMedida = programaMedida.resposta;
+        }
+      }
+      
+      const respostaNumCheck = typeof respostaMedida === 'string' ? parseInt(respostaMedida, 10) : respostaMedida;
+      if (respostaNumCheck === 6) {
+        medidasNaoSeAplica++;
+      } else if (respostaMedida !== null && respostaMedida !== undefined) {
+        medidasRespondidas++;
+      }
+    });
     
     return {
-      score: percentual,
+      score: finalScore,
       label,
       color,
-      level
+      level,
+      calculationData: {
+        medidas: {
+          total: totalMedidas,
+          respondidas: medidasRespondidas,
+          naoSeAplica: medidasNaoSeAplica,
+          somaRespostas
+        },
+        incc: {
+          nivel: inccNivel,
+          multiplicador: inccMultiplier
+        },
+        calculo: {
+          baseIndex,
+          finalScore,
+          formula: 'iMC = (∑PMC / (QMC - QMNAC)) / 2 × (1 + iNCC/100)'
+        },
+        resultado: {
+          score: finalScore,
+          label,
+          color
+        }
+      }
     };
-  }, [MATURITY_COLORS]);
+  }, [MATURITY_COLORS, programaId]);
 
   const getDiagnosticoMaturity = useCallback((
     diagnostico: Diagnostico,
@@ -146,7 +212,7 @@ export const useMaturityCache = (programaId: number) => {
 
     // Calcular média dos controles
     let totalScore = 0;
-    let controlesComMedidas = 0;
+    let controlesComDados = 0;
 
     controles.forEach(controle => {
       const medidas = medidasMap[controle.id] || [];
@@ -159,29 +225,30 @@ export const useMaturityCache = (programaId: number) => {
         };
         const controleMaturity = getControleMaturity(controle, medidas, programaControle);
         totalScore += controleMaturity.score;
-        controlesComMedidas++;
+        controlesComDados++;
       }
     });
 
-    const averageScore = controlesComMedidas > 0 ? totalScore / controlesComMedidas : 0;
+    const averageScore = controlesComDados > 0 ? totalScore / controlesComDados : 0;
     
+    // ✅ USAR FAIXAS OFICIAIS DO FRAMEWORK
     let level: MaturityData['level'] = 'inicial';
     let label = 'Inicial';
     let color = MATURITY_COLORS.inicial;
     
-    if (averageScore >= 0.8) {
+    if (averageScore >= 0.9) {
       level = 'aprimorado';
       label = 'Aprimorado';
       color = MATURITY_COLORS.aprimorado;
-    } else if (averageScore >= 0.6) {
+    } else if (averageScore >= 0.7) {
       level = 'aprimoramento';
       label = 'Em Aprimoramento';
       color = MATURITY_COLORS.aprimoramento;
-    } else if (averageScore >= 0.4) {
+    } else if (averageScore >= 0.5) {
       level = 'intermediario';
       label = 'Intermediário';
       color = MATURITY_COLORS.intermediario;
-    } else if (averageScore >= 0.2) {
+    } else if (averageScore >= 0.3) {
       level = 'basico';
       label = 'Básico';
       color = MATURITY_COLORS.basico;

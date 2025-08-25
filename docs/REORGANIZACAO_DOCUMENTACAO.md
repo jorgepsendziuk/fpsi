@@ -111,3 +111,4 @@ archive/
 **Estrutura anterior**: Desorganizada com 15+ arquivos MD na raiz  
 **Estrutura atual**: 3 categorias principais + arquivo histórico
 
+
