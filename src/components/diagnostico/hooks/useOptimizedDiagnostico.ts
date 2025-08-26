@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { loadEssentialData, loadMedidasDetalhadas, invalidateCache } from '../../../lib/services/optimizedDataService';
+import * as dataService from '../../../lib/services/dataService';
 
 interface DiagnosticoData {
   id: number;
@@ -71,19 +72,33 @@ export const useOptimizedDiagnostico = (programaId: number) => {
     lastUpdate: 0
   });
 
+
+
   // Carregamento inicial dos dados essenciais
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         setState(prev => ({ ...prev, isLoadingEssential: true, error: null }));
         
-        const essentialData = await loadEssentialData(programaId);
+        // Carregar diagnósticos
+        const diagnosticos = await dataService.fetchDiagnosticos();
+        
+        // Carregar todos os programaMedidas de uma vez
+        const programaMedidas = await dataService.fetchAllProgramaMedidas(programaId);
+        
+        // Carregar controles para cada diagnóstico
+        const controlesPorDiagnostico: { [key: number]: any[] } = {};
+        
+        for (const diagnostico of diagnosticos) {
+          const controles = await dataService.fetchControles(diagnostico.id, programaId);
+          controlesPorDiagnostico[diagnostico.id] = controles;
+        }
         
         setState(prev => ({
           ...prev,
-          diagnosticos: essentialData.diagnosticos,
-          controlesPorDiagnostico: essentialData.controlesPorDiagnostico,
-          respostasPorChave: essentialData.respostasPorChave,
+          diagnosticos,
+          controlesPorDiagnostico,
+          respostasPorChave: programaMedidas,
           isLoadingEssential: false,
           lastUpdate: Date.now()
         }));
@@ -114,7 +129,7 @@ export const useOptimizedDiagnostico = (programaId: number) => {
         isLoadingDetailed: { ...prev.isLoadingDetailed, [controleId]: true }
       }));
 
-      const medidas = await loadMedidasDetalhadas(controleId, programaId);
+      const medidas = await dataService.fetchMedidas(controleId, programaId);
       
       setState(prev => ({
         ...prev,
@@ -142,8 +157,8 @@ export const useOptimizedDiagnostico = (programaId: number) => {
     value: any
   ) => {
     try {
-      // Atualizar no banco (implementar)
-      // await updateProgramaMedida(medidaId, controleId, programaId, { [field]: value });
+      // Atualizar no banco
+      await dataService.updateProgramaMedida(medidaId, controleId, programaId, { [field]: value });
       
       // Atualizar estado local
       const key = `${medidaId}-${controleId}-${programaId}`;
@@ -167,8 +182,14 @@ export const useOptimizedDiagnostico = (programaId: number) => {
   // Função para atualizar nível INCC
   const updateControleINCC = useCallback(async (controleId: number, nivel: number) => {
     try {
-      // Atualizar no banco (implementar)
-      // await updateControleNivel(controleId, nivel);
+      // Atualizar no banco - precisa do programa_controle_id
+      const controle = Object.values(state.controlesPorDiagnostico)
+        .flat()
+        .find(c => c.id === controleId);
+      
+      if (controle?.programa_controle_id) {
+        await dataService.updateControleNivel(controle.programa_controle_id, nivel);
+      }
       
       // Atualizar estado local
       setState(prev => {
@@ -194,7 +215,7 @@ export const useOptimizedDiagnostico = (programaId: number) => {
     } catch (error) {
       console.error('❌ Failed to update INCC:', error);
     }
-  }, []);
+  }, [state.controlesPorDiagnostico]);
 
   // Função para calcular maturidade de controle
   const getControleMaturidade = useCallback((controle: ControleData) => {
