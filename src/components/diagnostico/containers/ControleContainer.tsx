@@ -28,7 +28,7 @@ export interface ControleContainerProps {
     error?: string;
   };
   /** Function to handle changes to the NCC level */
-  handleINCCChange: (programaId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (controleId: number, value: number) => void;
   /** Function to fetch measures for this control */
   handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   /** Function to handle changes to a measure */
@@ -51,7 +51,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   handleMedidaFetch,
   handleMedidaChange,
   responsaveis,
-  onMedidaNavigate,
+  onMedidaNavigate
 }) => {
   // Store measures locally
   const [medidas, setMedidas] = useState<Medida[]>([]);

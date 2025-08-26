@@ -112,3 +112,6 @@ archive/
 **Estrutura atual**: 3 categorias principais + arquivo histórico
 
 
+
+
+

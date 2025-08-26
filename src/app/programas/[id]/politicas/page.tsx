@@ -14,6 +14,7 @@ import {
   Paper,
   Chip,
   useTheme,
+  useMediaQuery,
   alpha,
   Stack
 } from "@mui/material";
@@ -121,6 +122,7 @@ export default function ProgramaPoliticasPage() {
   const params = useParams();
   const router = useRouter();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const programaId = params.id;
   const [programa, setPrograma] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -203,7 +205,17 @@ export default function ProgramaPoliticasPage() {
             </Box>
 
             <Box>
-              <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
+              <Typography 
+                variant={isMobile ? "h5" : "h4"} 
+                component="h1" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1
+                }}
+              >
                 Políticas de Segurança
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>

@@ -283,7 +283,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         <Grid item xs={12}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Box>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1
+                }}
+              >
                 Gerenciar Usuários
               </Typography>
               <Typography variant="body1" color="text.secondary">

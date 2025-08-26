@@ -20,6 +20,7 @@ import {
   Alert,
   Skeleton,
   useTheme,
+  useMediaQuery,
   alpha,
   Avatar,
   Button,
@@ -123,6 +124,7 @@ export default function ProgramaMainPage() {
   const router = useRouter();
   const params = useParams();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const programaId = params.id;
   const [programa, setPrograma] = useState<any>(null);
   const [editField, setEditField] = useState<string | null>(null);

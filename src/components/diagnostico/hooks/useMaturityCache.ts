@@ -210,8 +210,9 @@ export const useMaturityCache = (programaId: number) => {
       };
     }
 
-    // Calcular média dos controles
-    let totalScore = 0;
+    // ✅ APLICAR FÓRMULAS OFICIAIS iSeg e iPriv conforme documentação
+    let iMC0 = 0; // Controle 0 (Estrutura Básica)
+    let somaControles = 0;
     let controlesComDados = 0;
 
     controles.forEach(controle => {
@@ -224,12 +225,39 @@ export const useMaturityCache = (programaId: number) => {
           nivel: controle.nivel || 1
         };
         const controleMaturity = getControleMaturity(controle, medidas, programaControle);
-        totalScore += controleMaturity.score;
-        controlesComDados++;
+        
+        // Identificar se é o Controle 0 (Estrutura Básica)
+        if (controle.numero === 0) {
+          iMC0 = controleMaturity.score;
+        } else {
+          somaControles += controleMaturity.score;
+          controlesComDados++;
+        }
       }
     });
 
-    const averageScore = controlesComDados > 0 ? totalScore / controlesComDados : 0;
+    // Calcular maturidade do diagnóstico usando fórmulas oficiais
+    let averageScore = 0;
+    
+    if (diagnostico.id === 1) {
+      // Diagnóstico 1: Estrutura Básica - apenas iMC0
+      averageScore = iMC0;
+    } else if (diagnostico.id === 2) {
+      // Diagnóstico 2: Segurança - usar fórmula iSeg
+      // iSeg = ((iMC₀ × 4) + ∑ᵢ₌₁¹⁸ iMCᵢ) / 22
+      if (controlesComDados > 0) {
+        averageScore = ((iMC0 * 4) + somaControles) / (4 + controlesComDados);
+      }
+    } else if (diagnostico.id === 3) {
+      // Diagnóstico 3: Privacidade - usar fórmula iPriv
+      // iPriv = ((iMC₀ × 4) + ∑ᵢ₌₁₉³¹ iMCᵢ) / 17
+      if (controlesComDados > 0) {
+        averageScore = ((iMC0 * 4) + somaControles) / (4 + controlesComDados);
+      }
+    } else {
+      // Fallback: média simples
+      averageScore = controlesComDados > 0 ? somaControles / controlesComDados : 0;
+    }
     
     // ✅ USAR FAIXAS OFICIAIS DO FRAMEWORK
     let level: MaturityData['level'] = 'inicial';

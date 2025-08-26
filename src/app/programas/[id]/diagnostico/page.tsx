@@ -50,6 +50,10 @@ import {
   Dashboard as DashboardIcon,
   Add as AddIcon,
   Remove as RemoveIcon,
+  // Ícones específicos para diagnósticos
+  AccountBalance as AccountBalanceIcon, // Estrutura/Governança
+  Lock as LockIcon, // Segurança
+  Person as PersonIcon, // Privacidade
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -132,7 +136,7 @@ export default function DiagnosticoPage() {
         setDiagnosticos(diagnosticosData || []);
         setResponsaveis(responsaveisData || []);
         setPrograma(programaData);
-        
+
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
       } finally {
@@ -154,7 +158,7 @@ export default function DiagnosticoPage() {
       setSelectedNode({
         id: 'dashboard',
         type: 'dashboard',
-        label: 'Dashboard',
+        label: 'Visão Geral',
         description: 'Visão geral consolidada dos diagnósticos',
         icon: <DashboardIcon sx={{ color: theme.palette.primary.main }} />,
         data: { type: 'dashboard' },
@@ -201,11 +205,11 @@ export default function DiagnosticoPage() {
       const programaMedidasPromises = (medidasData || []).map(async (medida) => {
         const key = `${medida.id}-${controleId}-${programaId}`;
         if (!programaMedidas[key]) {
-          try {
-            const programaMedida = await dataService.fetchProgramaMedida(medida.id, controleId, programaId);
+        try {
+          const programaMedida = await dataService.fetchProgramaMedida(medida.id, controleId, programaId);
             return { key, data: programaMedida };
-          } catch (error) {
-            console.error(`Erro ao carregar programa_medida para medida ${medida.id}:`, error);
+        } catch (error) {
+          console.error(`Erro ao carregar programa_medida para medida ${medida.id}:`, error);
             return null;
           }
         }
@@ -356,12 +360,12 @@ export default function DiagnosticoPage() {
 
     const tree: TreeNode[] = [
       {
-        id: 'dashboard',
-        type: 'dashboard',
-        label: 'Dashboard',
-        description: 'Visão geral consolidada dos diagnósticos',
-        icon: <DashboardIcon sx={{ color: theme.palette.primary.main }} />,
-        data: { type: 'dashboard' },
+      id: 'dashboard',
+      type: 'dashboard',
+      label: 'Visão Geral',
+      description: 'Visão geral consolidada dos diagnósticos',
+      icon: <DashboardIcon sx={{ color: theme.palette.primary.main }} />,
+      data: { type: 'dashboard' },
       }
     ];
 
@@ -369,42 +373,95 @@ export default function DiagnosticoPage() {
       const diagnosticoControles = controles[diagnostico.id] || [];
       const diagnosticoMaturity = getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidas);
 
+      // Escolher ícone específico baseado no diagnóstico
+      const getDiagnosticoIcon = (diagnosticoId: number) => {
+        switch (diagnosticoId) {
+          case 1: // Estrutura Básica de Gestão
+            return <AccountBalanceIcon sx={{ color: diagnosticoMaturity.color }} />;
+          case 2: // Segurança da Informação
+            return <LockIcon sx={{ color: diagnosticoMaturity.color }} />;
+          case 3: // Privacidade
+            return <PersonIcon sx={{ color: diagnosticoMaturity.color }} />;
+          default:
+            return <AssessmentIcon sx={{ color: diagnosticoMaturity.color }} />;
+        }
+      };
+
       const diagnosticoNode: TreeNode = {
         id: `diagnostico-${diagnostico.id}`,
         type: 'diagnostico',
         label: diagnostico.descricao,
         description: `Diagnóstico ${diagnostico.id}`,
-        icon: <AssessmentIcon sx={{ color: diagnosticoMaturity.color }} />,
+        icon: getDiagnosticoIcon(diagnostico.id),
         data: diagnostico,
         maturityScore: diagnosticoMaturity.score,
         maturityLabel: diagnosticoMaturity.label,
         children: []
       };
 
-      diagnosticoControles.forEach(controle => {
+            diagnosticoControles.forEach(controle => {
         const controleMedidas = medidas[controle.id] || [];
         const controleMaturity = getControleMaturity(controle, controleMedidas, controle, programaMedidas);
 
         const controleNode: TreeNode = {
-          id: `controle-${controle.id}`,
-          type: 'controle',
-          label: `${controle.numero} - ${controle.nome}`,
+              id: `controle-${controle.id}`,
+              type: 'controle',
+              label: `${controle.numero} - ${controle.nome}`,
           description: `Controle ${controle.numero}`,
-          icon: <SecurityIcon sx={{ color: controleMaturity.color }} />,
-          data: controle,
+              icon: <SecurityIcon sx={{ color: controleMaturity.color }} />,
+          data: { 
+            ...controle,
+            calculationData: controleMaturity.calculationData
+          },
           maturityScore: controleMaturity.score,
-          maturityLabel: controleMaturity.label,
+              maturityLabel: controleMaturity.label,
           children: []
         };
 
-        controleMedidas.forEach(medida => {
+                controleMedidas.forEach(medida => {
+              const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
+              
+              // Determinar cor baseada na resposta
+              const getMedidaColor = () => {
+                if (!programaMedida?.resposta) {
+                  return '#9E9E9E'; // Cinza para não respondida
+                }
+                
+                const respostaNum = typeof programaMedida.resposta === 'string' 
+                  ? parseInt(programaMedida.resposta, 10) 
+                  : programaMedida.resposta;
+                
+                if (isNaN(respostaNum)) return '#9E9E9E';
+                
+                // Para diagnóstico 1 (sim/não) - usando respostasimnao
+                if (controle.diagnostico === 1) {
+                  // respostasimnao: { id: 1, label: "Sim" }, { id: 2, label: "Não" }
+                  return respostaNum === 1 ? '#4CAF50' : respostaNum === 2 ? '#FF5252' : '#9E9E9E';
+                }
+                
+                // Para outros diagnósticos (escala 1-6) - usando respostas
+                switch (respostaNum) {
+                  case 1: return '#4CAF50'; // Verde - Adota totalmente
+                  case 2: return '#8BC34A'; // Verde claro - Adota em menor parte
+                  case 3: return '#FFC107'; // Amarelo - Adota parcialmente  
+              case 4: return '#FF9800'; // Laranja - Não adota mas planeja
+              case 5: return '#FF5252'; // Vermelho - Não adota
+                  case 6: return '#9E9E9E'; // Cinza - Não se aplica
+                  default: return '#9E9E9E';
+                }
+              };
+
           const medidaNode: TreeNode = {
             id: `medida-${medida.id}`,
-            type: 'medida',
+                type: 'medida',
             label: `${medida.id_medida} - ${medida.medida?.substring(0, 50)}...`,
             description: `Medida ${medida.id_medida}`,
-            icon: <PolicyIcon sx={{ color: theme.palette.text.secondary }} />,
-            data: medida
+                icon: <PolicyIcon sx={{ color: getMedidaColor() }} />,
+                data: { 
+                  medida, 
+                  controle, 
+                  programaMedida 
+            }
           };
 
           controleNode.children!.push(medidaNode);
@@ -423,6 +480,7 @@ export default function DiagnosticoPage() {
     controles,
     medidas,
     programaMedidas,
+    programaId,
     theme,
     getDiagnosticoMaturity,
     getControleMaturity
@@ -452,13 +510,14 @@ export default function DiagnosticoPage() {
       }
     } else if (itemType === 'medida') {
       // Encontrar todas as medidas do controle atual
-      const controleMedidas = medidas[currentNode.data.id_controle] || [];
+      const controle = currentNode.data.controle;
+      const controleMedidas = medidas[controle.id] || [];
       allItems = controleMedidas.map(medida => ({
         id: `medida-${medida.id}`,
         type: 'medida' as const,
         label: `${medida.id_medida} - ${medida.medida?.substring(0, 50)}...`,
         icon: <PolicyIcon />,
-        data: medida,
+        data: { medida, controle, programaMedida: programaMedidas[`${medida.id}-${controle.id}-${programaId}`] },
       }));
     }
 
@@ -466,8 +525,13 @@ export default function DiagnosticoPage() {
     const nextItem = currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null;
     const prevItem = currentIndex > 0 ? allItems[currentIndex - 1] : null;
 
-    return { nextItem, prevItem };
-  }, [treeData, diagnosticos, controles, medidas]);
+    return { 
+      nextItem, 
+      prevItem, 
+      currentIndex: currentIndex + 1, // 1-based index for display
+      total: allItems.length 
+    };
+  }, [treeData, diagnosticos, controles, medidas, programaMedidas, programaId]);
 
   // Função para lidar com mudanças nas medidas (callback para MedidaContainer)
   const handleMedidaChange = useCallback(async (
@@ -487,16 +551,31 @@ export default function DiagnosticoPage() {
       
       // Atualizar programaMedidas local
       const key = `${medidaId}-${controleId}-${programaId}`;
-      setProgramaMedidas(prev => ({
+      setProgramaMedidas(prev => {
+        const newProgramaMedidas = {
         ...prev,
-        [key]: {
-          ...prev[key],
-          [field]: value
-        }
-      }));
+          [key]: {
+            ...prev[key],
+            [field]: value
+          }
+        };
+        
+        // Atualizar selectedNode se for uma medida
+      if (selectedNode?.type === 'medida' && selectedNode.data.medida.id === medidaId) {
+          setSelectedNode(prevNode => ({
+            ...prevNode!,
+          data: {
+              ...prevNode!.data,
+              programaMedida: newProgramaMedidas[key]
+          }
+        }));
+      }
+      
+        return newProgramaMedidas;
+      });
 
       // Sincronizar selectedNode se for o controle atual
-      if (selectedNode?.type === 'controle' && selectedNode.data.id === controleId) {
+        if (selectedNode?.type === 'controle' && selectedNode.data.id === controleId) {
         // Recarregar dados do controle para refletir mudanças
         const diagnosticoId = selectedNode.data.diagnostico;
         await loadControles(diagnosticoId);
@@ -536,53 +615,175 @@ export default function DiagnosticoPage() {
       await handleNodeToggle(node.id, node);
     };
 
+    // Calcular o padding considerando as linhas conectoras
+    const paddingLeft = level * 24 + 8; // 24px por nível + 8px base
+
     return (
-      <Box key={node.id}>
-        <ListItem disablePadding>
+      <React.Fragment key={node.id}>
+        <ListItem 
+          disablePadding 
+          sx={{ 
+            position: 'relative',
+            pl: 0,
+          }}
+        >
+          {/* Linhas conectoras */}
+          {level > 0 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: paddingLeft,
+                pointerEvents: 'none',
+                zIndex: 1,
+              }}
+            >
+              {/* Linhas verticais dos níveis pais */}
+              {parentPath.map((hasMore, index) => (
+                hasMore && (
+                  <Box
+                    key={`vertical-${index}`}
+                    sx={{
+                      position: 'absolute',
+                      left: index * 24 + 20,
+                      top: 0,
+                      bottom: 0,
+                      width: '1px',
+                      backgroundColor: alpha(theme.palette.divider, 0.4),
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: '-0.5px',
+                        top: 0,
+                        bottom: 0,
+                        width: '2px',
+                        backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                        zIndex: -1,
+                      }
+                    }}
+                  />
+                )
+              ))}
+              
+              {/* Linha horizontal para este item */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: (level - 1) * 24 + 20,
+                  top: '50%',
+                  width: '20px',
+                  height: '1px',
+                  backgroundColor: alpha(theme.palette.divider, 0.4),
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    right: '-2px',
+                    top: '-1px',
+                    width: '3px',
+                    height: '3px',
+                    borderRadius: '50%',
+                    backgroundColor: alpha(theme.palette.primary.main, 0.6),
+                  }
+                }}
+              />
+              
+              {/* Linha vertical para este item */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: (level - 1) * 24 + 20,
+                  top: 0,
+                  bottom: isLast ? '50%' : 0,
+                  width: '1px',
+                  backgroundColor: alpha(theme.palette.divider, 0.4),
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: '-0.5px',
+                    top: 0,
+                    bottom: 0,
+                    width: '2px',
+                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                    zIndex: -1,
+                  }
+                }}
+              />
+            </Box>
+          )}
+
           <ListItemButton
             selected={isSelected}
             onClick={handleItemClick}
+            disabled={isLoading}
             sx={{
-              pl: 2 + level * 2,
-              minHeight: 48,
               borderRadius: 1,
               mx: 1,
-              mb: 0.5,
-              '&.Mui-selected': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.12),
+              py: node.type === 'dashboard' ? 2 : 1.5,
+              minHeight: node.type === 'dashboard' ? 70 : 60,
+              width: '100%',
+              ml: `${paddingLeft}px`,
+              ...(node.type === 'dashboard' && {
+                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
+                border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
                 '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.16),
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${alpha(theme.palette.secondary.main, 0.12)} 100%)`,
+                  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
+              },
+              }),
+              '&.Mui-selected': {
+                backgroundColor: node.type === 'dashboard' 
+                  ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.16)} 0%, ${alpha(theme.palette.secondary.main, 0.16)} 100%)`
+                  : alpha(theme.palette.primary.main, 0.12),
+              '&:hover': {
+                  backgroundColor: node.type === 'dashboard' 
+                    ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)} 0%, ${alpha(theme.palette.secondary.main, 0.2)} 100%)`
+                    : alpha(theme.palette.primary.main, 0.16),
                 },
               },
             }}
           >
+            {/* Ícone circular de expand/collapse */}
             {showExpandButton && (
               <IconButton
                 size="small"
                 onClick={handleExpandClick}
-                sx={{ mr: 1 }}
+                disabled={isLoading}
+                sx={{ 
+                  mr: 1.5,
+                  width: 24,
+                  height: 24,
+                  border: `2px solid ${theme.palette.primary.main}`,
+                  borderRadius: '50%',
+                  backgroundColor: isExpanded ? theme.palette.primary.main : 'transparent',
+                  color: isExpanded ? 'white' : theme.palette.primary.main,
+                  '&:hover': {
+                    backgroundColor: isExpanded ? theme.palette.primary.dark : alpha(theme.palette.primary.main, 0.1),
+                  },
+                }}
               >
                 {isLoading ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>
-                    <Box
-                      sx={{
-                        width: 16,
-                        height: 16,
-                        border: '2px solid',
-                        borderColor: `${theme.palette.primary.main} transparent ${theme.palette.primary.main} transparent`,
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                        '@keyframes spin': {
-                          '0%': { transform: 'rotate(0deg)' },
-                          '100%': { transform: 'rotate(360deg)' },
-                        },
-                      }}
-                    />
-                  </Box>
+                  <Box
+                    sx={{
+                      width: 14,
+                      height: 14,
+                      border: '2px solid',
+                      borderColor: 'primary.main',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                      '@keyframes spin': {
+                        '0%': { transform: 'rotate(0deg)' },
+                        '100%': { transform: 'rotate(360deg)' }
+                      }
+                    }}
+                  />
                 ) : isExpanded ? (
-                  <ExpandLess fontSize="small" />
+                  <RemoveIcon sx={{ fontSize: 16, color: 'inherit' }} />
                 ) : (
-                  <ExpandMore fontSize="small" />
+                  <AddIcon sx={{ fontSize: 16, color: 'inherit' }} />
                 )}
               </IconButton>
             )}
@@ -597,10 +798,16 @@ export default function DiagnosticoPage() {
                   <Typography
                     variant="body2"
                     sx={{
-                      fontWeight: isSelected ? 600 : 400,
-                      fontSize: '0.875rem',
+                      fontWeight: node.type === 'dashboard' ? 700 : (isSelected ? 600 : 400),
+                      fontSize: node.type === 'dashboard' ? '1rem' : '0.875rem',
                       flex: 1,
-                      wordBreak: 'break-word'
+                      wordBreak: 'break-word',
+                      ...(node.type === 'dashboard' && {
+                        background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                      }),
                     }}
                   >
                     {node.label}
@@ -610,7 +817,10 @@ export default function DiagnosticoPage() {
                       score={node.maturityScore}
                       label={node.maturityLabel || ''}
                       size="small"
-                      animated={false}
+                      animated={true}
+                      calculationData={node.data?.calculationData}
+                      controleId={node.type === 'controle' ? node.data.id : undefined}
+                      controleNome={node.type === 'controle' ? node.data.nome : undefined}
                     />
                   )}
                 </Box>
@@ -619,16 +829,19 @@ export default function DiagnosticoPage() {
           </ListItemButton>
         </ListItem>
         
-        {showExpandButton && (
+        {/* Mostrar filhos quando expandido */}
+        {isExpanded && node.children && node.children.length > 0 && (
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              {node.children?.map((child, index) => 
-                renderTreeItem(child, level + 1, index === (node.children?.length || 0) - 1, [...parentPath, !isLast])
-              )}
+              {node.children.map((child, index) => {
+                const isLastChild = index === node.children!.length - 1;
+                const newParentPath = [...parentPath, !isLast];
+                return renderTreeItem(child, level + 1, isLastChild, newParentPath);
+              })}
             </List>
           </Collapse>
         )}
-      </Box>
+      </React.Fragment>
     );
   }, [
     expandedNodes,
@@ -676,39 +889,252 @@ export default function DiagnosticoPage() {
             return getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidas);
           }}
           programaId={programaId}
+          onDiagnosticoClick={(diagnosticoId) => {
+            // Encontrar o nó do diagnóstico no treeData
+            const diagnosticoNode = treeData.find(node => 
+              node.type === 'diagnostico' && node.data.id === diagnosticoId
+            );
+            if (diagnosticoNode) {
+              handleNodeSelect(diagnosticoNode);
+            }
+          }}
         />
       );
     }
 
-    if (selectedNode.type === 'medida') {
-      const medida = selectedNode.data as Medida;
-      const controle = diagnosticos
-        .flatMap(d => controles[d.id] || [])
-        .find(c => c.id === medida.id_controle);
+    if (selectedNode.type === 'diagnostico') {
+      const diagnosticoControles = controles[selectedNode.data.id] || [];
+      const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'diagnostico');
+      
+      // Função para determinar cor baseada no score de maturidade
+      const getMaturityColorForDiagnostico = (score: number) => {
+        if (score < 0.3) return '#FF5252'; // Vermelho
+        if (score < 0.5) return '#FF9800'; // Laranja
+        if (score < 0.7) return '#FFC107'; // Amarelo
+        if (score < 0.9) return '#4CAF50'; // Verde
+        return '#2E7D32'; // Verde escuro
+      };
 
-      if (!controle) {
-        return (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6" color="error">
-              Controle não encontrado para esta medida
-            </Typography>
-          </Box>
-        );
-      }
-
-      const { nextItem, prevItem } = findNextPrevItems(selectedNode, 'medida');
-
-      const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
+      // Função para navegar para um item
+      const navigateToItem = (item: any) => {
+        const itemNode = treeData.find(node => node.id === item.id);
+        if (itemNode) handleNodeSelect(itemNode);
+      };
 
       return (
-        <MedidaContainer
-          medida={medida}
-          programaMedida={programaMedida}
-          controle={controle}
-          programaId={programaId}
-          handleMedidaChange={handleMedidaChange}
-          responsaveis={responsaveis}
-        />
+        <Box>
+          {/* Navegação entre diagnósticos */}
+          <Paper elevation={1} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <IconButton 
+              onClick={() => prevItem && navigateToItem(prevItem)}
+              disabled={!prevItem}
+              color="primary"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Diagnóstico {currentIndex} de {total}
+              </Typography>
+              <Typography variant="h6" color="primary" fontWeight="bold">
+                {selectedNode.data.descricao}
+              </Typography>
+            </Box>
+            
+            <IconButton 
+              onClick={() => nextItem && navigateToItem(nextItem)}
+              disabled={!nextItem}
+              color="primary"
+            >
+              <ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />
+            </IconButton>
+          </Paper>
+
+          <Card>
+            <CardHeader
+              avatar={
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    backgroundColor: getMaturityColorForDiagnostico(selectedNode.maturityScore ?? 0),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '1.25rem'
+                  }}
+                >
+                  {selectedNode.data.id}
+                </Box>
+              }
+              title={
+                <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  {selectedNode.data.descricao}
+                </Typography>
+              }
+              subheader={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <MaturityChip
+                    score={selectedNode.maturityScore ?? 0}
+                    label={selectedNode.maturityLabel ?? 'N/A'}
+                    size="medium"
+                    showLabel={true}
+                    animated={true}
+                    calculationData={selectedNode.data?.calculationData}
+                    controleId={selectedNode.data?.id}
+                    controleNome={selectedNode.data?.nome}
+                  />
+                  <Chip label={`${diagnosticoControles.length} controles`} variant="outlined" size="small" />
+                </Box>
+              }
+            />
+            <CardContent>
+              {/* Lista de Controles */}
+              {diagnosticoControles.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Expanda este diagnóstico na árvore lateral para carregar os controles.
+                </Typography>
+              ) : (
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
+                    Controles deste Diagnóstico
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {diagnosticoControles.map((controle) => {
+                      const controleMedidas = medidas[controle.id] || [];
+                      const programaControle = {
+                        id: controle.programa_controle_id || 0,
+                        programa: programaId,
+                        controle: controle.id,
+                        nivel: controle.nivel || 1
+                      };
+                      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle, programaMedidas);
+                      
+                      return (
+                        <Grid size={{ xs: 12, md: 6 }} key={controle.id}>
+                          <Card 
+                            variant="outlined" 
+                            sx={{ 
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: 3
+                              }
+                            }}
+                            onClick={() => {
+                              const controleNode = treeData
+                                .find(node => node.type === 'diagnostico' && node.data.id === selectedNode.data.id)
+                                ?.children?.find(child => child.type === 'controle' && child.data.id === controle.id);
+                              if (controleNode) handleNodeSelect(controleNode);
+                            }}
+                          >
+                            <CardContent sx={{ p: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                                <SecurityIcon sx={{ color: controleMaturity.color, mt: 0.5 }} />
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                    {controle.numero} - {controle.nome}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    {controle.texto?.substring(0, 100)}...
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                    <MaturityChip
+                                      score={controleMaturity.score}
+                                      label={controleMaturity.label}
+                                      size="small"
+                                      calculationData={controleMaturity.calculationData}
+                                      controleId={controle.id}
+                                      controleNome={controle.nome}
+                                    />
+                                    <Chip 
+                                      label={`${controleMedidas.length} medidas`} 
+                                      size="small" 
+                                      variant="outlined" 
+                                    />
+                                  </Box>
+                                </Box>
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+      );
+    }
+
+        if (selectedNode.type === 'medida') {
+      const { medida, controle, programaMedida } = selectedNode.data;
+      const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'medida');
+      
+      // Encontrar o diagnóstico pai
+      const diagnostico = diagnosticos.find(d => {
+        const diagnosticoControles = controles[d.id] || [];
+        return diagnosticoControles.some(c => c.id === controle.id);
+      });
+
+      // Função para navegar para um item
+      const navigateToItem = (item: any) => {
+        const medidaNode = treeData
+          .flatMap(d => d.children || [])
+          .flatMap(c => c.children || [])
+          .find(m => m.data.medida.id === item.data.medida.id);
+        if (medidaNode) handleNodeSelect(medidaNode);
+      };
+
+      return (
+        <Box>
+          {/* Navegação entre medidas */}
+          <Paper elevation={1} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <IconButton 
+              onClick={() => prevItem && navigateToItem(prevItem)}
+              disabled={!prevItem}
+              color="primary"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Medida {currentIndex} de {total} • {controle.numero} - {controle.nome}
+              </Typography>
+              <Typography variant="h6" color="primary" fontWeight="bold">
+                {medida.id_medida || medida.id} - {medida.medida}
+              </Typography>
+            </Box>
+            
+            <IconButton 
+              onClick={() => nextItem && navigateToItem(nextItem)}
+              disabled={!nextItem}
+              color="primary"
+            >
+              <ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />
+            </IconButton>
+          </Paper>
+
+          {/* Componente original da medida */}
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+            <MedidaContainer
+              medida={medida}
+              programaMedida={programaMedida}
+              controle={controle}
+              programaId={programaId}
+              handleMedidaChange={handleMedidaChange}
+              responsaveis={responsaveis}
+            />
+          </LocalizationProvider>
+        </Box>
       );
     }
 
@@ -721,14 +1147,14 @@ export default function DiagnosticoPage() {
         const diagnosticoControles = controles[d.id] || [];
         return diagnosticoControles.some(c => c.id === controle.id);
       });
-
+      
       if (!diagnostico) {
-        return (
+      return (
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" color="error">
               Diagnóstico não encontrado para este controle
-            </Typography>
-          </Box>
+              </Typography>
+            </Box>
         );
       }
 
@@ -745,28 +1171,59 @@ export default function DiagnosticoPage() {
           if (programaControleId) {
             await dataService.updateControleNivel(programaControleId, novoNivel);
             
+            // Atualizar estado local imediatamente
+            setControles(prev => {
+              const newControles = { ...prev };
+              if (newControles[diagnostico.id]) {
+                newControles[diagnostico.id] = newControles[diagnostico.id].map(c => 
+                  c.id === controleId ? { ...c, nivel: novoNivel } : c
+                );
+              }
+              return newControles;
+            });
+            
+            // Atualizar selectedNode se for o controle atual
+            if (selectedNode?.type === 'controle' && selectedNode.data.id === controleId) {
+              setSelectedNode(prev => ({
+                ...prev!,
+                data: { ...prev!.data, nivel: novoNivel }
+              }));
+            }
+            
             // Invalidar cache e recarregar dados
             invalidateCache('controle', controleId);
-            await loadControles(diagnostico.id);
+            invalidateCache('diagnostico', diagnostico.id);
           }
         } catch (error) {
           console.error('Erro ao atualizar INCC:', error);
         }
       };
 
+      // Função para navegar para uma medida
+      const handleMedidaNavigate = (medidaId: number, controleId: number) => {
+        const medidaNode = treeData
+          .flatMap(d => d.children || [])
+          .flatMap(c => c.children || [])
+          .find(m => m.data.medida.id === medidaId && m.data.controle.id === controleId);
+        if (medidaNode) {
+          handleNodeSelect(medidaNode);
+        }
+      };
+
       return (
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-          <ControleContainer
-            controle={controle}
-            diagnostico={diagnostico}
-            programaId={programaId}
-            state={controleState}
-            handleINCCChange={handleINCCChange}
-            handleMedidaFetch={handleMedidaFetch}
-            handleMedidaChange={handleMedidaChange}
-            responsaveis={responsaveis}
-          />
-        </LocalizationProvider>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+            <ControleContainer
+              controle={controle}
+              diagnostico={diagnostico}
+              programaId={programaId}
+              state={controleState}
+              handleINCCChange={handleINCCChange}
+              handleMedidaFetch={handleMedidaFetch}
+              handleMedidaChange={handleMedidaChange}
+              responsaveis={responsaveis}
+              onMedidaNavigate={handleMedidaNavigate}
+            />
+          </LocalizationProvider>
       );
     }
 
@@ -793,95 +1250,95 @@ export default function DiagnosticoPage() {
           <Box sx={{ px: 3, py: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <IconButton onClick={() => router.back()} color="primary">
-                <ArrowBackIcon />
-              </IconButton>
-              
+              <ArrowBackIcon />
+            </IconButton>
+            
               <Box sx={{ flex: 1 }}>
                 <Breadcrumbs>
                   <Link underline="hover" color="inherit" href="/programas">
                     Programas
                   </Link>
                   <Link underline="hover" color="inherit" href={`/programas/${programaId}`}>
-                    {programa?.nome || `Programa ${programaId}`}
+                    {programa?.nome_fantasia || programa?.razao_social || `Programa ${programaId}`}
                   </Link>
                   <Typography color="text.primary">Diagnósticos</Typography>
                 </Breadcrumbs>
-              </Box>
-
+            </Box>
+            
               {isMobile && (
-                <IconButton
-                  color="primary"
+            <IconButton 
+              color="primary"
                   onClick={() => setDrawerOpen(!drawerOpen)}
-                >
+            >
                   <MenuIcon />
-                </IconButton>
+            </IconButton>
               )}
             </Box>
 
-            <Typography variant="h4" sx={{ fontWeight: 600 }}>
-              Diagnósticos de Maturidade
+            <Typography 
+              variant={isMobile ? "h5" : "h4"} 
+              sx={{ 
+                fontWeight: 'bold',
+                background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 1
+              }}
+            >
+              Diagnóstico
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Avaliação da maturidade organizacional em segurança da informação e privacidade
-            </Typography>
-          </Box>
+        </Box>
         </Paper>
 
         {/* Layout principal */}
         <Box sx={{ display: 'flex', height: 'calc(100vh - 140px)' }}>
           {/* Drawer de navegação */}
-          <Drawer
+      <Drawer
             variant={isMobile ? 'temporary' : 'persistent'}
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            sx={{
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sx={{
               width: DRAWER_WIDTH,
-              flexShrink: 0,
-              '& .MuiDrawer-paper': {
-                width: DRAWER_WIDTH,
-                boxSizing: 'border-box',
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
                 position: 'relative',
                 height: '100%',
-                borderRight: `1px solid ${theme.palette.divider}`,
-              },
-            }}
-          >
-            {/* Header do drawer */}
-            <Box sx={{ 
-              p: 2, 
-              borderBottom: `1px solid ${theme.palette.divider}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Navegação
-              </Typography>
-              {isMobile && (
-                <IconButton onClick={() => setDrawerOpen(false)} size="small">
-                  <ChevronLeftIcon />
-                </IconButton>
-              )}
-            </Box>
-
+            borderRight: `1px solid ${theme.palette.divider}`,
+          },
+        }}
+      >
             {/* Lista de navegação */}
+            {isMobile && (
+        <Box sx={{ 
+                p: 1, 
+          display: 'flex',
+                justifyContent: 'flex-end',
+                borderBottom: `1px solid ${theme.palette.divider}`
+              }}>
+                <IconButton onClick={() => setDrawerOpen(false)} size="small">
+              <ChevronLeftIcon />
+            </IconButton>
+        </Box>
+            )}
             <Box sx={{ flex: 1, overflow: 'auto' }}>
               {loading ? (
-                <Box sx={{ p: 2 }}>
+            <Box sx={{ p: 2 }}>
                   {[1, 2, 3].map(i => (
                     <Skeleton key={i} variant="rectangular" height={40} sx={{ mb: 1, borderRadius: 1 }} />
                   ))}
-                </Box>
-              ) : (
+            </Box>
+          ) : (
                 <List sx={{ py: 1 }}>
                   {treeData.map(node => renderTreeItem(node))}
-                </List>
-              )}
-            </Box>
-          </Drawer>
+              </List>
+          )}
+        </Box>
+      </Drawer>
 
           {/* Conteúdo principal */}
-          <Box sx={{ 
+      <Box sx={{ 
             flex: 1, 
             overflow: 'auto',
             backgroundColor: theme.palette.background.default
@@ -893,8 +1350,8 @@ export default function DiagnosticoPage() {
         {/* FAB para mobile */}
         {isMobile && !drawerOpen && (
           <Fab
-            color="primary"
-            sx={{
+                      color="primary" 
+                    sx={{ 
               position: 'fixed',
               bottom: 16,
               right: 16,
@@ -903,9 +1360,9 @@ export default function DiagnosticoPage() {
             onClick={() => setDrawerOpen(true)}
           >
             <MenuIcon />
-          </Fab>
+                  </Fab>
         )}
-      </Container>
+          </Container>
     </LocalizationProvider>
   );
-}
+} 

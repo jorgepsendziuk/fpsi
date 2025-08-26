@@ -54,7 +54,7 @@ export interface ControleProps {
   /** List of available responsibles */
   responsaveis: Responsavel[];
   /** Function to handle changes to the NCC level */
-  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (controleId: number, value: number) => void;
   /** Function to handle changes to a measure */
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** Function to calculate the maturity index */
@@ -243,11 +243,7 @@ const ControleComponent: React.FC<ControleProps> = ({
               fullWidth
               value={programaControle?.nivel || ""}
               onChange={(event) => {
-                if (programaControle?.id && programaControle.id > 0) {
-                  handleINCCChange(programaControle.id, diagnostico.id, parseInt(event.target.value.toString(), 10));
-                } else {
-                  console.warn('Cannot update INCC: programaControle.id is not valid', programaControle);
-                }
+                handleINCCChange(controle.id, parseInt(event.target.value.toString(), 10));
               }}
               sx={{
                 backgroundColor: 'white',

@@ -17,7 +17,7 @@ interface DiagnosticoSectionProps {
   state: any;
   fetchControlesAndMedidas: (programaId: number) => Promise<void>;
   handleControleFetch: (diagnosticoId: number, programaId: number) => Promise<void>;
-  handleINCCChange: (programaControleId: number, diagnosticoId: number, value: number) => void;
+  handleINCCChange: (controleId: number, value: number) => void;
   handleMedidaFetch: (controleId: number, programaId: number) => Promise<void>;
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   responsaveis: any[];

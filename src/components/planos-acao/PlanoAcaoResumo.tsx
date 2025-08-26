@@ -366,8 +366,19 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
       {/* Header */}
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            <AssignmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 'bold',
+              background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              mb: 1,
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <AssignmentIcon sx={{ mr: 1, color: '#667eea' }} />
             Plano de Trabalho
           </Typography>
           <Typography variant="body1" color="text.secondary">
