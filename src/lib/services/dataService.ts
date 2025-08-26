@@ -1,26 +1,9 @@
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { mergeControleData } from "./controlesData";
-import { demoDataService, shouldUseDemoData } from "./demoDataService";
 
-// Wrapper function to check if we should use demo data
-const withDemoCheck = (originalFunction: any, demoFunction: any) => {
-  return async (...args: any[]) => {
-    // Check if we should use demo data
-    // Look for programaId in the arguments - it's usually the first number argument
-    const programaId = args.find(arg => typeof arg === 'number');
-    const shouldUseDemo = shouldUseDemoData(programaId);
-    
-    if (shouldUseDemo) {
-      console.log('[DEMO MODE] Using demo data service for programaId:', programaId);
-      return await demoFunction(...args);
-    }
-    
-    return await originalFunction(...args);
-  };
-};
 
-// Original functions
-const originalFetchProgramas = async () => {
+
+export const fetchProgramas = async () => {
   const { data } = await supabaseBrowserClient
     .from("programa")
     .select("*")
@@ -28,7 +11,7 @@ const originalFetchProgramas = async () => {
   return data || [];
 };
 
-const originalFetchProgramaById = async (programaId: number) => {
+export const fetchProgramaById = async (programaId: number) => {
   const { data } = await supabaseBrowserClient
     .from("programa")
     .select("*")
@@ -37,7 +20,7 @@ const originalFetchProgramaById = async (programaId: number) => {
   return data;
 };
 
-const originalFetchDiagnosticos = async () => {
+export const fetchDiagnosticos = async () => {
   const { data } = await supabaseBrowserClient
     .from("diagnostico")
     .select("*") 
@@ -45,7 +28,7 @@ const originalFetchDiagnosticos = async () => {
   return data || [];
 };
 
-const originalFetchOrgaos = async () => {
+export const fetchOrgaos = async () => {
   const { data } = await supabaseBrowserClient
     .from("orgao")
     .select("*")
@@ -53,7 +36,7 @@ const originalFetchOrgaos = async () => {
   return data || [];
 };
 
-const originalFetchResponsaveis = async (programaId: number, retries = 3): Promise<any[]> => {
+export const fetchResponsaveis = async (programaId: number, retries = 3): Promise<any[]> => {
   try {
     const { data, error } = await supabaseBrowserClient
       .from("responsavel")
@@ -69,7 +52,7 @@ const originalFetchResponsaveis = async (programaId: number, retries = 3): Promi
   }
 };
 
-const originalFetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {
+export const fetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {
   console.log(`fetchControles: Fetching controles for diagnostico ${diagnosticoId}, programa ${programaId}`);
   
   // First, ensure programa_controle records exist for this program
@@ -129,7 +112,7 @@ const originalFetchControles = async (diagnosticoId: number, programaId: number)
   return finalData;
 };
 
-const originalFetchMedidas = async (controleId: number, programaId: number): Promise<any[]> => {
+export const fetchMedidas = async (controleId: number, programaId: number): Promise<any[]> => {
   console.log(`fetchMedidas: Fetching medidas for controle ${controleId}, programa ${programaId}`);
   
   // First fetch the static measure data
@@ -196,7 +179,7 @@ const originalFetchMedidas = async (controleId: number, programaId: number): Pro
   return mergedData;
 };
 
-const originalFetchProgramaMedida = async (medidaId: number, controleId: number, programaId: number) => {
+export const fetchProgramaMedida = async (medidaId: number, controleId: number, programaId: number) => {
   console.log(`fetchProgramaMedida: Fetching for medida ${medidaId}, controle ${controleId}, programa ${programaId}`);
   
   const { data, error } = await supabaseBrowserClient
@@ -215,7 +198,7 @@ const originalFetchProgramaMedida = async (medidaId: number, controleId: number,
   return data;
 };
 
-const originalUpdateProgramaMedida = async (medidaId: number, controleId: number, programaId: number, updates: any) => {
+export const updateProgramaMedida = async (medidaId: number, controleId: number, programaId: number, updates: any) => {
   console.log(`updateProgramaMedida: Updating medida ${medidaId}, controle ${controleId}, programa ${programaId}`, updates);
   
   // Check if a record exists in programa_medida
@@ -264,27 +247,15 @@ const originalUpdateProgramaMedida = async (medidaId: number, controleId: number
   }
 };
 
-const originalUpdateControleNivel = async (programaControleId: number, newValue: number) => {
+export const updateControleNivel = async (programaControleId: number, newValue: number) => {
   return await supabaseBrowserClient
     .from("programa_controle")
     .update({ nivel: newValue })
     .eq("id", programaControleId);
 };
 
-// Export wrapped functions
-export const fetchProgramas = withDemoCheck(originalFetchProgramas, demoDataService.fetchProgramas);
-export const fetchProgramaById = withDemoCheck(originalFetchProgramaById, demoDataService.fetchProgramaById);
-export const fetchDiagnosticos = withDemoCheck(originalFetchDiagnosticos, demoDataService.fetchDiagnosticos);
-export const fetchOrgaos = withDemoCheck(originalFetchOrgaos, demoDataService.fetchOrgaos);
-export const fetchResponsaveis = withDemoCheck(originalFetchResponsaveis, demoDataService.fetchResponsaveis);
-export const fetchControles = withDemoCheck(originalFetchControles, demoDataService.fetchControles);
-export const fetchMedidas = withDemoCheck(originalFetchMedidas, demoDataService.fetchMedidas);
-export const fetchProgramaMedida = withDemoCheck(originalFetchProgramaMedida, demoDataService.fetchProgramaMedida);
-export const updateProgramaMedida = withDemoCheck(originalUpdateProgramaMedida, demoDataService.updateProgramaMedida);
-export const updateControleNivel = withDemoCheck(originalUpdateControleNivel, demoDataService.updateControleNivel);
-
 // Nova função para carregar todos os programaMedidas de uma vez para dashboard
-const originalFetchAllProgramaMedidas = async (programaId: number) => {
+export const fetchAllProgramaMedidas = async (programaId: number) => {
   console.log(`📊 fetchAllProgramaMedidas: Fetching all for programa ${programaId}`);
   
   // Ensure all records exist first
@@ -326,17 +297,8 @@ const originalFetchAllProgramaMedidas = async (programaId: number) => {
   return programaMedidasMap;
 };
 
-export const fetchAllProgramaMedidas = withDemoCheck(originalFetchAllProgramaMedidas, async (programaId: number) => {
-  // Para modo demo, retornar dados simulados
-  return {};
-});
-
 // New function to ensure programa_medida records exist
 export const ensureProgramaMedidaRecords = async (programaId: number) => {
-  // Skip for demo mode
-  if (shouldUseDemoData(programaId)) {
-    return { data: null, error: null };
-  }
 
   console.log(`ensureProgramaMedidaRecords: Checking programa ${programaId}`);
   
@@ -399,10 +361,6 @@ export const ensureProgramaMedidaRecords = async (programaId: number) => {
 };
 
 export const updateMedida = async (medidaId: number, programaId: number, field: string, value: any) => {
-  // Check if demo mode
-  if (shouldUseDemoData(programaId)) {
-    return demoDataService.updateProgramaMedida(medidaId, { [field]: value });
-  }
 
   // Check if a record exists in programa_medida
   const { data: existingRecord } = await supabaseBrowserClient
@@ -433,9 +391,6 @@ export const updateMedida = async (medidaId: number, programaId: number, field: 
 };
 
 export const updateProgramaSetor = async (programaId: number, setor: number) => {
-  if (shouldUseDemoData(programaId)) {
-    return demoDataService.updatePrograma(programaId, { setor });
-  }
 
   return await supabaseBrowserClient
     .from("programa")
@@ -444,9 +399,6 @@ export const updateProgramaSetor = async (programaId: number, setor: number) => 
 };
 
 export const updateProgramaOrgao = async (programaId: number, orgao: number) => {
-  if (shouldUseDemoData(programaId)) {
-    return demoDataService.updatePrograma(programaId, { orgao });
-  }
 
   return await supabaseBrowserClient
     .from("programa")
@@ -470,9 +422,6 @@ export const deletePrograma = async (programaId: number) => {
 };
 
 export const updateProgramaDetails = async (programaId: number, updates: { cnpj?: string; razao_social?: string }) => {
-  if (shouldUseDemoData(programaId)) {
-    return demoDataService.updatePrograma(programaId, updates);
-  }
 
   const { data, error } = await supabaseBrowserClient
     .from("programa")
@@ -482,9 +431,6 @@ export const updateProgramaDetails = async (programaId: number, updates: { cnpj?
 };
 
 export const updateProgramaField = async (programaId: number, field: string, value: any) => {
-  if (shouldUseDemoData(programaId)) {
-    return demoDataService.updatePrograma(programaId, { [field]: value });
-  }
 
   const { data, error } = await supabaseBrowserClient
     .from("programa")
@@ -494,9 +440,6 @@ export const updateProgramaField = async (programaId: number, field: string, val
 };
 
 export const createProgramaControlesForProgram = async (programaId: number) => {
-  if (shouldUseDemoData(programaId)) {
-    return { data: null, error: null };
-  }
 
   // Get all existing controles
   const { data: controles } = await supabaseBrowserClient
@@ -518,10 +461,6 @@ export const createProgramaControlesForProgram = async (programaId: number) => {
 
 // New function to ensure programa_controle records exist
 export const ensureProgramaControleRecords = async (programaId: number) => {
-  // Skip for demo mode
-  if (shouldUseDemoData(programaId)) {
-    return { data: null, error: null };
-  }
 
   console.log(`ensureProgramaControleRecords: Checking programa ${programaId}`);
   
