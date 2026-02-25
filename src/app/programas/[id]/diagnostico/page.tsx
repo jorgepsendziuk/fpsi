@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
+  Button,
   Container,
   Typography,
   Breadcrumbs,
@@ -29,6 +30,8 @@ import {
   Tooltip,
   Fab,
   useMediaQuery,
+  LinearProgress,
+  Alert,
 } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import {
@@ -54,12 +57,14 @@ import {
   AccountBalance as AccountBalanceIcon, // Estrutura/Governança
   Lock as LockIcon, // Segurança
   Person as PersonIcon, // Privacidade
+  HourglassEmpty as HourglassEmptyIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/pt-br';
 
 import * as dataService from "../../../../lib/services/dataService";
+import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../../components/diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../../components/diagnostico/containers/ControleContainer";
@@ -86,13 +91,17 @@ export default function DiagnosticoPage() {
   const params = useParams();
   const router = useRouter();
   const theme = useTheme();
-  const programaId = parseInt(params.id as string);
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const idOrSlug = params.id as string;
+  const { programaId: resolvedProgramaId, loading: resolvingId } = useProgramaIdFromParam(idOrSlug);
+  const programaId = resolvedProgramaId ?? 0;
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Estado principal
   const [diagnosticos, setDiagnosticos] = useState<Diagnostico[]>([]);
   const [controles, setControles] = useState<{ [key: number]: Controle[] }>({});
   const [medidas, setMedidas] = useState<{ [key: number]: Medida[] }>({});
+  /** Estrutura (id, id_controle) por controle para cálculos do dashboard; não substitui medidas completas. */
+  const [medidasStructure, setMedidasStructure] = useState<{ [key: number]: dataService.MedidaStructureItem[] }>({});
   const [programaMedidas, setProgramaMedidas] = useState<{ [key: string]: ProgramaMedida }>({});
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
   const [programa, setPrograma] = useState<any>(null);
@@ -106,6 +115,22 @@ export default function DiagnosticoPage() {
   const [drawerOpen, setDrawerOpen] = useState(!isMobile);
   const [autoLoadingMedidas, setAutoLoadingMedidas] = useState<Set<number>>(new Set());
   const [autoLoadingControles, setAutoLoadingControles] = useState<Set<number>>(new Set());
+  const [showLoadedFeedback, setShowLoadedFeedback] = useState(false);
+  const wasLoadingRef = useRef(false);
+  const loadMedidasForDashboardRef = useRef<() => Promise<void>>(() => Promise.resolve());
+
+  // Carregamento em segundo plano (controles, medidas, índices) — não bloqueia a tela
+  const isBackgroundLoading = loading || loadingControles.size > 0 || loadingMedidas.size > 0;
+
+  // Ao terminar todo o carregamento, mostrar "Carregado" por alguns segundos
+  useEffect(() => {
+    if (wasLoadingRef.current && !isBackgroundLoading) {
+      setShowLoadedFeedback(true);
+      const t = setTimeout(() => setShowLoadedFeedback(false), 2500);
+      return () => clearTimeout(t);
+    }
+    wasLoadingRef.current = isBackgroundLoading;
+  }, [isBackgroundLoading]);
 
   // Hook de maturidade inteligente
   const {
@@ -114,36 +139,28 @@ export default function DiagnosticoPage() {
     invalidateCache,
     preloadMaturity,
     clearOldCache,
-  } = useMaturityCache(programaId);
+  } = useMaturityCache(programaId, programaMedidas);
 
-  // Carregar dados iniciais
+  // Carregar dados iniciais (só quando programaId já foi resolvido a partir do slug/id)
   useEffect(() => {
+    if (!programaId) return;
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        console.log("Loading initial data for programa:", programaId);
-        
         const [diagnosticosData, responsaveisData, programaData] = await Promise.all([
           dataService.fetchDiagnosticos(),
           dataService.fetchResponsaveis(programaId),
-          dataService.fetchProgramaById(programaId)
+          dataService.fetchProgramaById(programaId),
         ]);
-        
-        console.log("Loaded diagnosticos:", diagnosticosData);
-        console.log("Loaded responsaveis:", responsaveisData);
-        console.log("Loaded programa:", programaData);
-        
         setDiagnosticos(diagnosticosData || []);
         setResponsaveis(responsaveisData || []);
         setPrograma(programaData);
-
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
       } finally {
         setLoading(false);
       }
     };
-
     loadInitialData();
   }, [programaId]);
 
@@ -189,10 +206,13 @@ export default function DiagnosticoPage() {
     }
   }, [controles, programaId]);
 
-  // Carregar medidas de um controle
+  // Carregar medidas de um controle (completas: texto, programa_medida, etc.)
+  // Só considera "já carregado" quando tem dados completos; estrutura só (id, id_controle) do dashboard não bloqueia.
   const loadMedidas = useCallback(async (controleId: number) => {
-    if (medidas[controleId] !== undefined) return; // Já carregado (mesmo que seja array vazio)
-    
+    const existing = medidas[controleId];
+    const hasFullData = existing?.length && typeof (existing[0] as any)?.medida === 'string';
+    if (hasFullData) return;
+
     console.log("Loading medidas for controle:", controleId);
     setLoadingMedidas(prev => new Set(prev).add(controleId));
     
@@ -272,51 +292,43 @@ export default function DiagnosticoPage() {
     return () => clearTimeout(timer);
   }, [diagnosticos, loading, selectedNode?.type, controles, loadControles, loadingControles]);
 
-  // Função para carregar dados completos para dashboard de forma otimizada
+  // Carrega só o necessário para o dashboard: programaMedidas (resposta) + estrutura de medidas (id, id_controle).
+  // Medidas completas (texto, etc.) são carregadas sob demanda ao expandir um controle.
   const loadMedidasForDashboard = useCallback(async () => {
-    console.log("📊 Dashboard: Carregando dados completos de forma otimizada");
-    
     try {
-      // 1. Carregar todos os programaMedidas de uma vez (mais eficiente)
-      console.log("📊 Dashboard: Carregando todos os programaMedidas...");
-      const allProgramaMedidas = await dataService.fetchAllProgramaMedidas(programaId);
-      setProgramaMedidas(prev => ({ ...prev, ...allProgramaMedidas }));
-      console.log(`✅ Dashboard: Carregados ${Object.keys(allProgramaMedidas).length} programaMedidas`);
-      
-      // 2. Carregar medidas apenas para controles que ainda não têm dados
-      for (const diagnostico of diagnosticos) {
-        const diagnosticoControles = controles[diagnostico.id] || [];
-        
-        for (const controle of diagnosticoControles) {
-          // Carregar medidas apenas se não estão carregadas e não estão sendo carregadas
-          if (!medidas[controle.id] && !loadingMedidas.has(controle.id)) {
-            try {
-              console.log(`📊 Dashboard: Carregando medidas para controle ${controle.id}`);
-              await loadMedidas(controle.id);
-            } catch (error) {
-              console.error(`Erro ao carregar medidas do controle ${controle.id}:`, error);
-            }
-          }
-        }
-      }
-      
-      console.log("✅ Dashboard: Carregamento de dados completo concluído");
-      
-    } catch (error) {
-      console.error("❌ Erro no carregamento otimizado para dashboard:", error);
-    }
-  }, [diagnosticos, controles, medidas, loadingMedidas, loadMedidas, programaId]);
+      const controleIds = diagnosticos.flatMap(d => (controles[d.id] || []).map((c: any) => c.id));
+      if (controleIds.length === 0) return;
 
-  // Trigger do carregamento de medidas para dashboard
+      const [allProgramaMedidas, structure] = await Promise.all([
+        dataService.fetchAllProgramaMedidas(programaId),
+        dataService.fetchMedidasStructure(controleIds),
+      ]);
+
+      setProgramaMedidas(prev => ({ ...prev, ...allProgramaMedidas }));
+      setMedidasStructure(prev => ({ ...prev, ...structure }));
+    } catch (error) {
+      console.error("❌ Erro no carregamento do dashboard:", error);
+    }
+  }, [diagnosticos, controles, programaId]);
+
+  loadMedidasForDashboardRef.current = loadMedidasForDashboard;
+
+  // Trigger do carregamento de medidas para dashboard. Usa ref para não depender de
+  // loadMedidasForDashboard (evita loop quando medidas/programaMedidas atualizam).
+  // Reexecuta quando controles aumentam; o último timeout (após controles estáveis) dispara o load.
   useEffect(() => {
-    if (selectedNode?.type === 'dashboard' && !loading && Object.keys(controles).length > 0) {
+    if (
+      selectedNode?.type === 'dashboard' &&
+      !loading &&
+      Object.keys(controles).length > 0
+    ) {
       const timer = setTimeout(() => {
-        loadMedidasForDashboard();
-      }, 500); // Pequeno delay para evitar execução excessiva
-      
+        loadMedidasForDashboardRef.current?.();
+      }, 500);
+
       return () => clearTimeout(timer);
     }
-  }, [selectedNode?.type, loading, controles, loadMedidasForDashboard]);
+  }, [selectedNode?.type, loading, controles]);
 
   // Manipular expansão de nós
   const handleNodeToggle = useCallback(async (nodeId: string, node: TreeNode) => {
@@ -338,21 +350,37 @@ export default function DiagnosticoPage() {
     setExpandedNodes(newExpanded);
   }, [expandedNodes, loadControles, loadMedidas]);
 
-  // Manipular seleção de nó
+  // Manipular seleção de nó (expande os pais para que o item fique visível no menu)
   const handleNodeSelect = useCallback(async (node: TreeNode) => {
-    console.log('handleNodeSelect - Selecionando nó:', node.type, node.id);
-    if (node.type === 'controle') {
-      console.log('handleNodeSelect - Dados do controle:', node.data);
-      console.log('handleNodeSelect - Maturidade do nó:', node.maturityScore, node.maturityLabel);
-    }
-    
     setSelectedNode(node);
-    
-    // No mobile, fechar drawer apenas quando selecionar medida
-    if (isMobile && node.type === 'medida') {
+
+    // Expandir nós pais para que a seleção fique visível na árvore
+    const parentIds: string[] = [];
+    if (node.type === "medida" && node.data?.controle) {
+      parentIds.push(`diagnostico-${node.data.controle.diagnostico}`, `controle-${node.data.controle.id}`);
+    } else if (node.type === "controle" && node.data?.diagnostico != null) {
+      parentIds.push(`diagnostico-${node.data.diagnostico}`);
+    }
+    if (parentIds.length > 0) {
+      setExpandedNodes((prev) => new Set([...Array.from(prev), ...parentIds]));
+    }
+
+    if (isMobile && node.type === "medida") {
       setDrawerOpen(false);
     }
   }, [isMobile]);
+
+  // Para maturidade/dashboard: usar medidas completas quando existirem, senão estrutura (id, id_controle).
+  const medidasParaCalculo = useMemo(() => {
+    const out: { [key: number]: Array<Medida | dataService.MedidaStructureItem> } = {};
+    const allIds = new Set([...Object.keys(medidas).map(Number), ...Object.keys(medidasStructure).map(Number)]);
+    allIds.forEach((id) => {
+      const full = medidas[id];
+      const hasFull = full?.length && typeof (full[0] as any)?.medida === 'string';
+      out[id] = hasFull ? full : (medidasStructure[id] || []);
+    });
+    return out;
+  }, [medidas, medidasStructure]);
 
   // Construir árvore de navegação
   const treeData = useMemo((): TreeNode[] => {
@@ -371,7 +399,7 @@ export default function DiagnosticoPage() {
 
     diagnosticos.forEach(diagnostico => {
       const diagnosticoControles = controles[diagnostico.id] || [];
-      const diagnosticoMaturity = getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidas);
+      const diagnosticoMaturity = getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidasParaCalculo as { [key: number]: Medida[] });
 
       // Escolher ícone específico baseado no diagnóstico
       const getDiagnosticoIcon = (diagnosticoId: number) => {
@@ -400,8 +428,9 @@ export default function DiagnosticoPage() {
       };
 
             diagnosticoControles.forEach(controle => {
+        const medidasControle = medidasParaCalculo[controle.id] || [];
         const controleMedidas = medidas[controle.id] || [];
-        const controleMaturity = getControleMaturity(controle, controleMedidas, controle, programaMedidas);
+        const controleMaturity = getControleMaturity(controle, medidasControle as Medida[], controle, programaMedidas);
 
         const controleNode: TreeNode = {
               id: `controle-${controle.id}`,
@@ -419,53 +448,40 @@ export default function DiagnosticoPage() {
         };
 
                 controleMedidas.forEach(medida => {
+              // Só mostrar nó de medida na árvore quando tiver dados completos (carregados ao expandir)
+              const hasFullMedida = typeof (medida as any).medida === 'string';
+              if (!hasFullMedida) return;
+
               const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
-              
-              // Determinar cor baseada na resposta
               const getMedidaColor = () => {
-                if (!programaMedida?.resposta) {
-                  return '#9E9E9E'; // Cinza para não respondida
-                }
-                
-                const respostaNum = typeof programaMedida.resposta === 'string' 
-                  ? parseInt(programaMedida.resposta, 10) 
-                  : programaMedida.resposta;
-                
+                if (!programaMedida?.resposta) return '#9E9E9E';
+                const respostaNum = typeof programaMedida.resposta === 'string'
+                  ? parseInt(programaMedida.resposta, 10) : programaMedida.resposta;
                 if (isNaN(respostaNum)) return '#9E9E9E';
-                
-                // Para diagnóstico 1 (sim/não) - usando respostasimnao
                 if (controle.diagnostico === 1) {
-                  // respostasimnao: { id: 1, label: "Sim" }, { id: 2, label: "Não" }
                   return respostaNum === 1 ? '#4CAF50' : respostaNum === 2 ? '#FF5252' : '#9E9E9E';
                 }
-                
-                // Para outros diagnósticos (escala 1-6) - usando respostas
                 switch (respostaNum) {
-                  case 1: return '#4CAF50'; // Verde - Adota totalmente
-                  case 2: return '#8BC34A'; // Verde claro - Adota em menor parte
-                  case 3: return '#FFC107'; // Amarelo - Adota parcialmente  
-              case 4: return '#FF9800'; // Laranja - Não adota mas planeja
-              case 5: return '#FF5252'; // Vermelho - Não adota
-                  case 6: return '#9E9E9E'; // Cinza - Não se aplica
+                  case 1: return '#4CAF50';
+                  case 2: return '#8BC34A';
+                  case 3: return '#FFC107';
+                  case 4: return '#FF9800';
+                  case 5: return '#FF5252';
+                  case 6: return '#9E9E9E';
                   default: return '#9E9E9E';
                 }
               };
 
-          const medidaNode: TreeNode = {
-            id: `medida-${medida.id}`,
+              const medidaNode: TreeNode = {
+                id: `medida-${medida.id}`,
                 type: 'medida',
-            label: `${medida.id_medida} - ${medida.medida?.substring(0, 50)}...`,
-            description: `Medida ${medida.id_medida}`,
+                label: `${medida.id_medida} - ${(medida as any).medida?.substring(0, 50)}...`,
+                description: `Medida ${(medida as any).id_medida}`,
                 icon: <PolicyIcon sx={{ color: getMedidaColor() }} />,
-                data: { 
-                  medida, 
-                  controle, 
-                  programaMedida 
-            }
-          };
-
-          controleNode.children!.push(medidaNode);
-        });
+                data: { medida, controle, programaMedida },
+              };
+              controleNode.children!.push(medidaNode);
+            });
 
         diagnosticoNode.children!.push(controleNode);
       });
@@ -479,6 +495,7 @@ export default function DiagnosticoPage() {
     diagnosticos,
     controles,
     medidas,
+    medidasParaCalculo,
     programaMedidas,
     programaId,
     theme,
@@ -855,7 +872,7 @@ export default function DiagnosticoPage() {
 
   // Conteúdo da área principal
   const renderMainContent = () => {
-    if (loading) {
+    if (loading || resolvingId) {
       return (
         <Box sx={{ p: 3 }}>
           <Skeleton variant="rectangular" height={200} sx={{ mb: 2, borderRadius: 2 }} />
@@ -879,14 +896,14 @@ export default function DiagnosticoPage() {
         <Dashboard
           diagnosticos={diagnosticos}
           controles={controles}
-          medidas={medidas}
+          medidas={medidasParaCalculo as { [key: number]: Medida[] }}
           programaMedidas={programaMedidas}
           getControleMaturity={getControleMaturity}
           getDiagnosticoMaturity={(id) => {
             const diagnostico = diagnosticos.find(d => d.id === id);
             if (!diagnostico) return { score: 0, label: 'Sem dados', color: '#9E9E9E', level: 'inicial' as const };
             const diagnosticoControles = controles[id] || [];
-            return getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidas);
+            return getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidasParaCalculo as { [key: number]: Medida[] });
           }}
           programaId={programaId}
           onDiagnosticoClick={(diagnosticoId) => {
@@ -1005,14 +1022,14 @@ export default function DiagnosticoPage() {
                   </Typography>
                   <Grid container spacing={2}>
                     {diagnosticoControles.map((controle) => {
-                      const controleMedidas = medidas[controle.id] || [];
+                      const controleMedidas = medidasParaCalculo[controle.id] || [];
                       const programaControle = {
                         id: controle.programa_controle_id || 0,
                         programa: programaId,
                         controle: controle.id,
                         nivel: controle.nivel || 1
                       };
-                      const controleMaturity = getControleMaturity(controle, controleMedidas, programaControle, programaMedidas);
+                      const controleMaturity = getControleMaturity(controle, controleMedidas as Medida[], programaControle, programaMedidas);
                       
                       return (
                         <Grid size={{ xs: 12, md: 6 }} key={controle.id}>
@@ -1222,6 +1239,8 @@ export default function DiagnosticoPage() {
               handleMedidaChange={handleMedidaChange}
               responsaveis={responsaveis}
               onMedidaNavigate={handleMedidaNavigate}
+              programaMedidas={programaMedidas}
+              getControleMaturity={getControleMaturity}
             />
           </LocalizationProvider>
       );
@@ -1242,6 +1261,19 @@ export default function DiagnosticoPage() {
     );
   };
 
+  if (!resolvingId && !programaId) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Programa não encontrado.
+        </Alert>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => router.push("/programas")}>
+          Voltar aos programas
+        </Button>
+      </Container>
+    );
+  }
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
       <Container maxWidth={false} disableGutters>
@@ -1258,8 +1290,8 @@ export default function DiagnosticoPage() {
                   <Link underline="hover" color="inherit" href="/programas">
                     Programas
                   </Link>
-                  <Link underline="hover" color="inherit" href={`/programas/${programaId}`}>
-                    {programa?.nome_fantasia || programa?.razao_social || `Programa ${programaId}`}
+                  <Link underline="hover" color="inherit" href={`/programas/${idOrSlug}`}>
+                    {programa?.nome || programa?.nome_fantasia || programa?.razao_social || `Programa ${programaId}`}
                   </Link>
                   <Typography color="text.primary">Diagnósticos</Typography>
                 </Breadcrumbs>
@@ -1289,6 +1321,44 @@ export default function DiagnosticoPage() {
             </Typography>
         </Box>
         </Paper>
+
+        {/* Indicador de carregamento em segundo plano — não bloqueia uso */}
+        {(isBackgroundLoading || showLoadedFeedback) && (
+          <Paper
+            elevation={0}
+            sx={{
+              px: 2,
+              py: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              borderRadius: 0,
+              borderBottom: `1px solid ${theme.palette.divider}`,
+              backgroundColor: showLoadedFeedback
+                ? alpha(theme.palette.success.main, 0.08)
+                : alpha(theme.palette.primary.main, 0.06),
+              transition: 'background-color 0.2s ease',
+            }}
+          >
+            {isBackgroundLoading ? (
+              <>
+                <HourglassEmptyIcon sx={{ fontSize: 20, color: 'primary.main' }} />
+                <Typography variant="body2" color="text.secondary">
+                  Carregando índices, respostas e medidas…
+                </Typography>
+                <Box sx={{ flex: 1, minWidth: 0 }} />
+                <LinearProgress sx={{ flex: 1, maxWidth: 280, borderRadius: 1 }} />
+              </>
+            ) : (
+              <>
+                <CheckCircleOutlineIcon sx={{ fontSize: 20, color: 'success.main' }} />
+                <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 500 }}>
+                  Carregado
+                </Typography>
+              </>
+            )}
+          </Paper>
+        )}
 
         {/* Layout principal */}
         <Box sx={{ display: 'flex', height: 'calc(100vh - 140px)' }}>

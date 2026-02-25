@@ -50,10 +50,16 @@ import {
   Email as EmailIcon,
   Language as WebsiteIcon,
   CalendarToday as CalendarIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Gavel as GavelIcon
 } from "@mui/icons-material";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
 import { shouldUseDemoData } from "@/lib/services/demoDataService";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 
 const sections = [
   {
@@ -73,6 +79,15 @@ const sections = [
     path: "planos-acao",
     color: "#2196f3",
     gradient: "linear-gradient(135deg, #2196f3 0%, #42a5f5 100%)"
+  },
+  {
+    key: "conformidade",
+    title: "Conformidade LGPD",
+    icon: <GavelIcon fontSize="large" />,
+    description: "ROPA, direitos dos titulares, RIPD e incidentes",
+    path: "conformidade",
+    color: "#1976d2",
+    gradient: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)"
   },
   {
     key: "politicas",
@@ -125,28 +140,32 @@ export default function ProgramaMainPage() {
   const params = useParams();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const programaId = params.id;
+  const idOrSlug = params.id as string;
   const [programa, setPrograma] = useState<any>(null);
   const [editField, setEditField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const isDemoMode = shouldUseDemoData(Number(programaId));
+  const programaId = programa?.id;
+  const isDemoMode = shouldUseDemoData(programaId);
+  const { programaUser, isLoading: permissionsLoading } = useUserPermissions(
+    isDemoMode ? undefined : programaId
+  );
 
   useEffect(() => {
     const fetchPrograma = async () => {
       setLoading(true);
       try {
-        const data = await dataService.fetchProgramaById(Number(programaId));
+        const data = await dataService.fetchProgramaByIdOrSlug(idOrSlug);
         setPrograma(data);
       } catch (error) {
-        console.error('Erro ao carregar programa:', error);
+        console.error("Erro ao carregar programa:", error);
       } finally {
         setLoading(false);
       }
     };
     fetchPrograma();
-  }, [programaId]);
+  }, [idOrSlug]);
 
   const handleEdit = (field: string, value: string) => {
     setEditField(field);
@@ -159,19 +178,24 @@ export default function ProgramaMainPage() {
   };
 
   const handleSave = async (field: string) => {
-    if (!editValue.trim()) {
+    const isPolicyDate = policyFields.some((f) => f.key === field);
+    if (!programaId) {
       handleCancel();
       return;
     }
-    
+    if (!isPolicyDate && !editValue.trim()) {
+      handleCancel();
+      return;
+    }
     setLoading(true);
     try {
-      await dataService.updateProgramaField(Number(programaId), field, editValue);
-      setPrograma((prev: any) => ({ ...prev, [field]: editValue }));
+      const valueToSave = isPolicyDate ? editValue || null : editValue;
+      await dataService.updateProgramaField(programaId, field, valueToSave);
+      setPrograma((prev: any) => ({ ...prev, [field]: valueToSave }));
       setEditField(null);
       setEditValue("");
     } catch (error) {
-      console.error('Erro ao salvar campo:', error);
+      console.error("Erro ao salvar campo:", error);
     } finally {
       setLoading(false);
     }
@@ -279,7 +303,22 @@ export default function ProgramaMainPage() {
     );
   }
 
-  const programaName = programa.nome_fantasia || programa.razao_social || `Programa #${programaId}`;
+  // Usuário não está atribuído ao programa (e não é modo demo)
+  if (!isDemoMode && !permissionsLoading && !programaUser) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Você não tem acesso a este programa.
+        </Alert>
+        <Button startIcon={<ArrowBack />} onClick={() => router.push("/programas")}>
+          Voltar aos programas
+        </Button>
+      </Container>
+    );
+  }
+
+  const programaName = programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`;
+  const hasSubtitle = programa.nome_fantasia || programa.razao_social;
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -310,12 +349,23 @@ export default function ProgramaMainPage() {
               <SecurityIcon fontSize="large" />
             </Avatar>
             <Box>
-              <Typography variant="h4" fontWeight="bold">
+              <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 {programaName}
               </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Sistema de Gestão de Segurança da Informação
-              </Typography>
+              {hasSubtitle && (
+                <Stack spacing={0.35} sx={{ mt: 1 }}>
+                  {programa.nome_fantasia && (
+                    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: 500, letterSpacing: '0.01em' }}>
+                      {programa.nome_fantasia}
+                    </Typography>
+                  )}
+                  {programa.razao_social && (
+                    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.9375rem', letterSpacing: '0.01em' }}>
+                      {programa.razao_social}
+                    </Typography>
+                  )}
+                </Stack>
+              )}
             </Box>
           </Box>
           
@@ -339,6 +389,120 @@ export default function ProgramaMainPage() {
           </Typography>
         </Alert>
       )}
+
+      {/* Política de Segurança — uma linha, antes dos módulos */}
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+        <Paper
+          elevation={1}
+          sx={{
+            py: 1.5,
+            px: 2,
+            mb: 4,
+            borderRadius: 2,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: { xs: 1.5, sm: 3 },
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Policy sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
+            <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
+              Política de Segurança
+            </Typography>
+          </Box>
+          <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />
+          {policyFields.map(field => {
+            const isEditing = editField === field.key;
+            const value = programa[field.key];
+            const isPrazoRevisao = field.key === "politica_prazo_revisao";
+            const dateValue = value ? new Date(value) : null;
+            const isAtrasado =
+              isPrazoRevisao &&
+              dateValue &&
+              !isNaN(dateValue.getTime()) &&
+              dateValue < new Date();
+            const isEmpty = !value;
+            const alertColor = isAtrasado
+              ? theme.palette.error.main
+              : isEmpty
+                ? theme.palette.warning.main
+                : undefined;
+            return (
+              <Box
+                key={field.key}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  flex: { xs: "1 1 100%", sm: "0 0 auto" },
+                  minWidth: 0,
+                  ...(alertColor && {
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    bgcolor: alpha(alertColor, 0.08),
+                    border: `1px solid ${alpha(alertColor, 0.3)}`,
+                  }),
+                }}
+              >
+                <Box sx={{ color: alertColor || theme.palette.text.secondary, display: "flex" }}>{field.icon}</Box>
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+                  {field.label}:
+                </Typography>
+                {isEditing ? (
+                  <DatePicker
+                    value={editValue ? dayjs(editValue) : null}
+                    onChange={(date) => setEditValue(date ? date.format("YYYY-MM-DD") : "")}
+                    format="DD/MM/YYYY"
+                    slotProps={{
+                      textField: {
+                        size: "small",
+                        sx: { width: 160 },
+                        disabled: loading,
+                      },
+                    }}
+                  />
+                ) : (
+                  <Typography variant="body2" sx={{ minWidth: 80, color: alertColor || "text.primary" }}>
+                    {value ? (
+                      dateValue && !isNaN(dateValue.getTime())
+                        ? dateValue.toLocaleDateString("pt-BR")
+                        : String(value)
+                    ) : (
+                      <span style={{ fontStyle: "italic" }}>—</span>
+                    )}
+                    {isAtrasado && (
+                      <Typography component="span" variant="caption" sx={{ ml: 0.5, color: "error.main" }}>
+                        (atrasado)
+                      </Typography>
+                    )}
+                    {isEmpty && !isAtrasado && (
+                      <Typography component="span" variant="caption" sx={{ ml: 0.5, color: "warning.main" }}>
+                        (não definido)
+                      </Typography>
+                    )}
+                  </Typography>
+                )}
+                {isEditing ? (
+                  <>
+                    <IconButton color="success" onClick={() => handleSave(field.key)} disabled={loading} size="small">
+                      <SaveIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton color="error" onClick={handleCancel} disabled={loading} size="small">
+                      <CancelIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                ) : (
+                  <IconButton color="primary" onClick={() => handleEdit(field.key, value)} size="small">
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </Box>
+            );
+          })}
+        </Paper>
+      </LocalizationProvider>
 
       {/* Grid principal */}
       <Grid container spacing={4}>
@@ -374,7 +538,7 @@ export default function ProgramaMainPage() {
                   }}
                 >
                   <CardActionArea 
-                    onClick={() => router.push(`/programas/${programaId}/${section.path}`)}
+                    onClick={() => router.push(`/programas/${idOrSlug}/${section.path}`)}
                     sx={{ height: '100%' }}
                   >
                     <CardContent sx={{ 
@@ -464,20 +628,6 @@ export default function ProgramaMainPage() {
               </Typography>
               <Stack spacing={2}>
                 {contactFields.map(field => (
-                  <Box key={field.key}>
-                    {renderEditableField(field, programa[field.key])}
-                  </Box>
-                ))}
-              </Stack>
-            </Paper>
-
-            {/* Informações de política */}
-            <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                Política de Segurança
-              </Typography>
-              <Stack spacing={2}>
-                {policyFields.map(field => (
                   <Box key={field.key}>
                     {renderEditableField(field, programa[field.key])}
                   </Box>

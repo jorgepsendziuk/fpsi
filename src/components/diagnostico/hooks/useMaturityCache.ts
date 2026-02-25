@@ -30,7 +30,7 @@ interface MaturityData {
   };
 }
 
-export const useMaturityCache = (programaId: number) => {
+export const useMaturityCache = (programaId: number, programaMedidas?: { [key: string]: any }) => {
   const [cacheHits, setCacheHits] = useState(0);
   const [cacheMisses, setCacheMisses] = useState(0);
 
@@ -224,7 +224,7 @@ export const useMaturityCache = (programaId: number) => {
           controle: controle.id,
           nivel: controle.nivel || 1
         };
-        const controleMaturity = getControleMaturity(controle, medidas, programaControle);
+        const controleMaturity = getControleMaturity(controle, medidas, programaControle, programaMedidas);
         
         // Identificar se é o Controle 0 (Estrutura Básica)
         if (controle.numero === 0) {
@@ -288,7 +288,7 @@ export const useMaturityCache = (programaId: number) => {
       color,
       level
     };
-  }, [getControleMaturity, programaId, MATURITY_COLORS]);
+  }, [getControleMaturity, programaId, MATURITY_COLORS, programaMedidas]);
 
   const invalidateCache = useCallback((type?: string, id?: number) => {
     // Cache simples - apenas reset dos contadores

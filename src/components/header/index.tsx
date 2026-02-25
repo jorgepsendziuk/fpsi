@@ -11,8 +11,11 @@ import SecurityIcon from "@mui/icons-material/Security";
 import PolicyIcon from "@mui/icons-material/Policy";
 import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import SettingsIcon from "@mui/icons-material/Settings";
 import PersonIcon from "@mui/icons-material/Person";
+import GavelIcon from "@mui/icons-material/Gavel";
+import FolderIcon from "@mui/icons-material/Folder";
+import BusinessIcon from "@mui/icons-material/Business";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AppBar from "@mui/material/AppBar";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
@@ -35,9 +38,11 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { useGetIdentity, useLogout } from "@refinedev/core";
 import { RefineThemedLayoutV2HeaderProps} from "@refinedev/mui";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import Image from 'next/image';
 import { useRouter, usePathname } from "next/navigation";
+import * as dataService from "@/lib/services/dataService";
+import type { Programa } from "@/lib/types/types";
 
 type IUser = {
   id: number;
@@ -45,39 +50,6 @@ type IUser = {
   email: string;
   avatar: string;
 };
-
-const navigationItems = [
-  {
-    label: "Dashboard",
-    icon: <DashboardIcon />,
-    path: "/programas",
-    description: "Visão geral dos programas"
-  },
-  {
-    label: "Diagnósticos",
-    icon: <SecurityIcon />,
-    path: "/programas",
-    description: "Avaliações de segurança"
-  },
-  {
-    label: "Políticas",
-    icon: <PolicyIcon />,
-    path: "/programas",
-    description: "Políticas de segurança"
-  },
-  {
-    label: "Responsáveis",
-    icon: <PeopleIcon />,
-    path: "/programas",
-    description: "Gestão de responsáveis"
-  },
-  {
-    label: "Plano de Trabalho",
-    icon: <AssignmentIcon />,
-    path: "/programas",
-    description: "Acompanhamento de ações"
-  }
-];
 
 export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   sticky = true,
@@ -108,6 +80,18 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       description: "Avaliações de segurança"
     },
     {
+      label: "Plano de Trabalho",
+      icon: <AssignmentIcon />,
+      path: `/programas/${programaId}/planos-acao`,
+      description: "Acompanhamento de ações"
+    },
+    {
+      label: "Conformidade",
+      icon: <GavelIcon />,
+      path: `/programas/${programaId}/conformidade`,
+      description: "ROPA, titulares, RIPD, incidentes"
+    },
+    {
       label: "Políticas",
       icon: <PolicyIcon />,
       path: `/programas/${programaId}/politicas`,
@@ -120,10 +104,10 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       description: "Gestão de responsáveis"
     },
     {
-      label: "Plano de Trabalho",
-      icon: <AssignmentIcon />,
-      path: `/programas/${programaId}/planos-acao`,
-      description: "Acompanhamento de ações"
+      label: "Usuários",
+      icon: <PeopleIcon />,
+      path: `/programas/${programaId}/usuarios`,
+      description: "Usuários e permissões"
     }
   ] : [];
   const theme = useTheme();
@@ -131,6 +115,21 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [programasMenuAnchor, setProgramasMenuAnchor] = useState<null | HTMLElement>(null);
+  const [empresasMenuAnchor, setEmpresasMenuAnchor] = useState<null | HTMLElement>(null);
+  const [programas, setProgramas] = useState<Programa[]>([]);
+  const [empresas, setEmpresas] = useState<dataService.EmpresaRow[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([
+      dataService.fetchProgramasForCurrentUser(false),
+      dataService.fetchEmpresasForCurrentUser(),
+    ]).then(([programasList, empresasList]) => {
+      setProgramas(programasList || []);
+      setEmpresas(empresasList || []);
+    }).catch(() => {});
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -138,7 +137,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   };
 
   const handleGoHome = () => {
-    router.push('/programas');
+    router.push('/dashboard');
   };
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -147,20 +146,50 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
 
   const handleUserMenuClose = () => {
     setUserMenuAnchor(null);
+    setProgramasMenuAnchor(null);
+    setEmpresasMenuAnchor(null);
+  };
+
+  const handleGoToPerfil = () => {
+    router.push('/perfil');
+    setUserMenuAnchor(null);
   };
 
   const handleNavigate = (path: string) => {
     router.push(path);
     setMobileMenuOpen(false);
+    setProgramasMenuAnchor(null);
+    setEmpresasMenuAnchor(null);
+  };
+
+  const handleProgramaClick = (p: Programa) => {
+    const path = p.slug ? `/programas/${p.slug}` : `/programas/${p.id}`;
+    handleNavigate(path);
+  };
+
+  const handleVerProgramas = () => {
+    handleNavigate("/programas");
+  };
+
+  const handleVerEmpresas = () => {
+    handleNavigate("/dashboard");
   };
 
   const getCurrentPageTitle = () => {
     if (pathname.includes('/diagnostico')) return 'Diagnóstico';
+    if (pathname.includes('/planos-acao')) return 'Plano de Trabalho';
+    if (pathname.includes('/conformidade/ropa')) return 'ROPA';
+    if (pathname.includes('/conformidade/pedidos-titulares')) return 'Pedidos dos titulares';
+    if (pathname.includes('/conformidade/ripd')) return 'RIPD / AIPD';
+    if (pathname.includes('/conformidade/incidentes')) return 'Incidentes';
+    if (pathname.includes('/conformidade/reportes')) return 'Reportes do portal';
+    if (pathname.includes('/conformidade/contato')) return 'Contato do portal';
+    if (pathname.includes('/conformidade')) return 'Conformidade';
     if (pathname.includes('/politicas')) return 'Políticas';
     if (pathname.includes('/responsabilidades')) return 'Responsáveis';
-    if (pathname.includes('/planos-acao')) return 'Plano de Trabalho';
     if (pathname.includes('/usuarios')) return 'Usuários';
     if (pathname === '/programas') return 'Programas';
+    if (pathname === '/dashboard') return 'Dashboard';
     return 'FPSI';
   };
 
@@ -211,7 +240,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
               )}
             </Stack>
 
-            {/* Menu de navegação para desktop */}
+            {/* Navegação do programa (só quando está dentro de um programa) */}
             {!isMobile && isProgramaContext && (
               <Stack direction="row" spacing={1}>
                 {dynamicNavigationItems.map((item) => (
@@ -220,12 +249,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                       color="inherit"
                       startIcon={item.icon}
                       onClick={() => handleNavigate(item.path)}
-                      sx={{
-                        textTransform: 'none',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        },
-                      }}
+                      sx={{ textTransform: "none", "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" } }}
                     >
                       {item.label}
                     </Button>
@@ -234,7 +258,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
               </Stack>
             )}
 
-            {/* Seção do usuário e controles */}
+            {/* Canto direito: tema + menu do usuário (Início, Perfil, Programas, Empresas, Sair) */}
             <Stack direction="row" alignItems="center" spacing={1}>
               <Tooltip title={mode === "dark" ? "Modo Claro" : "Modo Escuro"}>
                 <IconButton
@@ -277,20 +301,15 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                     anchorEl={userMenuAnchor}
                     open={Boolean(userMenuAnchor)}
                     onClose={handleUserMenuClose}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                    PaperProps={{
-                      sx: {
-                        mt: 1,
-                        minWidth: 200,
-                      },
-                    }}
+                    transformOrigin={{ horizontal: "right", vertical: "top" }}
+                    anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                    PaperProps={{ sx: { mt: 1, minWidth: 220 } }}
                   >
                     <Box sx={{ px: 2, py: 1 }}>
                       <Typography variant="body2" color="text.secondary">
                         Logado como
                       </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant="body1" sx={{ fontWeight: "bold" }}>
                         {user?.name || user?.email}
                       </Typography>
                       {user?.email && user?.name && (
@@ -300,31 +319,85 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                       )}
                     </Box>
                     <Divider />
-                    <MenuItem onClick={handleGoHome}>
-                      <ListItemIcon>
-                        <HomeIcon fontSize="small" />
-                      </ListItemIcon>
-                      Meus Programas
+                    <MenuItem onClick={() => { handleNavigate("/dashboard"); handleUserMenuClose(); }}>
+                      <ListItemIcon><HomeIcon fontSize="small" /></ListItemIcon>
+                      Início
                     </MenuItem>
-                    <MenuItem onClick={handleUserMenuClose}>
-                      <ListItemIcon>
-                        <PersonIcon fontSize="small" />
-                      </ListItemIcon>
+                    <MenuItem onClick={() => { handleNavigate("/perfil"); handleUserMenuClose(); }}>
+                      <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
                       Perfil
                     </MenuItem>
-                    <MenuItem onClick={handleUserMenuClose}>
-                      <ListItemIcon>
-                        <SettingsIcon fontSize="small" />
-                      </ListItemIcon>
-                      Configurações
+                    <MenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProgramasMenuAnchor(programasMenuAnchor ? null : e.currentTarget);
+                        setEmpresasMenuAnchor(null);
+                      }}
+                    >
+                      <ListItemIcon><FolderIcon fontSize="small" /></ListItemIcon>
+                      <ListItemText primary="Programas" />
+                      <ExpandMoreIcon sx={{ fontSize: 18, transform: programasMenuAnchor ? "rotate(180deg)" : undefined }} />
+                    </MenuItem>
+                    <MenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEmpresasMenuAnchor(empresasMenuAnchor ? null : e.currentTarget);
+                        setProgramasMenuAnchor(null);
+                      }}
+                    >
+                      <ListItemIcon><BusinessIcon fontSize="small" /></ListItemIcon>
+                      <ListItemText primary="Empresas" />
+                      <ExpandMoreIcon sx={{ fontSize: 18, transform: empresasMenuAnchor ? "rotate(180deg)" : undefined }} />
                     </MenuItem>
                     <Divider />
                     <MenuItem onClick={handleLogout}>
-                      <ListItemIcon>
-                        <LogoutIcon fontSize="small" />
-                      </ListItemIcon>
+                      <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
                       Sair
                     </MenuItem>
+                  </Menu>
+                  {/* Submenu Programas (abre ao lado do menu do usuário) */}
+                  <Menu
+                    anchorEl={programasMenuAnchor}
+                    open={Boolean(programasMenuAnchor)}
+                    onClose={() => setProgramasMenuAnchor(null)}
+                    anchorOrigin={{ horizontal: "right", vertical: "top" }}
+                    transformOrigin={{ horizontal: "left", vertical: "top" }}
+                    PaperProps={{ sx: { maxHeight: 400, minWidth: 240 } }}
+                  >
+                    <MenuItem
+                      onClick={() => { handleVerProgramas(); handleUserMenuClose(); }}
+                    >
+                      <ListItemIcon><FolderIcon fontSize="small" /></ListItemIcon>
+                      Ver todos os programas
+                    </MenuItem>
+                    {programas.length > 0 && <Divider />}
+                    {programas.map((p) => (
+                      <MenuItem key={p.id} onClick={() => { handleProgramaClick(p); handleUserMenuClose(); }}>
+                        <ListItemText primary={p.nome_fantasia || p.nome || p.razao_social || `Programa ${p.id}`} />
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                  {/* Submenu Empresas */}
+                  <Menu
+                    anchorEl={empresasMenuAnchor}
+                    open={Boolean(empresasMenuAnchor)}
+                    onClose={() => setEmpresasMenuAnchor(null)}
+                    anchorOrigin={{ horizontal: "right", vertical: "top" }}
+                    transformOrigin={{ horizontal: "left", vertical: "top" }}
+                    PaperProps={{ sx: { maxHeight: 400, minWidth: 240 } }}
+                  >
+                    <MenuItem
+                      onClick={() => { handleVerEmpresas(); handleUserMenuClose(); }}
+                    >
+                      <ListItemIcon><BusinessIcon fontSize="small" /></ListItemIcon>
+                      Ver todas no Dashboard
+                    </MenuItem>
+                    {empresas.length > 0 && <Divider />}
+                    {empresas.map((e) => (
+                      <MenuItem key={e.id} onClick={() => { handleVerEmpresas(); handleUserMenuClose(); }}>
+                        <ListItemText primary={e.razao_social || e.nome_fantasia || `Empresa ${e.id}`} />
+                      </MenuItem>
+                    ))}
                   </Menu>
                 </>
               ) : (
@@ -375,38 +448,81 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
           <Divider />
         </Box>
 
-        {isProgramaContext && (
+        {/* Menu principal mobile: Início, Perfil, Programas, Empresas */}
+        {user && (
           <List>
-            {dynamicNavigationItems.map((item) => (
-              <ListItem key={item.label} disablePadding>
-                <ListItemButton onClick={() => handleNavigate(item.path)}>
-                  <ListItemIcon>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={item.label}
-                    secondary={item.description}
-                  />
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleNavigate("/dashboard")}>
+                <ListItemIcon><HomeIcon /></ListItemIcon>
+                <ListItemText primary="Início" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleNavigate("/perfil")}>
+                <ListItemIcon><PersonIcon /></ListItemIcon>
+                <ListItemText primary="Perfil" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleVerProgramas}>
+                <ListItemIcon><FolderIcon /></ListItemIcon>
+                <ListItemText primary="Ver todos os programas" />
+              </ListItemButton>
+            </ListItem>
+            {programas.map((p) => (
+              <ListItem key={p.id} disablePadding sx={{ pl: 3 }}>
+                <ListItemButton onClick={() => handleProgramaClick(p)}>
+                  <ListItemText primary={p.nome_fantasia || p.nome || p.razao_social || `Programa ${p.id}`} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleVerEmpresas}>
+                <ListItemIcon><BusinessIcon /></ListItemIcon>
+                <ListItemText primary="Ver todas as empresas (Dashboard)" />
+              </ListItemButton>
+            </ListItem>
+            {empresas.map((e) => (
+              <ListItem key={e.id} disablePadding sx={{ pl: 3 }}>
+                <ListItemButton onClick={handleVerEmpresas}>
+                  <ListItemText primary={e.razao_social || e.nome_fantasia || `Empresa ${e.id}`} />
                 </ListItemButton>
               </ListItem>
             ))}
           </List>
         )}
 
+        {isProgramaContext && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="overline" sx={{ px: 2, color: "text.secondary" }}>Este programa</Typography>
+            <List>
+              {dynamicNavigationItems.map((item) => (
+                <ListItem key={item.label} disablePadding>
+                  <ListItemButton onClick={() => handleNavigate(item.path)}>
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.label} secondary={item.description} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </>
+        )}
+
         {user && (
           <>
-            <Divider sx={{ mt: 'auto' }} />
+            <Divider sx={{ mt: "auto" }} />
             <Box sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Avatar 
-                  src={user?.avatar} 
-                  alt={user?.name || user?.email} 
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                <Avatar
+                  src={user?.avatar}
+                  alt={user?.name || user?.email}
                   sx={{ width: 40, height: 40 }}
                 >
-                  {(user?.name || user?.email || '').charAt(0).toUpperCase()}
+                  {(user?.name || user?.email || "").charAt(0).toUpperCase()}
                 </Avatar>
                 <Box>
-                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="body1" sx={{ fontWeight: "bold" }}>
                     {user?.name || user?.email}
                   </Typography>
                   {user?.email && user?.name && (
@@ -421,7 +537,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                 variant="outlined"
                 startIcon={<LogoutIcon />}
                 onClick={handleLogout}
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: "none" }}
               >
                 Sair
               </Button>

@@ -2,7 +2,7 @@
 
 import { AuthPage } from "@refinedev/mui";
 import { Box, useTheme, IconButton, Tooltip, CircularProgress } from "@mui/material";
-import { DarkModeOutlined, LightModeOutlined } from "@mui/icons-material";
+import { DarkModeOutlined, LightModeOutlined, Google } from "@mui/icons-material";
 import { ColorModeContext } from "@contexts/color-mode";
 import { useContext, useEffect } from "react";
 import { useGetIdentity } from "@refinedev/core";
@@ -27,7 +27,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user && !isLoading) {
-      router.push('/');
+      router.push('/dashboard');
     }
   }, [user, isLoading, router]);
 
@@ -86,6 +86,13 @@ export default function Login() {
       <Box sx={{ position: 'relative' }}>
         <AuthPage 
           type="login"
+          providers={[
+            {
+              name: "google",
+              label: "Entrar com Google",
+              icon: <Google />,
+            },
+          ]}
           title={
             <Box sx={{ textAlign: 'center', mb: 2 }}>
               <Image 

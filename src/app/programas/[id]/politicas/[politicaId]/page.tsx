@@ -24,6 +24,7 @@ import {
 import SectionDisplay from './components/SectionDisplay';
 import PDFDownloadButton from './components/PDFDownloadButton';
 import { fetchProgramaById } from '../../../../../lib/services/dataService';
+import { useProgramaIdFromParam } from '../../../../../hooks/useProgramaIdFromParam';
 
 interface Section {
   titulo: string;
@@ -118,7 +119,8 @@ export default function PoliticaPage() {
   const params = useParams();
   const router = useRouter();
   const theme = useTheme();
-  const programaId = params.id;
+  const idOrSlug = params.id as string;
+  const { programaId, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
   const politicaId = params.politicaId as string;
   
   const [sections, setSections] = useState<Section[]>([]);
@@ -162,17 +164,13 @@ export default function PoliticaPage() {
   }, [politicaId, politicaConfig]);
 
   useEffect(() => {
+    if (programaId == null) return;
     const loadData = async () => {
       try {
         setLoading(true);
-        
-        // Carregar dados do programa
-        const programaData = await fetchProgramaById(Number(programaId));
+        const programaData = await fetchProgramaById(programaId);
         setPrograma(programaData);
-
-        // Carregar modelo da política
         await loadPoliticaModel();
-        
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         setError('Erro ao carregar dados da política');
@@ -180,7 +178,6 @@ export default function PoliticaPage() {
         setLoading(false);
       }
     };
-
     loadData();
   }, [programaId, politicaId, loadPoliticaModel]);
 
@@ -237,8 +234,9 @@ export default function PoliticaPage() {
         if (section.id === id) {
           let updatedText = text;
           // Substituir placeholders se programa carregado
-          if (programa?.nome_fantasia) {
-            updatedText = text.replace(/\[Órgão ou Entidade\]/g, programa.nome_fantasia);
+          const nomeEntidade = programa?.nome || programa?.nome_fantasia;
+          if (nomeEntidade) {
+            updatedText = text.replace(/\[Órgão ou Entidade\]/g, nomeEntidade);
           }
           return { ...section, texto: updatedText };
         }
@@ -248,8 +246,16 @@ export default function PoliticaPage() {
   };
 
   const handleVoltar = () => {
-    router.push(`/programas/${programaId}/politicas`);
+    router.push(`/programas/${idOrSlug}/politicas`);
   };
+
+  if (idLoading || !programaId) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Skeleton variant="rectangular" height={200} />
+      </Container>
+    );
+  }
 
   if (!politicaConfig) {
     return (
@@ -313,14 +319,14 @@ export default function PoliticaPage() {
                 </Link>
                 <Link
                   color="inherit"
-                  href={`/programas/${programaId}`}
+                  href={`/programas/${idOrSlug}`}
                   sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
                 >
                   {programa?.nome || 'Programa'}
                 </Link>
                 <Link
                   color="inherit"
-                  href={`/programas/${programaId}/politicas`}
+                  href={`/programas/${idOrSlug}/politicas`}
                   sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
                 >
                   Políticas
@@ -351,13 +357,13 @@ export default function PoliticaPage() {
                   {politicaConfig.nome}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  {politicaConfig.descricao} • Programa: <strong>{programa?.nome_fantasia || programa?.nome}</strong>
+                  {politicaConfig.descricao} • Programa: <strong>{programa?.nome || programa?.nome_fantasia}</strong>
                 </Typography>
               </Box>
               
               <PDFDownloadButton 
                 sections={sections} 
-                nomeFantasia={programa?.nome_fantasia || programa?.nome || ''} 
+                nomeFantasia={programa?.nome || programa?.nome_fantasia || ''} 
                 politicaNome={politicaConfig.nome}
               />
             </Box>
@@ -378,7 +384,7 @@ export default function PoliticaPage() {
                   key={section.id}
                   section={section}
                   onTextChange={handleSectionTextChange}
-                  nomeFantasia={programa?.nome_fantasia || ''}
+                  nomeFantasia={programa?.nome || programa?.nome_fantasia || ''}
                   politicaCor={politicaConfig.cor}
                 />
               ))}

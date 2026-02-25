@@ -4,13 +4,35 @@ import type { AuthProvider } from "@refinedev/core";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 
 export const authProviderClient: AuthProvider = {
-  login: async ({ email, password }) => {
-    const { data, error } = await supabaseBrowserClient.auth.signInWithPassword(
-      {
-        email,
-        password,
+  login: async ({ email, password, providerName }) => {
+    // Login social (OAuth)
+    if (providerName) {
+      const { data, error } =
+        await supabaseBrowserClient.auth.signInWithOAuth({
+          provider: providerName as "google" | "github" | "azure" | "facebook",
+          options: {
+            redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/dashboard`,
+          },
+        });
+
+      if (error) {
+        return { success: false, error };
       }
-    );
+      if (data?.url) {
+        window.location.href = data.url;
+        return { success: true };
+      }
+      return {
+        success: false,
+        error: { name: "OAuthError", message: "Erro ao iniciar login social" },
+      };
+    }
+
+    // Login com email e senha
+    const { data, error } = await supabaseBrowserClient.auth.signInWithPassword({
+      email: email ?? "",
+      password: password ?? "",
+    });
 
     if (error) {
       return {
@@ -22,13 +44,14 @@ export const authProviderClient: AuthProvider = {
     if (data?.session) {
       await supabaseBrowserClient.auth.setSession(data.session);
 
+      fetch("/api/profiles/verify", { method: "POST" }).catch(() => {});
+
       return {
         success: true,
-        redirectTo: "/programas",
+        redirectTo: "/dashboard",
       };
     }
 
-    // for third-party login
     return {
       success: false,
       error: {
@@ -52,6 +75,42 @@ export const authProviderClient: AuthProvider = {
       redirectTo: "/",
     };
   },
+  updatePassword: async ({ password }) => {
+    const { error } = await supabaseBrowserClient.auth.updateUser({ password });
+
+    if (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+
+    return {
+      success: true,
+    };
+  },
+  forgotPassword: async ({ email }) => {
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/login`
+        : "/login";
+
+    const { error } = await supabaseBrowserClient.auth.resetPasswordForEmail(
+      email,
+      { redirectTo }
+    );
+
+    if (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+
+    return {
+      success: true,
+    };
+  },
   register: async ({ email, password }) => {
     try {
       const { data, error } = await supabaseBrowserClient.auth.signUp({
@@ -69,7 +128,7 @@ export const authProviderClient: AuthProvider = {
       if (data) {
         return {
           success: true,
-          redirectTo: "/programas",
+          redirectTo: "/dashboard",
         };
       }
     } catch (error: any) {
@@ -110,13 +169,9 @@ export const authProviderClient: AuthProvider = {
       redirectTo: "/login",
     };
   },
+  // Permissões reais vêm de programa_users via useUserPermissions(programaId) e GET /api/users.
+  // Este retorno não é usado para autorização na app; mantemos null para deixar explícito.
   getPermissions: async () => {
-    const user = await supabaseBrowserClient.auth.getUser();
-
-    if (user) {
-      return user.data.user?.role;
-    }
-
     return null;
   },
   getIdentity: async () => {

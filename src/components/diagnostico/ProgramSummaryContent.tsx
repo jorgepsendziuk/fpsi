@@ -74,7 +74,7 @@ const ProgramSummaryContent = ({
               fontSize: { xs: '2rem', sm: '1.75rem' }
             }}
           >
-            {programa?.nome_fantasia?.charAt(0) || programa?.razao_social?.charAt(0) || 'P'}
+            {programa?.nome?.charAt(0) || programa?.nome_fantasia?.charAt(0) || programa?.razao_social?.charAt(0) || 'P'}
           </Typography>
         </Box>
         <Box sx={{ 

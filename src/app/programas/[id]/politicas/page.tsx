@@ -33,7 +33,8 @@ import {
   Cloud as CloudIcon,
   Assignment as AssignmentIcon
 } from "@mui/icons-material";
-import { fetchProgramaById } from "../../../../lib/services/dataService";
+import * as dataService from "../../../../lib/services/dataService";
+import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
 
 interface PoliticaInfo {
   id: string;
@@ -122,15 +123,17 @@ export default function ProgramaPoliticasPage() {
   const params = useParams();
   const router = useRouter();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const programaId = params.id;
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const idOrSlug = params.id as string;
+  const { programaId, loading: idLoading, error: idError } = useProgramaIdFromParam(idOrSlug);
   const [programa, setPrograma] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (programaId == null) return;
     const loadPrograma = async () => {
       try {
-        const data = await fetchProgramaById(Number(programaId));
+        const data = await dataService.fetchProgramaById(programaId);
         setPrograma(data);
       } catch (error) {
         console.error("Erro ao carregar programa:", error);
@@ -142,14 +145,14 @@ export default function ProgramaPoliticasPage() {
   }, [programaId]);
 
   const handlePoliticaClick = (politica: PoliticaInfo) => {
-    router.push(`/programas/${programaId}/politicas/${politica.id}`);
+    router.push(`/programas/${idOrSlug}/politicas/${politica.id}`);
   };
 
   const handleVoltar = () => {
-    router.push(`/programas/${programaId}`);
+    router.push(`/programas/${idOrSlug}`);
   };
 
-  if (loading) {
+  if (idLoading || loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
@@ -162,6 +165,14 @@ export default function ProgramaPoliticasPage() {
             </Grid>
           ))}
         </Grid>
+      </Container>
+    );
+  }
+
+  if (!programaId) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography color="error">Programa não encontrado.</Typography>
       </Container>
     );
   }
@@ -192,7 +203,7 @@ export default function ProgramaPoliticasPage() {
                 </Link>
                 <Link
                   color="inherit"
-                  href={`/programas/${programaId}`}
+                  href={`/programas/${idOrSlug}`}
                   sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
                 >
                   {programa?.nome || 'Programa'}
@@ -220,7 +231,7 @@ export default function ProgramaPoliticasPage() {
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
                 Gerencie e edite as políticas de segurança do programa{' '}
-                <strong>{programa?.nome_fantasia || programa?.nome}</strong>
+                <strong>{programa?.nome || programa?.nome_fantasia}</strong>
               </Typography>
             </Box>
           </Stack>

@@ -45,26 +45,13 @@ export const useUserPermissions = (programaId?: number): UseUserPermissionsRetur
       const response = await fetch(`/api/users?programaId=${programaId}`);
       
       if (!response.ok) {
-        if (response.status === 404) {
-          // Usuário não tem acesso ao programa - criar usuário admin temporário
-          console.warn('Usuário não encontrado no programa. Criando permissões temporárias de admin.');
-          
-          const tempUser: ProgramaUser = {
-            id: 0,
-            programa_id: programaId,
-            user_id: user.id,
-            role: UserRole.ADMIN,
-            permissions: getDefaultPermissions(UserRole.ADMIN),
-            status: 'accepted' as any,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          
-          setProgramaUser(tempUser);
-          setPermissions(tempUser.permissions);
-          return;
+        // Usuário não tem acesso ao programa ou erro na API - sem permissões
+        setProgramaUser(null);
+        setPermissions(null);
+        if (response.status !== 404) {
+          setError('Erro ao carregar permissões do usuário');
         }
-        throw new Error('Erro ao carregar permissões do usuário');
+        return;
       }
 
       const usersData: ProgramaUser[] = await response.json();
@@ -74,42 +61,16 @@ export const useUserPermissions = (programaId?: number): UseUserPermissionsRetur
         setProgramaUser(userData);
         setPermissions(userData.permissions);
       } else {
-        // Usuário não encontrado na lista - criar permissões temporárias
-        const tempUser: ProgramaUser = {
-          id: 0,
-          programa_id: programaId,
-          user_id: user.id,
-          role: UserRole.ADMIN,
-          permissions: getDefaultPermissions(UserRole.ADMIN),
-          status: 'accepted' as any,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        setProgramaUser(tempUser);
-        setPermissions(tempUser.permissions);
+        // Usuário não está na lista do programa - sem acesso
+        setProgramaUser(null);
+        setPermissions(null);
       }
 
     } catch (err) {
       console.error('Erro ao carregar permissões:', err);
-      
-      // Em caso de erro, dar permissões temporárias de admin para não bloquear o sistema
-      console.warn('Erro ao carregar permissões. Aplicando permissões temporárias de admin.');
-      
-      const tempUser: ProgramaUser = {
-        id: 0,
-        programa_id: programaId,
-        user_id: user?.id || 'temp-user',
-        role: UserRole.ADMIN,
-        permissions: getDefaultPermissions(UserRole.ADMIN),
-        status: 'accepted' as any,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setProgramaUser(tempUser);
-      setPermissions(tempUser.permissions);
-      setError(null); // Limpar erro para não bloquear interface
+      setProgramaUser(null);
+      setPermissions(null);
+      setError('Erro ao carregar permissões');
     } finally {
       setIsLoading(false);
     }

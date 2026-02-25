@@ -14,33 +14,32 @@ import {
 import { ArrowBack } from '@mui/icons-material';
 import { UserManagement } from '../../../../components/user-management/UserManagement';
 import { useUserPermissions, useDemoPermissions } from '../../../../hooks/useUserPermissions';
+import { useProgramaIdFromParam } from '../../../../hooks/useProgramaIdFromParam';
 import { shouldUseDemoData } from '../../../../lib/services/demoDataService';
 import * as dataService from '../../../../lib/services/dataService';
 
 export default function UsuariosPage() {
   const router = useRouter();
   const params = useParams();
-  const programaId = Number(params.id);
+  const idOrSlug = params.id as string;
+  const { programaId, loading: idLoading, error: idError } = useProgramaIdFromParam(idOrSlug);
   const [programa, setPrograma] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Usar permissões demo ou reais dependendo do contexto
-  const isDemoMode = shouldUseDemoData(programaId);
-  const realPermissions = useUserPermissions(programaId);
+  const isDemoMode = shouldUseDemoData(programaId ?? 0);
+  const realPermissions = useUserPermissions(programaId ?? undefined);
   const demoPermissions = useDemoPermissions();
   const permissions = isDemoMode ? demoPermissions : realPermissions;
 
   useEffect(() => {
+    if (programaId == null) return;
     const fetchPrograma = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const data = await dataService.fetchProgramaById(programaId);
-        if (!data) {
-          throw new Error('Programa não encontrado');
-        }
+        if (!data) throw new Error('Programa não encontrado');
         setPrograma(data);
       } catch (err) {
         console.error('Erro ao carregar programa:', err);
@@ -49,7 +48,6 @@ export default function UsuariosPage() {
         setLoading(false);
       }
     };
-
     fetchPrograma();
   }, [programaId]);
 
@@ -60,7 +58,7 @@ export default function UsuariosPage() {
     }
   }, [permissions.isLoading, permissions.canViewResource, permissions]);
 
-  if (loading || permissions.isLoading) {
+  if (idLoading || loading || permissions.isLoading) {
     return (
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -70,7 +68,15 @@ export default function UsuariosPage() {
     );
   }
 
-  if (error || permissions.error) {
+  if (!programaId) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Alert severity="warning">Programa não encontrado.</Alert>
+      </Container>
+    );
+  }
+
+  if (error || idError || permissions.error) {
     return (
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Box sx={{ mb: 3 }}>
@@ -85,18 +91,18 @@ export default function UsuariosPage() {
               Programas
             </Link>
             <Link 
-              href={`/programas/${programaId}`} 
+              href={`/programas/${idOrSlug}`} 
               underline="hover" 
               color="inherit"
             >
-              {programa?.nome_fantasia || `Programa #${programaId}`}
+              {programa?.nome || programa?.nome_fantasia || `Programa #${programaId}`}
             </Link>
             <Typography color="text.primary">Usuários</Typography>
           </Breadcrumbs>
         </Box>
 
         <Alert severity="error" sx={{ mt: 3 }}>
-          {error || permissions.error}
+          {error || idError || permissions.error}
         </Alert>
       </Container>
     );
@@ -112,7 +118,7 @@ export default function UsuariosPage() {
     );
   }
 
-  const programaName = programa.nome_fantasia || programa.razao_social || `Programa #${programaId}`;
+  const programaName = programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programaId}`;
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -129,7 +135,7 @@ export default function UsuariosPage() {
             Programas
           </Link>
           <Link 
-            href={`/programas/${programaId}`} 
+            href={`/programas/${idOrSlug}`} 
             underline="hover" 
             color="inherit"
           >

@@ -33,7 +33,9 @@ import {
   Grid,
   Divider,
   ListItemIcon,
-  CircularProgress
+  CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import {
   PersonAdd as PersonAddIcon,
@@ -67,6 +69,7 @@ interface UserManagementProps {
 }
 
 interface InviteDialogData {
+  nome: string;
   email: string;
   role: UserRole;
   message: string;
@@ -83,10 +86,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [selectedUser, setSelectedUser] = useState<ProgramaUser | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [inviteData, setInviteData] = useState<InviteDialogData>({
+    nome: '',
     email: '',
     role: UserRole.ANALISTA,
     message: ''
   });
+  const [inviteSuccessUrl, setInviteSuccessUrl] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteMode, setInviteMode] = useState<'convidar' | 'cadastrar'>('convidar');
 
   const { user: currentUser, canViewResource, canEditResource, hasPermission } = useUserPermissions(programaId);
 
@@ -101,15 +108,30 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     try {
       setLoading(true);
       
-      const usersResponse = await fetch(`/api/users?programaId=${programaId}`);
+      const [usersResponse, invitesResponse] = await Promise.all([
+        fetch(`/api/users?programaId=${programaId}`),
+        fetch(`/api/invites?programaId=${programaId}`)
+      ]);
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
         setUsers(usersData);
       }
 
-      // Convites ainda não implementados na nova API
-      setInvites([]);
+      if (invitesResponse.ok) {
+        const invitesData = await invitesResponse.json();
+        setInvites(invitesData.map((i: { id: number; email: string; role: UserRole; status: string; invited_at: string }) => ({
+          ...i,
+          status: i.status as InviteStatus,
+          programa_id: programaId,
+          permissions: getDefaultPermissions(i.role),
+          invited_by: '',
+          expires_at: '',
+          token: '',
+        } as UserInvite)));
+      } else {
+        setInvites([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
     } finally {
@@ -118,30 +140,42 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   };
 
   const handleInviteUser = async () => {
+    setInviteError(null);
     try {
-      const response = await fetch('/api/users', {
+      const isCadastrar = inviteMode === 'cadastrar';
+      const url = isCadastrar ? '/api/users/cadastrar' : '/api/invites';
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           programaId,
-          userId: inviteData.email,
+          nome: inviteData.nome.trim() || undefined,
+          email: inviteData.email,
           role: inviteData.role,
-          action: 'add'
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setInviteDialogOpen(false);
-        setInviteData({ email: '', role: UserRole.ANALISTA, message: '' });
+        setInviteSuccessUrl(isCadastrar ? data.message || 'OK' : data.inviteUrl || null);
         await loadUsersAndInvites();
       } else {
-        throw new Error('Erro ao adicionar usuário');
+        const msg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Erro ao criar convite');
+        setInviteError(msg);
       }
     } catch (error) {
-      console.error('Erro ao adicionar usuário:', error);
+      setInviteError('Erro ao criar convite');
+      console.error('Erro ao criar convite:', error);
     }
+  };
+
+  const handleCloseInviteDialog = () => {
+    setInviteDialogOpen(false);
+    setInviteSuccessUrl(null);
+    setInviteError(null);
+    setInviteMode('convidar');
+    setInviteData({ nome: '', email: '', role: UserRole.ANALISTA, message: '' });
   };
 
   const handleChangeUserRole = async (userId: string, newRole: UserRole) => {
@@ -190,8 +224,21 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   };
 
   const handleCancelInvite = async (inviteId: number) => {
-    // Função temporariamente desabilitada - convites não implementados na nova API
-    console.log('Cancelar convite:', inviteId);
+    try {
+      const res = await fetch('/api/invites', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId, action: 'cancel' }),
+      });
+      if (res.ok) {
+        await loadUsersAndInvites();
+      } else {
+        const data = await res.json();
+        console.error(data.error || 'Erro ao cancelar convite');
+      }
+    } catch (err) {
+      console.error('Erro ao cancelar convite:', err);
+    }
   };
 
   const getRoleIcon = (role: UserRole) => {
@@ -520,87 +567,146 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       {/* Dialog de Convite */}
       <Dialog
         open={inviteDialogOpen}
-        onClose={() => setInviteDialogOpen(false)}
+        onClose={handleCloseInviteDialog}
         maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
-          Convidar Usuário para {programaName}
+          {inviteMode === 'cadastrar' ? 'Cadastrar' : 'Convidar'} Usuário para {programaName}
         </DialogTitle>
         
         <DialogContent>
-          <Stack spacing={3} sx={{ mt: 1 }}>
-            <TextField
-              label="Email do usuário"
-              type="email"
-              fullWidth
-              value={inviteData.email}
-              onChange={(e) => setInviteData(prev => ({ ...prev, email: e.target.value }))}
-            />
-            
-            <FormControl fullWidth>
-              <InputLabel>Função</InputLabel>
-              <Select
-                value={inviteData.role}
-                label="Função"
-                onChange={(e) => setInviteData(prev => ({ ...prev, role: e.target.value as UserRole }))}
-              >
-                <MenuItem value={UserRole.ANALISTA}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {getRoleIcon(UserRole.ANALISTA)}
-                    {getRoleDisplayName(UserRole.ANALISTA)}
-                  </Box>
-                </MenuItem>
-                <MenuItem value={UserRole.COORDENADOR}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {getRoleIcon(UserRole.COORDENADOR)}
-                    {getRoleDisplayName(UserRole.COORDENADOR)}
-                  </Box>
-                </MenuItem>
-                <MenuItem value={UserRole.CONSULTOR}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {getRoleIcon(UserRole.CONSULTOR)}
-                    {getRoleDisplayName(UserRole.CONSULTOR)}
-                  </Box>
-                </MenuItem>
-                <MenuItem value={UserRole.AUDITOR}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {getRoleIcon(UserRole.AUDITOR)}
-                    {getRoleDisplayName(UserRole.AUDITOR)}
-                  </Box>
-                </MenuItem>
-              </Select>
-            </FormControl>
-            
-            <Alert severity="info">
-              <Typography variant="body2">
-                {getRoleDescription(inviteData.role)}
-              </Typography>
-            </Alert>
-            
-            <TextField
-              label="Mensagem (opcional)"
-              multiline
-              rows={3}
-              fullWidth
-              value={inviteData.message}
-              onChange={(e) => setInviteData(prev => ({ ...prev, message: e.target.value }))}
-              placeholder="Adicione uma mensagem personalizada ao convite..."
-            />
-          </Stack>
+          {inviteSuccessUrl ? (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Alert severity="success">
+                {inviteMode === 'cadastrar'
+                  ? inviteSuccessUrl
+                  : 'Convite criado! Envie o link abaixo para o usuário.'}
+              </Alert>
+              {inviteMode === 'convidar' && (
+                <>
+                  <TextField
+                    fullWidth
+                    value={inviteSuccessUrl}
+                    InputProps={{ readOnly: true }}
+                    size="small"
+                  />
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigator.clipboard?.writeText(inviteSuccessUrl)}
+                  >
+                    Copiar link
+                  </Button>
+                </>
+              )}
+            </Stack>
+          ) : (
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              {inviteError && (
+                <Alert severity="error" onClose={() => setInviteError(null)}>
+                  {inviteError}
+                </Alert>
+              )}
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Modo
+                </Typography>
+                <ToggleButtonGroup
+                  value={inviteMode}
+                  exclusive
+                  onChange={(_, v) => v && setInviteMode(v)}
+                  size="small"
+                >
+                  <ToggleButton value="convidar">
+                    Convidar (copiar link)
+                  </ToggleButton>
+                  <ToggleButton value="cadastrar">
+                    Cadastrar (e-mail para definir senha)
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+              <TextField
+                label="Nome (opcional)"
+                fullWidth
+                value={inviteData.nome}
+                onChange={(e) => setInviteData(prev => ({ ...prev, nome: e.target.value }))}
+                placeholder="Ex.: João Silva"
+              />
+              <TextField
+                label="Email do usuário"
+                type="email"
+                fullWidth
+                required
+                value={inviteData.email}
+                onChange={(e) => setInviteData(prev => ({ ...prev, email: e.target.value }))}
+              />
+              
+              <FormControl fullWidth>
+                <InputLabel>Função</InputLabel>
+                <Select
+                  value={inviteData.role}
+                  label="Função"
+                  onChange={(e) => setInviteData(prev => ({ ...prev, role: e.target.value as UserRole }))}
+                >
+                  <MenuItem value={UserRole.ANALISTA}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.ANALISTA)}
+                      {getRoleDisplayName(UserRole.ANALISTA)}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value={UserRole.COORDENADOR}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.COORDENADOR)}
+                      {getRoleDisplayName(UserRole.COORDENADOR)}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value={UserRole.CONSULTOR}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.CONSULTOR)}
+                      {getRoleDisplayName(UserRole.CONSULTOR)}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value={UserRole.AUDITOR}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.AUDITOR)}
+                      {getRoleDisplayName(UserRole.AUDITOR)}
+                    </Box>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              
+              <Alert severity="info">
+                <Typography variant="body2">
+                  {getRoleDescription(inviteData.role)}
+                </Typography>
+              </Alert>
+              
+              <TextField
+                label="Mensagem (opcional)"
+                multiline
+                rows={3}
+                fullWidth
+                value={inviteData.message}
+                onChange={(e) => setInviteData(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Adicione uma mensagem personalizada ao convite..."
+              />
+            </Stack>
+          )}
         </DialogContent>
         
         <DialogActions>
-          <Button onClick={() => setInviteDialogOpen(false)}>
-            Cancelar
+          <Button onClick={handleCloseInviteDialog}>
+            {inviteSuccessUrl ? 'Fechar' : 'Cancelar'}
           </Button>
-          <Button 
-            onClick={handleInviteUser}
-            variant="contained"
-            disabled={!inviteData.email}
-          >
-            Enviar Convite
-          </Button>
+          {!inviteSuccessUrl && (
+            <Button 
+              onClick={handleInviteUser}
+              variant="contained"
+              disabled={!inviteData.email}
+            >
+              {inviteMode === 'cadastrar' ? 'Cadastrar e enviar e-mail' : 'Criar Convite'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

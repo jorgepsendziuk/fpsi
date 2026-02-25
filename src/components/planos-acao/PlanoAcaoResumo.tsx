@@ -134,66 +134,45 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
     }
   };
 
-  // Otimização: carregar dados em paralelo sempre que possível
+  // Otimização: uma chamada por diagnóstico (controles) e uma por controle (medidas já com programa_medida)
   const loadRealDataOptimized = async (): Promise<DiagnosticoGroup[]> => {
     try {
-      // 1. Carregar todos os diagnósticos
       const diagnosticosData = await dataService.fetchDiagnosticos();
-      
-      const diagnosticosResult: DiagnosticoGroup[] = [];
+      const diagnosticoNome = (d: any) => d.descricao || d.diagnostico || d.nome;
+      const controleNome = (c: any) => c.controle || c.nome;
 
-      // 2. Processar diagnósticos em paralelo
       const diagnosticosPromises = diagnosticosData.map(async (diagnostico: any) => {
         try {
           const controlesData = await dataService.fetchControles(diagnostico.id, programaId);
-          
-                     // 3. Processar controles em paralelo
-           const controlesPromises = controlesData.map(async (controle: any) => {
+          const controlesPromises = controlesData.map(async (controle: any) => {
             try {
+              // fetchMedidas já retorna medidas com programa_medida mergeado — evita N chamadas fetchProgramaMedida
               const medidasData = await dataService.fetchMedidas(controle.id, programaId);
-              
-                             // 4. Processar medidas em paralelo
-               const medidasPromises = medidasData.map(async (medida: any) => {
-                try {
-                  const programaMedida = await dataService.fetchProgramaMedida(medida.id, controle.id, programaId);
-                  
-                  return {
-                    id: medida.id,
-                    id_medida: medida.id_medida,
-                    medida: medida.medida,
-                    controle_id: controle.id,
-                    controle_nome: controle.controle || controle.nome,
-                    diagnostico_id: diagnostico.id,
-                    diagnostico_nome: diagnostico.diagnostico || diagnostico.nome,
-                    resposta: programaMedida?.resposta,
-                    responsavel: programaMedida?.responsavel,
-                    previsao_inicio: programaMedida?.previsao_inicio,
-                    previsao_fim: programaMedida?.previsao_fim,
-                    status_medida: programaMedida?.status_medida,
-                    status_plano_acao: programaMedida?.status_plano_acao,
-                    justificativa: programaMedida?.justificativa,
-                    programa_medida: programaMedida
-                  } as MedidaPlanoAcao;
-                } catch (error) {
-                  // Fallback para medida sem programa_medida
-                  return {
-                    id: medida.id,
-                    id_medida: medida.id_medida,
-                    medida: medida.medida,
-                    controle_id: controle.id,
-                    controle_nome: controle.controle || controle.nome,
-                    diagnostico_id: diagnostico.id,
-                    diagnostico_nome: diagnostico.diagnostico || diagnostico.nome
-                  } as MedidaPlanoAcao;
-                }
+              const medidasResult: MedidaPlanoAcao[] = medidasData.map((medida: any) => {
+                const pm = medida.programa_medida;
+                return {
+                  id: medida.id,
+                  id_medida: medida.id_medida,
+                  medida: medida.medida,
+                  controle_id: controle.id,
+                  controle_nome: controleNome(controle),
+                  diagnostico_id: diagnostico.id,
+                  diagnostico_nome: diagnosticoNome(diagnostico),
+                  resposta: pm?.resposta,
+                  responsavel: pm?.responsavel,
+                  previsao_inicio: pm?.previsao_inicio,
+                  previsao_fim: pm?.previsao_fim,
+                  status_medida: pm?.status_medida,
+                  status_plano_acao: pm?.status_plano_acao,
+                  justificativa: pm?.justificativa,
+                  programa_medida: pm
+                } as MedidaPlanoAcao;
               });
 
-              const medidasResult = await Promise.all(medidasPromises);
-              
               if (medidasResult.length > 0) {
                 return {
                   id: controle.id,
-                  nome: controle.controle || controle.nome,
+                  nome: controleNome(controle),
                   medidas: medidasResult
                 } as ControleGroup;
               }
@@ -205,11 +184,10 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
           });
 
           const controlesResult = (await Promise.all(controlesPromises)).filter(Boolean) as ControleGroup[];
-          
           if (controlesResult.length > 0) {
             return {
               id: diagnostico.id,
-              nome: diagnostico.diagnostico || diagnostico.nome,
+              nome: diagnosticoNome(diagnostico),
               controles: controlesResult
             } as DiagnosticoGroup;
           }

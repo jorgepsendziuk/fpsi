@@ -82,7 +82,7 @@ export const medidaStyles = {
     flex: '0 0 auto',
   }),
 
-  // Card do plano de ação
+  // Card do plano de trabalho
   actionPlanCard: (theme: Theme, statusColor?: string) => ({
     background: statusColor 
       ? theme.palette.mode === 'dark'
@@ -105,7 +105,7 @@ export const medidaStyles = {
     justifyContent: 'space-between',
   }),
 
-  // Título da seção de plano de ação
+  // Título da seção de plano de trabalho
   actionPlanTitle: (theme: Theme) => ({
     color: theme.palette.text.primary,
     fontWeight: 600,

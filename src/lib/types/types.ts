@@ -1,10 +1,32 @@
 import { DateTimeFieldOwnerState } from "@mui/x-date-pickers/DateTimeField/DateTimeField.types";
 
 /**
+ * Empresa interface - organização/empresa vinculável a programas (dados para ROPA e cadastro)
+ */
+export interface Empresa {
+  id: number;
+  cnpj?: number | string | null;
+  razao_social?: string | null;
+  nome_fantasia?: string | null;
+  endereco?: string | null;
+  atividade_principal?: string | null;
+  gestor_responsavel?: string | null;
+  email?: string | null;
+  telefone?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
  * Programa interface - represents a security program
  */
 export interface Programa {
-  id: number; 
+  id: number;
+  slug?: string | null;
+  nome?: string | null;
+  tipo_programa?: string | null;
+  descricao_escopo?: string | null;
+  empresa_id?: number | null;
   orgao: number;
   sgd_versao_diagnostico_enviado: string;
   sgd_versao_diagnostico: string;
@@ -24,6 +46,8 @@ export interface Programa {
   atendimento_site: string;
   politica_inicio_vigencia: Date;
   politica_prazo_revisao: Date;
+  /** Quando preenchido, programa está na lixeira (soft delete) */
+  deleted_at?: string | null;
 }
 
 /**
@@ -120,6 +144,27 @@ export interface Responsavel {
   departamento: string;
   email: string;
   nome: string;
+}
+
+/**
+ * PedidoTitular - pedidos dos titulares (art. 18 LGPD): acesso, correção, exclusão, portabilidade, revogação de consentimento
+ */
+export interface PedidoTitular {
+  id: number;
+  programa_id: number;
+  protocolo: string | null;
+  tipo: string;
+  nome_titular: string;
+  email_titular: string;
+  documento_titular: string | null;
+  descricao_pedido: string | null;
+  status: string;
+  data_prazo_resposta: string | null;
+  data_resposta: string | null;
+  observacoes_internas: string | null;
+  origem: string;
+  created_at: string;
+  updated_at: string;
 }
 
 /**

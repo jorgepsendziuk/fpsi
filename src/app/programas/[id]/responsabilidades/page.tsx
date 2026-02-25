@@ -32,6 +32,8 @@ import {
   useMediaQuery
 } from "@mui/material";
 import * as dataService from "@/lib/services/dataService";
+import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
+import { SelectWithAdd } from "@/components/common/SelectWithAdd";
 import { 
   Add, 
   Edit, 
@@ -63,7 +65,9 @@ interface EditingResponsavel {
 
 export default function ProgramaResponsaveisCRUDPage() {
   const params = useParams();
-  const programaId = Number(params.id);
+  const idOrSlug = params.id as string;
+  const { programaId: resolvedId, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
+  const programaId = resolvedId ?? 0;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
@@ -83,7 +87,7 @@ export default function ProgramaResponsaveisCRUDPage() {
   const [isEditing, setIsEditing] = useState(false);
   
   // Estado para dados do programa
-  const [programaData, setProgramaData] = useState<{ nome_fantasia?: string; razao_social?: string }>({});
+  const [programaData, setProgramaData] = useState<{ nome?: string; nome_fantasia?: string; razao_social?: string }>({});
   
   const isMounted = useRef(true);
 
@@ -94,6 +98,30 @@ export default function ProgramaResponsaveisCRUDPage() {
     if (!isMounted.current) return;
     setResponsaveis(data);
     setLoading(false);
+  }, [programaId]);
+
+  // Sincronizar usuários do programa na tabela responsavel (para aparecerem nos combos e na lista)
+  const syncResponsaveisFromUsers = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/users?programaId=${programaId}`);
+      if (!res.ok) return;
+      const users = await res.json();
+      const responsaveisAtuais = await dataService.fetchResponsaveis(programaId);
+      const emailsExistentes = new Set(responsaveisAtuais.map((r: Responsavel) => (r.email || "").trim().toLowerCase()));
+      for (const u of users) {
+        const email = (u.email || u.user_id || "").trim().toLowerCase();
+        if (!email || emailsExistentes.has(email)) continue;
+        await supabaseBrowserClient.from("responsavel").insert({
+          programa: programaId,
+          nome: u.nome || email,
+          email,
+          departamento: "",
+        });
+        emailsExistentes.add(email);
+      }
+    } catch {
+      // ignora erro de sync
+    }
   }, [programaId]);
 
   // Buscar dados do programa para os campos principais
@@ -111,11 +139,18 @@ export default function ProgramaResponsaveisCRUDPage() {
   }, [programaId]);
 
   useEffect(() => {
+    if (!programaId) return;
     isMounted.current = true;
-    fetchResponsaveis();
-    fetchProgramaCamposPrincipais();
+    const load = async () => {
+      await syncResponsaveisFromUsers();
+      if (!isMounted.current) return;
+      await fetchResponsaveis();
+      if (!isMounted.current) return;
+      await fetchProgramaCamposPrincipais();
+    };
+    load();
     return () => { isMounted.current = false; };
-  }, [programaId, fetchResponsaveis, fetchProgramaCamposPrincipais]);
+  }, [programaId, syncResponsaveisFromUsers, fetchResponsaveis, fetchProgramaCamposPrincipais]);
 
   // Salvar campo de responsável principal
   const handleSaveResponsavel = async (field: string, value: string) => {
@@ -207,6 +242,21 @@ export default function ProgramaResponsaveisCRUDPage() {
     setEditingResponsavel({ nome: "", email: "", departamento: "" });
   };
 
+  if (idLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
+        <Typography color="text.secondary">Carregando…</Typography>
+      </Container>
+    );
+  }
+  if (!resolvedId) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="warning">Programa não encontrado.</Alert>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
@@ -217,7 +267,7 @@ export default function ProgramaResponsaveisCRUDPage() {
             Programas
           </Link>
           <Link 
-            href={`/programas/${programaId}`}
+            href={`/programas/${idOrSlug}`}
             underline="hover" 
             color="inherit"
             sx={{ 
@@ -227,9 +277,9 @@ export default function ProgramaResponsaveisCRUDPage() {
               whiteSpace: 'nowrap',
               display: 'block'
             }}
-            title={programaData.nome_fantasia || programaData.razao_social}
+            title={programaData.nome || programaData.nome_fantasia || programaData.razao_social}
           >
-            {programaData.nome_fantasia || programaData.razao_social || 'Carregando...'}
+            {programaData.nome || programaData.nome_fantasia || programaData.razao_social || 'Carregando...'}
           </Link>
           <Typography color="text.primary">Responsáveis</Typography>
         </Breadcrumbs>
@@ -467,11 +517,15 @@ export default function ProgramaResponsaveisCRUDPage() {
               onChange={(e) => setEditingResponsavel({ ...editingResponsavel, email: e.target.value })}
               required
             />
-            <TextField
+            <SelectWithAdd
               label="Departamento"
-              fullWidth
               value={editingResponsavel.departamento}
-              onChange={(e) => setEditingResponsavel({ ...editingResponsavel, departamento: e.target.value })}
+              onChange={(v) => setEditingResponsavel({ ...editingResponsavel, departamento: String(v) })}
+              fetchUrl="/api/departamentos"
+              createUrl="/api/departamentos"
+              addDialogTitle="Novo departamento"
+              addFieldLabel="Nome do departamento"
+              valueAs="nome"
             />
           </Stack>
         </DialogContent>

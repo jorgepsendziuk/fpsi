@@ -217,6 +217,7 @@ export const getDefaultPermissions = (role: UserRole): ProgramaPermissions => {
         can_view_planos: true,
         can_edit_planos: true,
         can_view_politicas: true,
+        can_edit_politicas: true,
         can_view_relatorios: true,
         can_view_users: true,
         can_view_programa: true

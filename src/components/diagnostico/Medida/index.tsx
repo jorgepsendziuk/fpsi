@@ -90,7 +90,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   const { getContrastTextColor } = useThemeColors();
   const theme = useTheme();
 
-  // Buscar a cor do status do plano de ação do sistema existente
+  // Buscar a cor do status do plano de trabalho do sistema existente
   const statusInfo = status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao);
 
   // Obter descrição da resposta selecionada

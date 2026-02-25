@@ -111,10 +111,17 @@ export default function HomePage() {
     handleMenuClose();
   };
 
-  const handleGoToPrograms = () => {
-    router.push('/programas');
+  const handleGoToDashboard = () => {
+    router.push('/dashboard');
     handleMenuClose();
   };
+
+  // Usuário logado: redirecionar para a dashboard
+  useEffect(() => {
+    if (!userLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, userLoading, router]);
 
   // Se estiver carregando dados do usuário, mostrar loading
   if (userLoading) {
@@ -139,7 +146,13 @@ export default function HomePage() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
             FPSI
           </Typography>
-          
+          <Button
+            color="inherit"
+            onClick={() => router.push('/sobre')}
+            sx={{ mr: 1, textTransform: 'none' }}
+          >
+            Sobre o projeto
+          </Button>
           {/* Theme toggle button */}
           <Tooltip title={mode === "dark" ? "Modo Claro" : "Modo Escuro"}>
             <IconButton
@@ -157,11 +170,11 @@ export default function HomePage() {
               <Button
                 color="primary"
                 variant="outlined"
-                onClick={handleGoToPrograms}
+                onClick={handleGoToDashboard}
                 startIcon={<DashboardIcon />}
                 sx={{ mr: 2 }}
               >
-                Acessar Sistema
+                Dashboard
               </Button>
               <IconButton onClick={handleMenuOpen} sx={{ ml: 1 }}>
                 <Avatar 
@@ -188,11 +201,11 @@ export default function HomePage() {
                   </Typography>
                 </Box>
                 <Divider />
-                <MenuItem onClick={handleGoToPrograms}>
+                <MenuItem onClick={handleGoToDashboard}>
                   <ListItemIcon>
                     <DashboardIcon fontSize="small" />
                   </ListItemIcon>
-                  Meus Programas
+                  Dashboard
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
                   <ListItemIcon>
@@ -252,16 +265,49 @@ export default function HomePage() {
                 </Box>
               </Typography>
               
-              <Typography 
-                variant="h5" 
-                color="text.secondary" 
-                sx={{ mb: 4, maxWidth: '800px', mx: 'auto' }}
-              >
-                {user 
-                  ? `Bem-vindo de volta! Continue avaliando e monitorando o nível de maturidade em segurança da informação da sua organização.`
-                  : `Avalie, monitore e melhore continuamente o nível de maturidade em segurança da informação da sua organização.`
-                }
-              </Typography>
+              {user ? (
+                <Typography
+                  variant="h5"
+                  color="text.secondary"
+                  sx={{ mb: 4, maxWidth: '800px', mx: 'auto' }}
+                >
+                  Bem-vindo de volta! Continue avaliando e monitorando o nível de maturidade em privacidade e segurança da informação da sua organização.
+                </Typography>
+              ) : (
+                <Box sx={{ mb: 4, maxWidth: '720px', mx: 'auto' }}>
+                  <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
+                    Avalie, monitore e melhore o nível de maturidade em privacidade e segurança da informação da sua organização.
+                  </Typography>
+                  <Box
+                    component="ul"
+                    sx={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      gap: 1.5,
+                      listStyle: 'none',
+                      m: 0,
+                      p: 0,
+                      '& li': {
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: 'text.secondary',
+                        fontSize: '1rem',
+                        '&:not(:last-child)::after': {
+                          content: '"·"',
+                          ml: 1.5,
+                          color: 'text.disabled',
+                          fontWeight: 'bold'
+                        }
+                      }
+                    }}
+                  >
+                    <Box component="li">Código aberto</Box>
+                    <Box component="li">Multi-usuário</Box>
+                    <Box component="li">Sem planilha nem software proprietário</Box>
+                  </Box>
+                </Box>
+              )}
               
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
                 {user ? (
@@ -269,7 +315,7 @@ export default function HomePage() {
                     <Button
                       variant="contained"
                       size="large"
-                      onClick={handleGoToPrograms}
+                      onClick={handleGoToDashboard}
                       startIcon={<DashboardIcon />}
                       sx={{ 
                         px: 4, 
@@ -279,7 +325,7 @@ export default function HomePage() {
                         boxShadow: 3
                       }}
                     >
-                      Acessar Meus Programas
+                      Ir para Dashboard
                     </Button>
                     <Button
                       variant="outlined"
@@ -386,6 +432,41 @@ export default function HomePage() {
         </Grid>
       </Container>
 
+      {/* Para quem é + Open source */}
+      <Box sx={{ py: 8, bgcolor: 'background.paper' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={6}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
+                Para quem é
+              </Typography>
+              <Typography variant="body1" color="text.secondary" paragraph>
+                DPOs (Encarregados de Dados), Gestores de TI e de Segurança da Informação, órgãos públicos, 
+                pequenas empresas e consultores que conduzem programas de privacidade e segurança. 
+                Roteiro alinhado ao Framework PPSI e à LGPD, com avaliação de maturidade e plano de trabalho em um só lugar.
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
+                Software livre
+              </Typography>
+              <Typography variant="body1" color="text.secondary" paragraph>
+                Código aberto e gratuito. Sem dependência de Excel ou software proprietário. 
+                Trabalho colaborativo e multi-usuário, com dados centralizados. Adaptável para sua organização 
+                ou para oferta como PaaS (Privacy as a Service).
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() => router.push('/sobre')}
+                size="small"
+              >
+                Conheça a pesquisa de origem
+              </Button>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
       {/* Call to Action */}
       <Box 
         sx={{ 
@@ -408,7 +489,7 @@ export default function HomePage() {
           <Button
             variant="contained"
             size="large"
-            onClick={user ? handleGoToPrograms : handleLogin}
+            onClick={user ? handleGoToDashboard : handleLogin}
             startIcon={user ? <DashboardIcon /> : undefined}
             sx={{
               bgcolor: 'background.paper',
@@ -422,7 +503,7 @@ export default function HomePage() {
               }
             }}
           >
-            {user ? 'Acessar Meus Programas' : 'Acessar Sistema'}
+            {user ? 'Ir para Dashboard' : 'Acessar Sistema'}
           </Button>
         </Container>
       </Box>
@@ -431,9 +512,15 @@ export default function HomePage() {
       <Box sx={{ bgcolor: 'background.paper', py: 4, mt: 'auto' }}>
         <Container maxWidth="lg">
           <Box textAlign="center">
-            
+            <Button
+              color="inherit"
+              onClick={() => router.push('/sobre')}
+              sx={{ textTransform: 'none', mb: 1 }}
+            >
+              Sobre o projeto
+            </Button>
             <Typography variant="body2" color="text.secondary">
-              © 2024 FPSI - Framework de Privacidade e Segurança da Informação. Todos os direitos reservados.
+              © 2024 FPSI - Framework de Privacidade e Segurança da Informação. Código aberto.
             </Typography>
           </Box>
         </Container>
