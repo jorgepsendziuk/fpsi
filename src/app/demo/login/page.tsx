@@ -26,6 +26,7 @@ import {
   Login as LoginIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { supabaseBrowserClient } from '@utils/supabase/client';
 
 export default function DemoLoginPage() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function DemoLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (email !== 'demo@fpsi.com.br' || password !== 'demo') {
       setError('Use as credenciais demo: demo@fpsi.com.br / demo');
       return;
@@ -54,11 +55,25 @@ export default function DemoLoginPage() {
     setError('');
 
     try {
-      // Simular login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirecionar para o programa demo
-      router.push('/programas/1');
+      const { data, error: authError } = await supabaseBrowserClient.auth.signInWithPassword({
+        email: 'demo@fpsi.com.br',
+        password: 'demo',
+      });
+
+      if (authError) {
+        setError(authError.message || 'Erro ao fazer login. Verifique as credenciais demo.');
+        setLoading(false);
+        return;
+      }
+
+      if (data?.session) {
+        await supabaseBrowserClient.auth.setSession(data.session);
+        fetch('/api/profiles/verify', { method: 'POST' }).catch(() => {});
+        router.push('/dashboard');
+        return;
+      }
+
+      setError('Erro ao fazer login no modo demonstração');
     } catch (err) {
       setError('Erro ao fazer login no modo demonstração');
     } finally {

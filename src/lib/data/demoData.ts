@@ -1,6 +1,8 @@
 // Dados sintéticos para modo de demonstração
+// slug 'demo' é usado na URL; id 1 é o fallback no banco
 export const DEMO_PROGRAMA = {
   id: 1,
+  slug: "demo",
   nome: "Programa de Demonstração - FPSI",
   nome_fantasia: "Empresa Demo Tech Ltda",
   razao_social: "Empresa Demo Tech Ltda",

@@ -47,11 +47,11 @@ export default function DemoPage() {
   }, []);
 
   const handleEnterDemo = () => {
-    router.push(`/programas/${DEMO_PROGRAMA.id}`);
+    router.push(`/programas/${DEMO_PROGRAMA.slug ?? DEMO_PROGRAMA.id}`);
   };
 
   const handleViewPolicies = () => {
-    router.push(`/programas/${DEMO_PROGRAMA.id}/politicas`);
+    router.push(`/programas/${DEMO_PROGRAMA.slug ?? DEMO_PROGRAMA.id}/politicas`);
   };
 
   const featuresDemo = [

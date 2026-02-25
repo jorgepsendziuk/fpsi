@@ -4,8 +4,11 @@ import { NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
   // Allow access to demo routes without authentication
-  if (request.nextUrl.pathname.startsWith('/demo') || 
-      request.nextUrl.pathname.includes('/programas/1')) {
+  if (request.nextUrl.pathname.startsWith('/demo')) {
+    return NextResponse.next();
+  }
+  // Permitir /programas/demo e /programas/1 para acesso ao programa demo (com ou sem auth)
+  if (request.nextUrl.pathname === '/programas/demo' || request.nextUrl.pathname === '/programas/1') {
     return NextResponse.next();
   }
   
