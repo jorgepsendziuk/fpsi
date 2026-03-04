@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { shouldUseDemoData } from "@/lib/services/demoDataService";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
+import { logActivity } from "@/lib/services/auditService";
 
 // programa_users.user_id deve ser sempre auth.uid() em string (UUID). RLS e useUserPermissions dependem disso.
 async function getSupabaseClient() {
@@ -102,6 +103,12 @@ export async function GET(request: NextRequest) {
 // POST /api/users - Adicionar/atualizar usuário
 export async function POST(request: NextRequest) {
   try {
+    const serverClient = await createSupabaseServerClient();
+    const { data: { user: currentUser } } = await serverClient.auth.getUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { programaId, userId, role, action = "add" } = body;
 
@@ -158,6 +165,14 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+      await logActivity(supabase, {
+        userId: currentUser.id,
+        action: "update",
+        resourceType: "programa_user",
+        programaId,
+        details: { targetUserId: userId, role },
+        req: { headers: request.headers },
+      });
       return NextResponse.json({ message: "Função alterada com sucesso", data });
     }
 
@@ -191,6 +206,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await logActivity(supabase, {
+      userId: currentUser.id,
+      action: "create",
+      resourceType: "programa_user",
+      programaId,
+      details: { targetUserId: userId, role },
+      req: { headers: request.headers },
+    });
     return NextResponse.json({ message: "Usuário adicionado com sucesso", data });
   } catch (error) {
     console.error("Erro na API de usuários (POST):", error);
@@ -207,6 +230,12 @@ export async function POST(request: NextRequest) {
 // DELETE /api/users - Remover usuário
 export async function DELETE(request: NextRequest) {
   try {
+    const serverClient = await createSupabaseServerClient();
+    const { data: { user: currentUser } } = await serverClient.auth.getUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const programaId = parseInt(searchParams.get("programaId") || "0");
     const userId = searchParams.get("userId");
@@ -247,6 +276,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    await logActivity(supabase, {
+      userId: currentUser.id,
+      action: "delete",
+      resourceType: "programa_user",
+      programaId,
+      details: { targetUserId: userId },
+      req: { headers: request.headers },
+    });
     return NextResponse.json({ message: "Usuário removido com sucesso" });
   } catch (error) {
     console.error("Erro na API de remover usuário:", error);

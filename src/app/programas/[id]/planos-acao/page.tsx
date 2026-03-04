@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Container,
@@ -12,7 +13,11 @@ import {
   CircularProgress
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import PlanoAcaoResumo from '../../../../components/planos-acao/PlanoAcaoResumo';
+
+const PlanoAcaoResumo = dynamic(
+  () => import('../../../../components/planos-acao/PlanoAcaoResumo'),
+  { ssr: false, loading: () => <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box> }
+);
 import { useUserPermissions, useDemoPermissions } from '../../../../hooks/useUserPermissions';
 import { useProgramaIdFromParam } from '../../../../hooks/useProgramaIdFromParam';
 import { shouldUseDemoData } from '../../../../lib/services/demoDataService';
@@ -82,7 +87,7 @@ export default function PlanosAcaoPage() {
         <Box sx={{ mb: 3 }}>
           <Breadcrumbs sx={{ mb: 1 }}>
             <Link 
-              href="/programas" 
+              href="/dashboard" 
               underline="hover" 
               color="inherit" 
               sx={{ display: 'flex', alignItems: 'center' }}
@@ -126,7 +131,7 @@ export default function PlanosAcaoPage() {
       <Box sx={{ mb: 3 }}>
         <Breadcrumbs sx={{ mb: 1 }}>
           <Link 
-            href="/programas" 
+            href="/dashboard" 
             underline="hover" 
             color="inherit" 
             sx={{ display: 'flex', alignItems: 'center' }}

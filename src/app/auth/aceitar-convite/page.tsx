@@ -18,14 +18,13 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import LockIcon from "@mui/icons-material/Lock";
-import { useRegister } from "@refinedev/core";
 import Image from "next/image";
+import { supabaseBrowserClient } from "@utils/supabase/client";
 
 export default function AceitarConvitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const { mutate: register, isPending: isRegistering } = useRegister();
 
   const [invite, setInvite] = useState<{
     email: string;
@@ -33,11 +32,37 @@ export default function AceitarConvitePage() {
     role: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const loginUrl = token ? `/login?redirect=${encodeURIComponent(`/auth/aceitar-convite?token=${token}`)}` : "/login";
+
+  const redirectToPrograma = (data: { programaSlug?: string; programaId?: number }) => {
+    router.push(
+      data.programaSlug ? `/programas/${data.programaSlug}` : data.programaId ? `/programas/${data.programaId}` : "/dashboard"
+    );
+  };
+
+  const acceptInvite = async (onForm = false): Promise<boolean> => {
+    const res = await fetch("/api/invites/accept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      redirectToPrograma(data);
+      return true;
+    }
+    const msg = data.error || "Erro ao aceitar convite";
+    if (onForm) setFormError(msg);
+    else setError(msg);
+    return false;
+  };
 
   useEffect(() => {
     if (!token) {
@@ -46,19 +71,33 @@ export default function AceitarConvitePage() {
       return;
     }
 
-    const validate = async () => {
+    const run = async () => {
       try {
         const res = await fetch(`/api/invites/validate?token=${token}`);
-        if (res.ok) {
-          const data = await res.json();
-          setInvite({
-            email: data.email,
-            programaNome: data.programaNome,
-            role: data.role,
-          });
-        } else {
+        if (!res.ok) {
           const err = await res.json();
           setError(err.error || "Convite inválido ou expirado");
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setInvite({
+          email: data.email,
+          programaNome: data.programaNome,
+          role: data.role,
+        });
+
+        const { data: { user } } = await supabaseBrowserClient.auth.getUser();
+        if (user) {
+          const userEmail = (user.email || "").trim().toLowerCase();
+          const inviteEmail = (data.email || "").trim().toLowerCase();
+          if (userEmail === inviteEmail) {
+            setAccepting(true);
+            const ok = await acceptInvite(false);
+            if (!ok) setAccepting(false);
+            return;
+          }
+          setError("O e-mail da sua conta não corresponde ao convite. Faça login com o e-mail correto.");
         }
       } catch (err) {
         setError("Erro ao validar convite");
@@ -67,7 +106,7 @@ export default function AceitarConvitePage() {
       }
     };
 
-    validate();
+    run();
   }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,33 +126,32 @@ export default function AceitarConvitePage() {
       return;
     }
 
-    register(
-      {
+    setAccepting(true);
+    try {
+      const { data: signUpData, error: signUpError } = await supabaseBrowserClient.auth.signUp({
         email: invite!.email,
         password,
-      },
-      {
-        onSuccess: async () => {
-          const res = await fetch("/api/invites/accept", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token }),
-          });
-          const data = await res.json();
-          if (res.ok) {
-            router.push(data.programaSlug ? `/programas/${data.programaSlug}` : data.programaId ? `/programas/${data.programaId}` : "/programas");
-          } else {
-            setFormError(data.error || "Erro ao aceitar convite");
-          }
-        },
-        onError: (err: unknown) => {
-          setFormError(err instanceof Error ? err.message : "Erro ao criar conta");
-        },
+      });
+
+      if (signUpError) {
+        setFormError(signUpError.message || "Erro ao criar conta");
+        setAccepting(false);
+        return;
       }
-    );
+
+      if (signUpData?.session) {
+        await supabaseBrowserClient.auth.setSession(signUpData.session);
+      }
+
+      const ok = await acceptInvite(true);
+      if (!ok) setAccepting(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Erro ao criar conta");
+      setAccepting(false);
+    }
   };
 
-  if (loading) {
+  if (loading || accepting) {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CircularProgress />
@@ -129,7 +167,7 @@ export default function AceitarConvitePage() {
           <Alert severity="error" sx={{ mb: 2 }}>
             {error || "Convite inválido"}
           </Alert>
-          <Button href="/login" variant="contained">
+          <Button href={loginUrl} variant="contained">
             Ir para o Login
           </Button>
         </Paper>
@@ -191,17 +229,17 @@ export default function AceitarConvitePage() {
               type="submit"
               variant="contained"
               size="large"
-              disabled={isRegistering}
+              disabled={accepting}
               fullWidth
             >
-              {isRegistering ? <CircularProgress size={24} /> : "Criar conta e aceitar"}
+              {accepting ? <CircularProgress size={24} /> : "Criar conta e aceitar"}
             </Button>
           </Stack>
         </form>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: "center" }}>
           Já tem conta?{" "}
-          <Box component="a" href="/login" sx={{ color: "primary.main", textDecoration: "none" }}>
+          <Box component="a" href={loginUrl} sx={{ color: "primary.main", textDecoration: "none" }}>
             Fazer login
           </Box>
         </Typography>

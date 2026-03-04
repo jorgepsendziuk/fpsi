@@ -7,11 +7,15 @@ export const authProviderClient: AuthProvider = {
   login: async ({ email, password, providerName }) => {
     // Login social (OAuth)
     if (providerName) {
+      const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
+      const redirectTo = redirect
+        ? `${typeof window !== "undefined" ? window.location.origin : ""}${redirect.startsWith("/") ? redirect : "/" + redirect}`
+        : `${typeof window !== "undefined" ? window.location.origin : ""}/dashboard`;
       const { data, error } =
         await supabaseBrowserClient.auth.signInWithOAuth({
           provider: providerName as "google" | "github" | "azure" | "facebook",
           options: {
-            redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/dashboard`,
+            redirectTo,
           },
         });
 
@@ -46,9 +50,10 @@ export const authProviderClient: AuthProvider = {
 
       fetch("/api/profiles/verify", { method: "POST" }).catch(() => {});
 
+      const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
       return {
         success: true,
-        redirectTo: "/dashboard",
+        redirectTo: redirect || "/dashboard",
       };
     }
 

@@ -116,13 +116,13 @@ export default function ConformidadeHubPage() {
       <Box sx={{ mb: 4 }}>
         <Breadcrumbs sx={{ mb: 2 }}>
           <Link
-            href="/programas"
+            href="/dashboard"
             underline="hover"
             color="inherit"
             sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
             onClick={(e) => {
               e.preventDefault();
-              router.push("/programas");
+              router.push("/dashboard");
             }}
           >
             <ArrowBackIcon sx={{ mr: 0.5 }} fontSize="small" />

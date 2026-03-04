@@ -3,7 +3,7 @@ import { Refine } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import { useNotificationProvider, RefineSnackbarProvider } from "@refinedev/mui";
 import routerProvider from "@refinedev/nextjs-router";
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import React, { Suspense } from "react";
 import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
@@ -14,7 +14,13 @@ import { dataProvider } from "@providers/data-provider";
 
 export const metadata: Metadata = {
   title: "FPSI - Framework de Privacidade e Segurança da Informação",
-  description: "Sistema de diagnóstico de privacidade e segurança da informação para organizações", 
+  description: "Sistema de diagnóstico de privacidade e segurança da informação para organizações",
+  applicationName: "FPSI",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FPSI",
+  },
   icons: {
     icon: [
       { url: "/ico_p.png", sizes: "any" },
@@ -23,6 +29,10 @@ export const metadata: Metadata = {
     shortcut: "/ico_p.png",
     apple: "/ico_p.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#667eea",
 }; 
 
 export default function RootLayout({
@@ -39,7 +49,7 @@ export default function RootLayout({
         <Suspense>
           <RefineKbarProvider>
             <ColorModeContextProvider defaultMode={defaultMode}>
-              <RefineSnackbarProvider>
+              <RefineSnackbarProvider preventDuplicate>
                 <DevtoolsProvider>
                   <Refine
                     routerProvider={routerProvider}
@@ -50,7 +60,7 @@ export default function RootLayout({
                       {
                         name: "programas",
                         identifier: "programas",
-                        list: "/programas",
+                        list: "/dashboard",
                         meta: {
                           canDelete: false,
                           label: "Programas",

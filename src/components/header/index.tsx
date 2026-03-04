@@ -117,8 +117,10 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [programasMenuAnchor, setProgramasMenuAnchor] = useState<null | HTMLElement>(null);
   const [empresasMenuAnchor, setEmpresasMenuAnchor] = useState<null | HTMLElement>(null);
+  const [programaMenuAnchor, setProgramaMenuAnchor] = useState<null | HTMLElement>(null);
   const [programas, setProgramas] = useState<Programa[]>([]);
   const [empresas, setEmpresas] = useState<dataService.EmpresaRow[]>([]);
+  const [currentPrograma, setCurrentPrograma] = useState<Programa | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -130,6 +132,23 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       setEmpresas(empresasList || []);
     }).catch(() => {});
   }, [user]);
+
+  // Resolve programa atual quando programaId ou programas mudam
+  useEffect(() => {
+    if (!programaId) {
+      setCurrentPrograma(null);
+      return;
+    }
+    const idNum = parseInt(programaId, 10);
+    const found = programas.find(
+      (p) => p.slug === programaId || (Number.isNaN(idNum) ? false : p.id === idNum)
+    );
+    if (found) {
+      setCurrentPrograma(found);
+    } else {
+      dataService.fetchProgramaByIdOrSlug(programaId).then((p) => setCurrentPrograma(p)).catch(() => setCurrentPrograma(null));
+    }
+  }, [programaId, programas]);
 
   const handleLogout = () => {
     logout();
@@ -148,6 +167,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
     setUserMenuAnchor(null);
     setProgramasMenuAnchor(null);
     setEmpresasMenuAnchor(null);
+    setProgramaMenuAnchor(null);
   };
 
   const handleGoToPerfil = () => {
@@ -160,6 +180,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
     setMobileMenuOpen(false);
     setProgramasMenuAnchor(null);
     setEmpresasMenuAnchor(null);
+    setProgramaMenuAnchor(null);
   };
 
   const handleProgramaClick = (p: Programa) => {
@@ -168,7 +189,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   };
 
   const handleVerProgramas = () => {
-    handleNavigate("/programas");
+    handleNavigate("/dashboard");
   };
 
   const handleVerEmpresas = () => {
@@ -188,7 +209,6 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
     if (pathname.includes('/politicas')) return 'Políticas';
     if (pathname.includes('/responsabilidades')) return 'Responsáveis';
     if (pathname.includes('/usuarios')) return 'Usuários';
-    if (pathname === '/programas') return 'Programas';
     if (pathname === '/dashboard') return 'Dashboard';
     return 'FPSI';
   };
@@ -227,8 +247,8 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                 </Typography>
               </Box>
 
-              {/* Título da página atual */}
-              {pathname !== '/programas' && (
+              {/* Título da página atual (não repete FPSI quando já está no logo) */}
+              {pathname !== '/dashboard' && getCurrentPageTitle() !== 'FPSI' && (
                 <>
                   <Typography variant="h6" sx={{ color: 'inherit', opacity: 0.7 }}>
                     /
@@ -240,22 +260,50 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
               )}
             </Stack>
 
-            {/* Navegação do programa (só quando está dentro de um programa) */}
-            {!isMobile && isProgramaContext && (
-              <Stack direction="row" spacing={1}>
-                {dynamicNavigationItems.map((item) => (
-                  <Tooltip key={item.label} title={item.description}>
-                    <Button
-                      color="inherit"
-                      startIcon={item.icon}
-                      onClick={() => handleNavigate(item.path)}
-                      sx={{ textTransform: "none", "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" } }}
-                    >
-                      {item.label}
-                    </Button>
-                  </Tooltip>
-                ))}
-              </Stack>
+            {/* Menu Programa (dropdown com nome do programa e subitens) */}
+            {!isMobile && isProgramaContext && programaId && (
+              <>
+                <Button
+                  color="inherit"
+                  endIcon={<ExpandMoreIcon />}
+                  onClick={(e) => setProgramaMenuAnchor(programaMenuAnchor ? null : e.currentTarget)}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+                  }}
+                >
+                  {currentPrograma
+                    ? (currentPrograma.nome_fantasia || currentPrograma.nome || currentPrograma.razao_social || `Programa ${currentPrograma.id}`)
+                    : "Programa"}
+                </Button>
+                <Menu
+                  anchorEl={programaMenuAnchor}
+                  open={Boolean(programaMenuAnchor)}
+                  onClose={() => setProgramaMenuAnchor(null)}
+                  anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+                  transformOrigin={{ horizontal: "left", vertical: "top" }}
+                  PaperProps={{ sx: { mt: 1.5, minWidth: 240 } }}
+                >
+                  {currentPrograma && (
+                    <Box sx={{ px: 2, py: 1.5 }}>
+                      <Typography variant="overline" color="text.secondary">
+                        Programa
+                      </Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {currentPrograma.nome_fantasia || currentPrograma.nome || currentPrograma.razao_social || `Programa ${currentPrograma.id}`}
+                      </Typography>
+                    </Box>
+                  )}
+                  <Divider />
+                  {dynamicNavigationItems.map((item) => (
+                    <MenuItem key={item.label} onClick={() => handleNavigate(item.path)}>
+                      <ListItemIcon>{item.icon}</ListItemIcon>
+                      <ListItemText primary={item.label} secondary={item.description} />
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </>
             )}
 
             {/* Canto direito: tema + menu do usuário (Início, Perfil, Programas, Empresas, Sair) */}
@@ -495,7 +543,14 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
         {isProgramaContext && (
           <>
             <Divider sx={{ my: 1 }} />
-            <Typography variant="overline" sx={{ px: 2, color: "text.secondary" }}>Este programa</Typography>
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography variant="overline" sx={{ color: "text.secondary" }}>Programa</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                {currentPrograma
+                  ? (currentPrograma.nome_fantasia || currentPrograma.nome || currentPrograma.razao_social || `Programa ${currentPrograma.id}`)
+                  : "Carregando..."}
+              </Typography>
+            </Box>
             <List>
               {dynamicNavigationItems.map((item) => (
                 <ListItem key={item.label} disablePadding>

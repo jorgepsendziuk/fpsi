@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { logActivity } from "@/lib/services/auditService";
 
 /**
  * PATCH /api/programas/[id]/pedidos-titulares/[pedidoId]
@@ -76,6 +77,16 @@ export async function PATCH(
       );
     }
 
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "update",
+      resourceType: "pedido_titular",
+      resourceId: pid,
+      programaId,
+      details: { fields: Object.keys(payload) },
+      req: { headers: request.headers },
+    });
+
     return NextResponse.json(data);
   } catch (error) {
     console.error("Erro PATCH pedidos-titulares:", error);
@@ -93,7 +104,7 @@ export async function PATCH(
  * DELETE /api/programas/[id]/pedidos-titulares/[pedidoId]
  */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; pedidoId: string }> }
 ) {
   try {
@@ -139,6 +150,15 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "delete",
+      resourceType: "pedido_titular",
+      resourceId: pid,
+      programaId,
+      req: { headers: request.headers },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

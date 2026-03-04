@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
+import { logActivity } from "@/lib/services/auditService";
 
 const TIPOS_VALIDOS = new Set([
   "acesso",
@@ -7,6 +8,8 @@ const TIPOS_VALIDOS = new Set([
   "exclusao",
   "portabilidade",
   "revogacao_consentimento",
+  "info_compartilhamento",
+  "oposicao",
 ]);
 
 /**
@@ -54,7 +57,7 @@ export async function POST(
 
     if (!tipo || !TIPOS_VALIDOS.has(tipo)) {
       return NextResponse.json(
-        { error: "Tipo de pedido inválido. Use: acesso, correcao, exclusao, portabilidade, revogacao_consentimento" },
+        { error: "Tipo de pedido inválido. Use: acesso, correcao, exclusao, portabilidade, revogacao_consentimento, info_compartilhamento, oposicao" },
         { status: 400 }
       );
     }
@@ -89,6 +92,17 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    await logActivity(admin, {
+      userId: null,
+      action: "create",
+      resourceType: "pedido_titular",
+      resourceId: data.id,
+      programaId,
+      origem: "portal_publico",
+      details: { tipo, origem: "formulario_publico" },
+      req: { headers: request.headers },
+    });
 
     return NextResponse.json({
       protocolo: data.protocolo || "",

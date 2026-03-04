@@ -1267,8 +1267,8 @@ export default function DiagnosticoPage() {
         <Alert severity="warning" sx={{ mb: 2 }}>
           Programa não encontrado.
         </Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => router.push("/programas")}>
-          Voltar aos programas
+        <Button startIcon={<ArrowBackIcon />} onClick={() => router.push("/dashboard")}>
+          Voltar ao dashboard
         </Button>
       </Container>
     );
@@ -1287,7 +1287,7 @@ export default function DiagnosticoPage() {
             
               <Box sx={{ flex: 1 }}>
                 <Breadcrumbs>
-                  <Link underline="hover" color="inherit" href="/programas">
+                  <Link underline="hover" color="inherit" href="/dashboard">
                     Programas
                   </Link>
                   <Link underline="hover" color="inherit" href={`/programas/${idOrSlug}`}>

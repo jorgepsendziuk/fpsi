@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 
 /**
  * GET /api/portal/[slug]
  * Dados públicos do programa para o portal de privacidade (sem auth).
+ * Usa admin para bypassar RLS e permitir acesso público por slug.
  * Retorna: nome, slug, razao_social, nome_fantasia, cnpj, atendimento_*, DPO (nome/email), links (quando existirem).
  */
 export async function GET(
@@ -16,11 +17,15 @@ export async function GET(
       return NextResponse.json({ error: "Slug obrigatório" }, { status: 400 });
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
+    if (!supabase) {
+      return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
+    }
     const { data: programa, error: progError } = await supabase
       .from("programa")
-      .select("id, nome, slug, razao_social, nome_fantasia, cnpj, atendimento_fone, atendimento_email, atendimento_site, responsavel_privacidade")
+      .select("id, nome, slug, razao_social, nome_fantasia, cnpj, atendimento_fone, atendimento_email, atendimento_site, responsavel_privacidade, logo_orgao_empresa, logo_programa")
       .eq("slug", slug.trim())
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (progError) {
@@ -61,6 +66,8 @@ export async function GET(
       atendimento_site: programa.atendimento_site ?? null,
       dpo_nome: dpo_nome,
       dpo_email: dpo_email,
+      logo_orgao_empresa: programa.logo_orgao_empresa ?? null,
+      logo_programa: programa.logo_programa ?? null,
       link_politica_privacidade: null,
       link_aviso_titular: null,
       link_cookies: null,

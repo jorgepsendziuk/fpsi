@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { logActivity } from "@/lib/services/auditService";
 
 /**
  * Verifica se o usuário tem acesso à empresa: está em algum programa que usa essa empresa OU criou a empresa (created_by_user_id).
@@ -60,6 +61,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       console.error("Erro ao atualizar empresa:", error);
       return NextResponse.json({ error: "Erro ao atualizar empresa", details: error.message }, { status: 500 });
     }
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "update",
+      resourceType: "empresa",
+      resourceId: empresaId,
+      details: { fields: Object.keys(update) },
+      req: { headers: request.headers },
+    });
     return NextResponse.json(data);
   } catch (e) {
     console.error("PUT /api/empresas/[id]:", e);
@@ -109,6 +118,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       console.error("Erro ao excluir empresa:", delError);
       return NextResponse.json({ error: "Erro ao excluir empresa", details: delError.message }, { status: 500 });
     }
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "delete",
+      resourceType: "empresa",
+      resourceId: empresaId,
+      req: { headers: request.headers },
+    });
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("DELETE /api/empresas/[id]:", e);

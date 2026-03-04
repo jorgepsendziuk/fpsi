@@ -34,6 +34,7 @@ import {
 import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
 import { SelectWithAdd } from "@/components/common/SelectWithAdd";
+import { PapelLgpdManager } from "@/components/programa/PapelLgpdManager";
 import { 
   Add, 
   Edit, 
@@ -262,7 +263,7 @@ export default function ProgramaResponsaveisCRUDPage() {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Breadcrumbs sx={{ mb: 2 }}>
-          <Link href="/programas" underline="hover" color="inherit" sx={{ display: 'flex', alignItems: 'center' }}>
+          <Link href="/dashboard" underline="hover" color="inherit" sx={{ display: 'flex', alignItems: 'center' }}>
             <ArrowBack sx={{ mr: 0.5 }} fontSize="small" />
             Programas
           </Link>
@@ -300,134 +301,136 @@ export default function ProgramaResponsaveisCRUDPage() {
         </Typography>
       </Box>
 
-      {/* Responsáveis Principais */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3, 
-          borderRadius: 3, 
-          mb: 4,
-          background: theme.palette.mode === 'dark' 
-            ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
-            : 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-          <Person sx={{ mr: 1 }} />
-          Definição de Responsáveis
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Responsável Controle Interno</InputLabel>
-              <Select 
-                value={controleInterno} 
-                label="Responsável Controle Interno" 
-                onChange={handleChangeCombo(setControleInterno, "responsavel_controle_interno")}
-              >
-                <MenuItem value="">Não definido</MenuItem>
-                {responsaveis.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Responsável SI</InputLabel>
-              <Select 
-                value={si} 
-                label="Responsável SI" 
-                onChange={handleChangeCombo(setSI, "responsavel_si")}
-              >
-                <MenuItem value="">Não definido</MenuItem>
-                {responsaveis.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Responsável Privacidade</InputLabel>
-              <Select 
-                value={privacidade} 
-                label="Responsável Privacidade" 
-                onChange={handleChangeCombo(setPrivacidade, "responsavel_privacidade")}
-              >
-                <MenuItem value="">Não definido</MenuItem>
-                {responsaveis.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Responsável TI</InputLabel>
-              <Select 
-                value={ti} 
-                label="Responsável TI" 
-                onChange={handleChangeCombo(setTI, "responsavel_ti")}
-              >
-                <MenuItem value="">Não definido</MenuItem>
-                {responsaveis.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Lista de Responsáveis */}
-      <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3,
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? 2 : 0
-        }}>
-          <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-            <PersonAdd sx={{ mr: 1 }} />
-            Equipe do Programa ({responsaveis.length})
-          </Typography>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            startIcon={<Add />} 
-            onClick={handleAddClick}
+      {/* Definição de Responsáveis e Equipe do Programa - lado a lado no topo */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <Paper 
+            elevation={3} 
             sx={{ 
-              borderRadius: 2,
-              width: isMobile ? '100%' : 'auto'
+              p: 3, 
+              borderRadius: 3, 
+              height: '100%',
+              background: theme.palette.mode === 'dark' 
+                ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
+                : 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)'
             }}
           >
-            Adicionar Responsável
-          </Button>
-        </Box>
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+              <Person sx={{ mr: 1 }} />
+              Definição de Responsáveis
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Responsável Controle Interno</InputLabel>
+                  <Select 
+                    value={controleInterno} 
+                    label="Responsável Controle Interno" 
+                    onChange={handleChangeCombo(setControleInterno, "responsavel_controle_interno")}
+                  >
+                    <MenuItem value="">Não definido</MenuItem>
+                    {responsaveis.map((r) => (
+                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Responsável SI</InputLabel>
+                  <Select 
+                    value={si} 
+                    label="Responsável SI" 
+                    onChange={handleChangeCombo(setSI, "responsavel_si")}
+                  >
+                    <MenuItem value="">Não definido</MenuItem>
+                    {responsaveis.map((r) => (
+                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Responsável Privacidade</InputLabel>
+                  <Select 
+                    value={privacidade} 
+                    label="Responsável Privacidade" 
+                    onChange={handleChangeCombo(setPrivacidade, "responsavel_privacidade")}
+                  >
+                    <MenuItem value="">Não definido</MenuItem>
+                    {responsaveis.map((r) => (
+                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Responsável TI</InputLabel>
+                  <Select 
+                    value={ti} 
+                    label="Responsável TI" 
+                    onChange={handleChangeCombo(setTI, "responsavel_ti")}
+                  >
+                    <MenuItem value="">Não definido</MenuItem>
+                    {responsaveis.map((r) => (
+                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper elevation={3} sx={{ p: 3, borderRadius: 3, height: '100%' }}>
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+          mb: 3,
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? 2 : 0
+            }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+                <PersonAdd sx={{ mr: 1 }} />
+                Equipe do Programa ({responsaveis.length})
+              </Typography>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                startIcon={<Add />} 
+                onClick={handleAddClick}
+                sx={{ 
+                  borderRadius: 2,
+                  width: isMobile ? '100%' : 'auto'
+                }}
+              >
+                Adicionar Responsável
+              </Button>
+            </Box>
 
-        {responsaveis.length === 0 ? (
-          <Box sx={{ 
-            textAlign: 'center', 
-            py: 6,
-            color: 'text.secondary'
-          }}>
-            <PersonAdd sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              Nenhum responsável cadastrado
-            </Typography>
-            <Typography variant="body2">
-              Adicione responsáveis para começar a gerenciar a equipe
-            </Typography>
-          </Box>
-        ) : (
-          <Grid container spacing={2}>
-            {responsaveis.map((responsavel) => (
-              <Grid item xs={12} sm={6} md={4} key={responsavel.id}>
-                <Card 
-                  sx={{ 
+                {responsaveis.length === 0 ? (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 6,
+                color: 'text.secondary'
+              }}>
+                <PersonAdd sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Nenhum responsável cadastrado
+                </Typography>
+                <Typography variant="body2">
+                  Adicione responsáveis para começar a gerenciar a equipe
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {responsaveis.map((responsavel) => (
+                  <Grid item xs={12} sm={6} md={4} key={responsavel.id}>
+                    <Card 
+                      sx={{ 
                     height: '100%',
                     transition: 'all 0.2s',
                     '&:hover': {
@@ -438,54 +441,59 @@ export default function ProgramaResponsaveisCRUDPage() {
                     background: theme.palette.mode === 'dark' 
                       ? 'rgba(255, 255, 255, 0.02)'
                       : '#fff'
-                  }}
-                >
-                  <CardContent sx={{ pb: 1 }}>
-                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-                      {responsavel.nome}
-                    </Typography>
-                    <Stack spacing={1}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Email sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {responsavel.email}
+                      }}
+                    >
+                      <CardContent sx={{ pb: 1 }}>
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+                          {responsavel.nome}
                         </Typography>
-                      </Box>
-                      {responsavel.departamento && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Business sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {responsavel.departamento}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Stack>
-                  </CardContent>
-                  <Divider />
-                  <CardActions sx={{ justifyContent: 'space-between', px: 2, py: 1 }}>
-                    <Button
-                      size="small"
-                      startIcon={<Edit />}
-                      onClick={() => handleEditClick(responsavel)}
-                      sx={{ borderRadius: 2 }}
-                    >
-                      Editar
-                    </Button>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteClick(responsavel.id)}
-                      sx={{ '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' } }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </CardActions>
-                </Card>
+                        <Stack spacing={1}>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Email sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {responsavel.email}
+                            </Typography>
+                          </Box>
+                          {responsavel.departamento && (
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Business sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2" color="text.secondary">
+                                {responsavel.departamento}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Stack>
+                      </CardContent>
+                      <Divider />
+                      <CardActions sx={{ justifyContent: 'space-between', px: 2, py: 1 }}>
+                        <Button
+                          size="small"
+                          startIcon={<Edit />}
+                          onClick={() => handleEditClick(responsavel)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Editar
+                        </Button>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteClick(responsavel.id)}
+                          sx={{ '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' } }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
-        )}
-      </Paper>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Estrutura de Tratamento */}
+      <PapelLgpdManager programaId={programaId} idOrSlug={idOrSlug} />
 
       {/* Modal de Edição */}
       <Dialog 

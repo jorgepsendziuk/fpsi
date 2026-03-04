@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
+import { logActivity } from "@/lib/services/auditService";
 
 /**
  * POST /api/portal/[slug]/contato
@@ -29,18 +30,29 @@ export async function POST(
     if (!email) return NextResponse.json({ error: "E-mail é obrigatório" }, { status: 400 });
     if (!mensagem) return NextResponse.json({ error: "Mensagem é obrigatória" }, { status: 400 });
 
-    const { error } = await admin.from("programa_contato").insert({
+    const { data: inserted, error } = await admin.from("programa_contato").insert({
       programa_id: programa.id,
       nome,
       email,
       assunto: assunto || null,
       mensagem,
-    });
+    }).select("id").single();
 
     if (error) {
       console.error("Erro ao salvar contato:", error);
       return NextResponse.json({ error: "Não foi possível enviar. Tente novamente." }, { status: 500 });
     }
+
+    await logActivity(admin, {
+      userId: null,
+      action: "create",
+      resourceType: "contato",
+      resourceId: inserted?.id,
+      programaId: programa.id,
+      origem: "portal_publico",
+      req: { headers: request.headers },
+    });
+
     return NextResponse.json({ ok: true, message: "Mensagem enviada com sucesso." });
   } catch (e) {
     console.error("Erro POST contato:", e);

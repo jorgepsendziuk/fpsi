@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { logActivity } from "@/lib/services/auditService";
 
 async function getSupabaseClient() {
   const admin = createSupabaseAdminClient();
@@ -38,6 +39,10 @@ export async function GET() {
 // POST /api/cargos - Criar cargo
 export async function POST(request: NextRequest) {
   try {
+    const serverClient = await createSupabaseServerClient();
+    const { data: { user } } = await serverClient.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
     const body = await request.json();
     const { nome } = body;
     if (!nome || typeof nome !== "string" || !nome.trim()) {
@@ -61,6 +66,14 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "create",
+      resourceType: "cargo",
+      resourceId: data.id,
+      details: { nome: data.nome },
+      req: { headers: request.headers },
+    });
     return NextResponse.json(data);
   } catch (error) {
     console.error("Erro na API de cargos (POST):", error);

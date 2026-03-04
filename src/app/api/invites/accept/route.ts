@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
+import { logActivity } from "@/lib/services/auditService";
 
 async function getSupabaseClient() {
   const admin = createSupabaseAdminClient();
@@ -76,7 +77,12 @@ export async function POST(request: NextRequest) {
           .from("programa_invites")
           .update({ status: "accepted", accepted_at: new Date().toISOString() })
           .eq("id", invite.id);
-        return NextResponse.json({ message: "Você já tem acesso a este programa" });
+        const { data: prog } = await supabase.from("programa").select("slug").eq("id", invite.programa_id).single();
+        return NextResponse.json({
+          message: "Você já tem acesso a este programa",
+          programaId: invite.programa_id,
+          programaSlug: prog?.slug ?? null,
+        });
       }
       console.error("Erro ao aceitar convite:", insertError);
       return NextResponse.json(
@@ -116,6 +122,16 @@ export async function POST(request: NextRequest) {
     } catch {
       /* ignore - profile pode não existir ainda */
     }
+
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "invite",
+      resourceType: "invite",
+      resourceId: invite.id,
+      programaId: invite.programa_id,
+      details: { status: "accepted" },
+      req: { headers: request.headers },
+    });
 
     const { data: programa } = await supabase
       .from("programa")

@@ -34,7 +34,6 @@ import {
   MenuItem
 } from "@mui/material";
 import {
-  Business,
   Group,
   Policy,
   CheckCircleOutline,
@@ -51,8 +50,10 @@ import {
   Language as WebsiteIcon,
   CalendarToday as CalendarIcon,
   Settings as SettingsIcon,
-  Gavel as GavelIcon
+  Gavel as GavelIcon,
+  CloudUpload as CloudUploadIcon
 } from "@mui/icons-material";
+import { PapelLgpdDiagramWithEdit } from "@/components/programa/PapelLgpdDiagramWithEdit";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -115,19 +116,16 @@ const sections = [
     path: "responsabilidades",
     color: "#607d8b",
     gradient: "linear-gradient(135deg, #607d8b 0%, #78909c 100%)"
+  },
+  {
+    key: "auditoria",
+    title: "Histórico de Atividades",
+    icon: <SecurityIcon fontSize="large" />,
+    description: "Trilha de auditoria: quem fez o quê, quando (LGPD art. 37, Framework FPSI Controle 8)",
+    path: "auditoria",
+    color: "#455a64",
+    gradient: "linear-gradient(135deg, #455a64 0%, #78909c 100%)"
   }
-];
-
-const basicInfoFields = [
-  { key: "razao_social", label: "Razão Social", icon: <Business /> },
-  { key: "nome_fantasia", label: "Nome Fantasia", icon: <Business /> },
-  { key: "cnpj", label: "CNPJ", icon: <Business /> }
-];
-
-const contactFields = [
-  { key: "atendimento_fone", label: "Telefone", icon: <PhoneIcon /> },
-  { key: "atendimento_email", label: "Email", icon: <EmailIcon /> },
-  { key: "atendimento_site", label: "Site", icon: <WebsiteIcon /> }
 ];
 
 const policyFields = [
@@ -146,6 +144,7 @@ export default function ProgramaMainPage() {
   const [editValue, setEditValue] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [logoUploading, setLogoUploading] = useState<string | null>(null);
   const programaId = programa?.id;
   const isDemoMode = shouldUseDemoData(programaId);
   const { programaUser, isLoading: permissionsLoading } = useUserPermissions(
@@ -167,14 +166,37 @@ export default function ProgramaMainPage() {
     fetchPrograma();
   }, [idOrSlug]);
 
+  const formatCnpjDisplay = (v: string | number | null | undefined): string => {
+    if (v == null || v === "") return "";
+    const s = String(v).replace(/\D/g, "");
+    if (s.length !== 14) return String(v);
+    return s.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+  };
+
   const handleEdit = (field: string, value: string) => {
     setEditField(field);
-    setEditValue(value || "");
+    setEditValue(field === "cnpj" ? formatCnpjDisplay(value) || "" : (value || ""));
   };
 
   const handleCancel = () => {
     setEditField(null);
     setEditValue("");
+  };
+
+  const handleLogoUpload = async (tipo: "orgao" | "programa", file: File) => {
+    if (!programaId || isDemoMode) return;
+    setLogoUploading(tipo);
+    try {
+      const { success } = await dataService.uploadProgramaLogo(programaId, file, tipo);
+      if (success) {
+        const data = await dataService.fetchProgramaById(programaId);
+        setPrograma(data);
+      }
+    } catch {
+      // ignora erro de upload
+    } finally {
+      setLogoUploading(null);
+    }
   };
 
   const handleSave = async (field: string) => {
@@ -183,13 +205,17 @@ export default function ProgramaMainPage() {
       handleCancel();
       return;
     }
-    if (!isPolicyDate && !editValue.trim()) {
+    if (!isPolicyDate && !editValue.trim() && !["sigla", "unidade", "endereco", "codigo_orgao", "cnpj"].includes(field)) {
       handleCancel();
       return;
     }
     setLoading(true);
     try {
-      const valueToSave = isPolicyDate ? editValue || null : editValue;
+      let valueToSave: string | number | null = isPolicyDate ? editValue || null : (editValue.trim() || null);
+      if (field === "cnpj") {
+        const digits = String(editValue).replace(/\D/g, "");
+        valueToSave = digits.length >= 14 ? parseInt(digits.slice(0, 14), 10) : null;
+      }
       await dataService.updateProgramaField(programaId, field, valueToSave);
       setPrograma((prev: any) => ({ ...prev, [field]: valueToSave }));
       setEditField(null);
@@ -203,6 +229,7 @@ export default function ProgramaMainPage() {
 
   const renderEditableField = (field: any, value: string) => {
     const isEditing = editField === field.key;
+    const displayValue = field.key === "cnpj" && value ? formatCnpjDisplay(value) : (value ?? "");
     
     return (
       <Box sx={{ 
@@ -235,7 +262,7 @@ export default function ProgramaMainPage() {
             />
           ) : (
             <Typography variant="body1" sx={{ mt: 0.5 }}>
-              {value || (
+              {displayValue || (
                 <span style={{ color: theme.palette.text.disabled, fontStyle: 'italic' }}>
                   Não informado
                 </span>
@@ -310,15 +337,18 @@ export default function ProgramaMainPage() {
         <Alert severity="warning" sx={{ mb: 2 }}>
           Você não tem acesso a este programa.
         </Alert>
-        <Button startIcon={<ArrowBack />} onClick={() => router.push("/programas")}>
+        <Button startIcon={<ArrowBack />} onClick={() => router.push("/dashboard")}>
           Voltar aos programas
         </Button>
       </Container>
     );
   }
 
+  const isOrgaoPublico = programa.setor === 1 || programa.setor === "1";
   const programaName = programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`;
-  const hasSubtitle = programa.nome_fantasia || programa.razao_social;
+  const hasSubtitle = isOrgaoPublico
+    ? (programa.sigla || programa.unidade)
+    : (programa.nome_fantasia || programa.razao_social);
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -326,7 +356,7 @@ export default function ProgramaMainPage() {
       <Box sx={{ mb: 4 }}>
         <Breadcrumbs sx={{ mb: 2 }}>
           <Link 
-            href="/programas" 
+            href="/dashboard" 
             underline="hover" 
             color="inherit" 
             sx={{ display: 'flex', alignItems: 'center' }}
@@ -339,44 +369,107 @@ export default function ProgramaMainPage() {
         
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar 
-              sx={{ 
-                width: 56, 
-                height: 56,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`
-              }}
-            >
-              <SecurityIcon fontSize="large" />
-            </Avatar>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              {(programa.logo_programa || programa.logo_orgao_empresa) ? (
+                <Box
+                  component="img"
+                  src={programa.logo_programa || programa.logo_orgao_empresa}
+                  alt="Logo"
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 2,
+                    objectFit: "contain",
+                    bgcolor: alpha(theme.palette.primary.main, 0.06),
+                    p: 0.5,
+                  }}
+                />
+              ) : (
+                <Avatar 
+                  sx={{ 
+                    width: 56, 
+                    height: 56,
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`
+                  }}
+                >
+                  <SecurityIcon fontSize="large" />
+                </Avatar>
+              )}
+              {!isDemoMode && (
+                <Button
+                  component="label"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  disabled={!!logoUploading}
+                >
+                  {logoUploading === "programa" ? "Enviando…" : (programa.logo_programa || programa.logo_orgao_empresa) ? "Trocar logo" : "Enviar logo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleLogoUpload("programa", f);
+                      e.target.value = "";
+                    }}
+                  />
+                </Button>
+              )}
+            </Box>
             <Box>
               <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 {programaName}
               </Typography>
               {hasSubtitle && (
                 <Stack spacing={0.35} sx={{ mt: 1 }}>
-                  {programa.nome_fantasia && (
-                    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: 500, letterSpacing: '0.01em' }}>
-                      {programa.nome_fantasia}
-                    </Typography>
-                  )}
-                  {programa.razao_social && (
-                    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.9375rem', letterSpacing: '0.01em' }}>
-                      {programa.razao_social}
-                    </Typography>
+                  {isOrgaoPublico ? (
+                    <>
+                      {programa.sigla && (
+                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: 500, letterSpacing: '0.01em' }}>
+                          {programa.sigla}
+                        </Typography>
+                      )}
+                      {programa.unidade && (
+                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.9375rem', letterSpacing: '0.01em' }}>
+                          {programa.unidade}
+                        </Typography>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {programa.nome_fantasia && (
+                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: 500, letterSpacing: '0.01em' }}>
+                          {programa.nome_fantasia}
+                        </Typography>
+                      )}
+                      {programa.razao_social && (
+                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.9375rem', letterSpacing: '0.01em' }}>
+                          {programa.razao_social}
+                        </Typography>
+                      )}
+                    </>
                   )}
                 </Stack>
               )}
             </Box>
           </Box>
           
-          {isDemoMode && (
-            <Chip 
-              label="DEMONSTRAÇÃO" 
-              color="warning" 
-              variant="filled"
-              sx={{ fontWeight: 'bold' }}
-            />
-          )}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {!isDemoMode && (
+              <IconButton size="small" onClick={() => setSettingsOpen(true)} aria-label="Configurações">
+                <SettingsIcon />
+              </IconButton>
+            )}
+            {isDemoMode && (
+              <Chip 
+                label="DEMONSTRAÇÃO" 
+                color="warning" 
+                variant="filled"
+                sx={{ fontWeight: 'bold' }}
+              />
+            )}
+          </Box>
         </Box>
       </Box>
 
@@ -408,7 +501,7 @@ export default function ProgramaMainPage() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Policy sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
             <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
-              Política de Segurança
+              Política de Privacidade e Segurança:
             </Typography>
           </Box>
           <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />
@@ -595,46 +688,9 @@ export default function ProgramaMainPage() {
           </Grid>
         </Grid>
 
-        {/* Informações do programa */}
+        {/* Estrutura de Tratamento (diagrama) */}
         <Grid item xs={12} lg={4}>
-          <Stack spacing={3}>
-            {/* Informações básicas */}
-            <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Informações Básicas
-                </Typography>
-                <IconButton 
-                  size="small" 
-                  onClick={() => setSettingsOpen(true)}
-                  sx={{ color: theme.palette.text.secondary }}
-                >
-                  <SettingsIcon />
-                </IconButton>
-              </Box>
-              <Stack spacing={2}>
-                {basicInfoFields.map(field => (
-                  <Box key={field.key}>
-                    {renderEditableField(field, programa[field.key])}
-                  </Box>
-                ))}
-              </Stack>
-            </Paper>
-
-            {/* Informações de contato */}
-            <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                Informações de Contato
-              </Typography>
-              <Stack spacing={2}>
-                {contactFields.map(field => (
-                  <Box key={field.key}>
-                    {renderEditableField(field, programa[field.key])}
-                  </Box>
-                ))}
-              </Stack>
-            </Paper>
-          </Stack>
+          <PapelLgpdDiagramWithEdit programaId={programa.id} idOrSlug={idOrSlug} isDemoMode={isDemoMode} />
         </Grid>
       </Grid>
 

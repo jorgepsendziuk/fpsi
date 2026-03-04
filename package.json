@@ -7,8 +7,8 @@
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--max_old_space_size=4096 NEXT_TELEMETRY_DISABLED=1 next dev",
-    "dev:turbo": "cross-env NODE_OPTIONS=--max_old_space_size=4096 NEXT_TELEMETRY_DISABLED=1 next dev --turbo",
+    "dev": "cross-env NODE_OPTIONS=--max_old_space_size=8192 NEXT_TELEMETRY_DISABLED=1 next dev --webpack",
+    "dev:turbo": "cross-env NODE_OPTIONS=--max_old_space_size=8192 NEXT_TELEMETRY_DISABLED=1 next dev --turbo",
     "dev:3001": "cross-env NODE_OPTIONS=--max_old_space_size=4096 next dev --port 3001",
     "dev:refine": "cross-env NODE_OPTIONS=--max_old_space_size=4096 REFINE_NO_TELEMETRY=true UPDATE_NOTIFIER_IS_DISABLED=true refine dev",
     "dev:fresh": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && npm run dev",
@@ -41,10 +41,12 @@
     "@refinedev/react-hook-form": "^4.10.2",
     "@refinedev/react-table": "^5.6.17",
     "@refinedev/supabase": "^5.9.8",
+    "@serwist/next": "^9.5.6",
     "@supabase/ssr": "^0.5.2",
     "@tanstack/react-table": "^8.20.6",
     "@tinymce/tinymce-react": "^6.1.0",
     "@uiw/react-md-editor": "^4.0.5",
+    "@xyflow/react": "^12.10.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "i18next": "^25.2.1",
@@ -61,6 +63,7 @@
     "react-dom": "^19.0.0",
     "react-i18next": "^15.5.3",
     "react-imask": "^7.6.1",
+    "sharp": "^0.34.5",
     "tinymce": "^7.9.1"
   },
   "devDependencies": {
@@ -76,6 +79,7 @@
     "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "^15.1.6",
+    "serwist": "^9.5.6",
     "supabase": "^2.76.10",
     "typescript": "^5.7.3",
     "vercel": "^39.3.0"

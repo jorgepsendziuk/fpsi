@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { logActivity } from "@/lib/services/auditService";
 
 // GET /api/profiles - Obter perfil do usuário logado
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, cargo:cargo(nome), departamento:departamento(nome)")
       .eq("user_id", user.id)
       .single();
 
@@ -78,6 +79,14 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "update",
+      resourceType: "profile",
+      resourceId: data?.id,
+      details: { fields: Object.keys(updates) },
+      req: { headers: request.headers },
+    });
     return NextResponse.json(data);
   } catch (error) {
     console.error("Erro na API de perfis (PUT):", error);

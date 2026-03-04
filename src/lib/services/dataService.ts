@@ -1,6 +1,7 @@
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { mergeControleData } from "./controlesData";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
+import { logActivityFromClient } from "./auditClient";
 
 
 
@@ -25,21 +26,39 @@ export const fetchProgramasForCurrentUser = async (excluidos?: boolean): Promise
 };
 
 export const fetchProgramaById = async (programaId: number) => {
-  const { data } = await supabaseBrowserClient
-    .from("programa")
-    .select("*")
-    .eq("id", programaId)
-    .single();
-  return data;
+  const res = await fetch(`/api/programas/${programaId}`, { credentials: "include" });
+  if (!res.ok) return null;
+  return res.json();
+};
+
+/** Resumo agregado do Plano de Trabalho (contagens sem carregar medidas). Usado para lazy load. */
+export const fetchPlanoAcaoResumo = async (programaId: number): Promise<{
+  total: number;
+  comResposta: number;
+  concluidas: number;
+  emAndamento: number;
+  atrasadas: number;
+  comPrioridade: number;
+  diagnosticos: Array<{
+    id: number;
+    nome: string;
+    qtdControles: number;
+    qtdMedidas: number;
+    controles: Array<{ id: number; nome: string; qtdMedidas: number }>;
+  }>;
+}> => {
+  const res = await fetch(`/api/programas/${programaId}/planos-acao/resumo`, { credentials: "include" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao carregar resumo do plano de trabalho");
+  }
+  return res.json();
 };
 
 export const fetchProgramaBySlug = async (slug: string) => {
-  const { data } = await supabaseBrowserClient
-    .from("programa")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  return data;
+  const res = await fetch(`/api/programas/${encodeURIComponent(slug)}`, { credentials: "include" });
+  if (!res.ok) return null;
+  return res.json();
 };
 
 /** Retorna um slug disponível para novo programa (base ou base-2, base-3, …). Não usa id. */
@@ -298,6 +317,7 @@ export const updateProgramaMedida = async (medidaId: number, controleId: number,
       throw error;
     }
     
+    logActivityFromClient({ action: "update", resourceType: "medida", resourceId: existingRecord.id, programaId });
     console.log(`updateProgramaMedida: Updated existing record`);
     return data;
   } else {
@@ -317,16 +337,21 @@ export const updateProgramaMedida = async (medidaId: number, controleId: number,
       throw error;
     }
     
+    logActivityFromClient({ action: "create", resourceType: "medida", resourceId: data.id, programaId });
     console.log(`updateProgramaMedida: Created new record`);
     return data;
   }
 };
 
-export const updateControleNivel = async (programaControleId: number, newValue: number) => {
-  return await supabaseBrowserClient
+export const updateControleNivel = async (programaControleId: number, newValue: number, programaId?: number) => {
+  const result = await supabaseBrowserClient
     .from("programa_controle")
     .update({ nivel: newValue })
     .eq("id", programaControleId);
+  if (!result.error && programaId) {
+    logActivityFromClient({ action: "update", resourceType: "controle", resourceId: programaControleId, programaId, details: { nivel: newValue } });
+  }
+  return result;
 };
 
 /** Estrutura mínima de medida para cálculos de maturidade (dashboard). */
@@ -438,7 +463,8 @@ export const ensureProgramaMedidaRecords = async (programaId: number) => {
     nova_resposta: null,
     encaminhamento_interno: null,
     status_medida: null,
-    status_plano_acao: null
+    status_plano_acao: null,
+    prioridade: false
   }));
   
   const { data, error } = await supabaseBrowserClient
@@ -681,11 +707,15 @@ export const createPrograma = async (payload: CreateProgramaPayload) => {
     orgao: payload.orgao ?? null,
     empresa_id: empresa_id ?? null,
   };
-  return await supabaseBrowserClient
+  const result = await supabaseBrowserClient
     .from("programa")
     .insert(insertPayload)
     .select()
     .single();
+  if (result.data) {
+    logActivityFromClient({ action: "create", resourceType: "programa", resourceId: result.data.id });
+  }
+  return result;
 };
 
 /** Garante criador em programa_users, cria responsável e seta programa.responsavel_privacidade. */
@@ -725,10 +755,14 @@ export const setCreatorAsDPO = async (
 };
 
 export const deletePrograma = async (programaId: number) => {
-  return await supabaseBrowserClient
+  const result = await supabaseBrowserClient
     .from("programa")
     .delete()
     .eq("id", programaId);
+  if (!result.error) {
+    logActivityFromClient({ action: "delete", resourceType: "programa", resourceId: programaId, programaId });
+  }
+  return result;
 };
 
 export const updateProgramaDetails = async (programaId: number, updates: { cnpj?: string; razao_social?: string }) => {
@@ -741,12 +775,35 @@ export const updateProgramaDetails = async (programaId: number, updates: { cnpj?
 };
 
 export const updateProgramaField = async (programaId: number, field: string, value: any) => {
-
   const { data, error } = await supabaseBrowserClient
     .from("programa")
     .update({ [field]: value })
     .eq("id", programaId);
+  if (!error) {
+    logActivityFromClient({ action: "update", resourceType: "programa", resourceId: programaId, programaId, details: { field } });
+  }
   return { data, error };
+};
+
+/** Upload de logo (orgao ou programa). Comprime no servidor e salva base64. */
+export const uploadProgramaLogo = async (
+  programaId: number,
+  file: File,
+  tipo: "orgao" | "programa"
+): Promise<{ success: boolean; error?: string }> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("tipo", tipo);
+  const res = await fetch(`/api/programas/${programaId}/logo`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return { success: false, error: body?.error || "Erro ao enviar logo" };
+  }
+  return { success: true };
 };
 
 export const createProgramaControlesForProgram = async (programaId: number) => {
@@ -910,6 +967,7 @@ export const upsertRegistroRopa = async (
     .select()
     .single();
   if (error) throw error;
+  logActivityFromClient({ action: "update", resourceType: "registro_ropa", resourceId: data.id, programaId });
   return {
     ...data,
     categorias_titulares: Array.isArray(data.categorias_titulares) ? data.categorias_titulares : [],
@@ -938,6 +996,7 @@ export const createRopa = async (
     .select()
     .single();
   if (error) throw error;
+  logActivityFromClient({ action: "create", resourceType: "ropa", resourceId: data.id, programaId });
   return data;
 };
 
@@ -952,12 +1011,14 @@ export const updateRopa = async (
     .select()
     .single();
   if (error) throw error;
+  logActivityFromClient({ action: "update", resourceType: "ropa", resourceId: id, programaId: data.programa_id });
   return data;
 };
 
-export const deleteRopa = async (id: number): Promise<void> => {
+export const deleteRopa = async (id: number, programaId?: number): Promise<void> => {
   const { error } = await supabaseBrowserClient.from("ropa").delete().eq("id", id);
   if (error) throw error;
+  if (programaId) logActivityFromClient({ action: "delete", resourceType: "ropa", resourceId: id, programaId });
 };
 
 // ========== RIPD (Relatório de Impacto à Proteção de Dados - Art. 38 LGPD) ==========
@@ -996,6 +1057,7 @@ export const createRipd = async (
     .select()
     .single();
   if (error) throw error;
+  logActivityFromClient({ action: "create", resourceType: "ripd", resourceId: data.id, programaId });
   return data;
 };
 
@@ -1010,12 +1072,14 @@ export const updateRipd = async (
     .select()
     .single();
   if (error) throw error;
+  logActivityFromClient({ action: "update", resourceType: "ripd", resourceId: id, programaId: data.programa_id });
   return data;
 };
 
-export const deleteRipd = async (id: number): Promise<void> => {
+export const deleteRipd = async (id: number, programaId?: number): Promise<void> => {
   const { error } = await supabaseBrowserClient.from("ripd").delete().eq("id", id);
   if (error) throw error;
+  if (programaId) logActivityFromClient({ action: "delete", resourceType: "ripd", resourceId: id, programaId });
 };
 
 // ========== Pedidos dos Titulares (art. 18 LGPD) ==========
@@ -1044,7 +1108,47 @@ export const PEDIDO_TITULAR_TIPOS = [
   { value: "exclusao", label: "Exclusão" },
   { value: "portabilidade", label: "Portabilidade" },
   { value: "revogacao_consentimento", label: "Revogação de consentimento" },
+  { value: "info_compartilhamento", label: "Informação sobre compartilhamento" },
+  { value: "oposicao", label: "Oposição" },
 ] as const;
+
+/** Procedimentos de atendimento por tipo de pedido (art. 18 LGPD) — PROCESSO_PEDIDOS_TITULARES.md */
+export const PEDIDO_TITULAR_PROCEDIMENTOS: Record<string, string[]> = {
+  acesso: [
+    "Localizar os dados do titular no sistema",
+    "Preparar relatório ou cópia dos dados em formato legível",
+    "Enviar ao titular por canal seguro (e-mail com link temporário, se necessário)",
+  ],
+  correcao: [
+    "Identificar os dados incorretos",
+    "Corrigir no sistema",
+    "Confirmar a correção ao titular",
+  ],
+  exclusao: [
+    "Verificar se a exclusão é possível (ex.: dados necessários para obrigação legal não podem ser excluídos)",
+    "Se procedente: excluir ou anonimizar os dados",
+    "Confirmar ao titular",
+  ],
+  portabilidade: [
+    "Exportar os dados em formato estruturado e de uso comum",
+    "Enviar ao titular ou ao novo fornecedor indicado por ele",
+  ],
+  revogacao_consentimento: [
+    "Verificar se o tratamento tem base no consentimento",
+    "Se sim: cessar o tratamento e excluir quando aplicável",
+    "Se não (ex.: política pública): informar que a base legal não é consentimento",
+  ],
+  info_compartilhamento: [
+    "Identificar com quais entidades públicas e privadas os dados do titular foram compartilhados",
+    "Preparar lista ou relatório com nomes e finalidades do compartilhamento",
+    "Enviar ao titular de forma clara e acessível",
+  ],
+  oposicao: [
+    "Verificar a base legal do tratamento (art. 7º LGPD)",
+    "Se o titular pode opor-se (ex.: legítimo interesse): avaliar o pedido e, se procedente, cessar o tratamento",
+    "Se a base legal não admite oposição (ex.: obrigação legal, política pública): informar fundamentadamente ao titular",
+  ],
+};
 
 export const PEDIDO_TITULAR_STATUS = [
   { value: "recebido", label: "Recebido" },
@@ -1068,18 +1172,32 @@ export const createPedidoTitular = async (
   programaId: number,
   payload: Omit<PedidoTitularRow, "id" | "programa_id" | "protocolo" | "created_at" | "updated_at">
 ): Promise<PedidoTitularRow> => {
-  const { data, error } = await supabaseBrowserClient
-    .from("pedido_titular")
-    .insert({ programa_id: programaId, ...payload })
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  const res = await fetch(`/api/programas/${programaId}/pedidos-titulares`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      tipo: payload.tipo,
+      nome_titular: payload.nome_titular,
+      email_titular: payload.email_titular,
+      documento_titular: payload.documento_titular ?? null,
+      descricao_pedido: payload.descricao_pedido ?? null,
+      status: payload.status ?? "recebido",
+      data_prazo_resposta: payload.data_prazo_resposta ?? null,
+      observacoes_internas: payload.observacoes_internas ?? null,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? err.details ?? "Erro ao criar pedido");
+  }
+  return res.json();
 };
 
 export const updatePedidoTitular = async (
   id: number,
-  payload: Partial<Omit<PedidoTitularRow, "id" | "programa_id" | "protocolo" | "created_at" | "updated_at">>
+  payload: Partial<Omit<PedidoTitularRow, "id" | "programa_id" | "protocolo" | "created_at" | "updated_at">>,
+  programaId?: number
 ): Promise<PedidoTitularRow> => {
   const { data, error } = await supabaseBrowserClient
     .from("pedido_titular")
@@ -1088,12 +1206,16 @@ export const updatePedidoTitular = async (
     .select()
     .single();
   if (error) throw error;
+  if (programaId ?? data?.programa_id) {
+    logActivityFromClient({ action: "update", resourceType: "pedido_titular", resourceId: id, programaId: programaId ?? data.programa_id });
+  }
   return data;
 };
 
-export const deletePedidoTitular = async (id: number): Promise<void> => {
+export const deletePedidoTitular = async (id: number, programaId?: number): Promise<void> => {
   const { error } = await supabaseBrowserClient.from("pedido_titular").delete().eq("id", id);
   if (error) throw error;
+  if (programaId) logActivityFromClient({ action: "delete", resourceType: "pedido_titular", resourceId: id, programaId });
 };
 
 // ========== Incidentes de segurança (dados pessoais) ==========
@@ -1146,6 +1268,7 @@ export const createIncidente = async (
     .select()
     .single();
   if (error) throw error;
+  logActivityFromClient({ action: "create", resourceType: "incidente", resourceId: data.id, programaId });
   return data;
 };
 
@@ -1160,12 +1283,14 @@ export const updateIncidente = async (
     .select()
     .single();
   if (error) throw error;
+  logActivityFromClient({ action: "update", resourceType: "incidente", resourceId: id, programaId: data.programa_id });
   return data;
 };
 
-export const deleteIncidente = async (id: number): Promise<void> => {
+export const deleteIncidente = async (id: number, programaId?: number): Promise<void> => {
   const { error } = await supabaseBrowserClient.from("incidente").delete().eq("id", id);
   if (error) throw error;
+  if (programaId) logActivityFromClient({ action: "delete", resourceType: "incidente", resourceId: id, programaId });
 };
 
 // ========== Reportes do portal (vulnerabilidade/incidente enviados pelo público) ==========
@@ -1210,4 +1335,142 @@ export const fetchProgramaContato = async (programaId: number): Promise<Programa
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data || [];
+};
+
+/** Papéis LGPD: instituições e vínculos por programa */
+export type PapelLgpdInstituicao = {
+  id: number;
+  programa_id: number;
+  tipo_papel: "controlador" | "contratante" | "operador";
+  ordem: number;
+  nome: string;
+  descricao: string | null;
+  contato: string | null;
+  email: string | null;
+  site: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PapelLgpdVinculo = {
+  id: number;
+  programa_id: number;
+  instituicao_origem_id: number;
+  instituicao_destino_id: number | null;
+  destino_tipo_papel: string | null;
+  tipo_vinculo: string;
+  ordem: number;
+};
+
+export type PapelLgpdData = {
+  instituicoes: PapelLgpdInstituicao[];
+  vinculos: PapelLgpdVinculo[];
+};
+
+export const fetchPapelLgpd = async (programaId: number): Promise<PapelLgpdData> => {
+  const res = await fetch(`/api/programas/${programaId}/papel-lgpd`, { credentials: "include" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const msg = body?.error || (res.status === 403 ? "Acesso negado ao programa" : "Erro ao carregar papéis LGPD");
+    throw new Error(msg);
+  }
+  return res.json();
+};
+
+export const createPapelLgpdInstituicao = async (
+  programaId: number,
+  data: Partial<Omit<PapelLgpdInstituicao, "id" | "programa_id" | "created_at" | "updated_at">>
+) => {
+  const res = await fetch(`/api/programas/${programaId}/papel-lgpd/instituicao`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error || "Erro ao criar instituição");
+  }
+  return res.json();
+};
+
+export const updatePapelLgpdInstituicao = async (
+  programaId: number,
+  instituicaoId: number,
+  data: Partial<Omit<PapelLgpdInstituicao, "id" | "programa_id" | "created_at" | "updated_at">>
+) => {
+  const res = await fetch(`/api/programas/${programaId}/papel-lgpd/instituicao/${instituicaoId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error || "Erro ao atualizar instituição");
+  }
+  return res.json();
+};
+
+export const deletePapelLgpdInstituicao = async (programaId: number, instituicaoId: number) => {
+  const res = await fetch(`/api/programas/${programaId}/papel-lgpd/instituicao/${instituicaoId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Erro ao excluir instituição");
+};
+
+export const createPapelLgpdVinculo = async (
+  programaId: number,
+  data: {
+    instituicao_origem_id: number;
+    instituicao_destino_id?: number | null;
+    destino_tipo_papel?: string | null;
+    tipo_vinculo: string;
+    ordem?: number;
+  }
+) => {
+  const res = await fetch(`/api/programas/${programaId}/papel-lgpd/vinculo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error || "Erro ao criar vínculo");
+  }
+  return res.json();
+};
+
+export const updatePapelLgpdVinculo = async (
+  programaId: number,
+  vinculoId: number,
+  data: Partial<{
+    instituicao_origem_id: number;
+    instituicao_destino_id: number | null;
+    destino_tipo_papel: string | null;
+    tipo_vinculo: string;
+    ordem: number;
+  }>
+) => {
+  const res = await fetch(`/api/programas/${programaId}/papel-lgpd/vinculo/${vinculoId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error || "Erro ao atualizar vínculo");
+  }
+  return res.json();
+};
+
+export const deletePapelLgpdVinculo = async (programaId: number, vinculoId: number) => {
+  const res = await fetch(`/api/programas/${programaId}/papel-lgpd/vinculo/${vinculoId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Erro ao excluir vínculo");
 };

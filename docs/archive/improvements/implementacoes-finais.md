@@ -45,7 +45,7 @@
 
 #### ✅ **Página de Login Demo Dedicada**
 - **Nova rota**: `/demo/login` com interface própria
-- **Campos pré-preenchidos**: `demo@fpsi.com.br` / `demo`
+- **Campos pré-preenchidos**: `demo@fpsi.com.br` / `FPSI@D3m0`
 - **Design moderno**: Gradientes, cards informativos, ícones
 - **Validação**: Aceita apenas credenciais demo
 - **Redirecionamento**: Vai direto para `/programas/999999`

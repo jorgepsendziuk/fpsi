@@ -109,7 +109,7 @@ export default function ContatoPage() {
           component="button"
           underline="hover"
           color="inherit"
-          onClick={() => router.push("/programas")}
+          onClick={() => router.push("/dashboard")}
           sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}
         >
           Programas

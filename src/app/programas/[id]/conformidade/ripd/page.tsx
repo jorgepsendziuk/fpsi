@@ -177,7 +177,7 @@ export default function RIPDPage() {
   const handleDelete = async (id: number) => {
     if (typeof window === "undefined" || !window.confirm("Excluir este relatório de impacto?")) return;
     try {
-      await dataService.deleteRipd(id);
+      await dataService.deleteRipd(id, programaIdNum ?? undefined);
       loadList();
     } catch (err) {
       console.error("Erro ao excluir RIPD:", err);
@@ -201,7 +201,7 @@ export default function RIPDPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/programas")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
+        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
           Programas
         </Link>
         <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>

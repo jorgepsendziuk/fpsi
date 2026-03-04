@@ -6,7 +6,7 @@ import { DarkModeOutlined, LightModeOutlined, Google } from "@mui/icons-material
 import { ColorModeContext } from "@contexts/color-mode";
 import { useContext, useEffect } from "react";
 import { useGetIdentity } from "@refinedev/core";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image';
 import { useAuthTranslation } from "../../hooks/useAuthTranslation";
 
@@ -21,15 +21,17 @@ export default function Login() {
   const { mode, setMode } = useContext(ColorModeContext);
   const { data: user, isLoading } = useGetIdentity<IUser>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   // Hook para traduzir textos automaticamente
   useAuthTranslation();
 
   useEffect(() => {
     if (user && !isLoading) {
-      router.push('/dashboard');
+      const redirect = searchParams.get("redirect");
+      router.push(redirect && redirect.startsWith("/") ? redirect : "/dashboard");
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, searchParams]);
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {

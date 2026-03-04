@@ -403,14 +403,27 @@ export function ProgramasSection() {
             {viewExcluidos ? "Restaurar ou excluir definitivamente." : "Programas de diagnóstico ativos."}
           </Typography>
         </Box>
-        <Button
-          variant={viewExcluidos ? "contained" : "outlined"}
-          size="small"
-          startIcon={viewExcluidos ? <RestoreFromTrashIcon /> : <DeleteSweepIcon />}
-          onClick={() => setViewExcluidos(!viewExcluidos)}
-        >
-          {viewExcluidos ? "Voltar aos ativos" : "Ver excluídos"}
-        </Button>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          {!viewExcluidos && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenDialog(true)}
+              sx={{ borderRadius: 2, textTransform: "none" }}
+            >
+              Novo programa
+            </Button>
+          )}
+          <Button
+            variant={viewExcluidos ? "contained" : "outlined"}
+            size="small"
+            startIcon={viewExcluidos ? <RestoreFromTrashIcon /> : <DeleteSweepIcon />}
+            onClick={() => setViewExcluidos(!viewExcluidos)}
+          >
+            {viewExcluidos ? "Voltar aos ativos" : "Ver excluídos"}
+          </Button>
+        </Stack>
       </Box>
       <Divider sx={{ mb: 3 }} />
 
@@ -484,9 +497,26 @@ export function ProgramasSection() {
                 >
                   <CardContent sx={{ flex: 1, p: 2.5, "&:last-child": { pb: 2.5 } }}>
                     <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
-                      <Typography variant="h6" component="h2" color="primary" sx={{ fontWeight: 600, flex: 1 }}>
-                        {programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`}
-                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1, minWidth: 0 }}>
+                        {(programa.logo_programa || programa.logo_orgao_empresa) && (
+                          <Box
+                            component="img"
+                            src={String(programa.logo_programa || programa.logo_orgao_empresa)}
+                            alt=""
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 1,
+                              objectFit: "contain",
+                              flexShrink: 0,
+                              bgcolor: alpha(theme.palette.primary.main, 0.04),
+                            }}
+                          />
+                        )}
+                        <Typography variant="h6" component="h2" color="primary" sx={{ fontWeight: 600, flex: 1 }}>
+                          {programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`}
+                        </Typography>
+                      </Box>
                       <IconButton
                         size="small"
                         aria-label="Menu"
@@ -590,9 +620,19 @@ export function ProgramasSection() {
 
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu} PaperProps={{ sx: { borderRadius: 2, minWidth: 200 } }}>
         {!viewExcluidos && [
-          <MenuItem key="edit" onClick={() => {}} sx={{ py: 1.5 }}>
-            <EditIcon sx={{ mr: 2, color: "text.secondary" }} fontSize="small" />
-            Editar (em breve)
+          <MenuItem
+            key="edit"
+            onClick={() => {
+              if (selectedPrograma) {
+                handleCloseMenu();
+                const path = selectedPrograma.slug ? `/programas/${selectedPrograma.slug}` : `/programas/${selectedPrograma.id}`;
+                router.push(path);
+              }
+            }}
+            sx={{ py: 1.5 }}
+          >
+            <EditIcon sx={{ mr: 2 }} fontSize="small" />
+            Editar
           </MenuItem>,
           <MenuItem key="trash" onClick={() => selectedPrograma && handleDeletePrograma(selectedPrograma.id)} sx={{ py: 1.5, color: "warning.main" }}>
             <DeleteSweepIcon sx={{ mr: 2 }} fontSize="small" />

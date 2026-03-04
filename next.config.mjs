@@ -1,5 +1,15 @@
 // Next.js config (no JSDoc type to avoid IDE analyzing 'next' and its dependencies)
+import withSerwistInit from "@serwist/next";
+
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  additionalPrecacheEntries: [{ url: "/offline", revision: "1" }],
+  disable: process.env.NODE_ENV !== "production",
+});
+
 const nextConfig = {
+  turbopack: {},
   // Acelera dev/build: compila só os imports usados desses pacotes
   experimental: {
     optimizePackageImports: [
@@ -12,4 +22,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

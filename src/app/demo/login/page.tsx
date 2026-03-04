@@ -28,26 +28,28 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { supabaseBrowserClient } from '@utils/supabase/client';
 
+const DEMO_PASSWORD = 'FPSI@D3m0';
+
 export default function DemoLoginPage() {
   const router = useRouter();
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('demo@fpsi.com.br');
-  const [password, setPassword] = useState('demo');
+  const [password, setPassword] = useState(DEMO_PASSWORD);
   const [error, setError] = useState('');
 
   // Auto-preencher campos demo
   useEffect(() => {
     setEmail('demo@fpsi.com.br');
-    setPassword('demo');
+    setPassword(DEMO_PASSWORD);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (email !== 'demo@fpsi.com.br' || password !== 'demo') {
-      setError('Use as credenciais demo: demo@fpsi.com.br / demo');
+    if (email !== 'demo@fpsi.com.br' || password !== DEMO_PASSWORD) {
+      setError('Use as credenciais demo: demo@fpsi.com.br / FPSI@D3m0');
       return;
     }
 
@@ -57,7 +59,7 @@ export default function DemoLoginPage() {
     try {
       const { data, error: authError } = await supabaseBrowserClient.auth.signInWithPassword({
         email: 'demo@fpsi.com.br',
-        password: 'demo',
+        password: DEMO_PASSWORD,
       });
 
       if (authError) {
@@ -141,7 +143,7 @@ export default function DemoLoginPage() {
                     Senha:
                   </Typography>
                   <Typography variant="body2">
-                    demo
+                    FPSI@D3m0
                   </Typography>
                 </Box>
               </Box>

@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       emailNorm,
       {
         data: { nome: nome?.trim() || null },
-        redirectTo: `${baseUrl}/programas`,
+        redirectTo: `${baseUrl}/dashboard`,
       }
     );
 

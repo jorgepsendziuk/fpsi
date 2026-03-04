@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { logActivity } from "@/lib/services/auditService";
 
 /** Garante usuário autenticado e retorna supabase + user. */
 async function requireAuth() {
@@ -37,6 +38,14 @@ export async function POST(request: NextRequest) {
       console.error("Erro ao criar empresa:", error);
       return NextResponse.json({ error: "Erro ao criar empresa", details: error.message }, { status: 500 });
     }
+    await logActivity(supabase!, {
+      userId: user!.id,
+      action: "create",
+      resourceType: "empresa",
+      resourceId: data.id,
+      details: { razao_social: data.razao_social },
+      req: { headers: request.headers },
+    });
     return NextResponse.json(data);
   } catch (e) {
     console.error("POST /api/empresas:", e);

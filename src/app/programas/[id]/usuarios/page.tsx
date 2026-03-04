@@ -82,7 +82,7 @@ export default function UsuariosPage() {
         <Box sx={{ mb: 3 }}>
           <Breadcrumbs sx={{ mb: 1 }}>
             <Link 
-              href="/programas" 
+              href="/dashboard" 
               underline="hover" 
               color="inherit" 
               sx={{ display: 'flex', alignItems: 'center' }}
@@ -126,7 +126,7 @@ export default function UsuariosPage() {
       <Box sx={{ mb: 3 }}>
         <Breadcrumbs sx={{ mb: 1 }}>
           <Link 
-            href="/programas" 
+            href="/dashboard" 
             underline="hover" 
             color="inherit" 
             sx={{ display: 'flex', alignItems: 'center' }}

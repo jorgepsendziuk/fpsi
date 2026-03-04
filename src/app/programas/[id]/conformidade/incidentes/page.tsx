@@ -244,7 +244,7 @@ export default function IncidentesPage() {
   const handleDelete = async (id: number) => {
     if (typeof window === "undefined" || !window.confirm("Excluir este registro de incidente?")) return;
     try {
-      await dataService.deleteIncidente(id);
+      await dataService.deleteIncidente(id, programaId ?? undefined);
       setIncidentes((prev) => prev.filter((i) => i.id !== id));
       setSelectedIds((prev) => {
         const next = new Set(prev);
@@ -362,7 +362,7 @@ export default function IncidentesPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/programas")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
+        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
           Programas
         </Link>
         <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>

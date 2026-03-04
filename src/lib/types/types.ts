@@ -48,6 +48,10 @@ export interface Programa {
   politica_prazo_revisao: Date;
   /** Quando preenchido, programa está na lixeira (soft delete) */
   deleted_at?: string | null;
+  /** Logo da empresa/órgão (base64 data URL, comprimida) */
+  logo_orgao_empresa?: string | null;
+  /** Logo do programa (base64 data URL, comprimida) */
+  logo_programa?: string | null;
 }
 
 /**
@@ -133,6 +137,8 @@ export interface ProgramaMedida {
   status_medida: number;
   status_plano_acao: number;
   nova_resposta: string;
+  /** Indica se a medida é prioritária no plano de trabalho (Sim/Não) */
+  prioridade?: boolean;
 }
 
 /**

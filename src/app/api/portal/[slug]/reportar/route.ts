@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
+import { logActivity } from "@/lib/services/auditService";
 
 const TIPOS = new Set(["vulnerabilidade", "incidente"]);
 
@@ -31,18 +32,30 @@ export async function POST(
     if (!email) return NextResponse.json({ error: "E-mail é obrigatório" }, { status: 400 });
     if (!descricao) return NextResponse.json({ error: "Descrição é obrigatória" }, { status: 400 });
 
-    const { error } = await admin.from("programa_reportes").insert({
+    const { data: inserted, error } = await admin.from("programa_reportes").insert({
       programa_id: programa.id,
       tipo,
       nome: nome || null,
       email,
       descricao,
-    });
+    }).select("id").single();
 
     if (error) {
       console.error("Erro ao salvar reporte:", error);
       return NextResponse.json({ error: "Não foi possível enviar. Tente novamente." }, { status: 500 });
     }
+
+    await logActivity(admin, {
+      userId: null,
+      action: "create",
+      resourceType: "reporte",
+      resourceId: inserted?.id,
+      programaId: programa.id,
+      origem: "portal_publico",
+      details: { tipo },
+      req: { headers: request.headers },
+    });
+
     return NextResponse.json({ ok: true, message: "Reporte recebido com sucesso." });
   } catch (e) {
     console.error("Erro POST reportar:", e);

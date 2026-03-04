@@ -27,6 +27,8 @@ import {
   TextField,
   Snackbar,
   Alert,
+  Avatar,
+  CircularProgress,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -41,11 +43,16 @@ import {
   WbSunny as SunIcon,
   DarkMode as MoonIcon,
   Star as StarIcon,
+  Close as CloseIcon,
+  Phone as PhoneIcon,
+  Email as EmailIcon,
+  CloudUpload as CloudUploadIcon,
 } from "@mui/icons-material";
 import { useGetIdentity } from "@refinedev/core";
 import * as dataService from "@/lib/services/dataService";
 import { Programa } from "@/lib/types/types";
 import { ProgramasSection } from "@/components/dashboard/ProgramasSection";
+import { PerfilContent } from "@/components/perfil/PerfilContent";
 
 type GreetingKind = "manha" | "tarde" | "noite";
 
@@ -78,7 +85,15 @@ export default function DashboardPage() {
   const router = useRouter();
   const theme = useTheme();
   const { data: user } = useGetIdentity<{ name?: string; email?: string }>();
-  const [profileNome, setProfileNome] = useState<string | null>(null);
+  const [profile, setProfile] = useState<{
+    nome?: string | null;
+    email?: string | null;
+    telefone?: string | null;
+    avatar_url?: string | null;
+    cargo?: { nome: string } | null;
+    departamento?: { nome: string } | null;
+  } | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [empresas, setEmpresas] = useState<dataService.EmpresaRow[]>([]);
   const [programas, setProgramas] = useState<Programa[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,23 +103,51 @@ export default function DashboardPage() {
     if (!user) return;
     fetch("/api/profiles", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.nome) setProfileNome(data.nome.trim());
-      })
+      .then((data) => setProfile(data))
       .catch(() => {});
   }, [user]);
 
   const userName = useMemo(() => {
-    if (profileNome) {
-      const primeiro = profileNome.split(/\s+/)[0];
-      return primeiro || profileNome;
+    if (profile?.nome) {
+      const primeiro = profile.nome.trim().split(/\s+/)[0];
+      return primeiro || profile.nome;
     }
     const n = (user?.name ?? user?.email ?? "").trim();
     if (!n) return "";
     if (n.includes("@")) return n.slice(0, n.indexOf("@"));
     const primeiroNome = n.split(/\s+/)[0];
     return primeiroNome || n;
-  }, [profileNome, user?.name, user?.email]);
+  }, [profile?.nome, user?.name, user?.email]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/profiles/avatar", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.avatar_url) {
+        setProfile((p) => (p ? { ...p, avatar_url: data.avatar_url } : { avatar_url: data.avatar_url }));
+        setToastMessage("Foto atualizada");
+        setToastSeverity("success");
+      } else {
+        setToastMessage(data?.error || "Erro ao enviar foto");
+        setToastSeverity("error");
+      }
+    } catch {
+      setToastMessage("Erro ao enviar foto");
+      setToastSeverity("error");
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const greetingIcon = useMemo(() => {
     switch (greeting.kind) {
@@ -146,6 +189,7 @@ export default function DashboardPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [empresaToDelete, setEmpresaToDelete] = useState<dataService.EmpresaRow | null>(null);
   const [deletingEmpresa, setDeletingEmpresa] = useState(false);
+  const [openPerfilDialog, setOpenPerfilDialog] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -310,8 +354,10 @@ export default function DashboardPage() {
           overflow: "hidden",
           minHeight: 120,
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
+          flexDirection: { xs: "column", md: "row" },
+          alignItems: { xs: "stretch", md: "center" },
+          justifyContent: "space-between",
+          gap: 2,
           borderRadius: 3,
           px: 3,
           py: 2.5,
@@ -319,41 +365,133 @@ export default function DashboardPage() {
           ...greetingBg,
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            right: -40,
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: theme.palette.text.primary,
-            opacity: theme.palette.mode === "dark" ? 0.06 : 0.09,
-            pointerEvents: "none",
-            lineHeight: 0,
-          }}
-          aria-hidden
-        >
-          {greetingIcon}
+        <Box sx={{ position: "relative", zIndex: 1, flex: 1 }}>
+          <Box
+            sx={{
+              position: "absolute",
+              right: -40,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: theme.palette.text.primary,
+              opacity: theme.palette.mode === "dark" ? 0.06 : 0.09,
+              pointerEvents: "none",
+              lineHeight: 0,
+            }}
+            aria-hidden
+          >
+            {greetingIcon}
+          </Box>
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              fontWeight: "bold",
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              color: "transparent",
+              mb: 0.5,
+            }}
+          >
+            {greeting.label}
+            {userName ? `, ${userName}` : ""}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Gerencie seu perfil, empresas e programas de diagnóstico.
+          </Typography>
         </Box>
-        <Typography
-          variant="h4"
-          component="h1"
+
+        {/* Cabeçalho de perfil - dados de contato */}
+        <Box
           sx={{
             position: "relative",
             zIndex: 1,
-            fontWeight: "bold",
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-            mb: 0.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            flexWrap: "wrap",
           }}
         >
-          {greeting.label}
-          {userName ? `, ${userName}` : ""}
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ position: "relative", zIndex: 1 }}>
-          Gerencie seu perfil, empresas e programas de diagnóstico.
-        </Typography>
+          <Box
+            component="label"
+            sx={{
+              position: "relative",
+              cursor: avatarUploading ? "wait" : "pointer",
+              display: "block",
+            }}
+          >
+            <Avatar
+              src={profile?.avatar_url ?? undefined}
+              sx={{
+                width: 64,
+                height: 64,
+                bgcolor: alpha(theme.palette.primary.main, 0.2),
+                border: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+              }}
+            >
+              {userName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "?"}
+            </Avatar>
+            <IconButton
+              component="span"
+              size="small"
+              sx={{
+                position: "absolute",
+                bottom: -4,
+                right: -4,
+                bgcolor: theme.palette.background.paper,
+                boxShadow: 2,
+                "&:hover": { bgcolor: theme.palette.background.paper },
+              }}
+              disabled={avatarUploading}
+            >
+              {avatarUploading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <CloudUploadIcon fontSize="small" />
+              )}
+            </IconButton>
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleAvatarUpload}
+              disabled={avatarUploading}
+            />
+          </Box>
+          <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+            {(profile?.telefone || profile?.email || user?.email) && (
+              <>
+                {profile?.telefone && (
+                  <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <PhoneIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                    {profile.telefone}
+                  </Typography>
+                )}
+                {(profile?.email || user?.email) && (
+                  <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <EmailIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                    {profile?.email || user?.email}
+                  </Typography>
+                )}
+              </>
+            )}
+            {(profile?.cargo || profile?.departamento) && (
+              <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
+                {profile?.cargo?.nome && (
+                  <Chip label={profile.cargo.nome} size="small" variant="outlined" sx={{ height: 22, fontSize: "0.75rem" }} />
+                )}
+                {profile?.departamento?.nome && (
+                  <Chip label={profile.departamento.nome} size="small" variant="outlined" sx={{ height: 22, fontSize: "0.75rem" }} />
+                )}
+              </Stack>
+            )}
+            {(!profile?.telefone && !profile?.email && !user?.email) && (!profile?.cargo && !profile?.departamento) && (
+              <Typography variant="caption" color="text.secondary">
+                Complete seu perfil
+              </Typography>
+            )}
+          </Stack>
+        </Box>
       </Box>
 
       {/* Perfil e Configurações */}
@@ -394,7 +532,7 @@ export default function DashboardPage() {
               <Button
                 variant="contained"
                 startIcon={<SettingsIcon />}
-                onClick={() => router.push("/perfil")}
+                onClick={() => setOpenPerfilDialog(true)}
                 sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
               >
                 Abrir Perfil
@@ -426,11 +564,14 @@ export default function DashboardPage() {
             <Typography variant="body2" color="text.secondary">
               Crie e edite empresas para vincular aos programas.
             </Typography>
+            
           </Box>
+          
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreateEmpresa} sx={{ borderRadius: 2, textTransform: "none" }}>
             Criar empresa
           </Button>
         </Box>
+        <Divider sx={{ mb: 3 }} />
         {loading ? (
           <Grid container spacing={2}>
             {[1, 2, 3].map((i) => (
@@ -608,6 +749,35 @@ export default function DashboardPage() {
           <Button onClick={() => setDeleteConfirmOpen(false)} disabled={deletingEmpresa}>Cancelar</Button>
           <Button variant="contained" color="error" onClick={handleConfirmDeleteEmpresa} disabled={deletingEmpresa}>{deletingEmpresa ? "Excluindo…" : "Excluir"}</Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Dialog Perfil e Configurações */}
+      <Dialog
+        open={openPerfilDialog}
+        onClose={() => {
+          setOpenPerfilDialog(false);
+          if (user) {
+            fetch("/api/profiles", { credentials: "include" })
+              .then((res) => (res.ok ? res.json() : null))
+              .then((data) => setProfile(data))
+              .catch(() => {});
+          }
+        }}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1 }}>
+          <Typography component="span" variant="h6" sx={{ fontWeight: 600 }}>
+            Perfil e Configurações
+          </Typography>
+          <IconButton size="small" onClick={() => setOpenPerfilDialog(false)} aria-label="Fechar">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 0 }}>
+          <PerfilContent compact />
+        </DialogContent>
       </Dialog>
 
       <Snackbar open={!!toastMessage} autoHideDuration={6000} onClose={() => setToastMessage(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>

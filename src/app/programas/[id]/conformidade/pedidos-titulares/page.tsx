@@ -35,6 +35,13 @@ import {
   alpha,
   Card,
   CardContent,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -46,6 +53,8 @@ import {
   Assignment as AssignmentIcon,
   ContentCopy as CopyIcon,
   QrCode2 as QrCodeIcon,
+  HelpOutline as HelpOutlineIcon,
+  ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
 import dayjs from "dayjs";
@@ -234,7 +243,7 @@ export default function PedidosTitularesPage() {
   const handleDelete = async (id: number) => {
     if (typeof window === "undefined" || !window.confirm("Excluir este pedido do registro?")) return;
     try {
-      await dataService.deletePedidoTitular(id);
+      await dataService.deletePedidoTitular(id, programaId ?? undefined);
       setPedidos((prev) => prev.filter((p) => p.id !== id));
       setSelectedIds((prev) => {
         const next = new Set(prev);
@@ -350,7 +359,7 @@ export default function PedidosTitularesPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/programas")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
+        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
           Programas
         </Link>
         <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
@@ -368,7 +377,7 @@ export default function PedidosTitularesPage() {
           <Box>
             <Typography variant="h5" fontWeight="bold">Pedidos dos titulares</Typography>
             <Typography variant="body2" color="text.secondary">
-              Registro de pedidos de acesso, correção, exclusão, portabilidade e revogação de consentimento (art. 18 LGPD)
+              Registro de pedidos de acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento e oposição (art. 18 LGPD)
             </Typography>
           </Box>
         </Box>
@@ -389,6 +398,38 @@ export default function PedidosTitularesPage() {
         </Stack>
       </Box>
 
+      <Accordion defaultExpanded={false} elevation={0} sx={{ mb: 3, border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: 1 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <HelpOutlineIcon color="primary" fontSize="small" />
+            <Typography variant="subtitle2" fontWeight="bold">Procedimentos de atendimento (art. 18 LGPD)</Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 0 }}>
+          <Grid container spacing={2}>
+            {dataService.PEDIDO_TITULAR_TIPOS.map(({ value, label }) => {
+              const passos = dataService.PEDIDO_TITULAR_PROCEDIMENTOS[value];
+              if (!passos?.length) return null;
+              return (
+                <Grid item xs={12} sm={6} md={4} key={value}>
+                  <Typography variant="overline" color="text.secondary" fontWeight="bold">{label}</Typography>
+                  <List dense disablePadding>
+                    {passos.map((p, i) => (
+                      <ListItem key={i} disablePadding sx={{ py: 0.25 }}>
+                        <ListItemIcon sx={{ minWidth: 24 }}>
+                          <Typography variant="caption" color="primary">{i + 1}.</Typography>
+                        </ListItemIcon>
+                        <ListItemText primary={p} primaryTypographyProps={{ variant: "body2" }} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
+
       {programa?.slug && (
         <Card sx={{ mb: 3, bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
           <CardContent>
@@ -396,7 +437,7 @@ export default function PedidosTitularesPage() {
               Link do portal de privacidade (para titulares)
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Distribua este link para titulares solicitarem acesso, correção, exclusão, portabilidade ou revogação de consentimento.
+              Distribua este link para titulares solicitarem acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento ou oposição.
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
               <TextField
@@ -487,7 +528,31 @@ export default function PedidosTitularesPage() {
                     />
                   </TableCell>
                   <TableCell sx={{ fontFamily: "monospace" }}>{p.protocolo ?? "—"}</TableCell>
-                  <TableCell>{dataService.PEDIDO_TITULAR_TIPOS.find((t) => t.value === p.tipo)?.label ?? p.tipo}</TableCell>
+                  <TableCell>
+                    {(() => {
+                      const procs = dataService.PEDIDO_TITULAR_PROCEDIMENTOS[p.tipo] ?? [];
+                      const label = dataService.PEDIDO_TITULAR_TIPOS.find((t) => t.value === p.tipo)?.label ?? p.tipo;
+                      if (procs.length === 0) return label;
+                      return (
+                        <Tooltip
+                          title={
+                            <Box component="span">
+                              {procs.map((proc, i) => (
+                                <Typography key={i} variant="caption" component="span" sx={{ display: "block", mb: 0.25 }}>
+                                  • {proc}
+                                </Typography>
+                              ))}
+                            </Box>
+                          }
+                          placement="left"
+                          arrow
+                          slotProps={{ popper: { sx: { maxWidth: 300 } } }}
+                        >
+                          <span style={{ cursor: "help" }}>{label}</span>
+                        </Tooltip>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell>{p.nome_titular}</TableCell>
                   <TableCell>{p.email_titular}</TableCell>
                   <TableCell>{dataService.PEDIDO_TITULAR_STATUS.find((s) => s.value === p.status)?.label ?? p.status}</TableCell>
@@ -518,18 +583,41 @@ export default function PedidosTitularesPage() {
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required>
-                <InputLabel>Tipo</InputLabel>
-                <Select
-                  value={form.tipo}
-                  label="Tipo"
-                  onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5 }}>
+                <FormControl fullWidth required>
+                  <InputLabel>Tipo</InputLabel>
+                  <Select
+                    value={form.tipo}
+                    label="Tipo"
+                    onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
+                  >
+                    {dataService.PEDIDO_TITULAR_TIPOS.map((t) => (
+                      <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Tooltip
+                  title={
+                    <Box component="span" sx={{ display: "block" }}>
+                      <Typography variant="caption" fontWeight="bold" sx={{ display: "block", mb: 0.5 }}>
+                        Procedimento para {dataService.PEDIDO_TITULAR_TIPOS.find((t) => t.value === form.tipo)?.label ?? form.tipo}:
+                      </Typography>
+                      {(dataService.PEDIDO_TITULAR_PROCEDIMENTOS[form.tipo] ?? []).map((p, i) => (
+                        <Typography key={i} variant="caption" component="span" sx={{ display: "block", mb: 0.25 }}>
+                          • {p}
+                        </Typography>
+                      ))}
+                    </Box>
+                  }
+                  placement="right"
+                  arrow
+                  slotProps={{ popper: { sx: { maxWidth: 320 } } }}
                 >
-                  {dataService.PEDIDO_TITULAR_TIPOS.map((t) => (
-                    <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <IconButton size="small" sx={{ mt: 1 }} aria-label="Ver procedimento">
+                    <HelpOutlineIcon fontSize="small" color="action" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>

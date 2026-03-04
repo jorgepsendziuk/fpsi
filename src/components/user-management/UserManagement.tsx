@@ -31,7 +31,6 @@ import {
   Tooltip,
   Stack,
   Grid,
-  Divider,
   ListItemIcon,
   CircularProgress,
   ToggleButton,
@@ -94,8 +93,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [inviteSuccessUrl, setInviteSuccessUrl] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteMode, setInviteMode] = useState<'convidar' | 'cadastrar'>('convidar');
+  const [editRoleDialogOpen, setEditRoleDialogOpen] = useState(false);
+  const [editRoleValue, setEditRoleValue] = useState<UserRole | ''>('');
+  const [editRoleError, setEditRoleError] = useState<string | null>(null);
 
-  const { user: currentUser, canViewResource, canEditResource, hasPermission } = useUserPermissions(programaId);
+  const { user: currentUser, canViewResource, hasPermission } = useUserPermissions(programaId);
 
   useEffect(() => {
     if (canViewResource('users')) {
@@ -195,11 +197,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       if (response.ok) {
         await loadUsersAndInvites();
+        setEditRoleDialogOpen(false);
+        setSelectedUser(null);
       } else {
-        throw new Error('Erro ao alterar função do usuário');
+        const data = await response.json();
+        throw new Error(data.details || data.error || 'Erro ao alterar função do usuário');
       }
     } catch (error) {
       console.error('Erro ao alterar função:', error);
+      setEditRoleError(error instanceof Error ? error.message : 'Erro ao alterar função');
     }
   };
 
@@ -358,6 +364,27 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           </Box>
         </Grid>
 
+        {/* O que cada papel faz - compacto com tooltips */}
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, py: 0.5 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+              Papéis:
+            </Typography>
+            {[UserRole.ADMIN, UserRole.COORDENADOR, UserRole.ANALISTA, UserRole.CONSULTOR, UserRole.AUDITOR].map((role) => (
+              <Tooltip key={role} title={getRoleDescription(role)} placement="top">
+                <Chip
+                  icon={getRoleIcon(role)}
+                  label={getRoleDisplayName(role)}
+                  variant="outlined"
+                  color={getRoleColor(role)}
+                  size="small"
+                  sx={{ cursor: 'help', px: 2, py: 1 }}
+                />
+              </Tooltip>
+            ))}
+          </Box>
+        </Grid>
+
         {/* Usuários Ativos */}
         <Grid item xs={12}>
           <Card>
@@ -385,14 +412,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <TableCell>
                           <Box display="flex" alignItems="center" gap={2}>
                             <Avatar sx={{ width: 32, height: 32 }}>
-                              {user.user_id.charAt(0).toUpperCase()}
+                              {(user.nome || user.email || user.user_id).charAt(0).toUpperCase()}
                             </Avatar>
                             <Box>
                               <Typography variant="body2" fontWeight="500">
-                                {user.user_id}
+                                {user.nome || user.email || user.user_id}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                ID: {user.user_id}
+                                {user.email || user.user_id}
                               </Typography>
                             </Box>
                           </Box>
@@ -402,8 +429,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           <Chip
                             icon={getRoleIcon(user.role)}
                             label={getRoleDisplayName(user.role)}
+                            variant="outlined"
                             color={getRoleColor(user.role)}
                             size="small"
+                            sx={{ px: 2, py: 1 }}
                           />
                         </TableCell>
                         
@@ -416,8 +445,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <TableCell>
                           <Chip
                             label="Ativo"
+                            variant="outlined"
                             color="success"
                             size="small"
+                            sx={{ px: 2, py: 1 }}
                           />
                         </TableCell>
                         
@@ -479,8 +510,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             <Chip
                               icon={getRoleIcon(invite.role)}
                               label={getRoleDisplayName(invite.role)}
+                              variant="outlined"
                               color={getRoleColor(invite.role)}
                               size="small"
+                              sx={{ px: 2, py: 1 }}
                             />
                           </TableCell>
                           
@@ -494,8 +527,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             <Chip
                               icon={getInviteStatusIcon(invite.status)}
                               label={invite.status}
+                              variant="outlined"
                               color={getInviteStatusColor(invite.status)}
                               size="small"
+                              sx={{ px: 2, py: 1 }}
                             />
                           </TableCell>
                           
@@ -523,6 +558,90 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         )}
       </Grid>
 
+      {/* Dialog Alterar Função */}
+      <Dialog
+        open={editRoleDialogOpen}
+        onClose={() => {
+          setEditRoleDialogOpen(false);
+          setSelectedUser(null);
+          setEditRoleError(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Alterar função</DialogTitle>
+        <DialogContent>
+          {selectedUser && (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Usuário: <strong>{selectedUser.nome || selectedUser.email || selectedUser.user_id}</strong>
+              </Typography>
+              {editRoleError && (
+                <Alert severity="error" onClose={() => setEditRoleError(null)}>
+                  {editRoleError}
+                </Alert>
+              )}
+              <FormControl fullWidth>
+                <InputLabel>Nova função</InputLabel>
+                <Select
+                  value={editRoleValue}
+                  label="Nova função"
+                  onChange={(e) => setEditRoleValue(e.target.value as UserRole)}
+                >
+                  <MenuItem value={UserRole.ADMIN}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.ADMIN)}
+                      {getRoleDisplayName(UserRole.ADMIN)}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value={UserRole.COORDENADOR}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.COORDENADOR)}
+                      {getRoleDisplayName(UserRole.COORDENADOR)}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value={UserRole.ANALISTA}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.ANALISTA)}
+                      {getRoleDisplayName(UserRole.ANALISTA)}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value={UserRole.CONSULTOR}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.CONSULTOR)}
+                      {getRoleDisplayName(UserRole.CONSULTOR)}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value={UserRole.AUDITOR}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getRoleIcon(UserRole.AUDITOR)}
+                      {getRoleDisplayName(UserRole.AUDITOR)}
+                    </Box>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              <Alert severity="info">
+                <Typography variant="body2">
+                  {editRoleValue ? getRoleDescription(editRoleValue as UserRole) : 'Selecione uma função'}
+                </Typography>
+              </Alert>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setEditRoleDialogOpen(false); setSelectedUser(null); setEditRoleError(null); }}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => selectedUser && editRoleValue && handleChangeUserRole(selectedUser.user_id, editRoleValue as UserRole)}
+            disabled={!editRoleValue || editRoleValue === selectedUser?.role}
+          >
+            Salvar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Menu de Ações do Usuário */}
       <Menu
         anchorEl={menuAnchor}
@@ -535,7 +654,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         {hasPermission('can_change_roles') && selectedUser && (
           <MenuItem
             onClick={() => {
-              // Implementar dialog de alteração de função
+              setEditRoleValue(selectedUser.role);
+              setEditRoleError(null);
+              setEditRoleDialogOpen(true);
               setMenuAnchor(null);
             }}
           >

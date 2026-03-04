@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { createSupabaseAdminClient } from "@/utils/supabase/admin";
+import { logActivity } from "@/lib/services/auditService";
 
 /**
  * GET /api/programas/[id]/pedidos-titulares
@@ -102,6 +104,11 @@ export async function POST(
       return NextResponse.json({ error: "Acesso negado ao programa" }, { status: 403 });
     }
 
+    const admin = createSupabaseAdminClient();
+    if (!admin) {
+      return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
+    }
+
     const body = await request.json();
     const {
       tipo,
@@ -134,7 +141,7 @@ export async function POST(
       origem: "manual",
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("pedido_titular")
       .insert(payload)
       .select()
@@ -147,6 +154,16 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    await logActivity(admin, {
+      userId: user.id,
+      action: "create",
+      resourceType: "pedido_titular",
+      resourceId: data.id,
+      programaId,
+      details: { tipo, origem: "manual" },
+      req: { headers: request.headers },
+    });
 
     return NextResponse.json(data);
   } catch (error) {

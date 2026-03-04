@@ -30,6 +30,9 @@ export interface ProgramaUser {
   status: InviteStatus;
   created_at: string;
   updated_at: string;
+  /** Enriquecido pela API a partir de profiles */
+  nome?: string | null;
+  email?: string | null;
 }
 
 export enum InviteStatus {
@@ -94,14 +97,15 @@ export interface UserInvite {
 
 export interface UserActivity {
   id: number;
-  user_id: string;
-  programa_id: number;
+  user_id: string | null;
+  programa_id: number | null;
   action: ActivityAction;
   resource_type: ResourceType;
   resource_id?: number;
-  details?: any;
+  details?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
+  origem?: AuditOrigem;
   created_at: string;
 }
 
@@ -114,7 +118,11 @@ export enum ActivityAction {
   REJECT = 'reject',
   INVITE = 'invite',
   LOGIN = 'login',
-  LOGOUT = 'logout'
+  LOGOUT = 'logout',
+  EXPORT = 'export',
+  RESTORE = 'restore',
+  UPLOAD = 'upload',
+  DOWNLOAD = 'download'
 }
 
 export enum ResourceType {
@@ -125,8 +133,26 @@ export enum ResourceType {
   PLANO_ACAO = 'plano_acao',
   POLITICA = 'politica',
   RELATORIO = 'relatorio',
-  USER = 'user'
+  USER = 'user',
+  PEDIDO_TITULAR = 'pedido_titular',
+  ROPA = 'ropa',
+  RIPD = 'ripd',
+  INCIDENTE = 'incidente',
+  INVITE = 'invite',
+  EMPRESA = 'empresa',
+  PROGRAMA_USER = 'programa_user',
+  RESPONSAVEL = 'responsavel',
+  REGISTRO_ROPA = 'registro_ropa',
+  PAPEL_LGPD_INSTITUICAO = 'papel_lgpd_instituicao',
+  PAPEL_LGPD_VINCULO = 'papel_lgpd_vinculo',
+  PROFILE = 'profile',
+  REPORTE = 'reporte',
+  CONTATO = 'contato',
+  CARGO = 'cargo',
+  DEPARTAMENTO = 'departamento'
 }
+
+export type AuditOrigem = 'api' | 'portal_publico' | 'sistema';
 
 // Funções utilitárias para permissões
 export const getDefaultPermissions = (role: UserRole): ProgramaPermissions => {

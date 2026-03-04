@@ -48,6 +48,8 @@ type PortalData = {
   atendimento_site: string | null;
   dpo_nome: string | null;
   dpo_email: string | null;
+  logo_orgao_empresa: string | null;
+  logo_programa: string | null;
   link_politica_privacidade: string | null;
   link_aviso_titular: string | null;
   link_cookies: string | null;
@@ -65,6 +67,8 @@ const TIPOS_DSAR = [
   { value: "exclusao", label: "Exclusão" },
   { value: "portabilidade", label: "Portabilidade" },
   { value: "revogacao_consentimento", label: "Revogação de consentimento" },
+  { value: "info_compartilhamento", label: "Informação sobre compartilhamento" },
+  { value: "oposicao", label: "Oposição" },
 ];
 
 const STATUS_PEDIDO: Record<string, string> = {
@@ -327,9 +331,25 @@ export default function PortalPrivacidadePage() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Cabeçalho */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Box sx={{ width: 56, height: 56, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: alpha(theme.palette.primary.main, 0.12), color: "primary.main" }}>
-          <PrivacyIcon sx={{ fontSize: 32 }} />
-        </Box>
+        {(data.logo_programa || data.logo_orgao_empresa) ? (
+          <Box
+            component="img"
+            src={data.logo_programa || data.logo_orgao_empresa!}
+            alt="Logo"
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: 2,
+              objectFit: "contain",
+              bgcolor: alpha(theme.palette.primary.main, 0.06),
+              p: 0.5,
+            }}
+          />
+        ) : (
+          <Box sx={{ width: 56, height: 56, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: alpha(theme.palette.primary.main, 0.12), color: "primary.main" }}>
+            <PrivacyIcon sx={{ fontSize: 32 }} />
+          </Box>
+        )}
         <Box>
           
         <Typography variant="h4" fontWeight="bold" >{nomeExibicao}</Typography>
@@ -413,7 +433,7 @@ export default function PortalPrivacidadePage() {
               <List dense disablePadding>
                 <ListItem disablePadding sx={{ mb: 0.5 }}>
                   <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>
-                  <ListItemText primary={<MuiLink href="#solicitar">Requisição de Direitos</MuiLink>} secondary="Formulário ao lado para acesso, correção, exclusão, portabilidade ou revogação de consentimento (art. 18 LGPD)." />
+                  <ListItemText primary={<MuiLink href="#solicitar">Requisição de Direitos</MuiLink>} secondary="Formulário ao lado para acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento ou oposição (art. 18 LGPD)." />
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>

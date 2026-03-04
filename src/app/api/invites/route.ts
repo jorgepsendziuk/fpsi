@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
+import { logActivity } from "@/lib/services/auditService";
 import crypto from "crypto";
 
 async function getSupabaseClient() {
@@ -109,6 +110,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "invite",
+      resourceType: "invite",
+      resourceId: invite.id,
+      programaId: programaId,
+      details: { email: invite.email, role: invite.role },
+      req: { headers: request.headers },
+    });
+
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
@@ -155,7 +166,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data: invite, error: fetchError } = await supabase
       .from("programa_invites")
-      .select("id, status")
+      .select("id, status, programa_id")
       .eq("id", inviteId)
       .single();
 
@@ -179,6 +190,16 @@ export async function PATCH(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await logActivity(supabase, {
+      userId: user.id,
+      action: "reject",
+      resourceType: "invite",
+      resourceId: inviteId,
+      programaId: invite.programa_id,
+      details: { action: "cancel" },
+      req: { headers: request.headers },
+    });
 
     return NextResponse.json({ message: "Convite cancelado" });
   } catch (error) {
