@@ -60,6 +60,13 @@ export async function logActivity(
   const { error } = await supabase.from("user_activities").insert(row);
 
   if (error) {
-    console.error("[audit] Erro ao registrar atividade:", error.message);
+    console.error(
+      "[audit] Erro ao registrar atividade:",
+      error.message,
+      "| código:",
+      error.code,
+      "| row:",
+      JSON.stringify({ action, resourceType, resourceId, programaId })
+    );
   }
 }

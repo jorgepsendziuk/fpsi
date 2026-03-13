@@ -95,7 +95,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       label: "Políticas",
       icon: <PolicyIcon />,
       path: `/programas/${programaId}/politicas`,
-      description: "Políticas de segurança"
+      description: "Políticas institucionais"
     },
     {
       label: "Responsáveis",

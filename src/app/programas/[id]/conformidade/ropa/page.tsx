@@ -48,6 +48,8 @@ import {
 } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
 import * as dataService from "@/lib/services/dataService";
+import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
+import { useLastActivity } from "@/hooks/useLastActivity";
 
 // —— Operação (Processo, Finalidade, Hipótese Legal) ——
 export interface OperacaoTratamento {
@@ -304,6 +306,8 @@ export default function ROPAPage() {
   const [form, setForm] = useState<OperacaoTratamento>(emptyOperacao());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const { lastActivity } = useLastActivity(programaIdNum ?? undefined, undefined, undefined);
+
   // Carregar registro, operações e dados da empresa (para preencher informações de contato do ROPA)
   useEffect(() => {
     if (programaIdNum == null) return;
@@ -534,6 +538,11 @@ export default function ROPAPage() {
             <Typography variant="body2" color="text.secondary">
               Registro das Operações de Tratamento (art. 37 LGPD) — Modelo ANPD ATPP
             </Typography>
+            <LastUpdateInfo
+              updatedAt={registro?.updated_at ?? lastActivity?.created_at}
+              userName={lastActivity?.user_name}
+              compact
+            />
           </Box>
         </Box>
       </Box>

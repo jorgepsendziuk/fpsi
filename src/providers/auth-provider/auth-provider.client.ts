@@ -158,7 +158,7 @@ export const authProviderClient: AuthProvider = {
     if (error) {
       return {
         authenticated: false,
-        redirectTo: "/login",
+        redirectTo: "/",
         logout: true,
       };
     }
@@ -171,7 +171,7 @@ export const authProviderClient: AuthProvider = {
 
     return {
       authenticated: false,
-      redirectTo: "/login",
+      redirectTo: "/",
     };
   },
   // Permissões reais vêm de programa_users via useUserPermissions(programaId) e GET /api/users.

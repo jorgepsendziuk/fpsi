@@ -14,7 +14,7 @@ export interface LogActivityFromClientParams {
 export async function logActivityFromClient(params: LogActivityFromClientParams): Promise<void> {
   const { action, resourceType, resourceId, programaId, details } = params;
   try {
-    await fetch("/api/audit/log", {
+    const res = await fetch("/api/audit/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -27,7 +27,17 @@ export async function logActivityFromClient(params: LogActivityFromClientParams)
         origem: "api",
       }),
     });
-  } catch {
-    // Fire-and-forget: não propagar erro para não afetar o fluxo principal
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(
+        `[audit] Falha ao registrar: ${action} ${resourceType} ${resourceId ?? ""} — status ${res.status}`,
+        text || res.statusText
+      );
+    }
+  } catch (err) {
+    console.error(
+      `[audit] Erro de rede ao registrar: ${action} ${resourceType}`,
+      err instanceof Error ? err.message : err
+    );
   }
 }

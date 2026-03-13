@@ -73,6 +73,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[audit] Erro POST /api/audit/log:", error);
+    if (error instanceof Error) {
+      console.error("[audit] Stack:", error.stack);
+    }
     return NextResponse.json(
       { error: "Erro ao registrar auditoria" },
       { status: 500 }

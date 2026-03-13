@@ -72,7 +72,7 @@ export default function DemoPage() {
     },
     {
       icon: <PolicyIcon color="primary" />,
-      title: "Políticas de Segurança",
+      title: "Políticas",
       description: "10 políticas pré-configuradas com editor moderno"
     },
     {
@@ -114,7 +114,7 @@ export default function DemoPage() {
             </Typography>
             <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: 600, mx: 'auto' }}>
               Acesse um programa pré-configurado com dados reais de demonstração, 
-              incluindo diagnósticos, controles, medidas e políticas de segurança.
+              incluindo diagnósticos, controles, medidas e políticas.
             </Typography>
           </Paper>
 
@@ -168,7 +168,7 @@ export default function DemoPage() {
                     onClick={handleViewPolicies}
                     sx={{ py: 1.5, fontSize: '1.1rem', borderRadius: 2 }}
                   >
-                    Ver Políticas de Segurança
+                    Ver Políticas
                   </Button>
                 </Stack>
               </Stack>

@@ -244,6 +244,9 @@ export default function AuditoriaPage() {
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">Nenhuma atividade registrada.</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                      Ao fazer alterações no programa, abra o console (F12) para ver erros de auditoria, se houver.
+                    </Typography>
                   </TableCell>
                 </TableRow>
               ) : (

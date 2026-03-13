@@ -210,7 +210,7 @@ export default function ProgramaPoliticasPage() {
                 </Link>
                 <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
                   <PolicyIcon sx={{ mr: 0.5, fontSize: 20 }} />
-                  Políticas de Segurança
+                  Políticas
                 </Typography>
               </Breadcrumbs>
             </Box>
@@ -227,10 +227,10 @@ export default function ProgramaPoliticasPage() {
                   mb: 1
                 }}
               >
-                Políticas de Segurança
+                Políticas
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-                Gerencie e edite as políticas de segurança do programa{' '}
+                Gerencie e edite as políticas institucionais do programa{' '}
                 <strong>{programa?.nome || programa?.nome_fantasia}</strong>
               </Typography>
             </Box>
@@ -335,10 +335,10 @@ export default function ProgramaPoliticasPage() {
           }}
         >
           <Typography variant="h6" color="primary" gutterBottom>
-            💡 Sobre as Políticas de Segurança
+            💡 Sobre as Políticas
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            As políticas de segurança são documentos fundamentais que estabelecem diretrizes, 
+            As políticas institucionais são documentos fundamentais que estabelecem diretrizes, 
             procedimentos e controles para proteger os ativos de informação da organização.
           </Typography>
           <Typography variant="body2" color="text.secondary">

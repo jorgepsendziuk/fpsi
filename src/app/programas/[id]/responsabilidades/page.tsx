@@ -33,6 +33,8 @@ import {
 } from "@mui/material";
 import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
+import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
+import { useLastActivity } from "@/hooks/useLastActivity";
 import { SelectWithAdd } from "@/components/common/SelectWithAdd";
 import { PapelLgpdManager } from "@/components/programa/PapelLgpdManager";
 import { 
@@ -48,6 +50,7 @@ import {
   PersonAdd
 } from "@mui/icons-material";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
+import { logActivityFromClient } from "@/lib/services/auditClient";
 
 interface Responsavel {
   id: number;
@@ -91,6 +94,7 @@ export default function ProgramaResponsaveisCRUDPage() {
   const [programaData, setProgramaData] = useState<{ nome?: string; nome_fantasia?: string; razao_social?: string }>({});
   
   const isMounted = useRef(true);
+  const { lastActivity } = useLastActivity(programaId || undefined, undefined, undefined);
 
   // Buscar responsáveis do programa
   const fetchResponsaveis = useCallback(async () => {
@@ -217,17 +221,23 @@ export default function ProgramaResponsaveisCRUDPage() {
           departamento: editingResponsavel.departamento
         })
         .eq("id", editingResponsavel.id);
+      logActivityFromClient({ action: "update", resourceType: "responsavel", resourceId: editingResponsavel.id, programaId });
       setSnackbar({ message: "Responsável atualizado!", severity: "success" });
     } else {
       // Criar novo
-      await supabaseBrowserClient
+      const { data: inserted } = await supabaseBrowserClient
         .from("responsavel")
         .insert({
           programa: programaId,
           nome: editingResponsavel.nome,
           email: editingResponsavel.email,
           departamento: editingResponsavel.departamento
-        });
+        })
+        .select("id")
+        .single();
+      if (inserted) {
+        logActivityFromClient({ action: "create", resourceType: "responsavel", resourceId: inserted.id, programaId });
+      }
       setSnackbar({ message: "Responsável criado!", severity: "success" });
     }
     
@@ -299,6 +309,11 @@ export default function ProgramaResponsaveisCRUDPage() {
         <Typography variant="body2" color="text.secondary">
           Gerencie os responsáveis principais e a equipe do programa
         </Typography>
+        <LastUpdateInfo
+          updatedAt={lastActivity?.created_at}
+          userName={lastActivity?.user_name}
+          compact
+        />
       </Box>
 
       {/* Definição de Responsáveis e Equipe do Programa - lado a lado no topo */}

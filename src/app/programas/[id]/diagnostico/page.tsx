@@ -65,6 +65,8 @@ import 'dayjs/locale/pt-br';
 
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
+import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
+import { useLastActivity } from "@/hooks/useLastActivity";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../../components/diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../../components/diagnostico/containers/ControleContainer";
@@ -95,6 +97,7 @@ export default function DiagnosticoPage() {
   const { programaId: resolvedProgramaId, loading: resolvingId } = useProgramaIdFromParam(idOrSlug);
   const programaId = resolvedProgramaId ?? 0;
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { lastActivity } = useLastActivity(programaId || undefined, undefined, undefined);
 
   // Estado principal
   const [diagnosticos, setDiagnosticos] = useState<Diagnostico[]>([]);
@@ -1314,11 +1317,16 @@ export default function DiagnosticoPage() {
                 background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                mb: 1
+                mb: 0.5
               }}
             >
               Diagnóstico
             </Typography>
+            <LastUpdateInfo
+              updatedAt={lastActivity?.created_at}
+              userName={lastActivity?.user_name}
+              compact
+            />
         </Box>
         </Paper>
 

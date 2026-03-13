@@ -212,13 +212,19 @@ export default function SobrePage() {
           Referências: LGPD (Lei nº 13.709/2018), Portaria PPSI (Ministério da Gestão e da Inovação em Serviços Públicos), Ferramenta oficial do Framework (planilha Excel, ciclo 2), ANPD.
         </Typography>
 
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ mt: 4, display: "flex", gap: 2, flexWrap: "wrap" }}>
           <Button
             variant="contained"
             onClick={() => router.push("/")}
             startIcon={<ArrowBackIcon />}
           >
             Voltar à página inicial
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => router.push("/artigo")}
+          >
+            Ver artigo para o livro Inovações Digitais
           </Button>
         </Box>
       </Container>

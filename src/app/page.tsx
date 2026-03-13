@@ -148,6 +148,13 @@ export default function HomePage() {
           </Typography>
           <Button
             color="inherit"
+            onClick={() => router.push('/artigo')}
+            sx={{ mr: 1, textTransform: 'none' }}
+          >
+            Artigo
+          </Button>
+          <Button
+            color="inherit"
             onClick={() => router.push('/sobre')}
             sx={{ mr: 1, textTransform: 'none' }}
           >
@@ -512,6 +519,13 @@ export default function HomePage() {
       <Box sx={{ bgcolor: 'background.paper', py: 4, mt: 'auto' }}>
         <Container maxWidth="lg">
           <Box textAlign="center">
+            <Button
+              color="inherit"
+              onClick={() => router.push('/artigo')}
+              sx={{ textTransform: 'none', mb: 1, mr: 1 }}
+            >
+              Artigo
+            </Button>
             <Button
               color="inherit"
               onClick={() => router.push('/sobre')}

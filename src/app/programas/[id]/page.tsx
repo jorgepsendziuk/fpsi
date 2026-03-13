@@ -61,6 +61,8 @@ import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
 import { shouldUseDemoData } from "@/lib/services/demoDataService";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
+import { useLastActivity } from "@/hooks/useLastActivity";
 
 const sections = [
   {
@@ -92,9 +94,9 @@ const sections = [
   },
   {
     key: "politicas",
-    title: "Políticas de Segurança",
+    title: "Políticas",
     icon: <Policy fontSize="large" />,
-    description: "Crie e gerencie políticas de segurança da informação",
+    description: "Crie e gerencie políticas institucionais (segurança, privacidade, proteção de dados e outras)",
     path: "politicas",
     color: "#9c27b0",
     gradient: "linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%)"
@@ -149,6 +151,12 @@ export default function ProgramaMainPage() {
   const isDemoMode = shouldUseDemoData(programaId);
   const { programaUser, isLoading: permissionsLoading } = useUserPermissions(
     isDemoMode ? undefined : programaId
+  );
+  const { lastActivity } = useLastActivity(
+    programaId ?? undefined,
+    "programa",
+    programaId ?? undefined,
+    !isDemoMode && !!programaId
   );
 
   useEffect(() => {
@@ -367,8 +375,8 @@ export default function ProgramaMainPage() {
           <Typography color="text.primary">{programaName}</Typography>
         </Breadcrumbs>
         
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               {(programa.logo_programa || programa.logo_orgao_empresa) ? (
                 <Box
@@ -421,6 +429,13 @@ export default function ProgramaMainPage() {
               <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 {programaName}
               </Typography>
+              {!isDemoMode && (
+                <LastUpdateInfo
+                  updatedAt={programa.updated_at ?? lastActivity?.created_at}
+                  userName={lastActivity?.user_name}
+                  compact
+                />
+              )}
               {hasSubtitle && (
                 <Stack spacing={0.35} sx={{ mt: 1 }}>
                   {isOrgaoPublico ? (
