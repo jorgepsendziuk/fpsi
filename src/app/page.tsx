@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { useGetIdentity, useLogout } from "@refinedev/core";
 import {
@@ -27,54 +27,109 @@ import {
   Tooltip,
 } from "@mui/material";
 import {
+  CheckCircleOutline as CheckCircleOutlineIcon,
+  Assignment as AssignmentIcon,
+  Gavel as GavelIcon,
+  Policy as PolicyIcon,
+  Group as GroupIcon,
   Security as SecurityIcon,
-  Assessment as AssessmentIcon,
-  Speed as SpeedIcon,
-  VerifiedUser as VerifiedUserIcon,
-  TrendingUp as TrendingUpIcon,
-  Shield as ShieldIcon,
   Logout as LogoutIcon,
   Dashboard as DashboardIcon,
   DarkModeOutlined,
   LightModeOutlined,
   PlayArrow as PlayArrowIcon,
 } from "@mui/icons-material";
-import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
-import Image from 'next/image';
+import Image from "next/image";
 import { ColorModeContext } from "@contexts/color-mode";
+import { FeatureBanner } from "@/components/landing/FeatureBanners";
+import { StatsBanner } from "@/components/landing/StatsBanner";
 
 const features = [
-  {
-    icon: <SecurityIcon fontSize="large" color="primary" />,
-    title: "Diagnóstico de Segurança",
-    description: "Avalie o nível de maturidade em segurança da informação da sua organização."
-  },
-  {
-    icon: <AssessmentIcon fontSize="large" color="primary" />,
-    title: "Relatórios Detalhados", 
-    description: "Gere relatórios completos com análises e recomendações personalizadas."
-  },
-  {
-    icon: <SpeedIcon fontSize="large" color="primary" />,
-    title: "Processo Ágil",
-    description: "Interface intuitiva que agiliza o processo de avaliação e implementação."
-  },
-  {
-    icon: <VerifiedUserIcon fontSize="large" color="primary" />,
-    title: "Conformidade",
-    description: "Garanta conformidade com normas e frameworks de segurança."
-  },
-  {
-    icon: <TrendingUpIcon fontSize="large" color="primary" />,
-    title: "Evolução Contínua",
-    description: "Acompanhe a evolução da maturidade ao longo do tempo."
-  },
-  {
-    icon: <ShieldIcon fontSize="large" color="primary" />,
-    title: "Proteção Robusta",
-    description: "Implemente medidas de proteção eficazes baseadas nas avaliações."
-  }
+  { key: "diagnostico", icon: <CheckCircleOutlineIcon fontSize="large" color="primary" />, title: "Diagnóstico", description: "Avalie a maturidade e realize diagnósticos completos" },
+  { key: "planos-acao", icon: <AssignmentIcon fontSize="large" color="primary" />, title: "Plano de Trabalho", description: "Gerencie o plano de trabalho e acompanhe o progresso" },
+  { key: "conformidade", icon: <GavelIcon fontSize="large" color="primary" />, title: "Conformidade LGPD", description: "ROPA, direitos dos titulares, RIPD e incidentes" },
+  { key: "politicas", icon: <PolicyIcon fontSize="large" color="primary" />, title: "Políticas", description: "Crie e gerencie políticas institucionais" },
+  { key: "responsabilidades", icon: <GroupIcon fontSize="large" color="primary" />, title: "Responsabilidades", description: "Defina responsáveis e suas atribuições" },
+  { key: "auditoria", icon: <SecurityIcon fontSize="large" color="primary" />, title: "Histórico de Atividades", description: "Trilha de auditoria (LGPD art. 37, Framework FPSI Controle 8)" },
 ];
+
+const BANNER_DATA: Record<
+  string,
+  { title: string; tagline: string; points: string[]; gradient: string; icon: React.ReactNode }
+> = {
+  diagnostico: {
+    title: "Diagnóstico",
+    tagline: "Avalie a maturidade em privacidade e segurança da informação da sua organização com base em controles e medidas.",
+    points: [
+      "Diagnósticos por domínio (Segurança, Privacidade, Governança)",
+      "Controles e medidas com níveis de maturidade (1 a 5)",
+      "Dashboard com visão consolidada e indicadores",
+      "Alinhado ao Framework PPSI e boas práticas",
+    ],
+    gradient: "linear-gradient(135deg, #2e7d32 0%, #43a047 50%, #66bb6a 100%)",
+    icon: <CheckCircleOutlineIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  "planos-acao": {
+    title: "Plano de Trabalho",
+    tagline: "Transforme lacunas identificadas no diagnóstico em ações concretas com prazos e responsáveis.",
+    points: [
+      "Plano de ação vinculado a cada medida",
+      "Status: Concluído, Em andamento, Não iniciado",
+      "Datas de início e fim, responsáveis e descrição",
+      "Acompanhamento visual do progresso",
+    ],
+    gradient: "linear-gradient(135deg, #1565c0 0%, #1976d2 50%, #42a5f5 100%)",
+    icon: <AssignmentIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  conformidade: {
+    title: "Conformidade LGPD",
+    tagline: "Atenda aos requisitos da LGPD com ROPA, RIPD, direitos dos titulares e gestão de incidentes.",
+    points: [
+      "ROPA – Registro das Operações de Tratamento",
+      "RIPD – Relatório de Impacto à Proteção de Dados",
+      "Direitos dos titulares e pedidos de acesso",
+      "Registro e tratamento de incidentes de segurança",
+    ],
+    gradient: "linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%)",
+    icon: <GavelIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  politicas: {
+    title: "Políticas",
+    tagline: "Centralize e gerencie políticas institucionais de segurança, privacidade e proteção de dados.",
+    points: [
+      "Políticas de Segurança da Informação",
+      "Política de Privacidade e Proteção de Dados",
+      "Editor rico com versionamento",
+      "Controle de vigência e revisão",
+    ],
+    gradient: "linear-gradient(135deg, #6a1b9a 0%, #7b1fa2 50%, #9c27b0 100%)",
+    icon: <PolicyIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  responsabilidades: {
+    title: "Responsabilidades",
+    tagline: "Defina a estrutura de tratamento com controladores, contratantes e operadores (LGPD art. 5º).",
+    points: [
+      "Diagrama de papéis (controlador, contratante, operador)",
+      "Vínculos entre instituições e fluxo de dados",
+      "Responsáveis por programa e atribuições",
+      "Visão clara da cadeia de tratamento",
+    ],
+    gradient: "linear-gradient(135deg, #455a64 0%, #546e7a 50%, #78909c 100%)",
+    icon: <GroupIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  auditoria: {
+    title: "Histórico de Atividades",
+    tagline: "Trilha de auditoria completa: quem fez o quê, quando. Atende LGPD art. 37 e Framework FPSI.",
+    points: [
+      "Registro automático de alterações em diagnósticos, medidas e planos",
+      "Filtros por usuário, data e tipo de atividade",
+      "Rastreabilidade para conformidade e auditorias",
+      "Framework FPSI Controle 8 – Evidências de auditoria",
+    ],
+    gradient: "linear-gradient(135deg, #37474f 0%, #455a64 50%, #607d8b 100%)",
+    icon: <SecurityIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+};
 
 type IUser = {
   id: string;
@@ -398,7 +453,7 @@ export default function HomePage() {
       {/* Features Section */}
       <Container maxWidth="lg" sx={{ py: 8 }}>
         <Box textAlign="center" sx={{ mb: 6 }}>
-          <Typography variant="h3" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h3" component="h2" gutterBottom sx={{ fontWeight: "bold" }}>
             Principais Funcionalidades
           </Typography>
           <Typography variant="h6" color="text.secondary">
@@ -407,35 +462,64 @@ export default function HomePage() {
         </Box>
 
         <Grid container spacing={4}>
-          {features.map((feature, index) => (
-            <Grid item xs={12} md={6} lg={4} key={index}>
-              <Grow in timeout={1000 + index * 200}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    transition: 'all 0.3s ease-in-out',
-                    transform: hoveredCard === index ? 'translateY(-8px)' : 'translateY(0)',
-                    boxShadow: hoveredCard === index ? 6 : 2,
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={() => setHoveredCard(index)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
-                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <Box sx={{ mb: 2 }}>
-                      {feature.icon}
-                    </Box>
-                    <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      {feature.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {feature.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grow>
+          <Grid item xs={12} md={8}>
+            <Grid container spacing={3}>
+              {features.map((feature, index) => (
+                <Grid item xs={12} sm={6} key={feature.key}>
+                  <Grow in timeout={1000 + index * 200}>
+                    <Card
+                      sx={{
+                        height: "100%",
+                        transition: "all 0.3s ease-in-out",
+                        transform: hoveredCard === index ? "translateY(-8px)" : "translateY(0)",
+                        boxShadow: hoveredCard === index ? 6 : 2,
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={() => setHoveredCard(index)}
+                      onMouseLeave={() => setHoveredCard(null)}
+                    >
+                      <CardContent sx={{ p: 3, textAlign: "center" }}>
+                        <Box sx={{ mb: 2 }}>{feature.icon}</Box>
+                        <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: "bold" }}>
+                          {feature.title}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {feature.description}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grow>
+                </Grid>
+              ))}
             </Grid>
-          ))}
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Box
+              sx={{
+                minHeight: 560,
+                borderRadius: 2,
+                overflow: "hidden",
+                bgcolor: "background.paper",
+                boxShadow: 2,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              {hoveredCard !== null && features[hoveredCard] ? (
+                <Fade in key={`banner-${features[hoveredCard].key}`} timeout={250}>
+                  <Box sx={{ height: "100%", minHeight: 560, p: 0 }}>
+                    <FeatureBanner {...BANNER_DATA[features[hoveredCard].key]} />
+                  </Box>
+                </Fade>
+              ) : (
+                <Fade in key="stats" timeout={300}>
+                  <Box sx={{ height: "100%", minHeight: 560, p: 0 }}>
+                    <StatsBanner />
+                  </Box>
+                </Fade>
+              )}
+            </Box>
+          </Grid>
         </Grid>
       </Container>
 

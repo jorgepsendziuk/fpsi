@@ -392,6 +392,20 @@ export default function ProgramaMainPage() {
                     p: 0.5,
                   }}
                 />
+              ) : isDemoMode ? (
+                <Box
+                  component="img"
+                  src="/logo_p.png"
+                  alt="FPSI"
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 2,
+                    objectFit: "contain",
+                    bgcolor: alpha(theme.palette.primary.main, 0.06),
+                    p: 0.5,
+                  }}
+                />
               ) : (
                 <Avatar 
                   sx={{ 

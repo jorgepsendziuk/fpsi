@@ -498,7 +498,7 @@ export function ProgramasSection() {
                   <CardContent sx={{ flex: 1, p: 2.5, "&:last-child": { pb: 2.5 } }}>
                     <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1, minWidth: 0 }}>
-                        {(programa.logo_programa || programa.logo_orgao_empresa) && (
+                        {(programa.logo_programa || programa.logo_orgao_empresa) ? (
                           <Box
                             component="img"
                             src={String(programa.logo_programa || programa.logo_orgao_empresa)}
@@ -512,7 +512,21 @@ export function ProgramasSection() {
                               bgcolor: alpha(theme.palette.primary.main, 0.04),
                             }}
                           />
-                        )}
+                        ) : (programa.slug === "demo" || programa.id === 1) ? (
+                          <Box
+                            component="img"
+                            src="/logo_p.png"
+                            alt="FPSI"
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 1,
+                              objectFit: "contain",
+                              flexShrink: 0,
+                              bgcolor: alpha(theme.palette.primary.main, 0.04),
+                            }}
+                          />
+                        ) : null}
                         <Typography variant="h6" component="h2" color="primary" sx={{ fontWeight: 600, flex: 1 }}>
                           {programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`}
                         </Typography>
