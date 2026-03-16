@@ -16,20 +16,19 @@ import {
   MenuItem, 
   Breadcrumbs, 
   Link,
-  Card,
-  CardContent,
-  CardActions,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  Chip,
   Stack,
-  Divider,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction
 } from "@mui/material";
 import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
@@ -441,67 +440,65 @@ export default function ProgramaResponsaveisCRUDPage() {
                 </Typography>
               </Box>
             ) : (
-              <Grid container spacing={2}>
+              <List disablePadding sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
                 {responsaveis.map((responsavel) => (
-                  <Grid item xs={12} sm={6} md={4} key={responsavel.id}>
-                    <Card 
-                      sx={{ 
-                    height: '100%',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: theme.shadows[8]
-                    },
-                    border: `1px solid ${theme.palette.divider}`,
-                    background: theme.palette.mode === 'dark' 
-                      ? 'rgba(255, 255, 255, 0.02)'
-                      : '#fff'
-                      }}
-                    >
-                      <CardContent sx={{ pb: 1 }}>
-                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+                  <ListItem
+                    key={responsavel.id}
+                    sx={{
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:last-child': { borderBottom: 'none' },
+                      py: 1.5,
+                      '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Typography variant="subtitle1" fontWeight="600">
                           {responsavel.nome}
                         </Typography>
-                        <Stack spacing={1}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Email sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                      }
+                      secondaryTypographyProps={{ component: "div" }}
+                      secondary={
+                        <Stack direction="row" spacing={2} sx={{ mt: 0.5 }} flexWrap="wrap">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Email sx={{ fontSize: 14, color: 'text.secondary' }} />
                             <Typography variant="body2" color="text.secondary">
                               {responsavel.email}
                             </Typography>
                           </Box>
                           {responsavel.departamento && (
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Business sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Business sx={{ fontSize: 14, color: 'text.secondary' }} />
                               <Typography variant="body2" color="text.secondary">
                                 {responsavel.departamento}
                               </Typography>
                             </Box>
                           )}
                         </Stack>
-                      </CardContent>
-                      <Divider />
-                      <CardActions sx={{ justifyContent: 'space-between', px: 2, py: 1 }}>
-                        <Button
-                          size="small"
-                          startIcon={<Edit />}
-                          onClick={() => handleEditClick(responsavel)}
-                          sx={{ borderRadius: 2 }}
-                        >
-                          Editar
-                        </Button>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDeleteClick(responsavel.id)}
-                          sx={{ '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' } }}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </CardActions>
-                    </Card>
-                  </Grid>
+                      }
+                    />
+                    <ListItemSecondaryAction sx={{ display: 'flex', gap: 0.5 }}>
+                      <Button
+                        size="small"
+                        startIcon={<Edit />}
+                        onClick={() => handleEditClick(responsavel)}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Editar
+                      </Button>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(responsavel.id)}
+                        sx={{ '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' } }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
                 ))}
-              </Grid>
+              </List>
             )}
           </Paper>
         </Grid>

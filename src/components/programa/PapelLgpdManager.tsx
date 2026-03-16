@@ -369,9 +369,6 @@ export function PapelLgpdManager({ programaId, idOrSlug }: PapelLgpdManagerProps
             Nova conexão
           </Button>
         </Box>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-          Ex.: INCRA → UFBA (TED 50/2023), LGRDC → Controlador (Processa dados em nome de)
-        </Typography>
         {vinculos.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
             Nenhuma conexão. Adicione instituições primeiro, depois crie as conexões.
