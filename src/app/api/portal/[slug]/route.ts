@@ -19,6 +19,7 @@ export async function GET(
 
     const supabase = createSupabaseAdminClient();
     if (!supabase) {
+      console.error("[portal] SUPABASE_SERVICE_ROLE_KEY não configurada - configure na Vercel (Environment Variables)");
       return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
     }
     const { data: programa, error: progError } = await supabase

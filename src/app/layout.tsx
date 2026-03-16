@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { ColorModeContextProvider } from "@contexts/color-mode";
 import { authProviderClient } from "@providers/auth-provider";
 import { dataProvider } from "@providers/data-provider";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "FPSI - Framework de Privacidade e Segurança da Informação",
@@ -110,6 +111,7 @@ export default function RootLayout({
                     {children}
                     <RefineKbar />
                   </Refine>
+                <Analytics />
                 </DevtoolsProvider>
               </RefineSnackbarProvider>
             </ColorModeContextProvider>

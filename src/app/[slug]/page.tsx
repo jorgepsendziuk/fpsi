@@ -134,6 +134,7 @@ export default function PortalPrivacidadePage() {
       .then((res) => {
         if (!res.ok) {
           if (res.status === 404) throw new Error("Programa não encontrado");
+          if (res.status === 503) throw new Error("Serviço temporariamente indisponível. Tente novamente mais tarde.");
           throw new Error("Erro ao carregar dados");
         }
         return res.json();
