@@ -370,24 +370,26 @@ const ControleComponent: React.FC<ControleProps> = ({
           {/* Lista simples de medidas */}
           <Box>
             {medidas.map((medida) => {
-              // Determinar status da medida
-              const resposta = medida.programa_medida?.resposta;
-              const hasResponse = resposta !== undefined && resposta !== null;
+              // Determinar status da medida (resposta pode vir como string do banco)
+              const respostaRaw = medida.programa_medida?.resposta;
+              const respostaNum = typeof respostaRaw === 'string'
+                ? parseInt(respostaRaw, 10) : respostaRaw;
+              const hasResponse = respostaNum !== undefined && respostaNum !== null && !isNaN(respostaNum);
               
               // Determinar cor baseada no status
               const getStatusColor = () => {
                 if (!hasResponse) return '#9E9E9E'; // Cinza para não respondida
                 if (diagnostico.id === 1) {
                   // Diagnóstico 1: Sim/Não
-                  return resposta === 1 ? '#4CAF50' : '#FF5252'; // Verde para Sim, Vermelho para Não
+                  return respostaNum === 1 ? '#4CAF50' : '#FF5252'; // Verde para Sim, Vermelho para Não
                 } else {
                   // Diagnósticos 2-3: Escala de maturidade
-                  if (resposta === 1) return '#4CAF50';      // Verde - Adota totalmente
-                  if (resposta === 2) return '#8BC34A';      // Verde claro - Adota em menor parte
-                  if (resposta === 3) return '#FFC107';      // Amarelo - Adota parcialmente
-                  if (resposta === 4) return '#FF9800';      // Laranja - Há plano
-                  if (resposta === 5) return '#FF5252';      // Vermelho - Não adota
-                  if (resposta === 6) return '#9E9E9E';      // Cinza - Não se aplica
+                  if (respostaNum === 1) return '#4CAF50';      // Verde - Adota totalmente
+                  if (respostaNum === 2) return '#8BC34A';      // Verde claro - Adota em menor parte
+                  if (respostaNum === 3) return '#FFC107';      // Amarelo - Adota parcialmente
+                  if (respostaNum === 4) return '#FF9800';      // Laranja - Há plano
+                  if (respostaNum === 5) return '#FF5252';      // Vermelho - Não adota
+                  if (respostaNum === 6) return '#9E9E9E';      // Cinza - Não se aplica
                 }
                 return '#9E9E9E';
               };
@@ -395,14 +397,14 @@ const ControleComponent: React.FC<ControleProps> = ({
               const getStatusLabel = () => {
                 if (!hasResponse) return 'Não Respondida';
                 if (diagnostico.id === 1) {
-                  return resposta === 1 ? 'Sim' : 'Não';
+                  return respostaNum === 1 ? 'Sim' : 'Não';
                 } else {
-                  if (resposta === 1) return 'Adota Totalmente';
-                  if (resposta === 2) return 'Adota em Menor Parte';
-                  if (resposta === 3) return 'Adota Parcialmente';
-                  if (resposta === 4) return 'Há Plano Aprovado';
-                  if (resposta === 5) return 'Não Adota';
-                  if (resposta === 6) return 'Não se Aplica';
+                  if (respostaNum === 1) return 'Adota Totalmente';
+                  if (respostaNum === 2) return 'Adota em Menor Parte';
+                  if (respostaNum === 3) return 'Adota Parcialmente';
+                  if (respostaNum === 4) return 'Há Plano Aprovado';
+                  if (respostaNum === 5) return 'Não Adota';
+                  if (respostaNum === 6) return 'Não se Aplica';
                 }
                 return 'Não Respondida';
               };

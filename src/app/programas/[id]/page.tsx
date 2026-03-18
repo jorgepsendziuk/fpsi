@@ -19,6 +19,7 @@ import {
   IconButton,
   Alert,
   Skeleton,
+  Tooltip,
   useTheme,
   useMediaQuery,
   alpha,
@@ -51,7 +52,8 @@ import {
   CalendarToday as CalendarIcon,
   Settings as SettingsIcon,
   Gavel as GavelIcon,
-  CloudUpload as CloudUploadIcon
+  CloudUpload as CloudUploadIcon,
+  OpenInNew as OpenInNewIcon
 } from "@mui/icons-material";
 import { PapelLgpdDiagramWithEdit } from "@/components/programa/PapelLgpdDiagramWithEdit";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -527,12 +529,26 @@ export default function ProgramaMainPage() {
             gap: { xs: 1.5, sm: 3 },
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Policy sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
-            <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
-              Política de Privacidade e Segurança:
-            </Typography>
-          </Box>
+          <Tooltip title="Ir para editor de políticas institucionais">
+            <Link
+              href={`/programas/${idOrSlug}/politicas`}
+              underline="hover"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "primary.main",
+                fontWeight: "bold",
+                "&:hover": { color: "primary.dark" },
+              }}
+            >
+              <Policy sx={{ fontSize: 20 }} />
+              <Typography variant="subtitle2" component="span">
+                Política de Privacidade e Segurança:
+              </Typography>
+              <OpenInNewIcon sx={{ fontSize: 16, opacity: 0.7 }} />
+            </Link>
+          </Tooltip>
           <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />
           {policyFields.map(field => {
             const isEditing = editField === field.key;
