@@ -15,6 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import GavelIcon from "@mui/icons-material/Gavel";
 import FolderIcon from "@mui/icons-material/Folder";
 import BusinessIcon from "@mui/icons-material/Business";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AppBar from "@mui/material/AppBar";
 import Avatar from "@mui/material/Avatar";
@@ -121,6 +122,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   const [programas, setProgramas] = useState<Programa[]>([]);
   const [empresas, setEmpresas] = useState<dataService.EmpresaRow[]>([]);
   const [currentPrograma, setCurrentPrograma] = useState<Programa | null>(null);
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -131,6 +133,14 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       setProgramas(programasList || []);
       setEmpresas(empresasList || []);
     }).catch(() => {});
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/admin/check")
+      .then((r) => r.json())
+      .then((d) => setIsSystemAdmin(d?.isAdmin === true))
+      .catch(() => {});
   }, [user]);
 
   // Resolve programa atual quando programaId ou programas mudam
@@ -197,6 +207,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   };
 
   const getCurrentPageTitle = () => {
+    if (pathname.startsWith('/admin')) return 'Administração';
     if (pathname.includes('/diagnostico')) return 'Diagnóstico';
     if (pathname.includes('/planos-acao')) return 'Plano de Trabalho';
     if (pathname.includes('/conformidade/ropa')) return 'ROPA';
@@ -397,6 +408,12 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                       <ListItemText primary="Empresas" />
                       <ExpandMoreIcon sx={{ fontSize: 18, transform: empresasMenuAnchor ? "rotate(180deg)" : undefined }} />
                     </MenuItem>
+                    {isSystemAdmin && (
+                      <MenuItem onClick={() => { handleNavigate("/admin"); handleUserMenuClose(); }}>
+                        <ListItemIcon><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
+                        Administração
+                      </MenuItem>
+                    )}
                     <Divider />
                     <MenuItem onClick={handleLogout}>
                       <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
@@ -530,6 +547,14 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                 <ListItemText primary="Ver todas as empresas (Dashboard)" />
               </ListItemButton>
             </ListItem>
+            {isSystemAdmin && (
+              <ListItem disablePadding>
+                <ListItemButton onClick={() => handleNavigate("/admin")}>
+                  <ListItemIcon><AdminPanelSettingsIcon /></ListItemIcon>
+                  <ListItemText primary="Administração" />
+                </ListItemButton>
+              </ListItem>
+            )}
             {empresas.map((e) => (
               <ListItem key={e.id} disablePadding sx={{ pl: 3 }}>
                 <ListItemButton onClick={handleVerEmpresas}>

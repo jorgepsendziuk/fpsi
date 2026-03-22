@@ -32,6 +32,8 @@ import {
   useMediaQuery,
   LinearProgress,
   Alert,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import {
@@ -58,6 +60,7 @@ import {
   Lock as LockIcon, // Segurança
   Person as PersonIcon, // Privacidade
   HourglassEmpty as HourglassEmptyIcon,
+  FilterList as FilterListIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -73,6 +76,10 @@ import ControleContainer from "../../../../components/diagnostico/containers/Con
 import { useMaturityCache } from "../../../../components/diagnostico/hooks/useMaturityCache";
 import MaturityChip from "../../../../components/diagnostico/MaturityChip";
 import Dashboard from "../../../../components/diagnostico/Dashboard";
+import {
+  GrupoImpleFilter,
+  matchesGrupoFilter,
+} from "../../../../lib/utils/grupoImplementacao";
 
 const DRAWER_WIDTH = 380;
 
@@ -121,6 +128,7 @@ export default function DiagnosticoPage() {
   const [showLoadedFeedback, setShowLoadedFeedback] = useState(false);
   const wasLoadingRef = useRef(false);
   const loadMedidasForDashboardRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const [grupoImpleFilter, setGrupoImpleFilter] = useState<GrupoImpleFilter>("all");
 
   // Carregamento em segundo plano (controles, medidas, índices) — não bloqueia a tela
   const isBackgroundLoading = loading || loadingControles.size > 0 || loadingMedidas.size > 0;
@@ -430,9 +438,17 @@ export default function DiagnosticoPage() {
         children: []
       };
 
-            diagnosticoControles.forEach(controle => {
+            for (const controle of diagnosticoControles) {
         const medidasControle = medidasParaCalculo[controle.id] || [];
         const controleMedidas = medidas[controle.id] || [];
+        const medidasLoaded =
+          controleMedidas.length > 0 && typeof (controleMedidas[0] as any)?.medida === "string";
+        if (grupoImpleFilter !== "all" && medidasLoaded) {
+          const hasAny = controleMedidas.some((m) =>
+            matchesGrupoFilter(m.grupo_imple, grupoImpleFilter)
+          );
+          if (!hasAny) continue;
+        }
         const controleMaturity = getControleMaturity(controle, medidasControle as Medida[], controle, programaMedidas);
 
         const controleNode: TreeNode = {
@@ -454,6 +470,7 @@ export default function DiagnosticoPage() {
               // Só mostrar nó de medida na árvore quando tiver dados completos (carregados ao expandir)
               const hasFullMedida = typeof (medida as any).medida === 'string';
               if (!hasFullMedida) return;
+              if (!matchesGrupoFilter(medida.grupo_imple, grupoImpleFilter)) return;
 
               const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
               const getMedidaColor = () => {
@@ -487,7 +504,7 @@ export default function DiagnosticoPage() {
             });
 
         diagnosticoNode.children!.push(controleNode);
-      });
+      }
 
       tree.push(diagnosticoNode);
     });
@@ -503,7 +520,8 @@ export default function DiagnosticoPage() {
     programaId,
     theme,
     getDiagnosticoMaturity,
-    getControleMaturity
+    getControleMaturity,
+    grupoImpleFilter,
   ]);
 
   // Funções de navegação
@@ -529,10 +547,14 @@ export default function DiagnosticoPage() {
         }));
       }
     } else if (itemType === 'medida') {
-      // Encontrar todas as medidas do controle atual
+      // Encontrar todas as medidas do controle atual (respeitando filtro G1/G2/G3)
       const controle = currentNode.data.controle;
       const controleMedidas = medidas[controle.id] || [];
-      allItems = controleMedidas.map(medida => ({
+      const filtradas =
+        grupoImpleFilter === "all"
+          ? controleMedidas
+          : controleMedidas.filter((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
+      allItems = filtradas.map(medida => ({
         id: `medida-${medida.id}`,
         type: 'medida' as const,
         label: `${medida.id_medida} - ${medida.medida?.substring(0, 50)}...`,
@@ -551,7 +573,21 @@ export default function DiagnosticoPage() {
       currentIndex: currentIndex + 1, // 1-based index for display
       total: allItems.length 
     };
-  }, [treeData, diagnosticos, controles, medidas, programaMedidas, programaId]);
+  }, [treeData, diagnosticos, controles, medidas, programaMedidas, programaId, grupoImpleFilter]);
+
+  useEffect(() => {
+    if (grupoImpleFilter === "all") return;
+    setSelectedNode((cur) => {
+      if (!cur || cur.type !== "medida") return cur;
+      if (matchesGrupoFilter(cur.data.medida.grupo_imple, grupoImpleFilter)) return cur;
+      const c = cur.data.controle;
+      const controleNode = treeData
+        .flatMap((n) => n.children || [])
+        .find((n) => n.type === "controle" && n.data.id === c.id);
+      const dashboardNode = treeData.find((n) => n.type === "dashboard");
+      return controleNode ?? dashboardNode ?? cur;
+    });
+  }, [grupoImpleFilter, treeData]);
 
   // Função para lidar com mudanças nas medidas (callback para MedidaContainer)
   const handleMedidaChange = useCallback(async (
@@ -924,6 +960,16 @@ export default function DiagnosticoPage() {
 
     if (selectedNode.type === 'diagnostico') {
       const diagnosticoControles = controles[selectedNode.data.id] || [];
+      const diagnosticoControlesVisiveis =
+        grupoImpleFilter === "all"
+          ? diagnosticoControles
+          : diagnosticoControles.filter((controle) => {
+              const cm = medidas[controle.id] || [];
+              const loaded =
+                cm.length > 0 && typeof (cm[0] as Medida)?.medida === "string";
+              if (!loaded) return true;
+              return cm.some((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
+            });
       const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'diagnostico');
       
       // Função para determinar cor baseada no score de maturidade
@@ -1008,7 +1054,15 @@ export default function DiagnosticoPage() {
                     controleId={selectedNode.data?.id}
                     controleNome={selectedNode.data?.nome}
                   />
-                  <Chip label={`${diagnosticoControles.length} controles`} variant="outlined" size="small" />
+                  <Chip
+                    label={`${diagnosticoControlesVisiveis.length}${
+                      grupoImpleFilter !== "all" && diagnosticoControlesVisiveis.length !== diagnosticoControles.length
+                        ? ` / ${diagnosticoControles.length}`
+                        : ""
+                    } controles`}
+                    variant="outlined"
+                    size="small"
+                  />
                 </Box>
               }
             />
@@ -1018,13 +1072,17 @@ export default function DiagnosticoPage() {
                 <Typography variant="body2" color="text.secondary">
                   Expanda este diagnóstico na árvore lateral para carregar os controles.
                 </Typography>
+              ) : diagnosticoControlesVisiveis.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Nenhum controle com medidas no grupo selecionado. Escolha &quot;Todos&quot; ou outro grupo no filtro acima.
+                </Typography>
               ) : (
                 <Box>
                   <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
                     Controles deste Diagnóstico
                   </Typography>
                   <Grid container spacing={2}>
-                    {diagnosticoControles.map((controle) => {
+                    {diagnosticoControlesVisiveis.map((controle) => {
                       const controleMedidas = medidasParaCalculo[controle.id] || [];
                       const programaControle = {
                         id: controle.programa_controle_id || 0,
@@ -1244,6 +1302,7 @@ export default function DiagnosticoPage() {
               onMedidaNavigate={handleMedidaNavigate}
               programaMedidas={programaMedidas}
               getControleMaturity={getControleMaturity}
+              grupoImpleFilter={grupoImpleFilter}
             />
           </LocalizationProvider>
       );
@@ -1310,18 +1369,63 @@ export default function DiagnosticoPage() {
               )}
             </Box>
 
-            <Typography 
-              variant={isMobile ? "h5" : "h4"} 
-              sx={{ 
-                fontWeight: 'bold',
-                background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 0.5
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1.5,
+                rowGap: 1,
               }}
             >
-              Diagnóstico
-            </Typography>
+              <Typography
+                variant={isMobile ? "h5" : "h4"}
+                sx={{
+                  fontWeight: "bold",
+                  background: "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  flex: "1 1 auto",
+                  minWidth: 0,
+                }}
+              >
+                Diagnóstico
+              </Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                flexWrap="wrap"
+                sx={{ gap: 1, flex: "0 1 auto", justifyContent: "flex-end" }}
+              >
+                <Tooltip title="Filtra a árvore e as listas por grupo de implementação (G1 básico, G2 intermediário, G3 avançado), conforme a planilha oficial. O índice de maturidade do controle continua considerando todas as medidas.">
+                  <Stack direction="row" alignItems="center" gap={0.5} component="span">
+                    <FilterListIcon color="action" fontSize="small" />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      component="span"
+                      sx={{ display: { xs: "none", sm: "inline" } }}
+                    >
+                      Grupo de Implementação :
+                    </Typography>
+                  </Stack>
+                </Tooltip>
+                <ToggleButtonGroup
+                  exclusive
+                  value={grupoImpleFilter}
+                  onChange={(_, v) => v != null && setGrupoImpleFilter(v)}
+                  size="small"
+                  aria-label="Filtrar por grupo de implementação"
+                >
+                  <ToggleButton value="all">Todos</ToggleButton>
+                  <ToggleButton value="G1">G1</ToggleButton>
+                  <ToggleButton value="G2">G2</ToggleButton>
+                  <ToggleButton value="G3">G3</ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+            </Box>
             <LastUpdateInfo
               updatedAt={lastActivity?.created_at}
               userName={lastActivity?.user_name}

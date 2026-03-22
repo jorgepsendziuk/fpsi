@@ -9,6 +9,7 @@ import ControleComponent from '../Controle';
 
 // Utils
 import { calculateMaturityIndexForControle } from '../../../lib/utils/calculations';
+import { GrupoImpleFilter, matchesGrupoFilter } from '../../../lib/utils/grupoImplementacao';
 import { respostas, respostasimnao, incc } from '../../../lib/utils/utils';
 
 /**
@@ -46,6 +47,8 @@ export interface ControleContainerProps {
     programaControle: { id: number; programa: number; controle: number; nivel: number },
     programaMedidas?: { [key: string]: ProgramaMedida }
   ) => { score: number; label: string };
+  /** Filtro global G1/G2/G3: só lista medidas do grupo (maturidade continua com todas). */
+  grupoImpleFilter?: GrupoImpleFilter;
 }
 
 /**
@@ -62,7 +65,8 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   responsaveis,
   onMedidaNavigate,
   programaMedidas: programaMedidasFromPage,
-  getControleMaturity
+  getControleMaturity,
+  grupoImpleFilter = 'all',
 }) => {
   // Store measures locally
   const [medidas, setMedidas] = useState<Medida[]>([]);
@@ -97,6 +101,11 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
     });
   }, [medidas, programaMedidasFromPage, controle.id, programaId]);
 
+  const medidasParaLista = useMemo(() => {
+    if (grupoImpleFilter === 'all') return medidasParaExibir;
+    return medidasParaExibir.filter((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
+  }, [medidasParaExibir, grupoImpleFilter]);
+
   // Load measures when the component mounts
   useEffect(() => {
     handleMedidaFetch(controle.id, programaId);
@@ -108,7 +117,12 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
    */
   const calculateMaturityIndexForHeader = (controle: Controle): number => {
     if (getControleMaturity && programaMedidasFromPage) {
-      const maturity = getControleMaturity(controle, medidasParaExibir, programaControle, programaMedidasFromPage);
+      const maturity = getControleMaturity(
+        controle,
+        medidasParaExibir,
+        programaControle,
+        programaMedidasFromPage
+      );
       return maturity.score;
     }
     return calculateMaturityIndexLocal(controle);
@@ -156,7 +170,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
       controle={controle}
       programaControle={programaControle}
       diagnostico={diagnostico}
-      medidas={medidasParaExibir}
+      medidas={medidasParaLista}
       programaId={programaId}
       responsaveis={responsaveis}
       handleINCCChange={handleINCCChange}

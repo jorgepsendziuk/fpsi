@@ -1,6 +1,30 @@
 # 👑 **Guia Completo: Como Atribuir Admin no Sistema FPSI**
 
-## 🎯 **Métodos Disponíveis**
+## 🔧 **Admin do Sistema (Área /admin)**
+
+A área de administração (`/admin`) é acessível de duas formas:
+
+### Opção 1: Variável de ambiente (rápido para desenvolvimento)
+
+No `.env.local`, adicione:
+
+```
+FPSI_ADMIN_EMAILS=seu-email@exemplo.com,demo@fpsi.com.br
+```
+
+Emails separados por vírgula. Reinicie o servidor após alterar.
+
+### Opção 2: Banco de dados (produção)
+
+```sql
+UPDATE profiles SET is_system_admin = true WHERE email = 'seu-email@exemplo.com';
+```
+
+Execute no Supabase SQL Editor. O link "Administração" aparecerá no menu do usuário (canto superior direito) apenas para system admins.
+
+---
+
+## 🎯 **Métodos Disponíveis (Admin de Programa)**
 
 ### **1. 🎮 Via Interface Web (Recomendado)**
 
