@@ -3,6 +3,11 @@
 import { Button, Box, Typography } from '@mui/material';
 import { GetApp as GetAppIcon } from '@mui/icons-material';
 import { useState } from 'react';
+import {
+  applyPoliticaPlaceholders,
+  applyPoliticaPlaceholdersToSections,
+  type PoliticaProgramaDados,
+} from '@/lib/utils/politicaPlaceholders';
 
 interface PDFDownloadButtonProps {
   sections: Array<{
@@ -14,9 +19,16 @@ interface PDFDownloadButtonProps {
   }>;
   nomeFantasia: string;
   politicaNome: string;
+  /** Dados do programa para preencher [Órgão ou entidade], [CNPJ], etc. */
+  programa?: PoliticaProgramaDados;
 }
 
-export default function PDFDownloadButton({ sections, nomeFantasia, politicaNome }: PDFDownloadButtonProps) {
+export default function PDFDownloadButton({
+  sections,
+  nomeFantasia,
+  politicaNome,
+  programa,
+}: PDFDownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,22 +37,28 @@ export default function PDFDownloadButton({ sections, nomeFantasia, politicaNome
     setError(null);
     
     try {
-      const sectionsWithNome = sections.map(section => ({
-        ...section,
-        texto: section.texto
-          ? section.texto.replace(/\[Órgão ou Entidade\]/g, nomeFantasia)
-          : section.texto
-      }));
+      const sectionsForPdf = programa
+        ? applyPoliticaPlaceholdersToSections(sections, programa, nomeFantasia || undefined)
+        : sections.map((section) => ({
+            ...section,
+            texto: section.texto
+              ? applyPoliticaPlaceholders(section.texto, { nome_fantasia: nomeFantasia, nome: nomeFantasia })
+              : section.texto,
+            descricao: section.descricao
+              ? applyPoliticaPlaceholders(section.descricao, { nome_fantasia: nomeFantasia, nome: nomeFantasia })
+              : section.descricao,
+          }));
 
       const response = await fetch('/api/generate-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          sections: sectionsWithNome,
+        body: JSON.stringify({
+          sections: sectionsForPdf,
           politicaNome,
-          nomeFantasia
+          nomeFantasia,
+          programa: programa ?? undefined,
         }),
       });
 

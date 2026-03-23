@@ -22,6 +22,7 @@ import { useUserPermissions, useDemoPermissions } from '../../../../hooks/useUse
 import { useProgramaIdFromParam } from '../../../../hooks/useProgramaIdFromParam';
 import { shouldUseDemoData } from '../../../../lib/services/demoDataService';
 import * as dataService from '../../../../lib/services/dataService';
+import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from '../../../../lib/utils/programaDisplay';
 
 export default function PlanosAcaoPage() {
   const router = useRouter();
@@ -100,7 +101,7 @@ export default function PlanosAcaoPage() {
               underline="hover" 
               color="inherit"
             >
-              {programa?.nome || programa?.nome_fantasia || `Programa #${programaId}`}
+              {programa ? getProgramaTituloPrincipal(programa) : `Programa #${programaId}`}
             </Link>
             <Typography color="text.primary">Plano de Trabalho</Typography>
           </Breadcrumbs>
@@ -123,7 +124,8 @@ export default function PlanosAcaoPage() {
     );
   }
 
-  const programaName = programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programaId}`;
+  const programaName = getProgramaTituloPrincipal(programa);
+  const programaOrganizacao = getProgramaTituloOrganizacao(programa);
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -164,6 +166,7 @@ export default function PlanosAcaoPage() {
       <PlanoAcaoResumo 
         programaId={programaId}
         programaName={programaName}
+        programaOrganizacao={programaOrganizacao}
       />
     </Container>
   );

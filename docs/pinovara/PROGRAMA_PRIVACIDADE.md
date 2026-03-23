@@ -112,13 +112,20 @@ Antes de iniciar a coleta em campo, a política deve ser atualizada para incluir
 
 ---
 
-## 5. Contatos
+## 5. Contatos e canal no FPSI
+
+O **Portal da Privacidade** do PINOVARA é o gerado pelo FPSI para o programa (slug `pinovara`), com base nos dados institucionais cadastrados no programa.
+
+**Contato operacional para titulares** segue o cadastro do programa no FPSI — **FAPEX** (Fundação de Apoio à Pesquisa e à Extensão): site https://www.fapex.org.br, ouvidoria@fapex.org.br, (71) 3183-8400 (valores espelhados na migration `20260322190000_programa_pinovara_dados_org_fapex.sql` e no próprio programa).
 
 | Papel | Nome/Entidade | Contato |
 |-------|---------------|---------|
 | DPO (LGRDC) | Jorge Psendziuk | jorgefrpsendziuk@gmail.com |
-| Controlador | UFBA / Projeto PINOVARA | [contato institucional] |
-| Contratante | FUNARBE | [contato institucional] |
+| Contato do programa (cadastro FPSI) | FAPEX | Campos no programa + Portal da Privacidade |
+
+### Infraestrutura e transferência internacional
+
+Hospedagem e serviços em **Google Cloud Platform (GCP) em região no Brasil**. **Não há** transferência internacional de dados pessoais para fins desse programa.
 
 ---
 

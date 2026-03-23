@@ -26,17 +26,20 @@ export interface Programa {
   nome?: string | null;
   tipo_programa?: string | null;
   descricao_escopo?: string | null;
+  /** Atividade institucional (ROPA); distinto do escopo narrativo do programa */
+  atividade_principal_organizacao?: string | null;
   empresa_id?: number | null;
   orgao: number;
-  sgd_versao_diagnostico_enviado: string;
-  sgd_versao_diagnostico: string;
+  /** Órgão público — rastreio SGD/ME (Nota Técnica e ciclo do diagnóstico) */
+  sgd_numero_documento_nota_tecnica?: string | null;
+  sgd_versao_diagnostico_enviado?: string | null;
+  sgd_versao_diagnostico?: string | null;
+  sgd_data_limite_retorno?: string | Date | null;
+  sgd_retorno_data?: string | Date | null;
   responsavel_controle_interno: number;
   responsavel_si: number;
   responsavel_privacidade: number;
   responsavel_ti: number;
-  sgd_numero_documento_nota_tecnica: string;
-  sgd_data_limite_retorno: Date;
-  sgd_retorno_data: Date;
   setor: number;
   cnpj: number;
   razao_social: string;
@@ -44,8 +47,9 @@ export interface Programa {
   atendimento_fone: string;
   atendimento_email: string;
   atendimento_site: string;
-  politica_inicio_vigencia: Date;
-  politica_prazo_revisao: Date;
+  /** @deprecated Metadados migrados para politica_programa (por tipo). Mantidos no schema por compatibilidade. */
+  politica_inicio_vigencia?: Date | string | null;
+  politica_prazo_revisao?: Date | string | null;
   /** Quando preenchido, programa está na lixeira (soft delete) */
   deleted_at?: string | null;
   /** Logo da empresa/órgão (base64 data URL, comprimida) */

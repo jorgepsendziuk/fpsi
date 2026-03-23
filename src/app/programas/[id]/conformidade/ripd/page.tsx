@@ -208,7 +208,7 @@ export default function RIPDPage() {
           Programa
         </Link>
         <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Conformidade LGPD
+          Tratamento de dados e riscos
         </Link>
         <Typography color="text.primary">RIPD / AIPD</Typography>
       </Breadcrumbs>
@@ -363,7 +363,7 @@ export default function RIPDPage() {
 
       <Box sx={{ mt: 2 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)}>
-          Voltar ao Conformidade LGPD
+          Voltar ao tratamento e riscos
         </Button>
       </Box>
     </Container>

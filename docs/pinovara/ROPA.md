@@ -2,6 +2,9 @@
 
 Projeto: PINOVARA | Controlador: UFBA/INCRA | Operador: LGRDC Serviços de Informática
 
+**Transferência internacional:** não há; infraestrutura em **GCP em região no Brasil**.  
+**Operação 4** (cadastro de famílias): **ainda não implementada** no sistema — permanece apenas **planejada**; antes de ativar, seguir checklist de política e RIPD no `PROGRAMA_PRIVACIDADE.md`.
+
 ---
 
 ## Operação 1: Cadastro de usuários do sistema

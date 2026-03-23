@@ -365,8 +365,8 @@ export default function PedidosTitularesPage() {
         <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
           Programa
         </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Conformidade LGPD
+        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
+          Portal de privacidade
         </Link>
         <Typography color="text.primary">Pedidos dos titulares</Typography>
       </Breadcrumbs>
@@ -701,8 +701,8 @@ export default function PedidosTitularesPage() {
       </Dialog>
 
       <Box sx={{ mt: 2 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)}>
-          Voltar ao Conformidade LGPD
+        <Button startIcon={<ArrowBackIcon />} onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)}>
+          Voltar ao portal de privacidade
         </Button>
       </Box>
     </Container>

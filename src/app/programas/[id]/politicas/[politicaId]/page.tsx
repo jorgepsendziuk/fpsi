@@ -14,7 +14,8 @@ import {
   Alert,
   Skeleton,
   useTheme,
-  alpha
+  alpha,
+  Snackbar
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -23,16 +24,25 @@ import {
 } from "@mui/icons-material";
 import SectionDisplay from './components/SectionDisplay';
 import PDFDownloadButton from './components/PDFDownloadButton';
-import { fetchProgramaById } from '../../../../../lib/services/dataService';
+import {
+  fetchProgramaById,
+  fetchPoliticaProgramaByTipo,
+  fetchPoliticaModeloSecoes,
+  upsertPoliticaPrograma,
+  type PoliticaSecao,
+} from '../../../../../lib/services/dataService';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
+import 'dayjs/locale/pt-br';
 import { useProgramaIdFromParam } from '../../../../../hooks/useProgramaIdFromParam';
+import {
+  applyPoliticaPlaceholders,
+  applyPoliticaPlaceholdersToSections,
+} from '../../../../../lib/utils/politicaPlaceholders';
 
-interface Section {
-  titulo: string;
-  id: number;
-  secao: string;
-  descricao: string;
-  texto?: string;
-}
+type Section = PoliticaSecao;
 
 interface PoliticaConfig {
   id: string;
@@ -128,60 +138,14 @@ export default function PoliticaPage() {
   const [loading, setLoading] = useState(true);
   const [loadingModel, setLoadingModel] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState<string | null>(null);
+  const [inicioVigencia, setInicioVigencia] = useState('');
+  const [prazoRevisao, setPrazoRevisao] = useState('');
 
   const politicaConfig = POLITICAS_CONFIG[politicaId];
 
-  const loadPoliticaModel = useCallback(async () => {
-    try {
-      setLoadingModel(true);
-      
-      // Tentar carregar o JSON específico da política
-      const response = await fetch(`/models/${politicaId}.json`);
-      
-      if (response.ok) {
-        const modelo = await response.json();
-        setSections(
-          modelo.secoes.map((section: any) => ({
-            id: section.id,
-            secao: section.secao,
-            titulo: section.titulo,
-            descricao: section.descricao ?? '',
-            texto: section.texto ?? ''
-          }))
-        );
-      } else {
-        // Se não existe o modelo específico, usar o modelo genérico
-        setSections(generateGenericSections());
-      }
-    } catch (error) {
-      console.error('Erro ao carregar modelo:', error);
-      // Usar modelo genérico em caso de erro
-      setSections(generateGenericSections());
-    } finally {
-      setLoadingModel(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [politicaId, politicaConfig]);
-
-  useEffect(() => {
-    if (programaId == null) return;
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const programaData = await fetchProgramaById(programaId);
-        setPrograma(programaData);
-        await loadPoliticaModel();
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        setError('Erro ao carregar dados da política');
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [programaId, politicaId, loadPoliticaModel]);
-
-  const generateGenericSections = (): Section[] => {
+  const generateGenericSections = useCallback((): Section[] => {
     return [
       {
         id: 0,
@@ -226,18 +190,122 @@ export default function PoliticaPage() {
         texto: '<p>Esta política será revisada periodicamente e entra em vigor na data de sua publicação.</p>'
       }
     ];
+  }, [politicaConfig]);
+
+  const loadPoliticaModel = useCallback(
+    async (programaData: Record<string, unknown> | null) => {
+      try {
+        setLoadingModel(true);
+
+        const mapRaw = (raw: unknown[]) =>
+          applyPoliticaPlaceholdersToSections(
+            raw.map((section) => {
+              const s = section as Record<string, unknown>;
+              return {
+                id: Number(s.id),
+                secao: String(s.secao ?? ''),
+                titulo: String(s.titulo ?? ''),
+                descricao: String(s.descricao ?? ''),
+                texto: s.texto != null ? String(s.texto) : '',
+              };
+            }),
+            programaData
+          );
+
+        // 1) Versão salva deste programa (fonte da verdade)
+        if (programaId != null) {
+          const saved = await fetchPoliticaProgramaByTipo(programaId, politicaId);
+          if (saved) {
+            setInicioVigencia(saved.inicio_vigencia ? String(saved.inicio_vigencia).slice(0, 10) : '');
+            setPrazoRevisao(saved.prazo_revisao ? String(saved.prazo_revisao).slice(0, 10) : '');
+          } else {
+            setInicioVigencia('');
+            setPrazoRevisao('');
+          }
+          const raw = saved?.secoes;
+          if (Array.isArray(raw) && raw.length > 0) {
+            setSections(mapRaw(raw));
+            return;
+          }
+        } else {
+          setInicioVigencia('');
+          setPrazoRevisao('');
+        }
+
+        // 2) Template global no Supabase (politica_modelo)
+        const fromDb = await fetchPoliticaModeloSecoes(politicaId);
+        if (fromDb && fromDb.length > 0) {
+          setSections(applyPoliticaPlaceholdersToSections(fromDb, programaData));
+          return;
+        }
+
+        // 3) JSON estático em /public/models
+        const response = await fetch(`/models/${politicaId}.json`);
+        if (response.ok) {
+          const modelo = await response.json();
+          setSections(mapRaw(modelo.secoes || []));
+          return;
+        }
+
+        setSections(
+          applyPoliticaPlaceholdersToSections(generateGenericSections(), programaData)
+        );
+      } catch (err) {
+        console.error('Erro ao carregar modelo:', err);
+        setSections(
+          applyPoliticaPlaceholdersToSections(generateGenericSections(), programaData)
+        );
+      } finally {
+        setLoadingModel(false);
+      }
+    },
+    [politicaId, programaId, generateGenericSections]
+  );
+
+  useEffect(() => {
+    if (programaId == null) return;
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const programaData = await fetchProgramaById(programaId);
+        setPrograma(programaData);
+        await loadPoliticaModel(programaData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        setError('Erro ao carregar dados da política');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [programaId, politicaId, loadPoliticaModel]);
+
+  const handleSalvarPrograma = async () => {
+    if (programaId == null) return;
+    try {
+      setSaving(true);
+      await upsertPoliticaPrograma(programaId, politicaId, sections, {
+        inicio_vigencia: inicioVigencia.trim() || null,
+        prazo_revisao: prazoRevisao.trim() || null,
+      });
+      setSnackbar('Política salva neste programa.');
+    } catch (e) {
+      console.error(e);
+      setSnackbar(
+        e instanceof Error ? `Erro ao salvar: ${e.message}` : 'Erro ao salvar política.'
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSectionTextChange = (id: number, text: string) => {
     setSections(prevSections =>
       prevSections.map(section => {
         if (section.id === id) {
-          let updatedText = text;
-          // Substituir placeholders se programa carregado
-          const nomeEntidade = programa?.nome || programa?.nome_fantasia;
-          if (nomeEntidade) {
-            updatedText = text.replace(/\[Órgão ou Entidade\]/g, nomeEntidade);
-          }
+          const updatedText = programa
+            ? applyPoliticaPlaceholders(text, programa)
+            : text;
           return { ...section, texto: updatedText };
         }
         return section;
@@ -294,6 +362,7 @@ export default function PoliticaPage() {
   }
 
   return (
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', py: 2 }}>
       <Container maxWidth="lg" sx={{ px: 2 }}>
         <Paper elevation={3} sx={{ p: 3, mb: 2 }}>
@@ -340,7 +409,7 @@ export default function PoliticaPage() {
               </Breadcrumbs>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
               <Box>
                 <Typography 
                   variant="h4" 
@@ -359,13 +428,44 @@ export default function PoliticaPage() {
                 <Typography variant="body1" color="text.secondary">
                   {politicaConfig.descricao} • Programa: <strong>{programa?.nome || programa?.nome_fantasia}</strong>
                 </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2, maxWidth: 420 }}>
+                  <DatePicker
+                    label="Início da vigência"
+                    value={inicioVigencia ? dayjs(inicioVigencia) : null}
+                    onChange={(d) => setInicioVigencia(d ? d.format('YYYY-MM-DD') : '')}
+                    format="DD/MM/YYYY"
+                    slotProps={{
+                      textField: { size: 'small', fullWidth: true },
+                    }}
+                  />
+                  <DatePicker
+                    label="Prazo de revisão"
+                    value={prazoRevisao ? dayjs(prazoRevisao) : null}
+                    onChange={(d) => setPrazoRevisao(d ? d.format('YYYY-MM-DD') : '')}
+                    format="DD/MM/YYYY"
+                    slotProps={{
+                      textField: { size: 'small', fullWidth: true },
+                    }}
+                  />
+                </Stack>
               </Box>
               
-              <PDFDownloadButton 
-                sections={sections} 
-                nomeFantasia={programa?.nome || programa?.nome_fantasia || ''} 
-                politicaNome={politicaConfig.nome}
-              />
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={saving || loadingModel}
+                  onClick={handleSalvarPrograma}
+                >
+                  {saving ? 'Salvando…' : 'Salvar no programa'}
+                </Button>
+                <PDFDownloadButton 
+                  sections={sections} 
+                  nomeFantasia={programa?.nome || programa?.nome_fantasia || ''} 
+                  politicaNome={politicaConfig.nome}
+                  programa={programa}
+                />
+              </Stack>
             </Box>
           </Stack>
         </Paper>
@@ -384,14 +484,22 @@ export default function PoliticaPage() {
                   key={section.id}
                   section={section}
                   onTextChange={handleSectionTextChange}
-                  nomeFantasia={programa?.nome || programa?.nome_fantasia || ''}
                   politicaCor={politicaConfig.cor}
                 />
               ))}
             </Box>
           )}
         </Paper>
+
+        <Snackbar
+          open={Boolean(snackbar)}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar(null)}
+          message={snackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        />
       </Container>
     </Box>
+    </LocalizationProvider>
   );
 }

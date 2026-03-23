@@ -31,6 +31,139 @@ export const fetchProgramaById = async (programaId: number) => {
   return res.json();
 };
 
+/** Seções de política (modelo ou instância por programa). */
+export type PoliticaSecao = {
+  id: number;
+  secao: string;
+  titulo: string;
+  descricao: string;
+  texto?: string;
+};
+
+/** IDs de modelos ativos em politica_modelo (templates no sistema). */
+export const fetchPoliticaModelosAtivos = async (): Promise<{ id: string }[]> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_modelo")
+    .select("id")
+    .eq("ativo", true);
+  if (error) {
+    console.warn("fetchPoliticaModelosAtivos:", error.message);
+    return [];
+  }
+  return (data || []) as { id: string }[];
+};
+
+/** Tipos de política já salvos para o programa (politica_programa). */
+export const fetchPoliticaProgramaTipos = async (programaId: number): Promise<string[]> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_programa")
+    .select("tipo_politica")
+    .eq("programa_id", programaId);
+  if (error) {
+    console.warn("fetchPoliticaProgramaTipos:", error.message);
+    return [];
+  }
+  return (data || []).map((r: { tipo_politica: string }) => r.tipo_politica);
+};
+
+/** Linhas de política por programa (tipo + metadados). */
+export type PoliticaProgramaResumo = {
+  tipo_politica: string;
+  updated_at: string | null;
+  inicio_vigencia: string | null;
+  prazo_revisao: string | null;
+};
+
+export const fetchPoliticaProgramaResumo = async (
+  programaId: number
+): Promise<PoliticaProgramaResumo[]> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_programa")
+    .select("tipo_politica, updated_at, inicio_vigencia, prazo_revisao")
+    .eq("programa_id", programaId);
+  if (error) {
+    console.warn("fetchPoliticaProgramaResumo:", error.message);
+    return [];
+  }
+  return (data || []) as PoliticaProgramaResumo[];
+};
+
+export type PoliticaProgramaRow = {
+  id: number;
+  secoes: unknown;
+  updated_at: string | null;
+  inicio_vigencia: string | null;
+  prazo_revisao: string | null;
+};
+
+export const fetchPoliticaProgramaByTipo = async (
+  programaId: number,
+  tipoPolitica: string
+): Promise<PoliticaProgramaRow | null> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_programa")
+    .select("id, secoes, updated_at, inicio_vigencia, prazo_revisao")
+    .eq("programa_id", programaId)
+    .eq("tipo_politica", tipoPolitica)
+    .maybeSingle();
+  if (error) {
+    console.warn("fetchPoliticaProgramaByTipo:", error.message);
+    return null;
+  }
+  return data as PoliticaProgramaRow | null;
+};
+
+function mapJsonToPoliticaSecoes(secoes: unknown): PoliticaSecao[] {
+  if (!Array.isArray(secoes)) return [];
+  return secoes.map((section: Record<string, unknown>) => ({
+    id: Number(section.id),
+    secao: String(section.secao ?? ""),
+    titulo: String(section.titulo ?? ""),
+    descricao: String(section.descricao ?? ""),
+    texto: section.texto != null ? String(section.texto) : "",
+  }));
+}
+
+/** Seções do template global (politica_modelo). */
+export const fetchPoliticaModeloSecoes = async (tipoPolitica: string): Promise<PoliticaSecao[] | null> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_modelo")
+    .select("secoes")
+    .eq("id", tipoPolitica)
+    .eq("ativo", true)
+    .maybeSingle();
+  if (error || !data?.secoes) return null;
+  const arr = mapJsonToPoliticaSecoes(data.secoes);
+  return arr.length > 0 ? arr : null;
+};
+
+export type PoliticaProgramaMeta = {
+  inicio_vigencia?: string | null;
+  prazo_revisao?: string | null;
+};
+
+/** Cria ou atualiza a instância da política no programa. */
+export const upsertPoliticaPrograma = async (
+  programaId: number,
+  tipoPolitica: string,
+  secoes: PoliticaSecao[],
+  meta?: PoliticaProgramaMeta
+): Promise<void> => {
+  const payload: Record<string, unknown> = {
+    programa_id: programaId,
+    tipo_politica: tipoPolitica,
+    secoes: secoes as unknown as Record<string, unknown>[],
+  };
+  if (meta) {
+    payload.inicio_vigencia = meta.inicio_vigencia?.trim() ?? null;
+    payload.prazo_revisao = meta.prazo_revisao?.trim() ?? null;
+  }
+  const { error } = await supabaseBrowserClient.from("politica_programa").upsert(payload, {
+    onConflict: "programa_id,tipo_politica",
+  });
+  if (error) throw new Error(error.message || "Erro ao salvar política");
+};
+
 /** Resumo agregado do Plano de Trabalho (contagens sem carregar medidas). Usado para lazy load. */
 export const fetchPlanoAcaoResumo = async (programaId: number): Promise<{
   total: number;
@@ -51,6 +184,64 @@ export const fetchPlanoAcaoResumo = async (programaId: number): Promise<{
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || "Erro ao carregar resumo do plano de trabalho");
+  }
+  return res.json();
+};
+
+/** Resumo agregado para os versos dos cards «Módulos do Sistema» (home do programa). */
+export type ModulosResumoApi = {
+  planoAcao: {
+    total: number;
+    comResposta: number;
+    concluidas: number;
+    emAndamento: number;
+    atrasadas: number;
+    comPrioridade: number;
+    diagnosticos: Array<{
+      id: number;
+      nome: string;
+      qtdControles: number;
+      qtdMedidas: number;
+      controles: Array<{ id: number; nome: string; qtdMedidas: number }>;
+    }>;
+  };
+  conformidade: {
+    mapeamentoDados: number;
+    ropaOperacoes: number;
+    ripd: number;
+    incidentes: number;
+  };
+  responsabilidades: {
+    usuarios: number;
+    papeisInstituicoes: number;
+    conexoes: number;
+  };
+  maturidade: Array<{ diagnostico_id: number; nome: string; score: number; label: string }>;
+  politicas: {
+    implementadas: number;
+    naoImplementadas: number;
+    catalogoTipos: number;
+  };
+  portal: {
+    pedidosTitulares: number;
+    reportes: number;
+    contato: number;
+  };
+  publicPortalPath: string | null;
+  auditoria: Array<{
+    id: number;
+    action: string;
+    resourceType: string;
+    createdAt: string;
+    details: unknown;
+  }>;
+};
+
+export const fetchModulosResumo = async (programaId: number): Promise<ModulosResumoApi> => {
+  const res = await fetch(`/api/programas/${programaId}/modulos-resumo`, { credentials: "include" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao carregar resumo dos módulos");
   }
   return res.json();
 };
@@ -548,6 +739,7 @@ export type CreateProgramaPayload = {
   orgao?: number | null;
   tipo_programa?: string | null;
   descricao_escopo?: string | null;
+  atividade_principal_organizacao?: string | null;
   /** Vincular programa a uma empresa já cadastrada */
   empresa_id?: number | null;
   /** Ou criar nova empresa e vincular (ignorado se empresa_id for informado) */
@@ -665,31 +857,66 @@ export const fetchEmpresaById = async (id: number): Promise<EmpresaRow | null> =
   return data as EmpresaRow | null;
 };
 
+/** Formata CNPJ numérico para exibição (mesma regra da empresa). */
+const formatCnpjFromNum = (cnpj: number | string | null | undefined): string => {
+  if (cnpj == null) return "";
+  const s = String(cnpj).replace(/\D/g, "").padStart(14, "0").slice(0, 14);
+  if (s.length !== 14) return String(cnpj);
+  return s.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+};
+
+/** Primeiro texto não vazio (trim); ordem define precedência no ROPA (empresa → programa → escopo legado). */
+const firstNonEmptyString = (...values: (string | null | undefined)[]): string | null => {
+  for (const v of values) {
+    if (v == null) continue;
+    const t = String(v).trim();
+    if (t) return t;
+  }
+  return null;
+};
+
 /** Dados da empresa para preencher "Informações de contato" do ROPA (organização, CNPJ, endereço, etc.). */
 export const getEmpresaForRegistroRopa = async (programaId: number): Promise<Partial<RegistroRopaRow> | null> => {
   const { data: programa, error: progError } = await supabaseBrowserClient
     .from("programa")
-    .select("empresa_id")
+    .select(
+      "empresa_id, nome_fantasia, razao_social, cnpj, endereco, atendimento_email, atendimento_fone, descricao_escopo, atividade_principal_organizacao, nome"
+    )
     .eq("id", programaId)
     .maybeSingle();
-  if (progError || !programa?.empresa_id) return null;
-  const emp = await fetchEmpresaById(programa.empresa_id);
-  if (!emp) return null;
-  const cnpjStr =
-    emp.cnpj != null
-      ? String(emp.cnpj)
-          .replace(/\D/g, "")
-          .padStart(14, "0")
-          .replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")
-      : "";
+  if (progError || !programa) return null;
+
+  if (programa.empresa_id) {
+    const emp = await fetchEmpresaById(programa.empresa_id);
+    if (!emp) return null;
+    const cnpjStr = formatCnpjFromNum(emp.cnpj);
+    return {
+      organizacao: emp.nome_fantasia || emp.razao_social || null,
+      cnpj: cnpjStr || null,
+      endereco: emp.endereco ?? null,
+      atividade_principal: firstNonEmptyString(
+        emp.atividade_principal,
+        programa.atividade_principal_organizacao,
+        programa.descricao_escopo
+      ),
+      gestor_responsavel: emp.gestor_responsavel ?? null,
+      email: emp.email ?? null,
+      telefone: emp.telefone ?? null,
+    };
+  }
+
+  const cnpjStr = formatCnpjFromNum(programa.cnpj);
   return {
-    organizacao: emp.nome_fantasia || emp.razao_social || null,
+    organizacao: programa.nome_fantasia || programa.razao_social || programa.nome || null,
     cnpj: cnpjStr || null,
-    endereco: emp.endereco ?? null,
-    atividade_principal: emp.atividade_principal ?? null,
-    gestor_responsavel: emp.gestor_responsavel ?? null,
-    email: emp.email ?? null,
-    telefone: emp.telefone ?? null,
+    endereco: programa.endereco ?? null,
+    atividade_principal: firstNonEmptyString(
+      programa.atividade_principal_organizacao,
+      programa.descricao_escopo
+    ),
+    gestor_responsavel: null,
+    email: programa.atendimento_email ?? null,
+    telefone: programa.atendimento_fone ?? null,
   };
 };
 
@@ -703,6 +930,7 @@ export const createPrograma = async (payload: CreateProgramaPayload) => {
     nome: payload.nome || null,
     tipo_programa: payload.tipo_programa || null,
     descricao_escopo: payload.descricao_escopo || null,
+    atividade_principal_organizacao: payload.atividade_principal_organizacao?.trim() || null,
     setor: payload.setor ?? null,
     orgao: payload.orgao ?? null,
     empresa_id: empresa_id ?? null,
@@ -878,11 +1106,11 @@ export const ensureProgramaControleRecords = async (programaId: number) => {
 };
 
 // ========== ROPA (Registro das Operações de Tratamento - Art. 37 LGPD) ==========
-// Modelo ANPD ATPP: registro_ropa = cabeçalho (1 por programa); ropa = operações (processo, finalidade, hipótese legal).
+// registro_ropa = cabeçalho (1 por programa); ropa = operações (processo, finalidade, hipótese legal).
 
-/** Chaves para categorias de titulares (modelo ANPD). */
+/** Chaves para categorias de titulares (formulário ROPA). */
 export const CATEGORIAS_TITULARES_KEYS = ["titulares_em_geral", "criancas_adolescentes", "idosos"] as const;
-/** Chaves para tipos de dados pessoais (modelo ANPD). */
+/** Chaves para tipos de dados pessoais (formulário ROPA). */
 export const TIPOS_DADOS_PESSOAIS_KEYS = ["nome", "endereco", "rg", "email", "cpf", "telefone"] as const;
 
 export type RegistroRopaRow = {
@@ -892,6 +1120,8 @@ export type RegistroRopaRow = {
   cnpj: string | null;
   endereco: string | null;
   atividade_principal: string | null;
+  /** UUID (profiles.user_id) — membro aceito do programa */
+  gestor_responsavel_user_id: string | null;
   gestor_responsavel: string | null;
   email: string | null;
   telefone: string | null;
@@ -907,10 +1137,35 @@ export type RegistroRopaRow = {
   updated_at: string;
 };
 
+export type MapeamentoDadosRow = {
+  id: number;
+  programa_id: number;
+  nome: string;
+  descricao: string | null;
+  sistemas_ou_fontes: string | null;
+  setor_area: string | null;
+  setor_outro: string | null;
+  finalidade_categoria: string | null;
+  finalidade_detalhe: string | null;
+  meios_armazenamento: string[];
+  meios_outro: string | null;
+  tipos_dados: string[];
+  tipos_outro: string | null;
+  fluxo_compartilhamento: string | null;
+  compartilhamento_detalhe: string | null;
+  categoria_titular: string | null;
+  titular_outro: string | null;
+  transferencia_internacional: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type RopaRow = {
   id: number;
   programa_id: number;
   registro_ropa_id: number | null;
+  /** Opcional em snapshots antigos de versão do ROPA */
+  mapeamento_id?: number | null;
   nome: string;
   finalidade: string | null;
   base_legal: string | null;
@@ -949,6 +1204,7 @@ export const upsertRegistroRopa = async (
     cnpj: payload.cnpj ?? null,
     endereco: payload.endereco ?? null,
     atividade_principal: payload.atividade_principal ?? null,
+    gestor_responsavel_user_id: payload.gestor_responsavel_user_id ?? null,
     gestor_responsavel: payload.gestor_responsavel ?? null,
     email: payload.email ?? null,
     telefone: payload.telefone ?? null,
@@ -973,6 +1229,73 @@ export const upsertRegistroRopa = async (
     categorias_titulares: Array.isArray(data.categorias_titulares) ? data.categorias_titulares : [],
     tipos_dados_pessoais: Array.isArray(data.tipos_dados_pessoais) ? data.tipos_dados_pessoais : [],
   };
+};
+
+function normalizeMapeamentoRow(row: Record<string, unknown>): MapeamentoDadosRow {
+  const meios = row.meios_armazenamento;
+  const tipos = row.tipos_dados;
+  return {
+    ...(row as unknown as MapeamentoDadosRow),
+    meios_armazenamento: Array.isArray(meios) ? (meios as string[]) : [],
+    tipos_dados: Array.isArray(tipos) ? (tipos as string[]) : [],
+  };
+}
+
+export const fetchMapeamentosByPrograma = async (programaId: number): Promise<MapeamentoDadosRow[]> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("mapeamento_dados")
+    .select("*")
+    .eq("programa_id", programaId)
+    .order("nome", { ascending: true });
+  if (error) throw error;
+  return (data || []).map((r) => normalizeMapeamentoRow(r as Record<string, unknown>));
+};
+
+export const createMapeamentoDados = async (
+  programaId: number,
+  payload: Omit<MapeamentoDadosRow, "id" | "programa_id" | "created_at" | "updated_at">
+): Promise<MapeamentoDadosRow> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("mapeamento_dados")
+    .insert({ programa_id: programaId, ...payload })
+    .select()
+    .single();
+  if (error) throw error;
+  logActivityFromClient({
+    action: "create",
+    resourceType: "mapeamento_dados",
+    resourceId: data.id,
+    programaId,
+  });
+  return normalizeMapeamentoRow(data as Record<string, unknown>);
+};
+
+export const updateMapeamentoDados = async (
+  id: number,
+  payload: Partial<Omit<MapeamentoDadosRow, "id" | "programa_id" | "created_at" | "updated_at">>
+): Promise<MapeamentoDadosRow> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("mapeamento_dados")
+    .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  logActivityFromClient({
+    action: "update",
+    resourceType: "mapeamento_dados",
+    resourceId: id,
+    programaId: data.programa_id,
+  });
+  return normalizeMapeamentoRow(data as Record<string, unknown>);
+};
+
+export const deleteMapeamentoDados = async (id: number, programaId?: number): Promise<void> => {
+  const { error } = await supabaseBrowserClient.from("mapeamento_dados").delete().eq("id", id);
+  if (error) throw error;
+  if (programaId) {
+    logActivityFromClient({ action: "delete", resourceType: "mapeamento_dados", resourceId: id, programaId });
+  }
 };
 
 export const fetchRopaByPrograma = async (programaId: number): Promise<RopaRow[]> => {
@@ -1019,6 +1342,111 @@ export const deleteRopa = async (id: number, programaId?: number): Promise<void>
   const { error } = await supabaseBrowserClient.from("ropa").delete().eq("id", id);
   if (error) throw error;
   if (programaId) logActivityFromClient({ action: "delete", resourceType: "ropa", resourceId: id, programaId });
+};
+
+/** Prioriza valor vindo do cadastro (programa/empresa); se vazio, mantém o atual do ROPA. */
+function preferCadastroRopa(
+  cadastro: string | null | undefined,
+  atual: string | null | undefined
+): string | null {
+  if (cadastro != null && String(cadastro).trim() !== "") return String(cadastro).trim();
+  return atual ?? null;
+}
+
+/**
+ * Sincroniza campos de identificação/contato do cabeçalho ROPA com o cadastro do programa (e empresa, se houver).
+ * Mantém categorias, medidas, compartilhamento, observações e demais campos do cabeçalho já preenchidos.
+ */
+export const syncRegistroRopaFromCadastro = async (programaId: number): Promise<RegistroRopaRow> => {
+  const defaults = await getEmpresaForRegistroRopa(programaId);
+  const current = await fetchRegistroRopaByPrograma(programaId);
+  const d = defaults || {};
+  const hoje = new Date().toISOString().slice(0, 10);
+  return upsertRegistroRopa(programaId, {
+    organizacao: preferCadastroRopa(d.organizacao ?? undefined, current?.organizacao),
+    cnpj: preferCadastroRopa(d.cnpj ?? undefined, current?.cnpj),
+    endereco: preferCadastroRopa(d.endereco ?? undefined, current?.endereco),
+    atividade_principal: preferCadastroRopa(d.atividade_principal ?? undefined, current?.atividade_principal),
+    gestor_responsavel_user_id: current?.gestor_responsavel_user_id ?? null,
+    gestor_responsavel: current?.gestor_responsavel ?? null,
+    email: preferCadastroRopa(d.email ?? undefined, current?.email),
+    telefone: preferCadastroRopa(d.telefone ?? undefined, current?.telefone),
+    data_registro: current?.data_registro || hoje,
+    categorias_titulares: current?.categorias_titulares ?? [],
+    medidas_seguranca: current?.medidas_seguranca ?? null,
+    tipos_dados_pessoais: current?.tipos_dados_pessoais ?? [],
+    outros_dados_pessoais: current?.outros_dados_pessoais ?? null,
+    compartilhamento: current?.compartilhamento ?? null,
+    periodo_armazenamento: current?.periodo_armazenamento ?? null,
+    observacoes: current?.observacoes ?? null,
+  });
+};
+
+export type RegistroRopaVersaoRow = {
+  id: number;
+  programa_id: number;
+  numero: number;
+  nota: string | null;
+  registro_snapshot: Record<string, unknown>;
+  operacoes_snapshot: unknown[];
+  created_by: string | null;
+  created_at: string;
+};
+
+export const fetchRegistroRopaVersoes = async (programaId: number): Promise<RegistroRopaVersaoRow[]> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("registro_ropa_versao")
+    .select("*")
+    .eq("programa_id", programaId)
+    .order("numero", { ascending: false });
+  if (error) throw error;
+  return (data || []) as RegistroRopaVersaoRow[];
+};
+
+/** Congela o estado atual do registro ROPA + operações em uma nova versão (snapshot imutável). */
+export const createRegistroRopaVersao = async (
+  programaId: number,
+  nota?: string | null
+): Promise<RegistroRopaVersaoRow> => {
+  const reg = await fetchRegistroRopaByPrograma(programaId);
+  const ops = await fetchRopaByPrograma(programaId);
+  const { data: auth } = await supabaseBrowserClient.auth.getUser();
+  const createdBy = auth?.user?.id ?? null;
+
+  const { data: maxRows, error: maxErr } = await supabaseBrowserClient
+    .from("registro_ropa_versao")
+    .select("numero")
+    .eq("programa_id", programaId)
+    .order("numero", { ascending: false })
+    .limit(1);
+  if (maxErr) throw maxErr;
+  const nextNum = (maxRows?.[0]?.numero ?? 0) + 1;
+
+  const registro_snapshot = reg
+    ? { ...reg, categorias_titulares: reg.categorias_titulares, tipos_dados_pessoais: reg.tipos_dados_pessoais }
+    : {};
+  const operacoes_snapshot = ops;
+
+  const { data, error } = await supabaseBrowserClient
+    .from("registro_ropa_versao")
+    .insert({
+      programa_id: programaId,
+      numero: nextNum,
+      nota: nota?.trim() || null,
+      registro_snapshot: registro_snapshot as Record<string, unknown>,
+      operacoes_snapshot: operacoes_snapshot as unknown[],
+      created_by: createdBy,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  logActivityFromClient({
+    action: "create",
+    resourceType: "registro_ropa_versao",
+    resourceId: data.id,
+    programaId,
+  });
+  return data as RegistroRopaVersaoRow;
 };
 
 // ========== RIPD (Relatório de Impacto à Proteção de Dados - Art. 38 LGPD) ==========

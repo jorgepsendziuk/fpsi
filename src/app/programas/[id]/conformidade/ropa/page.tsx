@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import NextLink from "next/link";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
 import {
   Container,
@@ -35,6 +36,7 @@ import {
   Tooltip,
   FormControlLabel,
   FormGroup,
+  Autocomplete,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -45,11 +47,26 @@ import {
   TableChart as ExcelIcon,
   Storage as StorageIcon,
   GetApp as GetAppIcon,
+  Sync as SyncIcon,
+  History as HistoryIcon,
+  PersonAdd as PersonAddIcon,
 } from "@mui/icons-material";
-import { jsPDF } from "jspdf";
 import * as dataService from "@/lib/services/dataService";
+import { buildRopaPdfDocument } from "@/lib/utils/ropaPdf";
 import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
 import { useLastActivity } from "@/hooks/useLastActivity";
+type ProgramaMembroUsuario = {
+  user_id: string;
+  nome: string | null;
+  email: string | null;
+  role: string;
+};
+
+function labelMembroGestor(u: ProgramaMembroUsuario): string {
+  const n = u.nome?.trim() || "Sem nome";
+  const e = u.email || u.user_id;
+  return `${n} (${e})`;
+}
 
 // —— Operação (Processo, Finalidade, Hipótese Legal) ——
 export interface OperacaoTratamento {
@@ -58,6 +75,16 @@ export interface OperacaoTratamento {
   finalidade: string;
   baseLegal: string;
   createdAt: string;
+  /** FK opcional para levantamento em `mapeamento_dados` */
+  mapeamentoId: string;
+  mapeamentoNome?: string | null;
+  /** Campos opcionais da linha `ropa` (quando preenchidos no banco) */
+  responsavel?: string | null;
+  retencao?: string | null;
+  categoriasDados?: string | null;
+  categoriasTitulares?: string | null;
+  compartilhamento?: string | null;
+  medidasSeguranca?: string | null;
 }
 
 const HIPOTESES_LEGAIS = [
@@ -86,7 +113,7 @@ const TIPOS_DADOS_PESSOAIS_OPCOES = [
   { key: "telefone", label: "Telefone" },
 ] as const;
 
-// Textos de apoio do modelo ANPD (instruções de preenchimento)
+// Textos de apoio do cabeçalho ROPA (instruções de preenchimento)
 const HELPER_ORGANIZACAO = "Nome da empresa";
 const HELPER_ATIVIDADE = "Da empresa";
 const HELPER_DATA_REGISTRO = "De preenchimento";
@@ -112,16 +139,60 @@ const emptyOperacao = (): OperacaoTratamento => ({
   finalidade: "",
   baseLegal: "",
   createdAt: new Date().toISOString().slice(0, 10),
+  mapeamentoId: "",
+  mapeamentoNome: null,
 });
 
-function rowToOperacao(r: dataService.RopaRow): OperacaoTratamento {
+function rowToOperacao(r: dataService.RopaRow, mapeamentoNome?: string | null): OperacaoTratamento {
   return {
     id: String(r.id),
     nome: r.nome ?? "",
     finalidade: r.finalidade ?? "",
     baseLegal: r.base_legal ?? "",
     createdAt: r.created_at ? r.created_at.slice(0, 10) : "",
+    mapeamentoId: r.mapeamento_id != null ? String(r.mapeamento_id) : "",
+    mapeamentoNome: mapeamentoNome ?? null,
+    responsavel: r.responsavel ?? null,
+    retencao: r.retencao ?? null,
+    categoriasDados: r.categorias_dados ?? null,
+    categoriasTitulares: r.categorias_titulares ?? null,
+    compartilhamento: r.compartilhamento ?? null,
+    medidasSeguranca: r.medidas_seguranca ?? null,
   };
+}
+
+/** Reidrata cabeçalho a partir do JSON gravado na versão. */
+function snapshotRegistroToRow(s: Record<string, unknown>): dataService.RegistroRopaRow | null {
+  if (!s || Object.keys(s).length === 0) return null;
+  const cats = s.categorias_titulares;
+  const tips = s.tipos_dados_pessoais;
+  return {
+    id: Number(s.id) || 0,
+    programa_id: Number(s.programa_id) || 0,
+    organizacao: (s.organizacao as string) ?? null,
+    cnpj: (s.cnpj as string) ?? null,
+    endereco: (s.endereco as string) ?? null,
+    atividade_principal: (s.atividade_principal as string) ?? null,
+    gestor_responsavel_user_id: (s.gestor_responsavel_user_id as string) ?? null,
+    gestor_responsavel: (s.gestor_responsavel as string) ?? null,
+    email: (s.email as string) ?? null,
+    telefone: (s.telefone as string) ?? null,
+    data_registro: (s.data_registro as string) ?? null,
+    categorias_titulares: Array.isArray(cats) ? (cats as string[]) : [],
+    medidas_seguranca: (s.medidas_seguranca as string) ?? null,
+    tipos_dados_pessoais: Array.isArray(tips) ? (tips as string[]) : [],
+    outros_dados_pessoais: (s.outros_dados_pessoais as string) ?? null,
+    compartilhamento: (s.compartilhamento as string) ?? null,
+    periodo_armazenamento: (s.periodo_armazenamento as string) ?? null,
+    observacoes: (s.observacoes as string) ?? null,
+    created_at: (s.created_at as string) || "",
+    updated_at: (s.updated_at as string) || "",
+  };
+}
+
+function snapshotOpsToOperacoes(raw: unknown): OperacaoTratamento[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((op: dataService.RopaRow) => rowToOperacao(op));
 }
 
 function escapeCsv(value: string): string {
@@ -131,97 +202,22 @@ function escapeCsv(value: string): string {
   return value;
 }
 
-const PDF_MARGIN = 14;
-const PDF_PAGE_HEIGHT = 297;
-const PDF_LINE_HEIGHT = 5;
-const PDF_MAX_WIDTH = 180;
-
-function addRegistroToPdf(doc: jsPDF, reg: dataService.RegistroRopaRow | null, startY: number): number {
-  let y = startY;
-  const push = (label: string, value: string) => {
-    if (y > PDF_PAGE_HEIGHT - 25) {
-      doc.addPage();
-      y = PDF_MARGIN + 5;
-    }
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text(label, PDF_MARGIN, y);
-    y += PDF_LINE_HEIGHT;
-    doc.setFont("helvetica", "normal");
-    const text = value || "—";
-    const lines = doc.splitTextToSize(text, PDF_MAX_WIDTH);
-    lines.forEach((line: string) => {
-      if (y > PDF_PAGE_HEIGHT - 20) {
-        doc.addPage();
-        y = PDF_MARGIN + 5;
-      }
-      doc.text(line, PDF_MARGIN, y);
-      y += PDF_LINE_HEIGHT;
-    });
-    y += 3;
+function operacaoToPdfPayload(o: OperacaoTratamento) {
+  return {
+    id: o.id,
+    nome: o.nome,
+    finalidade: o.finalidade,
+    baseLegal: o.baseLegal,
+    createdAt: o.createdAt,
+    mapeamentoId: o.mapeamentoId || null,
+    mapeamentoNome: o.mapeamentoNome ?? null,
+    responsavel: o.responsavel,
+    retencao: o.retencao,
+    categoriasDados: o.categoriasDados,
+    categoriasTitulares: o.categoriasTitulares,
+    compartilhamento: o.compartilhamento,
+    medidasSeguranca: o.medidasSeguranca,
   };
-  if (!reg) return y;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("Informações do registro (Modelo ANPD)", PDF_MARGIN, y);
-  y += 8;
-  push("Organização", reg.organizacao ?? "");
-  push("CNPJ", reg.cnpj ?? "");
-  push("Endereço", reg.endereco ?? "");
-  push("Principal atividade", reg.atividade_principal ?? "");
-  push("Gestor responsável", reg.gestor_responsavel ?? "");
-  push("E-mail", reg.email ?? "");
-  push("Telefone", reg.telefone ?? "");
-  push("Data do registro", reg.data_registro ?? "");
-  push("Categorias de titulares", (reg.categorias_titulares ?? []).join(", "));
-  push("Medidas de segurança", reg.medidas_seguranca ?? "");
-  push("Dados pessoais (tipos)", (reg.tipos_dados_pessoais ?? []).join(", "));
-  if (reg.outros_dados_pessoais) push("Outros dados pessoais", reg.outros_dados_pessoais);
-  push("Compartilhamento", reg.compartilhamento ?? "");
-  push("Período de armazenamento", reg.periodo_armazenamento ?? "");
-  if (reg.observacoes) push("Observações", reg.observacoes);
-  return y;
-}
-
-function addOperacaoToPdf(
-  doc: jsPDF,
-  op: OperacaoTratamento,
-  startY: number,
-  isFirstPage: boolean
-): number {
-  let y = startY;
-  const push = (label: string, value: string) => {
-    if (y > PDF_PAGE_HEIGHT - 25) {
-      doc.addPage();
-      y = PDF_MARGIN + 5;
-    }
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text(label, PDF_MARGIN, y);
-    y += PDF_LINE_HEIGHT;
-    doc.setFont("helvetica", "normal");
-    const text = value || "—";
-    const lines = doc.splitTextToSize(text, PDF_MAX_WIDTH);
-    lines.forEach((line: string) => {
-      if (y > PDF_PAGE_HEIGHT - 20) {
-        doc.addPage();
-        y = PDF_MARGIN + 5;
-      }
-      doc.text(line, PDF_MARGIN, y);
-      y += PDF_LINE_HEIGHT;
-    });
-    y += 3;
-  };
-  if (isFirstPage) {
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Processo: ${op.nome || "Sem nome"}`, PDF_MARGIN, y);
-    y += 8;
-  }
-  push("Finalidade", op.finalidade);
-  push("Hipótese legal", op.baseLegal);
-  push("Data de registro", op.createdAt);
-  return y;
 }
 
 type RegistroFormState = Partial<dataService.RegistroRopaRow> & {
@@ -234,6 +230,7 @@ const emptyRegistroForm = (): RegistroFormState => ({
   cnpj: "",
   endereco: "",
   atividade_principal: "",
+  gestor_responsavel_user_id: "",
   gestor_responsavel: "",
   email: "",
   telefone: "",
@@ -262,7 +259,8 @@ function registroRowToForm(
       cnpj: def.cnpj ?? "",
       endereco: def.endereco ?? "",
       atividade_principal: def.atividade_principal ?? "",
-      gestor_responsavel: def.gestor_responsavel ?? "",
+      gestor_responsavel_user_id: "",
+      gestor_responsavel: "",
       email: def.email ?? "",
       telefone: def.telefone ?? "",
       data_registro: hoje,
@@ -273,7 +271,8 @@ function registroRowToForm(
     cnpj: r.cnpj ?? def.cnpj ?? "",
     endereco: r.endereco ?? def.endereco ?? "",
     atividade_principal: r.atividade_principal ?? def.atividade_principal ?? "",
-    gestor_responsavel: r.gestor_responsavel ?? def.gestor_responsavel ?? "",
+    gestor_responsavel_user_id: r.gestor_responsavel_user_id ?? "",
+    gestor_responsavel: r.gestor_responsavel ?? "",
     email: r.email ?? def.email ?? "",
     telefone: r.telefone ?? def.telefone ?? "",
     data_registro: r.data_registro ?? "",
@@ -305,10 +304,30 @@ export default function ROPAPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<OperacaoTratamento>(emptyOperacao());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [versoes, setVersoes] = useState<dataService.RegistroRopaVersaoRow[]>([]);
+  const [versaoDialogOpen, setVersaoDialogOpen] = useState(false);
+  const [versaoNota, setVersaoNota] = useState("");
+  const [syncingCadastro, setSyncingCadastro] = useState(false);
+  const [savingVersao, setSavingVersao] = useState(false);
+  const [membrosPrograma, setMembrosPrograma] = useState<ProgramaMembroUsuario[]>([]);
+  const [mapeamentos, setMapeamentos] = useState<dataService.MapeamentoDadosRow[]>([]);
+  /** Cadastro do programa — logo, CNPJ e portal no cabeçalho do PDF (como nas políticas) */
+  const [programa, setPrograma] = useState<Record<string, unknown> | null>(null);
 
   const { lastActivity } = useLastActivity(programaIdNum ?? undefined, undefined, undefined);
 
-  // Carregar registro, operações e dados da empresa (para preencher informações de contato do ROPA)
+  const loadVersoes = useCallback(async () => {
+    if (programaIdNum == null) return;
+    try {
+      const rows = await dataService.fetchRegistroRopaVersoes(programaIdNum);
+      setVersoes(rows);
+    } catch (e) {
+      console.error("Erro ao carregar versões do ROPA:", e);
+    }
+  }, [programaIdNum]);
+
+  // Carregar registro, operações e dados da empresa (para preencher informações de contato do ROPA).
+  // Mapeamentos são carregados à parte: falha na tabela/RLS de mapeamento não pode derrubar o ROPA inteiro.
   useEffect(() => {
     if (programaIdNum == null) return;
     let cancelled = false;
@@ -318,12 +337,27 @@ export default function ROPAPage() {
       dataService.fetchRopaByPrograma(programaIdNum),
       dataService.getEmpresaForRegistroRopa(programaIdNum),
     ])
-      .then(([reg, rows, empresaDefaults]) => {
+      .then(async ([reg, rows, empresaDefaults]) => {
+        let maps: dataService.MapeamentoDadosRow[] = [];
+        try {
+          maps = await dataService.fetchMapeamentosByPrograma(programaIdNum);
+        } catch (e) {
+          console.error("Erro ao carregar mapeamentos (ROPA continua disponível):", e);
+        }
         if (!cancelled) {
           setRegistro(reg);
           setEmpresaRopaDefaults(empresaDefaults || null);
           setRegistroForm(registroRowToForm(reg, empresaDefaults || undefined));
-          setOperacoes(rows.map(rowToOperacao));
+          setMapeamentos(maps);
+          const nomePorId = new Map(maps.map((m) => [m.id, m.nome]));
+          setOperacoes(
+            rows.map((r) =>
+              rowToOperacao(
+                r,
+                r.mapeamento_id != null ? nomePorId.get(r.mapeamento_id) ?? null : null
+              )
+            )
+          );
         }
       })
       .catch((err) => {
@@ -336,6 +370,103 @@ export default function ROPAPage() {
       cancelled = true;
     };
   }, [programaIdNum]);
+
+  useEffect(() => {
+    loadVersoes();
+  }, [loadVersoes]);
+
+  useEffect(() => {
+    if (programaIdNum == null) return;
+    let cancelled = false;
+    dataService
+      .fetchProgramaById(programaIdNum)
+      .then((p) => {
+        if (!cancelled) setPrograma(p && typeof p === "object" ? (p as Record<string, unknown>) : null);
+      })
+      .catch(() => {
+        if (!cancelled) setPrograma(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [programaIdNum]);
+
+  useEffect(() => {
+    if (programaIdNum == null) return;
+    let cancelled = false;
+    fetch(`/api/users?programaId=${programaIdNum}`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (Array.isArray(data)) setMembrosPrograma(data as ProgramaMembroUsuario[]);
+        else setMembrosPrograma([]);
+      })
+      .catch(() => {
+        if (!cancelled) setMembrosPrograma([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [programaIdNum]);
+
+  const handleSyncCadastro = async () => {
+    if (programaIdNum == null) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        "Atualizar organização, CNPJ, endereço, atividade, gestor, e-mail e telefone do ROPA com os dados do cadastro do programa (e da empresa, se houver)? Os demais campos do cabeçalho (categorias, medidas, etc.) são mantidos."
+      )
+    ) {
+      return;
+    }
+    setSyncingCadastro(true);
+    try {
+      const saved = await dataService.syncRegistroRopaFromCadastro(programaIdNum);
+      setRegistro(saved);
+      setRegistroForm(registroRowToForm(saved, empresaRopaDefaults || undefined));
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível sincronizar com o cadastro. Verifique os dados do programa na página inicial.");
+    } finally {
+      setSyncingCadastro(false);
+    }
+  };
+
+  const handleRegistrarVersao = async () => {
+    if (programaIdNum == null) return;
+    setSavingVersao(true);
+    try {
+      await dataService.createRegistroRopaVersao(programaIdNum, versaoNota);
+      await loadVersoes();
+      setVersaoDialogOpen(false);
+      setVersaoNota("");
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível registrar a versão.");
+    } finally {
+      setSavingVersao(false);
+    }
+  };
+
+  const exportPdfVersao = useCallback(
+    async (v: dataService.RegistroRopaVersaoRow) => {
+      try {
+        const regSnap = snapshotRegistroToRow(v.registro_snapshot);
+        const ops = snapshotOpsToOperacoes(v.operacoes_snapshot);
+        const doc = await buildRopaPdfDocument({
+          programa: programa ?? undefined,
+          idOrSlug,
+          registro: regSnap,
+          operacoes: ops.map(operacaoToPdfPayload),
+          metaLine: `Programa: ${idOrSlug} | Versão ${v.numero} | ${new Date(v.created_at).toLocaleString("pt-BR")}`,
+        });
+        doc.save(`ROPA-${idOrSlug}-v${v.numero}-${new Date(v.created_at).toISOString().slice(0, 10)}.pdf`);
+      } catch (e) {
+        console.error("Erro ao gerar PDF da versão:", e);
+      }
+    },
+    [idOrSlug, programa]
+  );
 
   const handleOpenNew = () => {
     setEditingId(null);
@@ -359,6 +490,12 @@ export default function ROPAPage() {
 
   const handleSave = async () => {
     if (!form.nome.trim() || programaIdNum == null) return;
+    if (!registroForm.gestor_responsavel_user_id?.trim()) {
+      alert(
+        "Selecione o gestor responsável entre os usuários do programa. Se a pessoa ainda não aparece na lista, use \"Cadastrar ou convidar usuário\"."
+      );
+      return;
+    }
     setSaving(true);
     try {
       const savedRegistro = await dataService.upsertRegistroRopa(programaIdNum, {
@@ -366,6 +503,7 @@ export default function ROPAPage() {
         cnpj: registroForm.cnpj || null,
         endereco: registroForm.endereco || null,
         atividade_principal: registroForm.atividade_principal || null,
+        gestor_responsavel_user_id: registroForm.gestor_responsavel_user_id.trim(),
         gestor_responsavel: registroForm.gestor_responsavel || null,
         email: registroForm.email || null,
         telefone: registroForm.telefone || null,
@@ -380,10 +518,15 @@ export default function ROPAPage() {
       });
       setRegistro(savedRegistro);
 
+      const nomePorId = new Map(mapeamentos.map((m) => [m.id, m.nome]));
+      const mid = form.mapeamentoId.trim() ? Number(form.mapeamentoId) : null;
+      const nomeMap = mid != null ? nomePorId.get(mid) ?? null : null;
+
       const payload = {
         nome: form.nome.trim(),
         finalidade: form.finalidade || null,
         base_legal: form.baseLegal || null,
+        mapeamento_id: mid,
         categorias_dados: null,
         categorias_titulares: null,
         compartilhamento: null,
@@ -394,11 +537,11 @@ export default function ROPAPage() {
       if (editingId) {
         const updated = await dataService.updateRopa(Number(editingId), payload);
         setOperacoes((prev) =>
-          prev.map((o) => (o.id === editingId ? rowToOperacao(updated) : o))
+          prev.map((o) => (o.id === editingId ? rowToOperacao(updated, nomeMap) : o))
         );
       } else {
         const created = await dataService.createRopa(programaIdNum, payload, savedRegistro.id);
-        setOperacoes((prev) => [...prev, rowToOperacao(created)]);
+        setOperacoes((prev) => [...prev, rowToOperacao(created, nomeMap)]);
       }
       handleClose();
     } catch (err) {
@@ -419,8 +562,14 @@ export default function ROPAPage() {
   };
 
   const exportExcel = useCallback(() => {
-    const headers = ["Processo", "Finalidade", "Hipótese legal", "Data registro"];
-    const rows = operacoes.map((o) => [o.nome, o.finalidade, o.baseLegal, o.createdAt]);
+    const headers = ["Processo", "Finalidade", "Hipótese legal", "Mapeamento", "Data registro"];
+    const rows = operacoes.map((o) => [
+      o.nome,
+      o.finalidade,
+      o.baseLegal,
+      o.mapeamentoNome?.trim() || "—",
+      o.createdAt,
+    ]);
     const csvContent = [
       headers.map(escapeCsv).join(","),
       ...rows.map((r) => r.map(escapeCsv).join(",")),
@@ -434,39 +583,31 @@ export default function ROPAPage() {
   }, [operacoes, idOrSlug]);
 
   const exportPdfBatch = useCallback(
-    (list: OperacaoTratamento[]) => {
-      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      doc.setFontSize(14);
-      doc.text("Registro das Operações de Tratamento (ROPA) - Modelo ANPD", PDF_MARGIN, 18);
-      doc.setFontSize(9);
-      doc.text(`Programa: ${idOrSlug} | Data: ${new Date().toLocaleDateString("pt-BR")}`, PDF_MARGIN, 24);
-      let y = 32;
-      y = addRegistroToPdf(doc, registro, y);
-      y += 10;
-      if (list.length > 0) {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text("Processo, Finalidade e Hipótese Legal", PDF_MARGIN, y);
-        y += 10;
-        list.forEach((op, idx) => {
-          if (idx > 0) {
-            doc.addPage();
-            y = PDF_MARGIN + 5;
-          }
-          y = addOperacaoToPdf(doc, op, y, true);
+    async (list: OperacaoTratamento[]) => {
+      try {
+        const doc = await buildRopaPdfDocument({
+          programa: programa ?? undefined,
+          idOrSlug,
+          registro,
+          operacoes: list.map(operacaoToPdfPayload),
+          metaLine: `Programa: ${idOrSlug} | Exportado em ${new Date().toLocaleString("pt-BR")}`,
         });
+        doc.save(`ROPA-Programa-${idOrSlug}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      } catch (e) {
+        console.error("Erro ao gerar PDF do ROPA:", e);
       }
-      doc.save(`ROPA-Programa-${idOrSlug}-${new Date().toISOString().slice(0, 10)}.pdf`);
     },
-    [idOrSlug, registro]
+    [idOrSlug, programa, registro]
   );
 
   const exportPdfSelected = useCallback(() => {
     const list = operacoes.filter((o) => selectedIds.has(o.id));
-    exportPdfBatch(list.length > 0 ? list : operacoes);
+    void exportPdfBatch(list.length > 0 ? list : operacoes);
   }, [operacoes, selectedIds, exportPdfBatch]);
 
-  const exportPdfAll = useCallback(() => exportPdfBatch(operacoes), [operacoes, exportPdfBatch]);
+  const exportPdfAll = useCallback(() => {
+    void exportPdfBatch(operacoes);
+  }, [operacoes, exportPdfBatch]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -525,7 +666,7 @@ export default function ROPAPage() {
           Programa
         </Link>
         <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Conformidade LGPD
+          Tratamento de dados e riscos
         </Link>
         <Typography color="text.primary">ROPA</Typography>
       </Breadcrumbs>
@@ -536,7 +677,7 @@ export default function ROPAPage() {
           <Box>
             <Typography variant="h5" fontWeight="bold">ROPA</Typography>
             <Typography variant="body2" color="text.secondary">
-              Registro das Operações de Tratamento (art. 37 LGPD) — Modelo ANPD ATPP
+              Registro das Operações de Tratamento (art. 37 LGPD)
             </Typography>
             <LastUpdateInfo
               updatedAt={registro?.updated_at ?? lastActivity?.created_at}
@@ -570,6 +711,73 @@ export default function ROPAPage() {
         </Button>
       </Box>
 
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2, alignItems: "center" }}>
+        <Tooltip title="Copiar para o cabeçalho do ROPA os dados de identificação e contato do cadastro do programa (e empresa, se existir). Mantém categorias, medidas e demais campos já preenchidos.">
+          <span>
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<SyncIcon />}
+              onClick={handleSyncCadastro}
+              disabled={syncingCadastro}
+            >
+              {syncingCadastro ? "Sincronizando…" : "Sincronizar com cadastro do programa"}
+            </Button>
+          </span>
+        </Tooltip>
+        <Tooltip title="Grava uma cópia imutável do ROPA atual (cabeçalho + operações) para auditoria e PDF histórico.">
+          <span>
+            <Button
+              variant="outlined"
+              startIcon={<HistoryIcon />}
+              onClick={() => setVersaoDialogOpen(true)}
+            >
+              Registrar versão
+            </Button>
+          </span>
+        </Tooltip>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: "1 1 200px" }}>
+          Híbrido: cadastro mestre na página do programa; ROPA pode sincronizar e ainda editar texto. Versões congelam o estado na data.
+        </Typography>
+      </Box>
+
+      {versoes.length > 0 && (
+        <Paper elevation={0} variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <HistoryIcon fontSize="small" />
+            Versões registradas ({versoes.length})
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Versão</strong></TableCell>
+                  <TableCell><strong>Data</strong></TableCell>
+                  <TableCell><strong>Nota</strong></TableCell>
+                  <TableCell align="right"><strong>Ações</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {versoes.map((v) => (
+                  <TableRow key={v.id} hover>
+                    <TableCell>{v.numero}</TableCell>
+                    <TableCell>{new Date(v.created_at).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell sx={{ maxWidth: 360 }}>{v.nota || "—"}</TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="PDF desta versão (conteúdo congelado)">
+                        <Button size="small" startIcon={<PdfIcon />} onClick={() => void exportPdfVersao(v)}>
+                          PDF
+                        </Button>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+
       <TableContainer component={Paper} elevation={1}>
         <Table size="small">
           <TableHead>
@@ -585,19 +793,20 @@ export default function ROPAPage() {
               <TableCell><strong>Processo</strong></TableCell>
               <TableCell><strong>Finalidade</strong></TableCell>
               <TableCell><strong>Hipótese legal</strong></TableCell>
+              <TableCell><strong>Mapeamento</strong></TableCell>
               <TableCell align="right"><strong>Ações</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">Carregando…</Typography>
                 </TableCell>
               </TableRow>
             ) : operacoes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">Nenhum processo cadastrado. Clique em &quot;Adicionar processo&quot; para informar processo, finalidade e hipótese legal (art. 7º e 11 LGPD).</Typography>
                 </TableCell>
               </TableRow>
@@ -610,9 +819,10 @@ export default function ROPAPage() {
                   <TableCell>{op.nome}</TableCell>
                   <TableCell sx={{ maxWidth: 280 }}>{op.finalidade}</TableCell>
                   <TableCell>{op.baseLegal}</TableCell>
+                  <TableCell sx={{ maxWidth: 200 }}>{op.mapeamentoNome?.trim() || "—"}</TableCell>
                   <TableCell align="right">
                     <Tooltip title="Exportar PDF">
-                      <IconButton size="small" onClick={() => exportPdfBatch([op])} aria-label="Exportar PDF">
+                      <IconButton size="small" onClick={() => void exportPdfBatch([op])} aria-label="Exportar PDF">
                         <GetAppIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -631,7 +841,7 @@ export default function ROPAPage() {
       </TableContainer>
 
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth scroll="paper">
-        <DialogTitle>{editingId ? "Editar processo" : "Adicionar processo — Registro das Operações de Tratamento (Modelo ANPD)"}</DialogTitle>
+        <DialogTitle>{editingId ? "Editar processo" : "Adicionar processo — Registro das Operações de Tratamento (ROPA)"}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
             {/* 1. INFORMAÇÕES DE CONTATO */}
@@ -650,8 +860,40 @@ export default function ROPAPage() {
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Principal atividade" value={registroForm.atividade_principal ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, atividade_principal: e.target.value }))} placeholder={HELPER_ATIVIDADE} />
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Gestor responsável" value={registroForm.gestor_responsavel ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, gestor_responsavel: e.target.value }))} />
+            <Grid item xs={12}>
+              <Autocomplete
+                options={membrosPrograma}
+                getOptionLabel={(o) => labelMembroGestor(o)}
+                isOptionEqualToValue={(a, b) => a.user_id === b.user_id}
+                value={
+                  membrosPrograma.find((m) => m.user_id === registroForm.gestor_responsavel_user_id) ?? null
+                }
+                onChange={(_, v) =>
+                  setRegistroForm((f) => ({
+                    ...f,
+                    gestor_responsavel_user_id: v?.user_id ?? "",
+                    gestor_responsavel: v ? labelMembroGestor(v) : "",
+                  }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    required
+                    label="Gestor responsável"
+                    helperText="Usuário com acesso aceito a este programa. O papel no sistema (admin, coordenador, etc.) continua o mesmo de Usuários e permissões — aqui você só indica quem responde pelo registro ROPA."
+                  />
+                )}
+              />
+              <Button
+                component={NextLink}
+                href={`/programas/${idOrSlug}/usuarios`}
+                size="small"
+                startIcon={<PersonAddIcon />}
+                sx={{ mt: 1 }}
+                variant="text"
+              >
+                Cadastrar ou convidar usuário
+              </Button>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="E-mail" type="email" value={registroForm.email ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, email: e.target.value }))} />
@@ -714,6 +956,31 @@ export default function ROPAPage() {
             <Grid item xs={12} sx={{ mt: 2 }}>
               <Typography variant="overline" color="text.secondary" fontWeight="bold">7. Processo, finalidade e hipótese legal</Typography>
               <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5, mb: 1 }}>{HELPER_PROCESSO_FINALIDADE_HIPOTESE}</Typography>
+              <FormControl fullWidth sx={{ mb: 1 }}>
+                <InputLabel id="ropa-mapeamento-select-label">Levantamento de mapeamento (opcional)</InputLabel>
+                <Select
+                  labelId="ropa-mapeamento-select-label"
+                  value={form.mapeamentoId || ""}
+                  label="Levantamento de mapeamento (opcional)"
+                  onChange={(e) => setForm((f) => ({ ...f, mapeamentoId: e.target.value }))}
+                >
+                  <MenuItem value="">
+                    <em>Nenhum</em>
+                  </MenuItem>
+                  {mapeamentos.map((m) => (
+                    <MenuItem key={m.id} value={String(m.id)}>
+                      {m.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 1.5 }}>
+                Cadastre ou edite itens em{" "}
+                <Link component={NextLink} href={`/programas/${idOrSlug}/conformidade/mapeamento`} underline="hover">
+                  Mapeamento de dados
+                </Link>
+                .
+              </Typography>
               <TextField fullWidth label="Processo" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} required placeholder={PLACEHOLDER_PROCESSO} sx={{ mb: 1.5 }} />
               <TextField fullWidth multiline rows={2} label="Finalidade" value={form.finalidade} onChange={(e) => setForm((f) => ({ ...f, finalidade: e.target.value }))} placeholder={PLACEHOLDER_FINALIDADE} sx={{ mb: 1.5 }} />
               <FormControl fullWidth>
@@ -741,9 +1008,36 @@ export default function ROPAPage() {
         </DialogActions>
       </Dialog>
 
+      <Dialog open={versaoDialogOpen} onClose={() => !savingVersao && setVersaoDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Registrar versão do ROPA</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Será gravado um snapshot imutável do cabeçalho do registro e de todas as operações de tratamento, como estão agora.
+            Use uma nota opcional (ex.: revisão anual, auditoria).
+          </Typography>
+          <TextField
+            fullWidth
+            label="Nota (opcional)"
+            value={versaoNota}
+            onChange={(e) => setVersaoNota(e.target.value)}
+            multiline
+            minRows={2}
+            placeholder="Ex.: Versão para relatório de conformidade 2026"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVersaoDialogOpen(false)} disabled={savingVersao}>
+            Cancelar
+          </Button>
+          <Button variant="contained" onClick={handleRegistrarVersao} disabled={savingVersao}>
+            {savingVersao ? "Salvando…" : "Registrar versão"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Box sx={{ mt: 2 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)}>
-          Voltar ao Conformidade LGPD
+          Voltar ao tratamento e riscos
         </Button>
       </Box>
     </Container>

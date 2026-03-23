@@ -64,11 +64,10 @@ interface Section {
 interface SectionDisplayProps {
   section: Section;
   onTextChange: (sectionId: number, text: string) => void;
-  nomeFantasia: string;
   politicaCor?: string;
 }
 
-export default function SectionDisplay({ section, onTextChange, nomeFantasia, politicaCor = '#2196F3' }: SectionDisplayProps) {
+export default function SectionDisplay({ section, onTextChange, politicaCor = '#2196F3' }: SectionDisplayProps) {
   const [content, setContent] = useState(section.texto || '');
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -89,9 +88,10 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia, po
     setupEditor();
   }, []);
 
-  const displayContent = content
-    ? content.replace(/\[Órgão ou Entidade\]/g, nomeFantasia || '[Órgão ou Entidade]')
-    : '';
+  // Pai aplica placeholders (dados do programa); manter editor alinhado ao section.texto
+  useEffect(() => {
+    setContent(section.texto || '');
+  }, [section.texto, section.id]);
 
   const handleEditorChange = (text: string) => {
     setContent(text);
@@ -169,7 +169,7 @@ export default function SectionDisplay({ section, onTextChange, nomeFantasia, po
           <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
             <Editor
               licenseKey="gpl" // GPL license for self-hosted (camelCase for React wrapper)
-              value={displayContent}
+              value={content}
               init={{
                 height: 300,
                 menubar: true,

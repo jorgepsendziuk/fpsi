@@ -128,10 +128,10 @@ export default function ReportesPage() {
           component="button"
           underline="hover"
           color="inherit"
-          onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)}
+          onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)}
           sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}
         >
-          Conformidade LGPD
+          Portal de privacidade
         </Link>
         <Typography color="text.primary">Reportes do portal</Typography>
       </Breadcrumbs>
@@ -209,9 +209,9 @@ export default function ReportesPage() {
       <Box sx={{ mt: 2 }}>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)}
+          onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)}
         >
-          Voltar ao Conformidade LGPD
+          Voltar ao portal de privacidade
         </Button>
       </Box>
     </Container>

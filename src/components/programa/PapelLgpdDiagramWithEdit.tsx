@@ -23,18 +23,25 @@ import type { PapelLgpdInstituicao, PapelLgpdVinculo } from "@/lib/services/data
 import { PapelLgpdDiagram } from "./PapelLgpdDiagram";
 
 const PAPEIS = [
-  { key: "controlador" as const, label: "Controlador" },
-  { key: "contratante" as const, label: "Contratante" },
-  { key: "operador" as const, label: "Operador" },
+  { key: "controlador" as const, label: "Controlador(es)" },
+  { key: "contratante" as const, label: "Contratante(s)" },
+  { key: "operador" as const, label: "Operador(es)" },
 ] as const;
 
 interface PapelLgpdDiagramWithEditProps {
   programaId: number;
   idOrSlug: string;
   isDemoMode?: boolean;
+  /** Padrão true. Na página inicial do programa use false para ocultar Gerenciar e indicar edição pelo card Responsabilidades. */
+  showManageButton?: boolean;
 }
 
-export function PapelLgpdDiagramWithEdit({ programaId, idOrSlug, isDemoMode }: PapelLgpdDiagramWithEditProps) {
+export function PapelLgpdDiagramWithEdit({
+  programaId,
+  idOrSlug,
+  isDemoMode,
+  showManageButton = true,
+}: PapelLgpdDiagramWithEditProps) {
   const [data, setData] = useState<dataService.PapelLgpdData | null>(null);
   const [loading, setLoading] = useState(true);
   const [instDialogOpen, setInstDialogOpen] = useState(false);
@@ -167,14 +174,16 @@ export function PapelLgpdDiagramWithEdit({ programaId, idOrSlug, isDemoMode }: P
   const instituicoes = data?.instituicoes || [];
 
   if (isDemoMode) {
-    return <PapelLgpdDiagram programaId={programaId} idOrSlug={idOrSlug} isDemoMode />;
+    return (
+      <PapelLgpdDiagram programaId={programaId} idOrSlug={idOrSlug} isDemoMode showManageButton={showManageButton} />
+    );
   }
 
   if (loading) {
     return (
       <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: "100%" }}>
         <Skeleton variant="text" width={180} height={32} sx={{ mb: 2 }} />
-        <Skeleton variant="rectangular" height={320} sx={{ borderRadius: 2 }} />
+        <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
       </Paper>
     );
   }
@@ -185,6 +194,7 @@ export function PapelLgpdDiagramWithEdit({ programaId, idOrSlug, isDemoMode }: P
         programaId={programaId}
         idOrSlug={idOrSlug}
         data={data}
+        showManageButton={showManageButton}
         onNodeClick={handleOpenEditInst}
         onEdgeClick={handleOpenEditVinculo}
       />

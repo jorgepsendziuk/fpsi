@@ -12,7 +12,8 @@ type IUser = {
   name?: string;
 };
 
-export default function ProtectedLayout({
+/** Autenticação + cabeçalho para área logada (dashboard). Sem route group com parênteses — evita ChunkLoadError/404 em chunks Webpack. */
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -22,18 +23,20 @@ export default function ProtectedLayout({
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push('/');
+      router.push("/");
     }
   }, [user, isLoading, router]);
 
   if (isLoading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh' 
-      }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
         Loading...
       </Box>
     );
@@ -44,9 +47,9 @@ export default function ProtectedLayout({
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <Header sticky />
       {children}
     </Box>
   );
-} 
+}

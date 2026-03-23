@@ -4,7 +4,7 @@ import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import { useNotificationProvider, RefineSnackbarProvider } from "@refinedev/mui";
 import routerProvider from "@refinedev/nextjs-router";
 import { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
+import Script from "next/script";
 import React, { Suspense } from "react";
 import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
 import Image from 'next/image';
@@ -41,12 +41,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = cookies();
   const defaultMode = "light";
 
   return (
     <html lang="pt-BR">
       <body>
+        {process.env.NODE_ENV === "development" && (
+          <Script id="fpsi-dev-clear-sw-cache" strategy="beforeInteractive">
+            {`(function(){var p=Promise.resolve();if(typeof navigator!=="undefined"&&"serviceWorker"in navigator){p=navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));});}p.then(function(){if(typeof caches!=="undefined"){return caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));});}}).catch(function(){});})();`}
+          </Script>
+        )}
         <Suspense>
           <RefineKbarProvider>
             <ColorModeContextProvider defaultMode={defaultMode}>

@@ -52,6 +52,7 @@ import * as dataService from "@/lib/services/dataService";
 import { Programa } from "@/lib/types/types";
 import { initialState, reducer } from "@/lib/state/state";
 import { getMaturityLabel } from "@/lib/utils/maturity";
+import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 
 const TIPOS_PROGRAMA = [
@@ -66,6 +67,7 @@ const DEFAULT_CREATE_FORM = {
   tipo_programa: "empresa_organizacao" as string,
   setor: 2 as number,
   orgao_id: "" as number | "",
+  atividade_principal_organizacao: "",
   descricao_escopo: "",
   empresa_modo: "nova" as "nova" | "existente",
   empresa_id: "" as number | "",
@@ -170,6 +172,7 @@ export function ProgramasSection() {
         setor: createForm.setor,
         orgao: createForm.setor === 1 ? Number(createForm.orgao_id) || null : null,
         tipo_programa: createForm.tipo_programa || null,
+        atividade_principal_organizacao: createForm.atividade_principal_organizacao?.trim() || null,
         descricao_escopo: createForm.descricao_escopo?.trim() || null,
       };
       if (createForm.setor === 2) {
@@ -468,6 +471,7 @@ export function ProgramasSection() {
             const maturityData = programaMaturityData.get(programa.id) || { score: 0, label: "Inicial", byDiagnostico: [] };
             const getMaturityEntry = (diagId: number) =>
               maturityData.byDiagnostico.find((d) => d.diagnostico_id === diagId) ?? { score: 0, label: "Inicial" };
+            const logoUrl = getProgramaLogoDisplayUrl(programa);
 
             return (
               <Grid item xs={12} sm={6} lg={4} key={programa.id}>
@@ -498,25 +502,11 @@ export function ProgramasSection() {
                   <CardContent sx={{ flex: 1, p: 2.5, "&:last-child": { pb: 2.5 } }}>
                     <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1, minWidth: 0 }}>
-                        {(programa.logo_programa || programa.logo_orgao_empresa) ? (
+                        {logoUrl ? (
                           <Box
                             component="img"
-                            src={String(programa.logo_programa || programa.logo_orgao_empresa)}
+                            src={logoUrl}
                             alt=""
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 1,
-                              objectFit: "contain",
-                              flexShrink: 0,
-                              bgcolor: alpha(theme.palette.primary.main, 0.04),
-                            }}
-                          />
-                        ) : (programa.slug === "demo" || programa.id === 1) ? (
-                          <Box
-                            component="img"
-                            src="/logo_p.png"
-                            alt="FPSI"
                             sx={{
                               width: 40,
                               height: 40,
@@ -768,7 +758,23 @@ export function ProgramasSection() {
                 )}
               </Box>
             </Collapse>
-            <TextField fullWidth multiline minRows={2} label="Descrição do escopo" value={createForm.descricao_escopo} onChange={(e) => setCreateForm((f) => ({ ...f, descricao_escopo: e.target.value }))} />
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              label="Principal atividade"
+              value={createForm.atividade_principal_organizacao}
+              onChange={(e) => setCreateForm((f) => ({ ...f, atividade_principal_organizacao: e.target.value }))}
+              helperText="Atividade institucional (ROPA). Opcional se a empresa já tiver esse dado."
+            />
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              label="Escopo do programa de privacidade"
+              value={createForm.descricao_escopo}
+              onChange={(e) => setCreateForm((f) => ({ ...f, descricao_escopo: e.target.value }))}
+            />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>

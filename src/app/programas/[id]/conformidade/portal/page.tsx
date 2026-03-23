@@ -3,11 +3,11 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Container, Typography, Box, Breadcrumbs, Link, Grid, Avatar } from "@mui/material";
-import { ArrowBack as ArrowBackIcon, Gavel as GavelIcon } from "@mui/icons-material";
+import { ArrowBack as ArrowBackIcon, Public as PublicIcon } from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
-import { ConformidadeHubCard, TRATAMENTO_SECTIONS } from "./ConformidadeHubCard";
+import { ConformidadeHubCard, PORTAL_SECTIONS } from "../ConformidadeHubCard";
 
-export default function ConformidadeTratamentoHubPage() {
+export default function PortalPrivacidadeHubPage() {
   const params = useParams();
   const router = useRouter();
   const idOrSlug = params.id as string;
@@ -50,7 +50,7 @@ export default function ConformidadeTratamentoHubPage() {
           >
             {programaName}
           </Link>
-          <Typography color="text.primary">Tratamento de dados e riscos</Typography>
+          <Typography color="text.primary">Portal de privacidade</Typography>
         </Breadcrumbs>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
@@ -58,29 +58,29 @@ export default function ConformidadeTratamentoHubPage() {
             sx={{
               width: 56,
               height: 56,
-              background: `linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)`,
+              background: `linear-gradient(135deg, #0288d1 0%, #03a9f4 100%)`,
             }}
           >
-            <GavelIcon fontSize="large" />
+            <PublicIcon fontSize="large" />
           </Avatar>
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              Tratamento de dados e riscos
+              Portal de privacidade
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Conformidade LGPD — ROPA, RIPD e incidentes
+              Canais do site público do programa — titulares, reportes e contato
             </Typography>
           </Box>
         </Box>
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: "md" }}>
-        Registro de operações (ROPA), impacto (RIPD) e incidentes — documentação e gestão de risco no tratamento de dados
-        pessoais.
+        O que chega pelo portal público: exercício de direitos do titular (art. 18 LGPD), reportes e mensagens do formulário
+        de contato.
       </Typography>
 
       <Grid container spacing={2}>
-        {TRATAMENTO_SECTIONS.map((section) => (
+        {PORTAL_SECTIONS.map((section) => (
           <ConformidadeHubCard key={section.key} section={section} idOrSlug={idOrSlug} router={router} />
         ))}
       </Grid>

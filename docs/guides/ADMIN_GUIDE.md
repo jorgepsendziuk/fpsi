@@ -24,6 +24,24 @@ Execute no Supabase SQL Editor. O link "Administração" aparecerá no menu do u
 
 ---
 
+## 📜 Políticas — preenchimento automático (placeholders)
+
+No editor de políticas do **programa**, trechos como `[Órgão ou entidade]` são substituídos pelos dados do cadastro do programa:
+
+| Placeholder | Origem (campo do programa) |
+|-------------|----------------------------|
+| `[Órgão ou entidade]` | `nome_fantasia` → `nome` → `razao_social` (primeiro preenchido) |
+| `[Razão Social]` | `razao_social` |
+| `[Nome Fantasia]` | `nome_fantasia` |
+| `[CNPJ]` | `cnpj` (formatado) |
+| `[E-mail]`, `[E-mail de atendimento]` | `atendimento_email` |
+| `[Telefone]` | `atendimento_fone` |
+| `[Site]` | `atendimento_site` |
+
+Lógica em `src/lib/utils/politicaPlaceholders.ts` (aplicada ao carregar o modelo, ao editar e ao gerar PDF).
+
+---
+
 ## 🎯 **Métodos Disponíveis (Admin de Programa)**
 
 ### **1. 🎮 Via Interface Web (Recomendado)**

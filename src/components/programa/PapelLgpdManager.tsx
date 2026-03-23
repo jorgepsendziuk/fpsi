@@ -41,9 +41,9 @@ import type { PapelLgpdInstituicao, PapelLgpdVinculo } from "@/lib/services/data
 import { PapelLgpdDiagram } from "./PapelLgpdDiagram";
 
 const PAPEIS = [
-  { key: "controlador" as const, label: "Controlador", sublabel: "Determina finalidades e meios", color: "#1976d2", icon: <PolicyIcon /> },
-  { key: "contratante" as const, label: "Contratante", sublabel: "Contratante administrativa", color: "#2e7d32", icon: <BusinessIcon /> },
-  { key: "operador" as const, label: "Operador", sublabel: "Executa conforme instruções", color: "#ed6c02", icon: <BuildIcon /> },
+  { key: "controlador" as const, label: "Controlador(es)", sublabel: "Determina finalidades e meios", color: "#1976d2", icon: <PolicyIcon /> },
+  { key: "contratante" as const, label: "Contratante(s)", sublabel: "Contratante administrativa", color: "#2e7d32", icon: <BusinessIcon /> },
+  { key: "operador" as const, label: "Operador(es)", sublabel: "Executa conforme instruções", color: "#ed6c02", icon: <BuildIcon /> },
 ] as const;
 
 interface PapelLgpdManagerProps {
@@ -259,18 +259,9 @@ export function PapelLgpdManager({ programaId, idOrSlug }: PapelLgpdManagerProps
             Estrutura de Tratamento
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<LinkIcon />}
-          onClick={() => router.push(`/programas/${idOrSlug}`)}
-          sx={{ borderRadius: 2, textTransform: "none" }}
-        >
-          Ver diagrama
-        </Button>
       </Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Cadastre instituições nos papéis LGPD (Controlador, Contratante, Operador) e defina as conexões entre elas. 
+        Cadastre instituições nos papéis LGPD (controlador(es), contratante(s), operador(es)) e defina as conexões entre elas.
         Pode ser sua empresa, órgão, prestadores ou operadores.
       </Typography>
 

@@ -13,6 +13,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import PersonIcon from "@mui/icons-material/Person";
 import GavelIcon from "@mui/icons-material/Gavel";
+import PublicIcon from "@mui/icons-material/Public";
 import FolderIcon from "@mui/icons-material/Folder";
 import BusinessIcon from "@mui/icons-material/Business";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
@@ -44,6 +45,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from "next/navigation";
 import * as dataService from "@/lib/services/dataService";
 import type { Programa } from "@/lib/types/types";
+import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 
 type IUser = {
   id: number;
@@ -87,10 +89,16 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       description: "Acompanhamento de ações"
     },
     {
-      label: "Conformidade",
+      label: "Tratamento e riscos",
       icon: <GavelIcon />,
       path: `/programas/${programaId}/conformidade`,
-      description: "ROPA, titulares, RIPD, incidentes"
+      description: "ROPA, RIPD e incidentes"
+    },
+    {
+      label: "Portal de privacidade",
+      icon: <PublicIcon />,
+      path: `/programas/${programaId}/conformidade/portal`,
+      description: "Pedidos dos titulares, reportes e contato"
     },
     {
       label: "Políticas",
@@ -224,6 +232,9 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
     return 'FPSI';
   };
 
+  const programaHeaderPrimary = currentPrograma ? getProgramaTituloPrincipal(currentPrograma) : null;
+  const programaHeaderOrg = currentPrograma ? getProgramaTituloOrganizacao(currentPrograma) : null;
+
   return (
     <>
       <AppBar position={sticky ? "sticky" : "relative"} elevation={1}>
@@ -284,9 +295,34 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                     "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
                   }}
                 >
-                  {currentPrograma
-                    ? (currentPrograma.nome_fantasia || currentPrograma.nome || currentPrograma.razao_social || `Programa ${currentPrograma.id}`)
-                    : "Programa"}
+                  {currentPrograma ? (
+                    <Stack alignItems="flex-start" spacing={0} sx={{ maxWidth: 280 }}>
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{ fontWeight: 600, lineHeight: 1.25, textAlign: "left" }}
+                      >
+                        {programaHeaderPrimary}
+                      </Typography>
+                      {programaHeaderOrg ? (
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          sx={{
+                            opacity: 0.88,
+                            lineHeight: 1.25,
+                            textAlign: "left",
+                            display: "block",
+                            fontWeight: 400,
+                          }}
+                        >
+                          {programaHeaderOrg}
+                        </Typography>
+                      ) : null}
+                    </Stack>
+                  ) : (
+                    "Programa"
+                  )}
                 </Button>
                 <Menu
                   anchorEl={programaMenuAnchor}
@@ -302,8 +338,13 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                         Programa
                       </Typography>
                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {currentPrograma.nome_fantasia || currentPrograma.nome || currentPrograma.razao_social || `Programa ${currentPrograma.id}`}
+                        {programaHeaderPrimary}
                       </Typography>
+                      {programaHeaderOrg ? (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                          {programaHeaderOrg}
+                        </Typography>
+                      ) : null}
                     </Box>
                   )}
                   <Divider />
@@ -438,7 +479,10 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                     {programas.length > 0 && <Divider />}
                     {programas.map((p) => (
                       <MenuItem key={p.id} onClick={() => { handleProgramaClick(p); handleUserMenuClose(); }}>
-                        <ListItemText primary={p.nome_fantasia || p.nome || p.razao_social || `Programa ${p.id}`} />
+                        <ListItemText
+                          primary={getProgramaTituloPrincipal(p)}
+                          secondary={getProgramaTituloOrganizacao(p) || undefined}
+                        />
                       </MenuItem>
                     ))}
                   </Menu>
@@ -537,7 +581,10 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
             {programas.map((p) => (
               <ListItem key={p.id} disablePadding sx={{ pl: 3 }}>
                 <ListItemButton onClick={() => handleProgramaClick(p)}>
-                  <ListItemText primary={p.nome_fantasia || p.nome || p.razao_social || `Programa ${p.id}`} />
+                  <ListItemText
+                    primary={getProgramaTituloPrincipal(p)}
+                    secondary={getProgramaTituloOrganizacao(p) || undefined}
+                  />
                 </ListItemButton>
               </ListItem>
             ))}
@@ -571,10 +618,13 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
             <Box sx={{ px: 2, py: 1 }}>
               <Typography variant="overline" sx={{ color: "text.secondary" }}>Programa</Typography>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {currentPrograma
-                  ? (currentPrograma.nome_fantasia || currentPrograma.nome || currentPrograma.razao_social || `Programa ${currentPrograma.id}`)
-                  : "Carregando..."}
+                {programaHeaderPrimary ?? "Carregando..."}
               </Typography>
+              {programaHeaderOrg ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                  {programaHeaderOrg}
+                </Typography>
+              ) : null}
             </Box>
             <List>
               {dynamicNavigationItems.map((item) => (

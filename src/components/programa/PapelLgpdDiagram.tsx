@@ -7,6 +7,8 @@ import {
   useEdgesState,
   Background,
   Controls,
+  Handle,
+  Position,
   type Node,
   type Edge,
 } from "@xyflow/react";
@@ -16,15 +18,149 @@ import { AccountTree as AccountTreeIcon, Settings as SettingsIcon } from "@mui/i
 import * as dataService from "@/lib/services/dataService";
 
 const PAPEIS = [
-  { key: "controlador" as const, label: "Controlador", sublabel: "Determina finalidades e meios" },
-  { key: "contratante" as const, label: "Contratante", sublabel: "Contratante administrativa" },
-  { key: "operador" as const, label: "Operador", sublabel: "Executa conforme instruções" },
+  { key: "controlador" as const, label: "Controlador(es)", sublabel: "Determina finalidades e meios" },
+  { key: "contratante" as const, label: "Contratante(s)", sublabel: "Contratante administrativa" },
+  { key: "operador" as const, label: "Operador(es)", sublabel: "Executa conforme instruções" },
 ] as const;
 
-const NODE_WIDTH = 160;
-const NODE_HEIGHT = 44;
+/** Alinhado aos cartões em PapelLgpdManager */
+const PAPEL_CORES: Record<
+  "controlador" | "contratante" | "operador" | "titulares",
+  { main: string; soft: string; border: string }
+> = {
+  controlador: { main: "#1976d2", soft: "rgba(25, 118, 210, 0.12)", border: "#1976d2" },
+  contratante: { main: "#2e7d32", soft: "rgba(46, 125, 50, 0.12)", border: "#2e7d32" },
+  operador: { main: "#ed6c02", soft: "rgba(237, 108, 2, 0.12)", border: "#ed6c02" },
+  titulares: { main: "#616161", soft: "rgba(97, 97, 97, 0.1)", border: "#757575" },
+};
+
+function resolvePapelCor(tipo: string): (typeof PAPEL_CORES)["controlador"] {
+  if (tipo === "controlador" || tipo === "contratante" || tipo === "operador") return PAPEL_CORES[tipo];
+  return PAPEL_CORES.titulares;
+}
+
+function labelPapelPorTipo(tipo: string): string {
+  const p = PAPEIS.find((x) => x.key === tipo);
+  if (p) return p.label;
+  if (tipo === "titulares") return "Titulares de dados";
+  return tipo;
+}
+
+const NODE_WIDTH = 172;
+/** Altura aproximada para layout em grade (instituição: faixa de papel + nome) */
+const NODE_HEIGHT = 72;
+const VIRTUAL_NODE_HEIGHT = 48;
 const H_SPACING = 80;
-const V_SPACING = 100;
+const V_SPACING = 108;
+
+type PapelInstNodeData = {
+  nome: string;
+  tipoPapel: string;
+  /** Nó sintético (ex.: destino “papel” ou titulares) — só legenda, sem faixa duplicada */
+  isVirtual?: boolean;
+};
+
+function PapelInstNode({ data }: { data: PapelInstNodeData }) {
+  const c = resolvePapelCor(data.tipoPapel);
+  const papelLegenda = labelPapelPorTipo(data.tipoPapel);
+
+  if (data.isVirtual) {
+    return (
+      <>
+        <Handle type="target" position={Position.Top} />
+        <Box
+          sx={{
+            width: NODE_WIDTH,
+            minHeight: VIRTUAL_NODE_HEIGHT - 8,
+            px: 1,
+            py: 0.75,
+            borderRadius: 1,
+            border: `2px dashed ${c.border}`,
+            background: c.soft,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxSizing: "border-box",
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 700,
+              color: c.main,
+              fontSize: 11,
+              textAlign: "center",
+              lineHeight: 1.25,
+            }}
+          >
+            {data.nome}
+          </Typography>
+        </Box>
+        <Handle type="source" position={Position.Bottom} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Handle type="target" position={Position.Top} />
+      <Box
+        sx={{
+          width: NODE_WIDTH,
+          borderRadius: 1,
+          border: `2px solid ${c.border}`,
+          background: "#fff",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        <Box
+          sx={{
+            px: 0.75,
+            py: 0.45,
+            background: c.soft,
+            borderBottom: `1px solid ${c.border}40`,
+          }}
+        >
+          <Typography
+            variant="caption"
+            component="div"
+            sx={{
+              fontWeight: 800,
+              color: c.main,
+              fontSize: 10,
+              letterSpacing: "0.04em",
+              textAlign: "center",
+              lineHeight: 1.2,
+              textTransform: "uppercase",
+            }}
+          >
+            {papelLegenda}
+          </Typography>
+        </Box>
+        <Typography
+          variant="body2"
+          sx={{
+            px: 1,
+            py: 1,
+            fontWeight: 600,
+            fontSize: 12.5,
+            textAlign: "center",
+            lineHeight: 1.35,
+            color: "text.primary",
+            wordBreak: "break-word",
+          }}
+        >
+          {data.nome}
+        </Typography>
+      </Box>
+      <Handle type="source" position={Position.Bottom} />
+    </>
+  );
+}
+
+const nodeTypes = { papelInst: PapelInstNode };
 
 function dataToFlow(data: dataService.PapelLgpdData): { nodes: Node[]; edges: Edge[] } {
   const inst = data.instituicoes || [];
@@ -51,14 +187,14 @@ function dataToFlow(data: dataService.PapelLgpdData): { nodes: Node[]; edges: Ed
     items.forEach((i) => {
       nodes.push({
         id: `inst_${i.id}`,
-        type: "default",
+        type: "papelInst",
         position: { x, y },
+        width: NODE_WIDTH,
+        height: NODE_HEIGHT,
         data: {
-          label: (
-            <Box sx={{ fontWeight: 600, fontSize: 13, textAlign: "center" }}>
-              {i.nome}
-            </Box>
-          ),
+          nome: i.nome,
+          tipoPapel: p.key,
+          isVirtual: false,
         },
       });
       x += NODE_WIDTH + H_SPACING;
@@ -77,20 +213,30 @@ function dataToFlow(data: dataService.PapelLgpdData): { nodes: Node[]; edges: Ed
         virtualNodeIds.add(targetId);
         const label =
           v.destino_tipo_papel === "controlador"
-            ? "Controlador"
-            : v.destino_tipo_papel === "titulares"
-              ? "Titulares de dados"
-              : v.destino_tipo_papel;
+            ? "Controlador(es)"
+            : v.destino_tipo_papel === "contratante"
+              ? "Contratante(s)"
+              : v.destino_tipo_papel === "operador"
+                ? "Operador(es)"
+                : v.destino_tipo_papel === "titulares"
+                  ? "Titulares de dados"
+                  : String(v.destino_tipo_papel);
+        const tipoVirt =
+          v.destino_tipo_papel === "controlador" ||
+          v.destino_tipo_papel === "contratante" ||
+          v.destino_tipo_papel === "operador"
+            ? v.destino_tipo_papel
+            : "titulares";
         nodes.push({
           id: targetId,
-          type: "default",
+          type: "papelInst",
           position: { x: 0, y },
+          width: NODE_WIDTH,
+          height: VIRTUAL_NODE_HEIGHT,
           data: {
-            label: (
-              <Box sx={{ fontWeight: 500, fontSize: 12, color: "#666", textAlign: "center" }}>
-                {label}
-              </Box>
-            ),
+            nome: label,
+            tipoPapel: tipoVirt,
+            isVirtual: true,
           },
         });
         y += V_SPACING;
@@ -134,13 +280,24 @@ interface PapelLgpdDiagramProps {
   data?: dataService.PapelLgpdData | null;
   /** Modo embutido: sem header, sem botão Gerenciar, layout compacto */
   embedded?: boolean;
+  /** Exibe o botão Gerenciar e o atalho no estado vazio (padrão: true). Na página inicial do programa costuma ser false. */
+  showManageButton?: boolean;
   /** Ao clicar em nó (instituição) — só em modo embedded */
   onNodeClick?: (inst: dataService.PapelLgpdInstituicao) => void;
   /** Ao clicar em aresta (vínculo) — só em modo embedded */
   onEdgeClick?: (vinculo: dataService.PapelLgpdVinculo) => void;
 }
 
-export function PapelLgpdDiagram({ programaId, idOrSlug, isDemoMode, data: dataProp, embedded, onNodeClick, onEdgeClick }: PapelLgpdDiagramProps) {
+export function PapelLgpdDiagram({
+  programaId,
+  idOrSlug,
+  isDemoMode,
+  data: dataProp,
+  embedded,
+  showManageButton = true,
+  onNodeClick,
+  onEdgeClick,
+}: PapelLgpdDiagramProps) {
   const router = useRouter();
   const [dataState, setDataState] = useState<dataService.PapelLgpdData | null>(null);
   const [loading, setLoading] = useState(!dataProp);
@@ -214,7 +371,7 @@ export function PapelLgpdDiagram({ programaId, idOrSlug, isDemoMode, data: dataP
     return (
       <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: "100%" }}>
         <Skeleton variant="text" width={180} height={32} sx={{ mb: 2 }} />
-        <Skeleton variant="rectangular" height={320} sx={{ borderRadius: 2 }} />
+        <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
       </Paper>
     );
   }
@@ -222,11 +379,12 @@ export function PapelLgpdDiagram({ programaId, idOrSlug, isDemoMode, data: dataP
   const hasData = data && (data.instituicoes?.length ?? 0) > 0;
 
   const diagramContent = (
-    <Box sx={{ flex: 1, minHeight: embedded ? 200 : 300, width: "100%", height: "100%" }}>
+    <Box sx={{ flex: 1, minHeight: embedded ? 200 : 400, width: "100%", height: "100%" }}>
       {hasData ? (
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick ? handleNodeClick : undefined}
@@ -248,7 +406,7 @@ export function PapelLgpdDiagram({ programaId, idOrSlug, isDemoMode, data: dataP
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: embedded ? 180 : 280,
+            minHeight: embedded ? 180 : 300,
             color: "#666",
             fontSize: 14,
             textAlign: "center",
@@ -261,10 +419,12 @@ export function PapelLgpdDiagram({ programaId, idOrSlug, isDemoMode, data: dataP
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 260 }}>
             {embedded
-              ? "Cadastre controladores, contratantes e operadores abaixo para exibir o diagrama."
-              : "Cadastre controladores, contratantes e operadores em Responsabilidades para exibir o diagrama."}
+              ? "Cadastre instituições como controlador(es), contratante(s) e operador(es) abaixo para exibir o diagrama."
+              : showManageButton
+                ? "Cadastre instituições como controlador(es), contratante(s) e operador(es) em Responsabilidades para exibir o diagrama."
+                : "Cadastre ou edite instituições e vínculos no card Responsabilidades (Módulos ao lado)."}
           </Typography>
-          {!embedded && !isDemoMode && (
+          {!embedded && !isDemoMode && showManageButton && (
             <Button
               size="small"
               variant="outlined"
@@ -298,7 +458,7 @@ export function PapelLgpdDiagram({ programaId, idOrSlug, isDemoMode, data: dataP
       sx={{
         p: 3,
         borderRadius: 2,
-        minHeight: 360,
+        minHeight: 460,
         height: "100%",
         display: "flex",
         flexDirection: "column",
@@ -311,7 +471,7 @@ export function PapelLgpdDiagram({ programaId, idOrSlug, isDemoMode, data: dataP
             Estrutura de Tratamento
           </Typography>
         </Box>
-        {!isDemoMode && (
+        {!isDemoMode && showManageButton && (
           <Button
             size="small"
             variant="outlined"

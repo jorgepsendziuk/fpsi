@@ -155,7 +155,6 @@ export default function AdminModeloPoliticaEditPage() {
               texto: section.texto ?? "",
             }}
             onTextChange={handleSectionTextChange}
-            nomeFantasia=""
             politicaCor={modelo?.cor || "#2196F3"}
           />
         ))}

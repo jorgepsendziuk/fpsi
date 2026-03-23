@@ -4,21 +4,15 @@
 
 
 politicas:
+Grupo de Implementação: Categoriza as medidas em grupos (G1, G2, G3) baseados na complexidade e prioridade de implementação. G1 são medidas básicas, G2 intermediárias e G3 avançadas.
 
-como esta essa parte de politicas no sistema?
-como esta no banco de dados isso? tem tabela? onde é armazenado?
+não é “fazer as 300 medidas porque existem no catálogo”, e sim selecionar e priorizar o que faz sentido para aquele programa, aquele produto e aquele nível de risco. 
 
-sei que a Política de Proteção de Dados Pessoais
-esta "Implementada", o que isso significa?
 
-a ideia é usar um modelo de texto com essa divisao de editores wysiwyg com os capitulos, secoes, etc.
+	exemplos de ligacao de medidas com politicas 
 
-quando cria o programa nao vem nenhuma politica criada, porque senao vai ficar um monte de gatilhos no banco pra criar coisas automaticamente, e nao quero isso.
+    os cards quando mouseover flip e mostrar resumo de informacoes relevantes, por exemplo no diagnostico mostrar minidashboard com medidas, respondidas, maturidades
 
-entao acho que a melhor maneira é fazer opcao de criar politica, para cada tipo de politica, ja com os dados preenchidos dos responsaveis, e indicar quando falta inserir dados, 
+e os cookies
+e o aviso de privacidade
 
-o modelo vai seguir o padrao que o governo brasileiro ja fornece, era bom que tivesse um lugar pra editar esse modelo padrao tambem, o administrador do sistema.
-
-ai quando o usuario mandar criar uma politica dentro de um programa vai ter que salvar esses textos em algum lugar no banco de dados.
-
-qual a melhor estrategia?

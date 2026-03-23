@@ -44,7 +44,10 @@ import { status_medida, status_plano_acao, respostas, respostasimnao } from '../
 
 interface PlanoAcaoResumoProps {
   programaId: number;
+  /** Nome do programa (prioriza campo `nome`). */
   programaName: string;
+  /** Organização (nome fantasia / razão) quando distinta do nome do programa. */
+  programaOrganizacao?: string | null;
 }
 
 interface MedidaPlanoAcao {
@@ -83,7 +86,8 @@ interface DiagnosticoGroup {
 
 const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
   programaId,
-  programaName
+  programaName,
+  programaOrganizacao,
 }) => {
   const theme = useTheme();
   const [resumo, setResumo] = useState<{
@@ -455,9 +459,19 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
             <AssignmentIcon sx={{ mr: 1, color: '#667eea' }} />
             Plano de Trabalho
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {programaName} • Acompanhamento resumido das medidas por diagnóstico e controle
-          </Typography>
+          <Box component="div" sx={{ color: "text.secondary" }}>
+            <Typography variant="body1" component="span" sx={{ fontWeight: 600, color: "text.primary" }}>
+              {programaName}
+            </Typography>
+            {programaOrganizacao ? (
+              <Typography variant="body2" component="div" sx={{ mt: 0.25 }}>
+                {programaOrganizacao}
+              </Typography>
+            ) : null}
+            <Typography variant="body2" component="div" sx={{ mt: programaOrganizacao ? 0.5 : 0.25 }}>
+              Acompanhamento resumido das medidas por diagnóstico e controle
+            </Typography>
+          </Box>
         </Box>
         <Box className="no-print">
           <Tooltip title="Gerar PDF / Imprimir">

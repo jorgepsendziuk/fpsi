@@ -35,6 +35,7 @@ import SecurityIcon from "@mui/icons-material/Security";
 import LinkIcon from "@mui/icons-material/Link";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
+import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 
 type PortalData = {
   id: number;
@@ -327,15 +328,16 @@ export default function PortalPrivacidadePage() {
   const linkAviso = data.link_aviso_titular || FAKE_LINK;
   const linkCookies = data.link_cookies || FAKE_LINK;
   const linkDeclaracao = data.link_declaracao_seguranca || FAKE_LINK;
+  const portalLogoUrl = getProgramaLogoDisplayUrl(data);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Cabeçalho */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        {(data.logo_programa || data.logo_orgao_empresa) ? (
+        {portalLogoUrl ? (
           <Box
             component="img"
-            src={data.logo_programa || data.logo_orgao_empresa!}
+            src={portalLogoUrl}
             alt="Logo"
             sx={{
               width: 64,
