@@ -19,6 +19,7 @@ import {
   Card,
   CardContent,
   alpha,
+  CircularProgress,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
@@ -30,6 +31,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 import CategoryIcon from '@mui/icons-material/Category';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import CircleIcon from '@mui/icons-material/Circle';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 // Components
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -43,6 +45,8 @@ import { respostas, respostasimnao, status_medida, status_plano_acao } from '../
 
 // Types
 import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
+import type { EvidenciaSugestao as EvidenciaSugestaoTipo } from '../../../lib/medidas/evidenciaRules';
+import { respostaAtualIgualSugestao } from '../../../lib/medidas/evidenciaRules';
 
 // Styles
 import { medidaStyles } from './styles';
@@ -71,6 +75,10 @@ export interface MedidaProps {
   handleTextChange: (field: MedidaTextField, value: string) => void;
   /** Function to save a field value */
   handleSaveField: (field: MedidaTextField) => void;
+  /** Sugestão derivada de dados do programa (Controle 0 / diag. 1) */
+  evidenciaSugestao?: EvidenciaSugestaoTipo | null;
+  evidenciaLoading?: boolean;
+  onAplicarSugestao?: () => void | Promise<void>;
 }
 
 /**
@@ -86,6 +94,9 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   localValues,
   handleTextChange,
   handleSaveField,
+  evidenciaSugestao = null,
+  evidenciaLoading = false,
+  onAplicarSugestao,
 }) => {
   const { getContrastTextColor } = useThemeColors();
   const theme = useTheme();
@@ -254,6 +265,55 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 </Tooltip>
               </Grid>
             </Grid>
+
+            {controle.diagnostico === 1 && evidenciaLoading && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <CircularProgress size={18} />
+                <Typography variant="body2" color="text.secondary">
+                  Carregando sugestão do sistema…
+                </Typography>
+              </Box>
+            )}
+
+            {controle.diagnostico === 1 &&
+              !evidenciaLoading &&
+              evidenciaSugestao?.regraDefinida &&
+              evidenciaSugestao.respostaSugerida != null && (
+                <Alert
+                  severity="info"
+                  icon={<AutoAwesomeIcon fontSize="inherit" />}
+                  sx={{ mb: 2, alignItems: 'flex-start' }}
+                  action={
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={respostaAtualIgualSugestao(
+                        programaMedida?.resposta,
+                        evidenciaSugestao.respostaSugerida
+                      )}
+                      onClick={() => void onAplicarSugestao?.()}
+                    >
+                      Aplicar
+                    </Button>
+                  }
+                >
+                  <Typography variant="body2">
+                    <strong>{evidenciaSugestao.respostaSugerida === 1 ? 'Sim' : 'Não'}</strong>
+                    {' — '}
+                    {evidenciaSugestao.motivo}
+                  </Typography>
+                </Alert>
+              )}
+
+            {controle.diagnostico === 1 &&
+              !evidenciaLoading &&
+              evidenciaSugestao &&
+              !evidenciaSugestao.regraDefinida &&
+              (medida.id_medida === '0.4' || medida.id_medida === '0.5') && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  {evidenciaSugestao.motivo}
+                </Alert>
+              )}
 
             {/* Cards de Resposta e Plano de Trabalho */}
             <Grid container spacing={2} sx={{ mb: 2 }}>

@@ -32,8 +32,7 @@ import {
 } from "@mui/material";
 import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
-import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
-import { useLastActivity } from "@/hooks/useLastActivity";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { SelectWithAdd } from "@/components/common/SelectWithAdd";
 import { PapelLgpdManager } from "@/components/programa/PapelLgpdManager";
 import { 
@@ -93,7 +92,6 @@ export default function ProgramaResponsaveisCRUDPage() {
   const [programaData, setProgramaData] = useState<{ nome?: string; nome_fantasia?: string; razao_social?: string }>({});
   
   const isMounted = useRef(true);
-  const { lastActivity } = useLastActivity(programaId || undefined, undefined, undefined);
 
   // Buscar responsáveis do programa
   const fetchResponsaveis = useCallback(async () => {
@@ -293,26 +291,10 @@ export default function ProgramaResponsaveisCRUDPage() {
           </Link>
           <Typography color="text.primary">Responsáveis</Typography>
         </Breadcrumbs>
-        <Typography
-          variant={isMobile ? "h5" : "h4"}
-          fontWeight="bold"
-          sx={{
-            background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 1
-          }}
-        >
-          Responsáveis pelo Programa
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
           Gerencie os responsáveis principais e a equipe do programa
         </Typography>
-        <LastUpdateInfo
-          updatedAt={lastActivity?.created_at}
-          userName={lastActivity?.user_name}
-          compact
-        />
+        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1 }} />
       </Box>
 
       {/* Definição de Responsáveis e Equipe do Programa - lado a lado no topo */}

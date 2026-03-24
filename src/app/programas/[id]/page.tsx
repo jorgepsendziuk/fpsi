@@ -296,7 +296,7 @@ export default function ProgramaMainPage() {
   const canHover = useMediaQuery("(hover: hover)", { noSsr: true });
 
   useEffect(() => {
-    if (!programaId || isDemoMode) {
+    if (!programaId) {
       setModulosResumo(null);
       setModulosResumoLoading(false);
       setModulosResumoError(false);
@@ -325,7 +325,7 @@ export default function ProgramaMainPage() {
     return () => {
       cancelled = true;
     };
-  }, [programaId, isDemoMode]);
+  }, [programaId]);
 
   useEffect(() => {
     const fetchPrograma = async () => {
@@ -526,7 +526,7 @@ export default function ProgramaMainPage() {
           </Typography>
           {field.key === "atividade_principal_organizacao" && !isEditing && (
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
-              Atividade institucional do controlador. No ROPA: empresa → este campo → escopo do programa (compatibilidade).
+              Atividade institucional do controlador. 
             </Typography>
           )}
           {field.key === "descricao_escopo" && !isEditing && (
@@ -813,12 +813,29 @@ export default function ProgramaMainPage() {
                 </Stack>
               )}
               {!isDemoMode && (
-                <Box sx={{ mt: hasSubtitle ? 1.25 : 1 }}>
+                <Box
+                  sx={{
+                    mt: hasSubtitle ? 1.25 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <LastUpdateInfo
                     updatedAt={programa.updated_at ?? lastActivity?.created_at}
                     userName={lastActivity?.user_name}
                     compact
                   />
+                  <Link
+                    component={NextLink}
+                    href={`/programas/${idOrSlug}/auditoria`}
+                    variant="caption"
+                    underline="hover"
+                    color="primary"
+                  >
+                    Histórico completo
+                  </Link>
                 </Box>
               )}
             </Box>
@@ -1108,7 +1125,7 @@ export default function ProgramaMainPage() {
       {isDemoMode && (
         <Alert severity="info" sx={{ mb: 4, borderRadius: 2 }}>
           <Typography variant="body2">
-            <strong>Modo Demonstração:</strong> Dados de exemplo — você pode abrir e alterar os campos nos painéis &quot;Dados do programa&quot; e &quot;Dados da organização&quot;; o botão de salvar só atualiza a tela nesta sessão, sem gravar no servidor.
+            <strong>Modo Demonstração:</strong> Dados de exemplo.
           </Typography>
         </Alert>
       )}
@@ -1124,8 +1141,7 @@ export default function ProgramaMainPage() {
                 <Grid item xs={12} sm={6} xl={4} key={section.key}>
                   <Box sx={{ position: "relative" }}>
                     {section.key === "portal-privacidade" &&
-                      modulosResumo?.publicPortalPath &&
-                      !isDemoMode && (
+                      modulosResumo?.publicPortalPath && (
                         <Tooltip title="Abrir portal público (nova aba)" placement="left">
                           <Box
                             component="span"
@@ -1176,7 +1192,6 @@ export default function ProgramaMainPage() {
                       resumo={modulosResumo}
                       resumoLoading={modulosResumoLoading}
                       resumoError={modulosResumoError}
-                      isDemoMode={isDemoMode}
                       prefersReducedMotion={prefersReducedMotion}
                       canHover={canHover}
                     />

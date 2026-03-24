@@ -23,6 +23,7 @@ import {
   Info as InfoIcon
 } from '@mui/icons-material';
 import MaturityChip from './MaturityChip';
+import type { GrupoImpleFilter } from '../../lib/utils/grupoImplementacao';
 
 interface DashboardProps {
   diagnosticos: any[];
@@ -32,6 +33,8 @@ interface DashboardProps {
   getControleMaturity: (controle: any, medidas: any[], programaControle: any, programaMedidas?: { [key: string]: any }) => any;
   getDiagnosticoMaturity: (diagnosticoId: number) => any;
   programaId: number;
+  /** Quando não for "all", contagens e índices refletem só o grupo selecionado. */
+  grupoImpleFilter?: GrupoImpleFilter;
   onDiagnosticoClick?: (diagnosticoId: number) => void;
 }
 
@@ -43,6 +46,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   getControleMaturity,
   getDiagnosticoMaturity,
   programaId,
+  grupoImpleFilter = 'all',
   onDiagnosticoClick
 }) => {
   const theme = useTheme();
@@ -109,7 +113,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       medidasImplementadas,
       avgMaturityDiagnosticos
     };
-  }, [diagnosticos, controles, medidas, programaMedidas, getDiagnosticoMaturity, programaId]);
+  }, [diagnosticos, controles, medidas, programaMedidas, getDiagnosticoMaturity, programaId, grupoImpleFilter]);
 
   // Função para determinar cor baseada no score de maturidade
   const getMaturityColor = (score: number) => {
@@ -128,7 +132,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         <Grid item xs={12}>
           <Card>
             <CardHeader 
-              title="Visão Geral dos Diagnósticos"
+              title="Indicadores"
+              subheader={
+                grupoImpleFilter !== 'all'
+                  ? `Indicadores considerando apenas medidas do grupo ${grupoImpleFilter}.`
+                  : 'Indicadores de todas as medidas aplicáveis.'
+              }
+              subheaderTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
               avatar={<DashboardIcon sx={{ color: theme.palette.primary.main, fontSize: 32 }} />}
               sx={{ pb: 1 }}
             />
@@ -183,6 +193,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Cards dos Diagnósticos em 3 Colunas */}
         {diagnosticos.map(diagnostico => {
           const diagnosticoControles = controles[diagnostico.id] || [];
+          const controlesComMedidasNoFiltro = diagnosticoControles.filter(
+            (c) => (medidas[c.id] || []).length > 0
+          );
           let totalMedidasDiag = 0;
           let medidasRespondidasDiag = 0;
 
@@ -283,7 +296,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                        {diagnosticoControles.length}
+                        {controlesComMedidasNoFiltro.length}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Controles

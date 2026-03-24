@@ -17,6 +17,7 @@ import { useUserPermissions, useDemoPermissions } from '../../../../hooks/useUse
 import { useProgramaIdFromParam } from '../../../../hooks/useProgramaIdFromParam';
 import { shouldUseDemoData } from '../../../../lib/services/demoDataService';
 import * as dataService from '../../../../lib/services/dataService';
+import { ProgramaLastActivityLine } from '@/components/common/ProgramaLastActivityLine';
 
 export default function UsuariosPage() {
   const router = useRouter();
@@ -143,6 +144,7 @@ export default function UsuariosPage() {
           </Link>
           <Typography color="text.primary">Usuários</Typography>
         </Breadcrumbs>
+        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1 }} />
       </Box>
 
       {/* Modo Demo Alert */}

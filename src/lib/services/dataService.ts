@@ -1,5 +1,6 @@
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import { mergeControleData } from "./controlesData";
+import { sortMedidasByIdMedida } from "@/lib/utils/medidaSort";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
 import { logActivityFromClient } from "./auditClient";
 
@@ -461,7 +462,7 @@ export const fetchMedidas = async (controleId: number, programaId: number): Prom
 
   console.log(`fetchMedidas: Returning ${mergedData.length} merged medidas`);
   console.log(`fetchMedidas: Merged data:`, mergedData);
-  return mergedData;
+  return sortMedidasByIdMedida(mergedData);
 };
 
 export const fetchProgramaMedida = async (medidaId: number, controleId: number, programaId: number) => {
@@ -546,11 +547,17 @@ export const updateControleNivel = async (programaControleId: number, newValue: 
 };
 
 /** Estrutura mínima de medida para cálculos de maturidade (dashboard). */
-export type MedidaStructureItem = { id: number; id_controle: number };
+export type MedidaStructureItem = {
+  id: number;
+  id_controle: number;
+  grupo_imple?: string | null;
+  /** Para ordenação natural na árvore (19.1 … 19.9 … 19.10). */
+  id_medida?: string | null;
+};
 
 /**
- * Carrega apenas id + id_controle das medidas dos controles informados.
- * Usado no dashboard para contagens e chaves, sem buscar texto das medidas.
+ * Carrega id, id_controle e grupo_imple das medidas dos controles informados.
+ * Usado no dashboard para contagens, filtro G1/G2/G3 e chaves, sem buscar texto das medidas.
  */
 export const fetchMedidasStructure = async (
   controleIds: number[]
@@ -558,18 +565,26 @@ export const fetchMedidasStructure = async (
   if (controleIds.length === 0) return {};
   const { data, error } = await supabaseBrowserClient
     .from("medida")
-    .select("id, id_controle")
-    .in("id_controle", controleIds)
-    .order("id_medida", { ascending: true });
+    .select("id, id_controle, grupo_imple, id_medida")
+    .in("id_controle", controleIds);
 
   if (error) {
     console.error("fetchMedidasStructure: Error", error);
     throw error;
   }
   const byControle: { [controleId: number]: MedidaStructureItem[] } = {};
-  (data || []).forEach((m: { id: number; id_controle: number }) => {
+  (data || []).forEach((m: { id: number; id_controle: number; grupo_imple?: string | null; id_medida?: string | null }) => {
     if (!byControle[m.id_controle]) byControle[m.id_controle] = [];
-    byControle[m.id_controle].push({ id: m.id, id_controle: m.id_controle });
+    byControle[m.id_controle].push({
+      id: m.id,
+      id_controle: m.id_controle,
+      grupo_imple: m.grupo_imple,
+      id_medida: m.id_medida,
+    });
+  });
+  Object.keys(byControle).forEach((k) => {
+    const cid = Number(k);
+    byControle[cid] = sortMedidasByIdMedida(byControle[cid]);
   });
   return byControle;
 };
@@ -1461,9 +1476,28 @@ export type RipdRow = {
   medidas_salvaguardas_mitigacao: string | null;
   conclusao: string | null;
   status: string;
+  /** Art. 38, IV */
+  riscos_tratamento: string | null;
+  nivel_risco: string | null;
+  tipos_risco: string[];
+  categorias_dados_chaves: string[];
+  base_legal_predominante: string | null;
+  parecer_dpo: string | null;
+  parecer_dpo_status: string | null;
+  decisao_controlador: string | null;
   created_at: string;
   updated_at: string;
 };
+
+function normalizeRipdRow(row: Record<string, unknown>): RipdRow {
+  const tipos = row.tipos_risco;
+  const cats = row.categorias_dados_chaves;
+  return {
+    ...(row as unknown as RipdRow),
+    tipos_risco: Array.isArray(tipos) ? (tipos as string[]) : [],
+    categorias_dados_chaves: Array.isArray(cats) ? (cats as string[]) : [],
+  };
+}
 
 export const fetchRipdByPrograma = async (programaId: number): Promise<RipdRow[]> => {
   const { data, error } = await supabaseBrowserClient
@@ -1472,7 +1506,7 @@ export const fetchRipdByPrograma = async (programaId: number): Promise<RipdRow[]
     .eq("programa_id", programaId)
     .order("id", { ascending: false });
   if (error) throw error;
-  return data || [];
+  return (data || []).map((r) => normalizeRipdRow(r as Record<string, unknown>));
 };
 
 export const createRipd = async (
@@ -1486,7 +1520,7 @@ export const createRipd = async (
     .single();
   if (error) throw error;
   logActivityFromClient({ action: "create", resourceType: "ripd", resourceId: data.id, programaId });
-  return data;
+  return normalizeRipdRow(data as Record<string, unknown>);
 };
 
 export const updateRipd = async (
@@ -1501,7 +1535,7 @@ export const updateRipd = async (
     .single();
   if (error) throw error;
   logActivityFromClient({ action: "update", resourceType: "ripd", resourceId: id, programaId: data.programa_id });
-  return data;
+  return normalizeRipdRow(data as Record<string, unknown>);
 };
 
 export const deleteRipd = async (id: number, programaId?: number): Promise<void> => {

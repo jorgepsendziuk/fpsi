@@ -1,7 +1,7 @@
 "use client";
 
 import { Box } from "@mui/material";
-import { Header } from "@components/header";
+import { MainAppShell } from "@/components/layout/MainAppShell";
 
 export default function AuthenticatedLayout({
   children,
@@ -9,11 +9,10 @@ export default function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Header sticky />
-      <Box component="main" sx={{ flexGrow: 1, bgcolor: 'background.default' }}>
+    <MainAppShell>
+      <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default", minHeight: "100%" }}>
         {children}
       </Box>
-    </Box>
+    </MainAppShell>
   );
 } 

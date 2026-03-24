@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { Suspense, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -542,8 +542,10 @@ export default function DashboardPage() {
         </Card>
       </Box>
 
-      {/* Programas */}
-      <ProgramasSection />
+      {/* Programas — Suspense: useSearchParams em ProgramasSection (abrir criação via ?novoPrograma=1) */}
+      <Suspense fallback={<Box sx={{ minHeight: 240 }} />}>
+        <ProgramasSection />
+      </Suspense>
       {/* Empresas */}
       <Box sx={{ mb: 5 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 2 }}>

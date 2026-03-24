@@ -9,7 +9,7 @@ DECLARE
   pid INTEGER;
   id_incra BIGINT;
   id_ufba BIGINT;
-  id_funarbe BIGINT;
+  id_fapex BIGINT;
   id_lgrdc BIGINT;
   ja_existe BOOLEAN;
 BEGIN
@@ -44,21 +44,21 @@ BEGIN
   VALUES 
     (pid, 'controlador', 0, 'INCRA', 'Instituto Nacional de Colonização e Reforma Agrária'),
     (pid, 'controlador', 1, 'UFBA', 'Universidade Federal da Bahia'),
-    (pid, 'contratante', 0, 'FUNARBE - Fundação UFBA', 'Fundação de apoio da UFBA; intermediária contratual'),
+    (pid, 'contratante', 0, 'FAPEX - Fundação de Apoio à Pesquisa e à Extensão', 'Fundação de apoio à pesquisa e extensão na Bahia; intermediária contratual no TED 50/2023'),
     (pid, 'operador', 0, 'LGRDC Serviços de Informática', 'Processa dados pessoais em nome do controlador');
 
   -- 4. Obter IDs
   SELECT id INTO id_incra FROM public.programa_papel_lgpd_instituicao WHERE programa_id = pid AND nome = 'INCRA';
   SELECT id INTO id_ufba FROM public.programa_papel_lgpd_instituicao WHERE programa_id = pid AND nome = 'UFBA';
-  SELECT id INTO id_funarbe FROM public.programa_papel_lgpd_instituicao WHERE programa_id = pid AND nome = 'FUNARBE - Fundação UFBA';
+  SELECT id INTO id_fapex FROM public.programa_papel_lgpd_instituicao WHERE programa_id = pid AND nome = 'FAPEX - Fundação de Apoio à Pesquisa e à Extensão';
   SELECT id INTO id_lgrdc FROM public.programa_papel_lgpd_instituicao WHERE programa_id = pid AND nome = 'LGRDC Serviços de Informática';
 
-  -- 5. Inserir vínculos (setas: INCRA→UFBA, UFBA→FUNARBE, FUNARBE→LGRDC, LGRDC→controlador)
+  -- 5. Inserir vínculos (setas: INCRA→UFBA, UFBA→FAPEX, FAPEX→LGRDC, LGRDC→controlador)
   INSERT INTO public.programa_papel_lgpd_vinculo (programa_id, instituicao_origem_id, instituicao_destino_id, tipo_vinculo, ordem)
   VALUES 
     (pid, id_incra, id_ufba, 'TED 50/2023', 0),
-    (pid, id_ufba, id_funarbe, 'Contrato', 1),
-    (pid, id_funarbe, id_lgrdc, 'Desenvolvimento/hospedagem', 2);
+    (pid, id_ufba, id_fapex, 'Contrato', 1),
+    (pid, id_fapex, id_lgrdc, 'Desenvolvimento/hospedagem', 2);
 
   INSERT INTO public.programa_papel_lgpd_vinculo (programa_id, instituicao_origem_id, destino_tipo_papel, tipo_vinculo, ordem)
   VALUES (pid, id_lgrdc, 'controlador', 'Processa dados em nome de', 3);

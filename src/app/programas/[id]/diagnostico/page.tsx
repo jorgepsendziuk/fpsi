@@ -68,18 +68,19 @@ import 'dayjs/locale/pt-br';
 
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
-import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
-import { useLastActivity } from "@/hooks/useLastActivity";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../../components/diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../../components/diagnostico/containers/ControleContainer";
 import { useMaturityCache } from "../../../../components/diagnostico/hooks/useMaturityCache";
 import MaturityChip from "../../../../components/diagnostico/MaturityChip";
 import Dashboard from "../../../../components/diagnostico/Dashboard";
+import ReportButton from "../../../../components/diagnostico/ReportButton";
 import {
   GrupoImpleFilter,
   matchesGrupoFilter,
 } from "../../../../lib/utils/grupoImplementacao";
+import { sortMedidasByIdMedida } from "../../../../lib/utils/medidaSort";
 
 const DRAWER_WIDTH = 380;
 
@@ -104,7 +105,6 @@ export default function DiagnosticoPage() {
   const { programaId: resolvedProgramaId, loading: resolvingId } = useProgramaIdFromParam(idOrSlug);
   const programaId = resolvedProgramaId ?? 0;
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { lastActivity } = useLastActivity(programaId || undefined, undefined, undefined);
 
   // Estado principal
   const [diagnosticos, setDiagnosticos] = useState<Diagnostico[]>([]);
@@ -393,6 +393,20 @@ export default function DiagnosticoPage() {
     return out;
   }, [medidas, medidasStructure]);
 
+  /** Visão geral e índices do dashboard respeitam o filtro G1/G2/G3. */
+  const medidasParaDashboard = useMemo(() => {
+    if (grupoImpleFilter === "all") return medidasParaCalculo;
+    const out: { [key: number]: Array<Medida | dataService.MedidaStructureItem> } = {};
+    Object.keys(medidasParaCalculo).forEach((k) => {
+      const cid = Number(k);
+      const arr = medidasParaCalculo[cid] || [];
+      out[cid] = arr.filter((m) =>
+        matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
+      );
+    });
+    return out;
+  }, [medidasParaCalculo, grupoImpleFilter]);
+
   // Construir árvore de navegação
   const treeData = useMemo((): TreeNode[] => {
     if (loading) return [];
@@ -466,7 +480,7 @@ export default function DiagnosticoPage() {
           children: []
         };
 
-                controleMedidas.forEach(medida => {
+                sortMedidasByIdMedida(controleMedidas).forEach((medida) => {
               // Só mostrar nó de medida na árvore quando tiver dados completos (carregados ao expandir)
               const hasFullMedida = typeof (medida as any).medida === 'string';
               if (!hasFullMedida) return;
@@ -554,7 +568,7 @@ export default function DiagnosticoPage() {
         grupoImpleFilter === "all"
           ? controleMedidas
           : controleMedidas.filter((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
-      allItems = filtradas.map(medida => ({
+      allItems = sortMedidasByIdMedida(filtradas).map((medida) => ({
         id: `medida-${medida.id}`,
         type: 'medida' as const,
         label: `${medida.id_medida} - ${medida.medida?.substring(0, 50)}...`,
@@ -935,14 +949,15 @@ export default function DiagnosticoPage() {
         <Dashboard
           diagnosticos={diagnosticos}
           controles={controles}
-          medidas={medidasParaCalculo as { [key: number]: Medida[] }}
+          medidas={medidasParaDashboard as { [key: number]: Medida[] }}
           programaMedidas={programaMedidas}
           getControleMaturity={getControleMaturity}
+          grupoImpleFilter={grupoImpleFilter}
           getDiagnosticoMaturity={(id) => {
             const diagnostico = diagnosticos.find(d => d.id === id);
             if (!diagnostico) return { score: 0, label: 'Sem dados', color: '#9E9E9E', level: 'inicial' as const };
             const diagnosticoControles = controles[id] || [];
-            return getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidasParaCalculo as { [key: number]: Medida[] });
+            return getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidasParaDashboard as { [key: number]: Medida[] });
           }}
           programaId={programaId}
           onDiagnosticoClick={(diagnosticoId) => {
@@ -1373,64 +1388,102 @@ export default function DiagnosticoPage() {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
                 flexWrap: "wrap",
                 gap: 1.5,
                 rowGap: 1,
+                width: "100%",
               }}
             >
-              <Typography
-                variant={isMobile ? "h5" : "h4"}
-                sx={{
-                  fontWeight: "bold",
-                  background: "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  flex: "1 1 auto",
-                  minWidth: 0,
-                }}
-              >
-                Diagnóstico
-              </Typography>
               <Stack
                 direction="row"
-                spacing={1}
+                spacing={1.5}
                 alignItems="center"
                 flexWrap="wrap"
                 sx={{ gap: 1, flex: "0 1 auto", justifyContent: "flex-end" }}
               >
-                <Tooltip title="Filtra a árvore e as listas por grupo de implementação (G1 básico, G2 intermediário, G3 avançado), conforme a planilha oficial. O índice de maturidade do controle continua considerando todas as medidas.">
-                  <Stack direction="row" alignItems="center" gap={0.5} component="span">
-                    <FilterListIcon color="action" fontSize="small" />
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      component="span"
-                      sx={{ display: { xs: "none", sm: "inline" } }}
-                    >
-                      Grupo de Implementação :
-                    </Typography>
-                  </Stack>
-                </Tooltip>
-                <ToggleButtonGroup
-                  exclusive
-                  value={grupoImpleFilter}
-                  onChange={(_, v) => v != null && setGrupoImpleFilter(v)}
-                  size="small"
-                  aria-label="Filtrar por grupo de implementação"
+                <Tooltip
+                  title="Filtra a árvore, as listas e a visão geral por grupo de implementação (G1 básico, G2 intermediário, G3 avançado), conforme a planilha oficial. Na tela de um controle, o índice de maturidade do controle continua considerando todas as medidas."
+                  enterDelay={400}
                 >
-                  <ToggleButton value="all">Todos</ToggleButton>
-                  <ToggleButton value="G1">G1</ToggleButton>
-                  <ToggleButton value="G2">G2</ToggleButton>
-                  <ToggleButton value="G3">G3</ToggleButton>
-                </ToggleButtonGroup>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: { xs: 0.75, sm: 1.25 },
+                      pl: { xs: 1, sm: 1.5 },
+                      pr: 0.75,
+                      py: 0.65,
+                      borderRadius: 2.5,
+                      border: `1px solid ${alpha(theme.palette.divider, 0.14)}`,
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
+                      boxShadow: `0 1px 2px ${alpha(theme.palette.common.black, 0.04)}`,
+                    }}
+                  >
+                    <FilterListIcon
+                      sx={{ fontSize: 20, color: "primary.main", opacity: 0.9 }}
+                      aria-hidden
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 700,
+                        letterSpacing: 0.8,
+                        color: "text.secondary",
+                        display: { xs: "none", md: "block" },
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Grupo
+                    </Typography>
+                    <ToggleButtonGroup
+                      exclusive
+                      value={grupoImpleFilter}
+                      onChange={(_, v) => v != null && setGrupoImpleFilter(v)}
+                      size="small"
+                      aria-label="Filtrar por grupo de implementação"
+                      sx={{
+                        gap: 0.5,
+                        "& .MuiToggleButtonGroup-grouped": {
+                          border: "none",
+                          mx: 0,
+                          "&:not(:first-of-type)": { borderRadius: 2 },
+                          "&:first-of-type": { borderRadius: 2 },
+                        },
+                        "& .MuiToggleButton-root": {
+                          px: { xs: 1.1, sm: 1.5 },
+                          py: 0.45,
+                          fontSize: "0.8125rem",
+                          fontWeight: 600,
+                          textTransform: "none",
+                          border: "none",
+                          borderRadius: "10px !important",
+                          color: "text.secondary",
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.08),
+                          },
+                          "&.Mui-selected": {
+                            bgcolor: "primary.main",
+                            color: "primary.contrastText",
+                            "&:hover": {
+                              bgcolor: "primary.dark",
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="all">Todos</ToggleButton>
+                      <ToggleButton value="G1">G1</ToggleButton>
+                      <ToggleButton value="G2">G2</ToggleButton>
+                      <ToggleButton value="G3">G3</ToggleButton>
+                    </ToggleButtonGroup>
+                  </Paper>
+                </Tooltip>
+                <ReportButton programaPathSegment={idOrSlug} />
               </Stack>
             </Box>
-            <LastUpdateInfo
-              updatedAt={lastActivity?.created_at}
-              userName={lastActivity?.user_name}
-              compact
-            />
+            <ProgramaLastActivityLine programaId={programaId || undefined} programaPathSegment={idOrSlug} />
         </Box>
         </Paper>
 

@@ -33,6 +33,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 
 const ACTION_LABELS: Record<string, string> = {
   create: "Criou",
@@ -170,14 +171,17 @@ export default function AuditoriaPage() {
               <HistoryIcon fontSize="large" />
             </Avatar>
             <Box>
-              <Typography variant="h4" fontWeight="bold">
-                Histórico de Atividades
-              </Typography>
               <Typography variant="body1" color="text.secondary">
                 Trilha de auditoria — quem fez o quê, quando (LGPD art. 37, Framework FPSI Controle 8)
               </Typography>
             </Box>
           </Box>
+          <ProgramaLastActivityLine
+            programaId={programaId}
+            programaPathSegment={idOrSlug}
+            showHistoricoLink={false}
+            sx={{ mt: 1 }}
+          />
         </Box>
 
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3 }}>

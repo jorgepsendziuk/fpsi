@@ -37,6 +37,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import 'dayjs/locale/pt-br';
 import { useProgramaIdFromParam } from '../../../../../hooks/useProgramaIdFromParam';
+import { ProgramaLastActivityLine } from '@/components/common/ProgramaLastActivityLine';
 import {
   applyPoliticaPlaceholders,
   applyPoliticaPlaceholdersToSections,
@@ -428,6 +429,7 @@ export default function PoliticaPage() {
                 <Typography variant="body1" color="text.secondary">
                   {politicaConfig.descricao} • Programa: <strong>{programa?.nome || programa?.nome_fantasia}</strong>
                 </Typography>
+                <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1.5 }} />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2, maxWidth: 420 }}>
                   <DatePicker
                     label="Início da vigência"

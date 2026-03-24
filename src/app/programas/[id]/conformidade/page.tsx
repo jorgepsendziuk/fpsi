@@ -5,12 +5,15 @@ import { useParams, useRouter } from "next/navigation";
 import { Container, Typography, Box, Breadcrumbs, Link, Grid, Avatar } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Gavel as GavelIcon } from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
+import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { ConformidadeHubCard, TRATAMENTO_SECTIONS } from "./ConformidadeHubCard";
 
 export default function ConformidadeTratamentoHubPage() {
   const params = useParams();
   const router = useRouter();
   const idOrSlug = params.id as string;
+  const { programaId } = useProgramaIdFromParam(idOrSlug);
   const [programa, setPrograma] = React.useState<{ nome?: string; nome_fantasia?: string; razao_social?: string } | null>(
     null
   );
@@ -64,14 +67,12 @@ export default function ConformidadeTratamentoHubPage() {
             <GavelIcon fontSize="large" />
           </Avatar>
           <Box>
-            <Typography variant="h4" fontWeight="bold">
-              Tratamento de dados e riscos
-            </Typography>
             <Typography variant="body1" color="text.secondary">
               Conformidade LGPD — ROPA, RIPD e incidentes
             </Typography>
           </Box>
         </Box>
+        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1 }} />
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: "md" }}>

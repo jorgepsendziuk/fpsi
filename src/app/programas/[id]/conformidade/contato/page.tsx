@@ -27,6 +27,7 @@ import {
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import type { ProgramaContatoRow } from "@/lib/services/dataService";
 
 function escapeCsv(value: string): string {
@@ -135,13 +136,12 @@ export default function ContatoPage() {
         <Typography color="text.primary">Contato do portal</Typography>
       </Breadcrumbs>
 
+      <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
+
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <ContactMailIcon sx={{ fontSize: 32, color: "primary.main" }} />
           <Box>
-            <Typography variant="h5" fontWeight="bold">
-              Contato do portal
-            </Typography>
             <Typography variant="body2" color="text.secondary">
               Mensagens enviadas pelo formulário de contato no portal público
             </Typography>

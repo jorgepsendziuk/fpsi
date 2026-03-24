@@ -13,7 +13,6 @@ import {
   Grid,
   Paper,
   useTheme,
-  useMediaQuery,
   alpha,
   Stack,
   Tooltip,
@@ -36,6 +35,7 @@ import {
 } from "@mui/icons-material";
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { loadPoliticaSectionsForPdf } from "../../../../lib/utils/loadPoliticaSectionsForPdf";
 
 interface PoliticaInfo {
@@ -123,7 +123,6 @@ export default function ProgramaPoliticasPage() {
   const params = useParams();
   const router = useRouter();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const idOrSlug = params.id as string;
   const { programaId, loading: idLoading, error: idError } = useProgramaIdFromParam(idOrSlug);
   const [programa, setPrograma] = useState<any>(null);
@@ -296,23 +295,11 @@ export default function ProgramaPoliticasPage() {
             </Box>
 
             <Box>
-              <Typography 
-                variant={isMobile ? "h5" : "h4"} 
-                component="h1" 
-                sx={{ 
-                  fontWeight: 'bold',
-                  background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: 1
-                }}
-              >
-                Políticas
-              </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+              <Typography variant="body1" color="text.secondary" sx={{ mt: 0 }}>
                 Gerencie e edite as políticas institucionais do programa{' '}
                 <strong>{programa?.nome || programa?.nome_fantasia}</strong>
               </Typography>
+              <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1.5 }} />
             </Box>
           </Stack>
         </Paper>

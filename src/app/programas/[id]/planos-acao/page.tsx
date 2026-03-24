@@ -23,6 +23,7 @@ import { useProgramaIdFromParam } from '../../../../hooks/useProgramaIdFromParam
 import { shouldUseDemoData } from '../../../../lib/services/demoDataService';
 import * as dataService from '../../../../lib/services/dataService';
 import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from '../../../../lib/utils/programaDisplay';
+import { ProgramaLastActivityLine } from '@/components/common/ProgramaLastActivityLine';
 
 export default function PlanosAcaoPage() {
   const router = useRouter();
@@ -150,6 +151,7 @@ export default function PlanosAcaoPage() {
           </Link>
           <Typography color="text.primary">Plano de Trabalho</Typography>
         </Breadcrumbs>
+        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1 }} />
       </Box>
 
       {/* Modo Demo Alert */}

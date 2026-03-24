@@ -9,6 +9,7 @@
  */
 
 import { supabaseBrowserClient } from '../../utils/supabase/client';
+import { sortMedidasByIdMedida } from '@/lib/utils/medidaSort';
 
 // Cache global para dados de diagnóstico
 const CACHE = {
@@ -238,12 +239,12 @@ export const loadMedidasDetalhadas = async (controleId: number, programaId: numb
       .eq('programa_medida.programa', programaId)
       .order('id_medida');
 
-    // Salvar no cache
-    CACHE.medidas.set(controleId, medidas || []);
+    const sorted = sortMedidasByIdMedida(medidas || []);
+    CACHE.medidas.set(controleId, sorted);
     CACHE.timestamps.set(cacheKey, Date.now());
 
-    console.log(`✅ Detailed medidas loaded for controle ${controleId}: ${medidas?.length} items`);
-    return medidas || [];
+    console.log(`✅ Detailed medidas loaded for controle ${controleId}: ${sorted.length} items`);
+    return sorted;
     
   } catch (error) {
     console.error(`❌ Error loading detailed medidas for controle ${controleId}:`, error);

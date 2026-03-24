@@ -68,7 +68,6 @@ type Props = {
   resumo: ModulosResumoApi | null;
   resumoLoading: boolean;
   resumoError?: boolean;
-  isDemoMode: boolean;
   prefersReducedMotion: boolean;
   canHover: boolean;
 };
@@ -80,7 +79,6 @@ export function ModuloSistemaFlipCard({
   resumo,
   resumoLoading,
   resumoError = false,
-  isDemoMode,
   prefersReducedMotion,
   canHover,
 }: Props) {
@@ -109,13 +107,6 @@ export function ModuloSistemaFlipCard({
   const navigateHref = `/programas/${idOrSlug}/${section.path}`;
 
   const renderBack = () => {
-    if (isDemoMode) {
-      return (
-        <Typography variant="body2" color="text.secondary" sx={{ ...backBodySx }}>
-          Modo demonstração: resumo indisponível. Acesse o módulo para explorar.
-        </Typography>
-      );
-    }
     if (resumoLoading) {
       return (
         <Stack spacing={0.75} sx={{ width: "100%" }}>

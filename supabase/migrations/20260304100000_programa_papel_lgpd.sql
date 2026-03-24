@@ -2,7 +2,7 @@
 -- Baseado no diagrama: Controlador, Contratante, Operador (PROGRAMA_PRIVACIDADE.md)
 -- Cada programa pode ter suas próprias instituições em cada papel
 
--- Instituições por papel (ex: INCRA, UFBA no Controlador; FUNARBE no Contratante; LGRDC no Operador)
+-- Instituições por papel (ex: INCRA, UFBA no Controlador; FAPEX no Contratante; LGRDC no Operador)
 CREATE TABLE IF NOT EXISTS public.programa_papel_lgpd_instituicao (
     id BIGSERIAL PRIMARY KEY,
     programa_id INTEGER NOT NULL REFERENCES public.programa(id) ON DELETE CASCADE,

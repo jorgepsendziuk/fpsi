@@ -59,6 +59,7 @@ import {
 import { jsPDF } from "jspdf";
 import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import type { PedidoTitularRow } from "@/lib/services/dataService";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -371,11 +372,12 @@ export default function PedidosTitularesPage() {
         <Typography color="text.primary">Pedidos dos titulares</Typography>
       </Breadcrumbs>
 
+      <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
+
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <AssignmentIcon sx={{ fontSize: 32, color: "primary.main" }} />
           <Box>
-            <Typography variant="h5" fontWeight="bold">Pedidos dos titulares</Typography>
             <Typography variant="body2" color="text.secondary">
               Registro de pedidos de acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento e oposição (art. 18 LGPD)
             </Typography>

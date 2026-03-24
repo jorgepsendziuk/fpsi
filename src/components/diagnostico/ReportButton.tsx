@@ -1,44 +1,53 @@
 "use client";
 
 import React from "react";
-import { Box, Tooltip, Typography } from "@mui/material";
+import { Button, Tooltip } from "@mui/material";
 import { Assessment as AssessmentIcon } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 
 interface ReportButtonProps {
-  programaId: number;
+  /** Segmento da URL do programa (`id` numérico ou `slug`), igual a `programas/[id]`. */
+  programaPathSegment: string;
 }
 
-export default function ReportButton({ programaId }: ReportButtonProps) {
+export default function ReportButton({ programaPathSegment }: ReportButtonProps) {
   const router = useRouter();
 
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Previne que o clique propague para o AccordionSummary
-    router.push(`/diagnostico/relatorio?programaId=${programaId}`);
+    e.stopPropagation();
+    router.push(`/programas/${encodeURIComponent(programaPathSegment)}/diagnostico/relatorio`);
   };
 
   return (
-    <Tooltip title="Relatório">
-      <Box
+    <Tooltip title="Abrir relatório de todos os controles (imprimível / PDF)" enterDelay={300}>
+      <Button
+        type="button"
+        variant="contained"
+        disableElevation={false}
+        startIcon={<AssessmentIcon sx={{ fontSize: 22 }} />}
         onClick={handleClick}
+        aria-label="Relatório de todos os controles"
         sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          cursor: "pointer",
-          ml: 2,
-          p: 1,
-          borderRadius: 1,
+          ml: { xs: 0, sm: 1 },
+          px: { xs: 2, sm: 2.75 },
+          py: 1.1,
+          borderRadius: 2.5,
+          textTransform: "none",
+          fontWeight: 800,
+          fontSize: { xs: "0.875rem", sm: "0.9375rem" },
+          letterSpacing: 0.02,
+          color: "#fff",
+          background: "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
+          boxShadow: "0 4px 14px rgba(102, 126, 234, 0.45)",
+          border: "1px solid rgba(255,255,255,0.2)",
           "&:hover": {
-            backgroundColor: "action.hover",
+            background: "linear-gradient(90deg, #5a6fd6 0%, #6a4190 100%)",
+            boxShadow: "0 6px 20px rgba(118, 75, 162, 0.5)",
           },
         }}
       >
-        <AssessmentIcon color="primary" />
-        <Typography variant="body2" color="primary">
-          Relatório
-        </Typography>
-      </Box>
+        Relatório
+      </Button>
     </Tooltip>
   );
-} 
+}

@@ -44,6 +44,7 @@ import {
   Map as MapIcon,
 } from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
+import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import {
   SETOR_AREA_OPCOES,
   FINALIDADE_OPCOES,
@@ -293,11 +294,12 @@ export default function MapeamentoDadosPage() {
         <Typography color="text.primary">Mapeamento de dados</Typography>
       </Breadcrumbs>
 
+      <ProgramaLastActivityLine programaId={programaIdNum} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
+
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <MapIcon sx={{ fontSize: 32, color: "primary.main" }} />
           <Box>
-            <Typography variant="h5" fontWeight="bold">Mapeamento de dados</Typography>
             <Typography variant="body2" color="text.secondary">
               Levantamento com listas de escolha para primeira linha; vincule ao ROPA ao cadastrar cada operação.
             </Typography>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useReducer, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Typography,
@@ -83,6 +83,7 @@ const DEFAULT_CREATE_FORM = {
 
 export function ProgramasSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const theme = useTheme();
   const [programas, setProgramas] = useState<Programa[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +105,12 @@ export function ProgramasSection() {
   useEffect(() => {
     loadAllData();
   }, [viewExcluidos]);
+
+  useEffect(() => {
+    if (searchParams.get("novoPrograma") !== "1") return;
+    setOpenDialog(true);
+    router.replace("/dashboard", { scroll: false });
+  }, [searchParams, router]);
 
   useEffect(() => {
     if (openDialog) {

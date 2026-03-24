@@ -18,6 +18,52 @@ export function getPoliticaNomeOrgao(programa: PoliticaProgramaDados): string {
 }
 
 /**
+ * Primeira linha em destaque dos PDFs: nome do programa FPSI (`nome`); se vazio, mesmo critério do órgão ([`getPoliticaNomeOrgao`]).
+ */
+export function getPoliticaPdfCabecalhoTitulo(programa: PoliticaProgramaDados): string {
+  if (!programa || typeof programa !== "object") return "";
+  const nomeProg = String(programa.nome ?? "").trim();
+  if (nomeProg) return nomeProg;
+  return getPoliticaNomeOrgao(programa);
+}
+
+/**
+ * Linhas abaixo do título: nome fantasia / razão social quando o título já é o nome do programa;
+ * ou só razão social quando o título veio só do órgão.
+ */
+export function getPoliticaPdfCabecalhoLinhasMetadados(programa: PoliticaProgramaDados): string[] {
+  if (!programa || typeof programa !== "object") return [];
+  const titulo = getPoliticaPdfCabecalhoTitulo(programa);
+  const nomeProg = String(programa.nome ?? "").trim();
+  const nf = String(programa.nome_fantasia ?? "").trim();
+  const rs = String(programa.razao_social ?? "").trim();
+  const out: string[] = [];
+  if (nomeProg) {
+    if (nf && nf !== titulo) out.push(nf);
+    if (rs && rs !== titulo && rs !== nf) out.push(rs);
+  } else if (rs && rs !== titulo) {
+    out.push(rs);
+  }
+  return out;
+}
+
+/**
+ * Texto para rótulos “Programa: …” — prioriza nome do programa; evita mostrar só o slug quando há cadastro.
+ */
+export function getPoliticaNomeProgramaRotulo(programa: PoliticaProgramaDados, slugOuIdFallback: string): string {
+  if (programa && typeof programa === "object") {
+    const n = String(programa.nome ?? "").trim();
+    if (n) return n;
+    const nf = String(programa.nome_fantasia ?? "").trim();
+    if (nf) return nf;
+    const rs = String(programa.razao_social ?? "").trim();
+    if (rs) return rs;
+  }
+  const s = String(slugOuIdFallback ?? "").trim();
+  return s || "Programa";
+}
+
+/**
  * Garante nome para placeholders quando o JSON do programa veio parcial ou só `nomeFantasia` no body do PDF.
  */
 export function mergeProgramaForPoliticaPlaceholders(

@@ -9,6 +9,14 @@ import MedidaComponent from '../Medida';
 
 // Utils
 import dayjs from 'dayjs';
+import * as dataService from '../../../lib/services/dataService';
+import {
+  TIPO_POLITICA_POSIN,
+  buildEvidenciaContext,
+  getEvidenciaSugestao,
+  textoJustificativaSugestao,
+  type EvidenciaSugestao as EvidenciaSugestaoTipo,
+} from '../../../lib/medidas/evidenciaRules';
 
 /**
  * Props for the MedidaContainer component
@@ -56,6 +64,35 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
       nova_resposta: programaMedida?.nova_resposta || ""
     });
   }, [programaMedida]);
+
+  const [evidenciaSugestao, setEvidenciaSugestao] = useState<EvidenciaSugestaoTipo | null>(null);
+  const [evidenciaLoading, setEvidenciaLoading] = useState(false);
+
+  useEffect(() => {
+    if (controle.diagnostico !== 1) {
+      setEvidenciaSugestao(null);
+      setEvidenciaLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setEvidenciaLoading(true);
+      try {
+        const programa = await dataService.fetchProgramaById(programaId);
+        const posin = await dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_POSIN);
+        if (cancelled) return;
+        const ctx = buildEvidenciaContext(programa, posin);
+        setEvidenciaSugestao(getEvidenciaSugestao(medida.id_medida, ctx));
+      } catch {
+        if (!cancelled) setEvidenciaSugestao(null);
+      } finally {
+        if (!cancelled) setEvidenciaLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [programaId, controle.diagnostico, medida.id_medida]);
 
   /**
    * Determines the status_plano_acao based on dates and status_medida
@@ -130,6 +167,27 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
     setLocalValues(prev => ({ ...prev, [field]: value }));
   }, []);
 
+  const handleAplicarSugestao = useCallback(async () => {
+    if (!evidenciaSugestao?.regraDefinida || evidenciaSugestao.respostaSugerida == null) return;
+    const rid = evidenciaSugestao.respostaSugerida;
+    await handleMedidaChange(medida.id, controle.id, programaId, "resposta", rid);
+    const extra = textoJustificativaSugestao(evidenciaSugestao);
+    if (extra) {
+      const current = (localValues.justificativa || "").trim();
+      const merged = current ? `${current}\n\n${extra}` : extra;
+      await handleMedidaChange(medida.id, controle.id, programaId, "justificativa", merged);
+      handleTextChange("justificativa", merged);
+    }
+  }, [
+    evidenciaSugestao,
+    handleMedidaChange,
+    medida.id,
+    controle.id,
+    programaId,
+    localValues.justificativa,
+    handleTextChange,
+  ]);
+
   /**
    * Handles saving a field value by calling the parent handler
    */
@@ -148,6 +206,9 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
       localValues={localValues} 
       handleTextChange={handleTextChange}
       handleSaveField={handleSaveField}
+      evidenciaSugestao={evidenciaSugestao}
+      evidenciaLoading={evidenciaLoading}
+      onAplicarSugestao={handleAplicarSugestao}
     />
   );
 };

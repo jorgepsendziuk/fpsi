@@ -10,7 +10,7 @@ Documento de orientação para atualização da política de privacidade antes d
 
 - Controlador: UFBA/INCRA (determina finalidades e meios)
 - Operador: LGRDC (processa dados em nome do controlador)
-- Contratante: FUNARBE (conforme arranjo contratual)
+- Contratante administrativa / canal operacional: FAPEX — Fundação de Apoio à Pesquisa e à Extensão (não confundir com FUNARBE; não é “fundação da UFBA” neste projeto)
 
 ---
 

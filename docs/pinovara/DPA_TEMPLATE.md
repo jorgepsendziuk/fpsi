@@ -1,7 +1,7 @@
 # Modelo de Acordo de Processamento de Dados (DPA)
 
 **Projeto:** PINOVARA — TED 50/2023 INCRA/UFBA  
-**Entre:** FUNARBE / UFBA (Controlador) e LGRDC Serviços de Informática (Operador)
+**Entre:** UFBA / INCRA (Controladores) e LGRDC Serviços de Informática (Operador); contratante administrativa FAPEX conforme instrumentos do TED 50/2023
 
 ---
 
@@ -11,7 +11,7 @@
 
 ## 1. Definições
 
-- **Controlador:** A parte que determina as finalidades e os meios do tratamento de dados pessoais (UFBA/INCRA, representada por FUNARBE).
+- **Controlador:** A parte que determina as finalidades e os meios do tratamento de dados pessoais (UFBA e INCRA, em conjunto no âmbito do projeto). A FAPEX (Fundação de Apoio à Pesquisa e à Extensão) atua como contratante administrativa, sem substituir o papel de controlador.
 - **Operador:** A parte que realiza o tratamento de dados pessoais em nome do controlador (LGRDC Serviços de Informática).
 - **Dados pessoais:** Conforme definido no art. 5º, I da Lei nº 13.709/2018 (LGPD).
 - **Tratamento:** Conforme definido no art. 5º, X da LGPD.
@@ -84,7 +84,10 @@ O presente acordo é regido pela LGPD (Lei nº 13.709/2018) e pela legislação 
 
 *[Espaço para assinaturas]*
 
-**FUNARBE / UFBA (Controlador)**
+**UFBA / INCRA (Controladores)**  
+*Representante para fins de assinatura, conforme mandato institucional:* ________________
+
+**FAPEX (contratante administrativa, quando aplicável ao instrumento)**
 Data: ________________
 
 **LGRDC Serviços de Informática (Operador)**

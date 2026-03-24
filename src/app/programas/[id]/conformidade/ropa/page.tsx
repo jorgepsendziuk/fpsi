@@ -52,6 +52,7 @@ import {
   PersonAdd as PersonAddIcon,
 } from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
+import { getPoliticaNomeProgramaRotulo } from "@/lib/utils/politicaPlaceholders";
 import { buildRopaPdfDocument } from "@/lib/utils/ropaPdf";
 import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
 import { useLastActivity } from "@/hooks/useLastActivity";
@@ -458,7 +459,7 @@ export default function ROPAPage() {
           idOrSlug,
           registro: regSnap,
           operacoes: ops.map(operacaoToPdfPayload),
-          metaLine: `Programa: ${idOrSlug} | Versão ${v.numero} | ${new Date(v.created_at).toLocaleString("pt-BR")}`,
+          metaLine: `Programa: ${getPoliticaNomeProgramaRotulo(programa, idOrSlug)} | Versão ${v.numero} | ${new Date(v.created_at).toLocaleString("pt-BR")}`,
         });
         doc.save(`ROPA-${idOrSlug}-v${v.numero}-${new Date(v.created_at).toISOString().slice(0, 10)}.pdf`);
       } catch (e) {
@@ -590,7 +591,7 @@ export default function ROPAPage() {
           idOrSlug,
           registro,
           operacoes: list.map(operacaoToPdfPayload),
-          metaLine: `Programa: ${idOrSlug} | Exportado em ${new Date().toLocaleString("pt-BR")}`,
+          metaLine: `Programa: ${getPoliticaNomeProgramaRotulo(programa, idOrSlug)} | Exportado em ${new Date().toLocaleString("pt-BR")}`,
         });
         doc.save(`ROPA-Programa-${idOrSlug}-${new Date().toISOString().slice(0, 10)}.pdf`);
       } catch (e) {
@@ -675,15 +676,25 @@ export default function ROPAPage() {
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <StorageIcon sx={{ fontSize: 32, color: "primary.main" }} />
           <Box>
-            <Typography variant="h5" fontWeight="bold">ROPA</Typography>
             <Typography variant="body2" color="text.secondary">
               Registro das Operações de Tratamento (art. 37 LGPD)
             </Typography>
-            <LastUpdateInfo
-              updatedAt={registro?.updated_at ?? lastActivity?.created_at}
-              userName={lastActivity?.user_name}
-              compact
-            />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
+              <LastUpdateInfo
+                updatedAt={registro?.updated_at ?? lastActivity?.created_at}
+                userName={lastActivity?.user_name}
+                compact
+              />
+              <Link
+                component={NextLink}
+                href={`/programas/${idOrSlug}/auditoria`}
+                variant="caption"
+                underline="hover"
+                color="primary"
+              >
+                Histórico completo
+              </Link>
+            </Box>
           </Box>
         </Box>
       </Box>

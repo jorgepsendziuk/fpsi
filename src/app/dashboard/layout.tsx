@@ -1,7 +1,7 @@
 "use client";
 
-import { Header } from "@components/header";
 import { Box } from "@mui/material";
+import { MainAppShell } from "@/components/layout/MainAppShell";
 import { useGetIdentity } from "@refinedev/core";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -47,9 +47,8 @@ export default function DashboardLayout({
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      <Header sticky />
-      {children}
-    </Box>
+    <MainAppShell>
+      <Box sx={{ flexGrow: 1, bgcolor: "background.default" }}>{children}</Box>
+    </MainAppShell>
   );
 }

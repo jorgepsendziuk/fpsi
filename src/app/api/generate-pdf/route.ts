@@ -17,7 +17,8 @@ import { NextResponse } from "next/server";
 import {
   applyPoliticaPlaceholders,
   formatCnpjBrasil,
-  getPoliticaNomeOrgao,
+  getPoliticaPdfCabecalhoLinhasMetadados,
+  getPoliticaPdfCabecalhoTitulo,
   mergeProgramaForPoliticaPlaceholders,
   type PoliticaProgramaDados,
 } from "@/lib/utils/politicaPlaceholders";
@@ -558,18 +559,17 @@ async function drawPolicyHeader(
     logoBottomY = top - dh;
   }
 
-  const nome =
-    getPoliticaNomeOrgao(programa) ||
+  const titulo =
+    getPoliticaPdfCabecalhoTitulo(programa) ||
     (nomeFantasiaFallback?.trim() ? nomeFantasiaFallback.trim() : "") ||
     "Programa";
 
   const metaLines: { text: string; bold: boolean; size: number }[] = [];
-  metaLines.push({ text: nome, bold: true, size: 11 });
+  metaLines.push({ text: titulo, bold: true, size: 11 });
 
   if (programa && typeof programa === "object") {
-    const rs = typeof programa.razao_social === "string" ? programa.razao_social.trim() : "";
-    if (rs && rs !== nome) {
-      metaLines.push({ text: rs, bold: false, size: 9 });
+    for (const linha of getPoliticaPdfCabecalhoLinhasMetadados(programa)) {
+      metaLines.push({ text: linha, bold: false, size: 9 });
     }
     const cnpj = formatCnpjBrasil(programa.cnpj);
     if (cnpj) {
@@ -606,27 +606,48 @@ async function drawPolicyHeader(
   const portalUrl = resolvePortalPrivacidadeUrl(programa);
   const portalFontSize = 9;
   const portalBlue = rgb(0.12, 0.32, 0.75);
+  const black = rgb(0, 0, 0);
   if (portalUrl) {
     baseline -= portalFontSize * 0.35;
-    page.drawText("Portal de privacidade", {
-      x: textLeft,
-      y: baseline,
-      size: portalFontSize,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-    baseline -= portalFontSize * 1.38;
-    const urlLines = wrapParagraphToLines(portalUrl, maxTextW, font, portalFontSize);
-    for (const ln of urlLines) {
-      const w = font.widthOfTextAtSize(ln, portalFontSize);
-      page.drawText(ln, {
-        x: textLeft,
-        y: baseline,
-        size: portalFontSize,
-        font,
-        color: portalBlue,
-      });
-      addUriLinkAnnotation(pdfDoc, page, [textLeft, baseline - 3, textLeft + w, baseline + portalFontSize], portalUrl);
+    const prefix = "Portal de privacidade: ";
+    const combined = prefix + portalUrl;
+    const portalLines = wrapParagraphToLines(combined, maxTextW, font, portalFontSize);
+    for (const ln of portalLines) {
+      if (ln.startsWith(prefix)) {
+        page.drawText(prefix, {
+          x: textLeft,
+          y: baseline,
+          size: portalFontSize,
+          font,
+          color: black,
+        });
+        const prefixW = font.widthOfTextAtSize(prefix, portalFontSize);
+        const rest = ln.slice(prefix.length);
+        const w = font.widthOfTextAtSize(rest, portalFontSize);
+        page.drawText(rest, {
+          x: textLeft + prefixW,
+          y: baseline,
+          size: portalFontSize,
+          font,
+          color: portalBlue,
+        });
+        addUriLinkAnnotation(
+          pdfDoc,
+          page,
+          [textLeft + prefixW, baseline - 3, textLeft + prefixW + w, baseline + portalFontSize],
+          portalUrl
+        );
+      } else {
+        const w = font.widthOfTextAtSize(ln, portalFontSize);
+        page.drawText(ln, {
+          x: textLeft,
+          y: baseline,
+          size: portalFontSize,
+          font,
+          color: portalBlue,
+        });
+        addUriLinkAnnotation(pdfDoc, page, [textLeft, baseline - 3, textLeft + w, baseline + portalFontSize], portalUrl);
+      }
       baseline -= portalFontSize * 1.38;
     }
   }

@@ -5,7 +5,8 @@ import { jsPDF } from "jspdf";
 import type { RegistroRopaRow } from "@/lib/services/dataService";
 import {
   formatCnpjBrasil,
-  getPoliticaNomeOrgao,
+  getPoliticaPdfCabecalhoLinhasMetadados,
+  getPoliticaPdfCabecalhoTitulo,
   type PoliticaProgramaDados,
 } from "@/lib/utils/politicaPlaceholders";
 import {
@@ -14,11 +15,22 @@ import {
   isProgramaDemonstracao,
 } from "@/lib/utils/programaDemoLogo";
 
-const MARGIN = 20;
-const PAGE_W = 210;
-const PAGE_H = 297;
-const CONTENT_W = PAGE_W - 2 * MARGIN;
-const FOOTER_Y = PAGE_H - 10;
+export const MARGIN = 20;
+export const PAGE_W = 210;
+export const PAGE_H = 297;
+export const CONTENT_W = PAGE_W - 2 * MARGIN;
+export const FOOTER_Y = PAGE_H - 10;
+
+/** Espaçamento vertical do corpo (mm) — evita texto “grudado”. */
+export const LINE_BODY = 4.15;
+const LINE_HEADER_META = 4.25;
+export const GAP_AFTER_FIELD = 2.75;
+export const GAP_SECTION_TOP = 3;
+const GAP_AFTER_RULE = 11;
+const GAP_DOC_TITLE_LINES = 7.2;
+const GAP_BLOCK_TO_DOC_TITLE = 13;
+const GAP_REGISTRO_TO_OPERACOES = 9;
+const GAP_ENTRE_OPERACOES = 9;
 
 const CATEGORIA_LABELS: Record<string, string> = {
   titulares_em_geral: "Titulares em geral",
@@ -123,7 +135,7 @@ export type BuildRopaPdfParams = {
   metaLine: string;
 };
 
-function drawFooterAllPages(doc: jsPDF): void {
+export function drawFooterAllPages(doc: jsPDF): void {
   const total = doc.getNumberOfPages();
   for (let i = 1; i <= total; i++) {
     doc.setPage(i);
@@ -141,7 +153,8 @@ function drawFooterAllPages(doc: jsPDF): void {
  * Cabeçalho estilo política: logo + metadados + título + linha.
  * Retorna Y (mm) para iniciar o corpo, abaixo da linha.
  */
-async function drawRopaPolicyStyleHeader(
+/** Cabeçalho padrão (logo, programa, título do documento). Reutilizável em ROPA, RIPD, etc. */
+export async function drawProgramaPoliticaPdfHeader(
   doc: jsPDF,
   programa: PoliticaProgramaDados,
   nomeFallback: string,
@@ -188,8 +201,8 @@ async function drawRopaPolicyStyleHeader(
     }
   }
 
-  const nome =
-    getPoliticaNomeOrgao(programa) ||
+  const titulo =
+    getPoliticaPdfCabecalhoTitulo(programa) ||
     (nomeFallback?.trim() ? nomeFallback.trim() : "") ||
     "Programa";
 
@@ -197,25 +210,24 @@ async function drawRopaPolicyStyleHeader(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(20, 20, 20);
-  doc.text(nome, textLeft, y);
-  y += 4.5;
+  doc.text(titulo, textLeft, y);
+  y += 5;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   if (programa && typeof programa === "object") {
     const p = programa as Record<string, unknown>;
-    const rs = typeof p.razao_social === "string" ? p.razao_social.trim() : "";
-    if (rs && rs !== nome) {
-      const lines = doc.splitTextToSize(rs, CONTENT_W - (textLeft - MARGIN));
+    for (const meta of getPoliticaPdfCabecalhoLinhasMetadados(programa)) {
+      const lines = doc.splitTextToSize(meta, CONTENT_W - (textLeft - MARGIN));
       lines.forEach((ln: string) => {
         doc.text(ln, textLeft, y);
-        y += 3.6;
+        y += LINE_HEADER_META;
       });
     }
     const cnpj = formatCnpjBrasil(p.cnpj);
     if (cnpj) {
       doc.text(`CNPJ: ${cnpj}`, textLeft, y);
-      y += 3.6;
+      y += LINE_HEADER_META;
     }
     const email = typeof p.atendimento_email === "string" ? p.atendimento_email.trim() : "";
     const fone = typeof p.atendimento_fone === "string" ? p.atendimento_fone.trim() : "";
@@ -225,30 +237,45 @@ async function drawRopaPolicyStyleHeader(
       const lines = doc.splitTextToSize(contato, CONTENT_W - (textLeft - MARGIN));
       lines.forEach((ln: string) => {
         doc.text(ln, textLeft, y);
-        y += 3.6;
+        y += LINE_HEADER_META;
       });
     }
   }
 
   const portalUrl = resolvePortalPrivacidadeUrl(programa);
   if (portalUrl) {
-    y += 1;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text("Portal de privacidade", textLeft, y);
-    y += 3.8;
+    y += 2;
+    const prefix = "Portal de privacidade: ";
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(31, 82, 191);
-    const urlLines = doc.splitTextToSize(portalUrl, CONTENT_W - (textLeft - MARGIN));
-    urlLines.forEach((ln: string) => {
-      const tw = doc.getTextWidth(ln);
-      doc.text(ln, textLeft, y);
-      try {
-        doc.link(textLeft, y - 2.5, tw, 3.5, { url: portalUrl });
-      } catch {
-        /* ignore */
+    doc.setFontSize(8.5);
+    const maxW = CONTENT_W - (textLeft - MARGIN);
+    const combined = prefix + portalUrl;
+    const portalLines = doc.splitTextToSize(combined, maxW);
+    portalLines.forEach((ln: string) => {
+      if (ln.startsWith(prefix)) {
+        doc.setTextColor(20, 20, 20);
+        doc.text(prefix, textLeft, y);
+        doc.setTextColor(31, 82, 191);
+        const rest = ln.slice(prefix.length);
+        const pw = doc.getTextWidth(prefix);
+        doc.text(rest, textLeft + pw, y);
+        const tw = doc.getTextWidth(rest);
+        try {
+          doc.link(textLeft + pw, y - 2.5, tw, 3.5, { url: portalUrl });
+        } catch {
+          /* ignore */
+        }
+      } else {
+        doc.setTextColor(31, 82, 191);
+        doc.text(ln, textLeft, y);
+        const tw = doc.getTextWidth(ln);
+        try {
+          doc.link(textLeft, y - 2.5, tw, 3.5, { url: portalUrl });
+        } catch {
+          /* ignore */
+        }
       }
-      y += 3.6;
+      y += LINE_HEADER_META;
     });
     doc.setTextColor(0, 0, 0);
   }
@@ -256,7 +283,7 @@ async function drawRopaPolicyStyleHeader(
   const textBlockBottom = y;
   const blockBottom = Math.max(logoBottomY, textBlockBottom);
 
-  let titleY = blockBottom + 10;
+  let titleY = blockBottom + GAP_BLOCK_TO_DOC_TITLE;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   doc.setTextColor(31, 31, 31);
@@ -264,15 +291,15 @@ async function drawRopaPolicyStyleHeader(
     const tl = doc.splitTextToSize(line, CONTENT_W);
     tl.forEach((ln: string) => {
       doc.text(ln, MARGIN, titleY);
-      titleY += 6.5;
+      titleY += GAP_DOC_TITLE_LINES;
     });
   }
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(90, 90, 90);
-  doc.text(metaLine, MARGIN, titleY + 1);
-  titleY += 6;
+  doc.text(metaLine, MARGIN, titleY + 2);
+  titleY += 7;
 
   doc.setDrawColor(200, 200, 200);
   doc.setLineWidth(0.4);
@@ -280,10 +307,10 @@ async function drawRopaPolicyStyleHeader(
   doc.line(MARGIN, ruleY, PAGE_W - MARGIN, ruleY);
   doc.setTextColor(0, 0, 0);
 
-  return ruleY + 8;
+  return ruleY + GAP_AFTER_RULE;
 }
 
-function ensureSpace(doc: jsPDF, y: number, needed: number): number {
+export function ensureSpace(doc: jsPDF, y: number, needed: number): number {
   if (y + needed > PAGE_H - 18) {
     doc.addPage();
     return MARGIN + 4;
@@ -291,43 +318,44 @@ function ensureSpace(doc: jsPDF, y: number, needed: number): number {
   return y;
 }
 
-function sectionBar(doc: jsPDF, y: number, title: string): number {
-  y = ensureSpace(doc, y, 12);
+export function sectionBar(doc: jsPDF, y: number, title: string): number {
+  y = ensureSpace(doc, y, 16);
+  const barH = 7.5;
   doc.setFillColor(241, 243, 246);
-  doc.rect(MARGIN, y, CONTENT_W, 6.5, "F");
+  doc.rect(MARGIN, y, CONTENT_W, barH, "F");
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
+  doc.setFontSize(9.2);
   doc.setTextColor(45, 55, 72);
-  doc.text(title, MARGIN + 2, y + 4.3);
+  doc.text(title, MARGIN + 2.5, y + 4.9);
   doc.setTextColor(0, 0, 0);
-  return y + 9;
+  return y + barH + GAP_SECTION_TOP + 2;
 }
 
 /** Rótulo em negrito + “: ” e valor (quebra em linhas adicionais alinhadas à margem) */
-function fieldBlock(doc: jsPDF, startY: number, label: string, value: string, fontSize = 7.8): number {
+export function fieldBlock(doc: jsPDF, startY: number, label: string, value: string, fontSize = 8.2): number {
   let y = startY;
   const display = (value || "").trim() || "—";
   const prefix = `${label}: `;
-  y = ensureSpace(doc, y, 8);
+  y = ensureSpace(doc, y, 10);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(fontSize);
   const labelW = doc.getTextWidth(prefix);
   doc.text(prefix, MARGIN, y);
   doc.setFont("helvetica", "normal");
   const lines = doc.splitTextToSize(display, CONTENT_W - labelW);
-  if (lines.length === 0) return y + 3.5;
+  if (lines.length === 0) return y + LINE_BODY + GAP_AFTER_FIELD;
   doc.text(lines[0], MARGIN + labelW, y);
-  y += 3.4;
+  y += LINE_BODY;
   for (let i = 1; i < lines.length; i++) {
-    y = ensureSpace(doc, y, 4);
+    y = ensureSpace(doc, y, LINE_BODY + 2);
     doc.text(lines[i], MARGIN, y);
-    y += 3.4;
+    y += LINE_BODY;
   }
-  return y + 1.2;
+  return y + GAP_AFTER_FIELD;
 }
 
 /** Duas colunas: rótulos curtos */
-function fieldPair(
+export function fieldPair(
   doc: jsPDF,
   y: number,
   labelA: string,
@@ -337,9 +365,9 @@ function fieldPair(
 ): number {
   const mid = MARGIN + CONTENT_W / 2 + 2;
   const colW = CONTENT_W / 2 - 4;
-  y = ensureSpace(doc, y, 10);
+  y = ensureSpace(doc, y, 12);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.8);
+  doc.setFontSize(8.2);
   doc.text(`${labelA}:`, MARGIN, y);
   doc.setFont("helvetica", "normal");
   const la = doc.splitTextToSize(valA || "—", colW - 22);
@@ -349,18 +377,18 @@ function fieldPair(
   doc.setFont("helvetica", "normal");
   const lb = doc.splitTextToSize(valB || "—", colW - 24);
   doc.text(lb[0] ?? "—", mid + 24, y);
-  let extra = 3.4;
+  let extra = LINE_BODY;
   if (la.length > 1 || lb.length > 1) {
     const maxL = Math.max(la.length, lb.length);
     for (let i = 1; i < maxL; i++) {
-      y += 3.3;
-      y = ensureSpace(doc, y, 4);
+      y += LINE_BODY;
+      y = ensureSpace(doc, y, LINE_BODY + 2);
       if (la[i]) doc.text(la[i], MARGIN, y);
       if (lb[i]) doc.text(lb[i], mid, y);
     }
-    extra += (maxL - 1) * 3.3;
+    extra += (maxL - 1) * LINE_BODY;
   }
-  return y + extra;
+  return y + extra + GAP_AFTER_FIELD * 0.85;
 }
 
 function addRegistroBody(doc: jsPDF, reg: RegistroRopaRow | null, startY: number): number {
@@ -395,11 +423,11 @@ function addRegistroBody(doc: jsPDF, reg: RegistroRopaRow | null, startY: number
 function addOperacaoBody(doc: jsPDF, op: RopaPdfOperacao, index: number, total: number, startY: number): number {
   let y = startY;
   if (index > 0) {
-    y = ensureSpace(doc, y, 6);
+    y = ensureSpace(doc, y, GAP_ENTRE_OPERACOES + 4);
     doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.25);
+    doc.setLineWidth(0.35);
     doc.line(MARGIN, y, PAGE_W - MARGIN, y);
-    y += 5;
+    y += GAP_ENTRE_OPERACOES;
   }
 
   y = sectionBar(
@@ -443,7 +471,7 @@ export async function buildRopaPdfDocument(params: BuildRopaPdfParams): Promise<
   const { programa, idOrSlug, registro, operacoes, metaLine } = params;
 
   const nomeFallback =
-    getPoliticaNomeOrgao(programa) ||
+    getPoliticaPdfCabecalhoTitulo(programa) ||
     (registro?.organizacao ?? "").trim() ||
     idOrSlug;
 
@@ -451,12 +479,12 @@ export async function buildRopaPdfDocument(params: BuildRopaPdfParams): Promise<
 
   const titleLines = ["Registro das Operações de Tratamento", "(ROPA) — art. 37 LGPD"];
 
-  let y = await drawRopaPolicyStyleHeader(doc, programa, nomeFallback, titleLines, metaLine);
+  let y = await drawProgramaPoliticaPdfHeader(doc, programa, nomeFallback, titleLines, metaLine);
 
   y = addRegistroBody(doc, registro, y);
 
   if (operacoes.length > 0) {
-    y += 2;
+    y += GAP_REGISTRO_TO_OPERACOES;
     for (let idx = 0; idx < operacoes.length; idx++) {
       y = addOperacaoBody(doc, operacoes[idx], idx, operacoes.length, y);
     }

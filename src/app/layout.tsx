@@ -85,10 +85,11 @@ export default function RootLayout({
                       {
                         name: "relatorio",
                         identifier: "relatorio",
-                        list: "/diagnostico/relatorio",
+                        list: "/dashboard",
                         meta: {
                           canDelete: false,
-                          label: "Relatório",
+                          label: "Relatório (diagnóstico)",
+                          hide: true,
                           dataProviderName: "default"
                         },
                       },

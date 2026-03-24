@@ -10,5 +10,6 @@ export { PageTitle } from './PageTitle';
 export { StandardCard } from './StandardCard';
 export { StandardButton, StandardFab } from './StandardButton';
 export { LastUpdateInfo } from './LastUpdateInfo';
+export { ProgramaLastActivityLine } from './ProgramaLastActivityLine';
 
 // Tipos são exportados diretamente pelos componentes quando necessário

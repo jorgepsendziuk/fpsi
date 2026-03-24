@@ -68,6 +68,21 @@ Projeto: PINOVARA | Controlador: UFBA/INCRA | Operador: LGRDC Serviços de Infor
 
 ---
 
+## Operação 5: Dados automáticos (logs, navegação e segurança)
+
+| Campo | Descrição |
+|-------|-----------|
+| **Nome do processo** | Dados automáticos — logs, navegação e segurança |
+| **Finalidade** | Segurança da informação, auditoria, diagnóstico de falhas e continuidade do serviço |
+| **Base legal** | Art. 7º, IX — legítimo interesse, com observância do art. 10 LGPD |
+| **Categorias de dados** | IP, data/hora, rotas/URLs, user-agent, identificadores de sessão técnicos, registros de auditoria de ações |
+| **Titulares** | Quem acessa o site ou o sistema do projeto |
+| **Compartilhamento** | Infraestrutura em GCP (Brasil) como meio; sem repasse para fins comerciais |
+| **Retenção** | Em regra até 12 meses para logs correntes, salvo exigência legal ou defesa em incidente |
+| **Medidas de segurança** | HTTPS, controle de acesso, minimização, acesso restrito a administradores |
+
+---
+
 ## Uso no FPSI
 
 As operações acima podem ser registradas no módulo ROPA do FPSI em `programas/[id]/conformidade/ropa` para acompanhamento e exportação.

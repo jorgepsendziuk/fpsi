@@ -36,7 +36,7 @@ flowchart TB
     end
     
     subgraph contratante [Contratante administrativa]
-        FUNARBE[FUNARBE - Fundação UFBA]
+        FAPEX[FAPEX - Fundação de Apoio à Pesquisa e à Extensão]
     end
     
     subgraph operador [Operador - executa conforme instruções]
@@ -44,8 +44,8 @@ flowchart TB
     end
     
     INCRA -->|TED 50/2023| UFBA
-    UFBA -->|Contrato| FUNARBE
-    FUNARBE -->|Desenvolvimento/hospedagem| LGRDC
+    UFBA -->|Contrato| FAPEX
+    FAPEX -->|Desenvolvimento/hospedagem| LGRDC
     
     LGRDC -->|Processa dados em nome de| controlador
 ```
@@ -56,11 +56,12 @@ flowchart TB
 - Define bases legais e políticas de retenção
 - Responde perante titulares e ANPD
 
-### 2.2 FUNARBE (Contratante)
+### 2.2 FAPEX (Contratante)
 
-- Fundação de apoio da UFBA; intermediária contratual
+- **FAPEX** — Fundação de Apoio à Pesquisa e à Extensão (Bahia); pessoa jurídica distinta da UFBA e **não** confundir com a FUNARBE (não é “fundação da UFBA” neste arranjo)
+- Intermediária contratual no âmbito do TED; canal operacional de contato para titulares espelhado no cadastro do programa (site, e-mail, telefone)
 - Garante que o contrato com LGRDC preveja obrigações LGPD
-- Pode atuar como controlador em conjunto com UFBA, conforme arranjo do TED
+- Papéis de controlador permanecem INCRA/UFBA; FAPEX atua na cadeia administrativa/contratual conforme instrumentos do projeto
 
 ### 2.3 LGRDC (Operador)
 
@@ -82,6 +83,7 @@ Conforme art. 37 da LGPD. Detalhamento em [ROPA.md](./ROPA.md).
 | 2 | Cadastro de organizações e representantes (Meta 12) | Gestão de organizações participantes | Política pública, execução de contrato | Ativo |
 | 3 | Capacitações e participantes (Meta 11) | Qualificação e formação profissional | Política pública, obrigação legal | Ativo |
 | 4 | Cadastro de famílias em territórios | RTID, suporte fundiário, regularização | Política pública (Art. 7º III, 11 II) | Planejado |
+| 5 | Dados automáticos (logs, navegação, segurança) | Segurança da informação, auditoria, continuidade do serviço | Legítimo interesse com medidas (Art. 7º IX, art. 10) | Ativo |
 
 ---
 
@@ -122,6 +124,39 @@ O **Portal da Privacidade** do PINOVARA é o gerado pelo FPSI para o programa (s
 |-------|---------------|---------|
 | DPO (LGRDC) | Jorge Psendziuk | jorgefrpsendziuk@gmail.com |
 | Contato do programa (cadastro FPSI) | FAPEX | Campos no programa + Portal da Privacidade |
+
+### Pacote para atualizar a política no site (Pinovara / IA externa)
+
+Use os dados abaixo como fonte única; o diagrama e o ROPA no FPSI já seguem esta versão.
+
+**Programa (slug `pinovara`)**
+
+| Campo | Valor |
+|--------|--------|
+| Projeto | PINOVARA — Pesquisa Inovadora em Gestão do PNRA |
+| Parceria | INCRA e UFBA — TED nº 50/2023 |
+| Razão social (cadastro FPSI) | Fundação de Apoio à Pesquisa e à Extensão |
+| Nome fantasia | FAPEX |
+| CNPJ | 10.490.525/0001-06 |
+| Site institucional do programa | https://www.fapex.org.br |
+| E-mail de contato | ouvidoria@fapex.org.br |
+| Telefone | (71) 3183-8400 |
+| Política de privacidade (URL pública) | https://pinovaraufba.com.br/politica-privacidade |
+
+**Papéis LGPD (texto público)**
+
+- **Controladores:** INCRA e UFBA (finalidades e meios).
+- **Contratante administrativa / canal operacional:** FAPEX (não descrever como “fundação da UFBA”; a FAPEX é entidade própria — Fundação de Apoio à Pesquisa e à Extensão).
+- **Operador do sistema:** LGRDC Serviços de Informática — processamento sob instrução dos controladores.
+- **DPO (referência no FPSI):** Jorge Psendziuk — jorgefrpsendziuk@gmail.com.
+
+**Alterações de texto já alinhadas neste repositório (refletir no site)**
+
+1. Corrigir qualquer menção a FUNARBE como fundação da UFBA ou contratante — substituir pela **FAPEX** conforme tabela acima.
+2. Manter papéis de controlador como no sistema (INCRA + UFBA); texto da política deve coincidir com o diagrama LGPD do programa.
+3. **Comunicação institucional relacionada ao projeto:** fundir com outra finalidade de comunicação (ex.: prestação de informações sobre o TED e o projeto) para não criar item isolado de baixa relevância.
+4. **Dados coletados automaticamente:** incluir secção coerente com a operação 5 do ROPA — logs, navegação, segurança; base legal legítimo interesse; retenção exemplificada (ex.: até 12 meses para logs correntes salvo exigência legal); infraestrutura em GCP Brasil; sem transferência internacional para fins do programa.
+5. Atualizar rodapé da política: data de última revisão e versão após incorporar os itens acima.
 
 ### Infraestrutura e transferência internacional
 
