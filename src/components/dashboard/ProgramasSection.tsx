@@ -772,7 +772,7 @@ export function ProgramasSection() {
               label="Principal atividade"
               value={createForm.atividade_principal_organizacao}
               onChange={(e) => setCreateForm((f) => ({ ...f, atividade_principal_organizacao: e.target.value }))}
-              helperText="Atividade institucional (ROPA). Opcional se a empresa já tiver esse dado."
+              helperText="Atividade institucional da empresa ou organização."
             />
             <TextField
               fullWidth

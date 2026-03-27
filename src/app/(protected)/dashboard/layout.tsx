@@ -12,7 +12,7 @@ type IUser = {
   name?: string;
 };
 
-/** Autenticação + cabeçalho para área logada (dashboard). Sem route group com parênteses — evita ChunkLoadError/404 em chunks Webpack. */
+/** Rota única /dashboard: fica sob (protected) para não duplicar com app/dashboard (mesmo path). */
 export default function DashboardLayout({
   children,
 }: {

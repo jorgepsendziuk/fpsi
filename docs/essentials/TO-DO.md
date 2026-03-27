@@ -9,7 +9,6 @@ não é “fazer as 300 medidas porque existem no catálogo”, e sim selecionar
 
 	exemplos de ligacao de medidas com politicas 
 
-    os cards quando mouseover flip e mostrar resumo de informacoes relevantes, por exemplo no diagnostico mostrar minidashboard com medidas, respondidas, maturidades
 
 e os cookies
 e o aviso de privacidade

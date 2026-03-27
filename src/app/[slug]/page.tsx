@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   Container,
   Typography,
@@ -35,28 +36,38 @@ import SecurityIcon from "@mui/icons-material/Security";
 import LinkIcon from "@mui/icons-material/Link";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
+import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
+import { resolvePortalDocHref, type PortalLegalDoc } from "@/lib/portal/portalLegalLinks";
 
-type PortalData = {
-  id: number;
-  nome: string | null;
-  slug: string | null;
-  razao_social: string | null;
-  nome_fantasia: string | null;
-  cnpj: string | number | null;
-  atendimento_fone: string | null;
-  atendimento_email: string | null;
-  atendimento_site: string | null;
-  dpo_nome: string | null;
-  dpo_email: string | null;
-  logo_orgao_empresa: string | null;
-  logo_programa: string | null;
-  link_politica_privacidade: string | null;
-  link_aviso_titular: string | null;
-  link_cookies: string | null;
-  link_declaracao_seguranca: string | null;
-  link_reportar_vulnerabilidade: string | null;
-};
+function PortalDocLink({
+  slug,
+  doc,
+  external,
+  children,
+}: {
+  slug: string;
+  doc: PortalLegalDoc;
+  external: string | null;
+  children: React.ReactNode;
+}) {
+  const href = resolvePortalDocHref(slug, external, doc);
+  const isRemote = /^https?:\/\//i.test(href);
+  if (isRemote) {
+    return (
+      <MuiLink href={href} target="_blank" rel="noopener noreferrer">
+        {children}
+      </MuiLink>
+    );
+  }
+  return (
+    <MuiLink component={Link} href={href}>
+      {children}
+    </MuiLink>
+  );
+}
 
 const RESERVED_SLUGS = new Set([
   "programas", "login", "sobre", "perfil", "api", "auth", "register", "forgot-password", "demo", "artigo", "favicon.ico",
@@ -80,14 +91,11 @@ const STATUS_PEDIDO: Record<string, string> = {
   parcial: "Parcial",
 };
 
-// Links fake por enquanto (quando a API não retorna URL)
-const FAKE_LINK = "#";
-
 export default function PortalPrivacidadePage() {
   const params = useParams();
   const theme = useTheme();
   const slug = params.slug as string;
-  const [data, setData] = useState<PortalData | null>(null);
+  const [data, setData] = useState<PortalPublicData | null>(null);
   const [loading, setLoading] = useState(!!slug);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -324,10 +332,6 @@ export default function PortalPrivacidadePage() {
     );
   }
 
-  const linkPolitica = data.link_politica_privacidade || FAKE_LINK;
-  const linkAviso = data.link_aviso_titular || FAKE_LINK;
-  const linkCookies = data.link_cookies || FAKE_LINK;
-  const linkDeclaracao = data.link_declaracao_seguranca || FAKE_LINK;
   const portalLogoUrl = getProgramaLogoDisplayUrl(data);
 
   return (
@@ -395,59 +399,131 @@ export default function PortalPrivacidadePage() {
         </Grid>
       </Paper>
 
-      {/* Duas colunas: accordions (esquerda) | formulário DSAR (direita) */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 400px" }, gap: 4, alignItems: "start" }}>
-        <Box>
-          {/* Privacidade — sempre aberto */}
-          <Accordion defaultExpanded elevation={0} sx={{ border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: "8px !important", mb: 1 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <LinkIcon color="primary" />
-                <Typography variant="subtitle1" fontWeight="bold">Privacidade</Typography>
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails sx={{ pt: 0 }}>
-              <List dense disablePadding>
-                <ListItem disablePadding sx={{ mb: 0.5 }}>
-                  <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>
-                  <ListItemText primary={<MuiLink href={linkPolitica} target="_blank" rel="noopener">Política de Privacidade</MuiLink>} />
-                </ListItem>
-                <ListItem disablePadding sx={{ mb: 0.5 }}>
-                  <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>
-                  <ListItemText primary={<MuiLink href={linkAviso} target="_blank" rel="noopener">Aviso do Portal do Titular</MuiLink>} />
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>
-                  <ListItemText primary={<MuiLink href={linkCookies} target="_blank" rel="noopener">Cookies</MuiLink>} />
-                </ListItem>
-              </List>
-            </AccordionDetails>
-          </Accordion>
-
-          {/* Seus direitos — sempre aberto */}
-          <Accordion defaultExpanded elevation={0} sx={{ border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: "8px !important", mb: 1 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+      {/* Duas colunas: direitos + documentos (esquerda) | formulário DSAR (direita) */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) 400px" }, gap: 4, alignItems: "start" }}>
+        <Stack spacing={2.5}>
+          {/* Destaque: direitos do titular → aponta para o formulário */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2.5,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.primary.main, 0.12),
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
                 <GavelIcon color="primary" />
-                <Typography variant="subtitle1" fontWeight="bold">Seus direitos</Typography>
               </Box>
-            </AccordionSummary>
-            <AccordionDetails sx={{ pt: 0 }}>
-              <List dense disablePadding>
-                <ListItem disablePadding sx={{ mb: 0.5 }}>
-                  <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>
-                  <ListItemText primary={<MuiLink href="#solicitar">Requisição de Direitos</MuiLink>} secondary="Formulário ao lado para acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento ou oposição (art. 18 LGPD)." />
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>
-                  <ListItemText primary={<MuiLink href="#solicitar">Prazos e acompanhamento</MuiLink>} secondary="Resposta em até 15 dias quando cabível. Guarde o protocolo após enviar o pedido." />
-                </ListItem>
-              </List>
-            </AccordionDetails>
-          </Accordion>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="overline" color="primary" fontWeight="700" sx={{ letterSpacing: "0.06em" }}>
+                  Seus direitos (LGPD)
+                </Typography>
+                <Typography variant="h6" component="h2" fontWeight="bold" sx={{ mt: 0.5, mb: 1 }}>
+                  Exerça seus direitos do art. 18
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Use o formulário ao lado para solicitar acesso, correção, exclusão, portabilidade, revogação de consentimento,
+                  informação sobre compartilhamento ou oposição. Quando aplicável, a organização responde em até{" "}
+                  <strong>15 dias</strong>. Guarde o <strong>protocolo</strong> para acompanhar o pedido abaixo do
+                  formulário.
+                </Typography>
+                <Button
+                  component={Link}
+                  href="#solicitar"
+                  variant="contained"
+                  size="medium"
+                  endIcon={<ArrowForwardIcon />}
+                  sx={{ textTransform: "none", fontWeight: 600 }}
+                >
+                  Preencher requisição de direitos
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
 
-          {/* Segurança — fechado por padrão; com formulários de reportar e contato */}
-          <Accordion defaultExpanded={true} elevation={0} sx={{ border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: "8px !important" }}>
+          {/* Documentos hospedados no portal (ou links externos configurados no cadastro) */}
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+              <MenuBookIcon color="primary" fontSize="small" />
+              <Typography variant="subtitle1" fontWeight="bold">
+                Documentos e transparência
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Textos-padrão neste portal; a organização pode substituir por URLs próprias no cadastro do programa.
+            </Typography>
+            <List dense disablePadding>
+              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+                <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
+                  <LinkIcon fontSize="small" color="action" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    <PortalDocLink slug={slug} doc="politica" external={data.link_politica_privacidade}>
+                      Política de Privacidade
+                    </PortalDocLink>
+                  }
+                  secondary="Finalidades, bases legais e direitos do titular."
+                />
+              </ListItem>
+              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+                <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
+                  <LinkIcon fontSize="small" color="action" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    <PortalDocLink slug={slug} doc="aviso" external={data.link_aviso_titular}>
+                      Aviso do Portal do Titular
+                    </PortalDocLink>
+                  }
+                  secondary="Como usar este canal e o que esperar do atendimento."
+                />
+              </ListItem>
+              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+                <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
+                  <LinkIcon fontSize="small" color="action" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    <PortalDocLink slug={slug} doc="cookies" external={data.link_cookies}>
+                      Política de Cookies
+                    </PortalDocLink>
+                  }
+                  secondary="Uso de cookies e tecnologias similares."
+                />
+              </ListItem>
+              <ListItem disablePadding sx={{ alignItems: "flex-start" }}>
+                <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
+                  <LinkIcon fontSize="small" color="action" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    <PortalDocLink slug={slug} doc="declaracao" external={data.link_declaracao_seguranca}>
+                      Declaração de Segurança
+                    </PortalDocLink>
+                  }
+                  secondary="Compromisso com boas práticas de segurança da informação."
+                />
+              </ListItem>
+            </List>
+          </Paper>
+
+          {/* Segurança: formulários de reportar e contato */}
+          <Accordion defaultExpanded elevation={0} sx={{ border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: "8px !important" }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <SecurityIcon color="primary" />
@@ -455,12 +531,14 @@ export default function PortalPrivacidadePage() {
               </Box>
             </AccordionSummary>
             <AccordionDetails sx={{ pt: 0 }}>
-              <List dense disablePadding sx={{ mb: 1.5 }}>
-                <ListItem disablePadding>
-                  <ListItemIcon sx={{ minWidth: 28 }}><LinkIcon fontSize="small" color="action" /></ListItemIcon>
-                  <ListItemText primary={<MuiLink href={linkDeclaracao} target="_blank" rel="noopener">Declaração de Segurança</MuiLink>} />
-                </ListItem>
-              </List>
+              {data.link_reportar_vulnerabilidade && /^https?:\/\//i.test(data.link_reportar_vulnerabilidade.trim()) && (
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                  Canal adicional de reporte:{" "}
+                  <MuiLink href={data.link_reportar_vulnerabilidade.trim()} target="_blank" rel="noopener noreferrer">
+                    abrir link oficial
+                  </MuiLink>
+                </Typography>
+              )}
 
               <Accordion defaultExpanded={false} elevation={0} sx={{ border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: 1, mb: 1, bgcolor: "background.default" }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -517,10 +595,22 @@ export default function PortalPrivacidadePage() {
               </Accordion>
             </AccordionDetails>
           </Accordion>
-        </Box>
+        </Stack>
 
         {/* Coluna direita: formulário DSAR */}
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: "1px solid", borderColor: "divider", position: { md: "sticky" }, top: { md: 24 } }} id="solicitar">
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            position: { md: "sticky" },
+            top: { md: 24 },
+            scrollMarginTop: { xs: 96, md: 100 },
+          }}
+          id="solicitar"
+        >
           <Typography variant="h6" fontWeight="bold" gutterBottom>Requisição de Direitos</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Os dados informados serão utilizados apenas para atendimento do seu pedido e cumprimento de obrigações legais.
