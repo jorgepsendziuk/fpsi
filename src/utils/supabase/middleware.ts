@@ -9,49 +9,54 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
-    cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value;
+  try {
+    const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+        },
       },
-      set(name: string, value: string, options: CookieOptions) {
-        request.cookies.set({
-          name,
-          value,
-          ...options,
-        });
-        response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
-        });
-        response.cookies.set({
-          name,
-          value,
-          ...options,
-        });
-      },
-      remove(name: string, options: CookieOptions) {
-        request.cookies.set({
-          name,
-          value: "",
-          ...options,
-        });
-        response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
-        });
-        response.cookies.set({
-          name,
-          value: "",
-          ...options,
-        });
-      },
-    },
-  });
+    });
 
-  await supabase.auth.getUser();
+    await supabase.auth.getUser();
+  } catch (err) {
+    console.error("[supabase/middleware] updateSession:", err);
+    // Evita 500 no app se Supabase/rede falhar; próximo request tenta de novo.
+  }
 
   return response;
 }

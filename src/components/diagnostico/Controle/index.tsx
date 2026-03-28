@@ -21,6 +21,7 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
+import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import PolicyIcon from '@mui/icons-material/Policy';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -63,13 +64,27 @@ export interface ControleProps {
   onMedidaNavigate?: (medidaId: number, controleId: number) => void;
 }
 
-type InfoType = 'texto' | 'por_que_implementar' | 'fique_atento' | 'aplicabilidade_privacidade';
+type InfoType =
+  | 'texto'
+  | 'por_que_implementar'
+  | 'procedimentos_e_ferramentas'
+  | 'fique_atento'
+  | 'aplicabilidade_privacidade';
+
+const INFO_SECTION_ORDER: InfoType[] = [
+  'texto',
+  'por_que_implementar',
+  'procedimentos_e_ferramentas',
+  'fique_atento',
+  'aplicabilidade_privacidade',
+];
 
 const infoLabels: Record<InfoType, string> = {
-  texto: 'Descrição',
-  por_que_implementar: 'Por que implementar',
+  texto: 'Visão geral',
+  por_que_implementar: 'Por que este controle é crítico',
+  procedimentos_e_ferramentas: 'Procedimentos e ferramentas',
   fique_atento: 'Fique atento',
-  aplicabilidade_privacidade: 'Aplicabilidade em privacidade'
+  aplicabilidade_privacidade: 'Aplicabilidade em privacidade',
 };
 
 
@@ -77,16 +92,19 @@ const infoLabels: Record<InfoType, string> = {
 const tabIcons: Record<InfoType, React.ReactElement> = {
   texto: <DescriptionOutlinedIcon sx={{ mr: 1 }} />,
   por_que_implementar: <HelpOutlineOutlinedIcon sx={{ mr: 1 }} />,
+  procedimentos_e_ferramentas: <BuildOutlinedIcon sx={{ mr: 1 }} />,
   fique_atento: <ErrorOutlineOutlinedIcon sx={{ mr: 1 }} />,
-  aplicabilidade_privacidade: <SecurityOutlinedIcon sx={{ mr: 1 }} />
+  aplicabilidade_privacidade: <SecurityOutlinedIcon sx={{ mr: 1 }} />,
 };
 
 const getBackgroundColor = (info: InfoType) => {
-  switch(info) {
+  switch (info) {
     case 'texto':
-      return '#F5F5F5'; // cinza claro
+      return '#F5F5F5';
     case 'por_que_implementar':
       return '#D8E6C3';
+    case 'procedimentos_e_ferramentas':
+      return '#E3F2FD';
     case 'fique_atento':
       return '#E6E0ED';
     case 'aplicabilidade_privacidade':
@@ -290,9 +308,9 @@ const ControleComponent: React.FC<ControleProps> = ({
         <Box sx={{ p: 3 }}>
           <div style={controleStyles.medidasContainer}>
           <Box sx={{ mb: 3 }}>
-            {(Object.keys(infoLabels) as InfoType[]).map((info) => {
+            {INFO_SECTION_ORDER.map((info) => {
               const content = controle[info];
-              if (!content || content.trim() === '') return null;
+              if (!content || String(content).trim() === '') return null;
               
               return (
                 <Box

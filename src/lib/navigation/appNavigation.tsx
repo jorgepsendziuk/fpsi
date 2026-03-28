@@ -18,6 +18,7 @@ import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import HomeIcon from "@mui/icons-material/Home";
 import PersonIcon from "@mui/icons-material/Person";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 export type AppNavItem = {
   id: string;
@@ -80,6 +81,12 @@ export function getGlobalNavSections(): AppNavSection[] {
       title: "Geral",
       items: [
         { id: "inicio", label: "Início", path: "/dashboard", icon: <HomeIcon sx={iconSx} /> },
+        {
+          id: "lgpd",
+          label: "LGPD",
+          path: "/referencias/lgpd",
+          icon: <MenuBookIcon sx={iconSx} />,
+        },
         { id: "perfil", label: "Perfil", path: "/perfil", icon: <PersonIcon sx={iconSx} /> },
       ],
     },
@@ -244,6 +251,7 @@ export function getAppShellPageTitle(pathname: string): string {
   if (pathname.includes("/usuarios")) return "Usuários";
   if (pathname.includes("/auditoria")) return "Auditoria";
   if (pathname === "/dashboard") return "Início";
+  if (pathname.startsWith("/referencias/lgpd")) return "LGPD";
   if (pathname.startsWith("/perfil")) return "Perfil";
   if (pathname.match(/^\/programas\/[^/]+\/?$/)) return "Programa";
   return "FPSI";

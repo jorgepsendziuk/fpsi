@@ -47,7 +47,7 @@ export interface ControleContainerProps {
     programaControle: { id: number; programa: number; controle: number; nivel: number },
     programaMedidas?: { [key: string]: ProgramaMedida }
   ) => { score: number; label: string };
-  /** Filtro global G1/G2/G3: só lista medidas do grupo (maturidade continua com todas). */
+  /** Filtro global GI cumulativo: GI2 lista GI1+GI2; GI3 lista GI1+GI2+GI3 (maturidade do controle continua com todas). */
   grupoImpleFilter?: GrupoImpleFilter;
 }
 

@@ -61,6 +61,7 @@ import {
   Person as PersonIcon, // Privacidade
   HourglassEmpty as HourglassEmptyIcon,
   FilterList as FilterListIcon,
+  InfoOutlined as InfoOutlinedIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -78,6 +79,11 @@ import Dashboard from "../../../../components/diagnostico/Dashboard";
 import ReportButton from "../../../../components/diagnostico/ReportButton";
 import {
   GrupoImpleFilter,
+  GRUPO_IMPLEMENTACAO_HINT,
+  GRUPO_FILTRO_CUMULATIVO_RESUMO,
+  GRUPO_GI_ESCOPO_DIAGNOSTICO,
+  GRUPO_GI_PALETTE,
+  labelGrupoGi,
   matchesGrupoFilter,
 } from "../../../../lib/utils/grupoImplementacao";
 import { sortMedidasByIdMedida } from "../../../../lib/utils/medidaSort";
@@ -393,7 +399,7 @@ export default function DiagnosticoPage() {
     return out;
   }, [medidas, medidasStructure]);
 
-  /** Visão geral e índices do dashboard respeitam o filtro G1/G2/G3. */
+  /** Visão geral e índices do dashboard respeitam o filtro cumulativo GI (GI2 inclui GI1; GI3 inclui GI1+GI2). */
   const medidasParaDashboard = useMemo(() => {
     if (grupoImpleFilter === "all") return medidasParaCalculo;
     const out: { [key: number]: Array<Medida | dataService.MedidaStructureItem> } = {};
@@ -561,7 +567,7 @@ export default function DiagnosticoPage() {
         }));
       }
     } else if (itemType === 'medida') {
-      // Encontrar todas as medidas do controle atual (respeitando filtro G1/G2/G3)
+      // Encontrar todas as medidas do controle atual (filtro cumulativo GI1/GI2/GI3)
       const controle = currentNode.data.controle;
       const controleMedidas = medidas[controle.id] || [];
       const filtradas =
@@ -1387,101 +1393,166 @@ export default function DiagnosticoPage() {
             <Box
               sx={{
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
+                alignItems: "stretch",
+                justifyContent: "space-between",
                 flexWrap: "wrap",
-                gap: 1.5,
-                rowGap: 1,
+                gap: 2,
                 width: "100%",
+                mt: 0.5,
               }}
             >
-              <Stack
-                direction="row"
-                spacing={1.5}
-                alignItems="center"
-                flexWrap="wrap"
-                sx={{ gap: 1, flex: "0 1 auto", justifyContent: "flex-end" }}
+              <Paper
+                elevation={0}
+                sx={{
+                  flex: "1 1 280px",
+                  minWidth: 0,
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "stretch", sm: "center" },
+                  gap: { xs: 1.25, sm: 2 },
+                  pl: { xs: 1.5, sm: 2 },
+                  pr: { xs: 1.5, sm: 1.75 },
+                  py: 1.25,
+                  borderRadius: 2,
+                  borderLeft: `4px solid ${theme.palette.primary.main}`,
+                  borderTop: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+                  borderRight: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+                  borderBottom: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.07)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
+                  boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.06)}`,
+                }}
               >
-                <Tooltip
-                  title="Filtra a árvore, as listas e a visão geral por grupo de implementação (G1 básico, G2 intermediário, G3 avançado), conforme a planilha oficial. Na tela de um controle, o índice de maturidade do controle continua considerando todas as medidas."
-                  enterDelay={400}
-                >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: { xs: 0.75, sm: 1.25 },
-                      pl: { xs: 1, sm: 1.5 },
-                      pr: 0.75,
-                      py: 0.65,
-                      borderRadius: 2.5,
-                      border: `1px solid ${alpha(theme.palette.divider, 0.14)}`,
-                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
-                      boxShadow: `0 1px 2px ${alpha(theme.palette.common.black, 0.04)}`,
-                    }}
-                  >
-                    <FilterListIcon
-                      sx={{ fontSize: 20, color: "primary.main", opacity: 0.9 }}
-                      aria-hidden
-                    />
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+                  <FilterListIcon sx={{ fontSize: 26, color: "primary.main" }} aria-hidden />
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 800, letterSpacing: 0.2, lineHeight: 1.2 }}
+                    >
+                      Grupos de implementação (GI)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+                      Priorização CIS · PPSI 2.0
+                    </Typography>
                     <Typography
                       variant="caption"
-                      sx={{
-                        fontWeight: 700,
-                        letterSpacing: 0.8,
-                        color: "text.secondary",
-                        display: { xs: "none", md: "block" },
-                        textTransform: "uppercase",
-                      }}
+                      color="text.secondary"
+                      sx={{ display: "block", mt: 0.75, maxWidth: 360, lineHeight: 1.35 }}
                     >
-                      Grupo
+                      {GRUPO_GI_ESCOPO_DIAGNOSTICO}
                     </Typography>
-                    <ToggleButtonGroup
-                      exclusive
-                      value={grupoImpleFilter}
-                      onChange={(_, v) => v != null && setGrupoImpleFilter(v)}
-                      size="small"
-                      aria-label="Filtrar por grupo de implementação"
-                      sx={{
-                        gap: 0.5,
-                        "& .MuiToggleButtonGroup-grouped": {
-                          border: "none",
-                          mx: 0,
-                          "&:not(:first-of-type)": { borderRadius: 2 },
-                          "&:first-of-type": { borderRadius: 2 },
-                        },
-                        "& .MuiToggleButton-root": {
-                          px: { xs: 1.1, sm: 1.5 },
-                          py: 0.45,
-                          fontSize: "0.8125rem",
-                          fontWeight: 600,
-                          textTransform: "none",
-                          border: "none",
-                          borderRadius: "10px !important",
-                          color: "text.secondary",
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                          },
-                          "&.Mui-selected": {
-                            bgcolor: "primary.main",
-                            color: "primary.contrastText",
-                            "&:hover": {
-                              bgcolor: "primary.dark",
-                            },
-                          },
-                        },
-                      }}
-                    >
-                      <ToggleButton value="all">Todos</ToggleButton>
-                      <ToggleButton value="G1">G1</ToggleButton>
-                      <ToggleButton value="G2">G2</ToggleButton>
-                      <ToggleButton value="G3">G3</ToggleButton>
-                    </ToggleButtonGroup>
-                  </Paper>
-                </Tooltip>
+                  </Box>
+                  <Tooltip
+                    title={
+                      <Box sx={{ maxWidth: 520, py: 0.5 }}>
+                        <Typography variant="body2" component="div" sx={{ whiteSpace: "pre-line", lineHeight: 1.55 }}>
+                          {GRUPO_IMPLEMENTACAO_HINT}
+                        </Typography>
+                        <Typography variant="body2" component="p" sx={{ mt: 2, fontWeight: 600, lineHeight: 1.5 }}>
+                          {GRUPO_FILTRO_CUMULATIVO_RESUMO}
+                        </Typography>
+                        <Typography variant="caption" component="p" sx={{ mt: 1.5, display: "block", opacity: 0.95 }}>
+                          {GRUPO_GI_ESCOPO_DIAGNOSTICO}
+                        </Typography>
+                        <Typography variant="caption" component="p" sx={{ mt: 1, display: "block", opacity: 0.95 }}>
+                          Filtra a árvore, as listas e a visão geral. Na tela de um controle, o índice de maturidade do controle continua considerando todas as medidas.
+                        </Typography>
+                      </Box>
+                    }
+                    placement="bottom-start"
+                    enterDelay={200}
+                    slotProps={{ tooltip: { sx: { maxWidth: 560 } } }}
+                  >
+                    <InfoOutlinedIcon
+                      fontSize="small"
+                      color="primary"
+                      sx={{ cursor: "help", opacity: 0.9, display: "block" }}
+                      aria-label="Sobre os grupos de implementação GI1, GI2 e GI3"
+                    />
+                  </Tooltip>
+                </Stack>
+                <ToggleButtonGroup
+                  exclusive
+                  value={grupoImpleFilter}
+                  onChange={(_, v) => v != null && setGrupoImpleFilter(v)}
+                  size="small"
+                  aria-label="Filtrar por grupo de implementação GI1, GI2 ou GI3"
+                  sx={{
+                    alignSelf: { xs: "stretch", sm: "center" },
+                    flexWrap: "wrap",
+                    justifyContent: { xs: "center", sm: "flex-end" },
+                    gap: 0.75,
+                    "& .MuiToggleButtonGroup-grouped": {
+                      border: "none",
+                      mx: 0,
+                      "&:not(:first-of-type)": { borderRadius: 2 },
+                      "&:first-of-type": { borderRadius: 2 },
+                    },
+                    "& .MuiToggleButton-root": {
+                      px: { xs: 1.2, sm: 1.65 },
+                      py: 0.55,
+                      fontSize: "0.875rem",
+                      fontWeight: 700,
+                      textTransform: "none",
+                      borderRadius: "10px !important",
+                      border: "none",
+                      color: "text.secondary",
+                    },
+                  }}
+                >
+                  <ToggleButton
+                    value="all"
+                    sx={{
+                      "&.Mui-selected": {
+                        bgcolor: "primary.main",
+                        color: "primary.contrastText",
+                        "&:hover": { bgcolor: "primary.dark" },
+                      },
+                    }}
+                  >
+                    Todos
+                  </ToggleButton>
+                  <ToggleButton
+                    value="G1"
+                    sx={{
+                      "&.Mui-selected": {
+                        bgcolor: GRUPO_GI_PALETTE.G1.main,
+                        color: GRUPO_GI_PALETTE.G1.contrastText,
+                        "&:hover": { bgcolor: "#1B5E20" },
+                      },
+                    }}
+                  >
+                    {labelGrupoGi("G1")}
+                  </ToggleButton>
+                  <ToggleButton
+                    value="G2"
+                    sx={{
+                      "&.Mui-selected": {
+                        bgcolor: GRUPO_GI_PALETTE.G2.main,
+                        color: GRUPO_GI_PALETTE.G2.contrastText,
+                        "&:hover": { bgcolor: "#9A3412" },
+                      },
+                    }}
+                  >
+                    {labelGrupoGi("G2")}
+                  </ToggleButton>
+                  <ToggleButton
+                    value="G3"
+                    sx={{
+                      "&.Mui-selected": {
+                        bgcolor: GRUPO_GI_PALETTE.G3.main,
+                        color: GRUPO_GI_PALETTE.G3.contrastText,
+                        "&:hover": { bgcolor: "#004D40" },
+                      },
+                    }}
+                  >
+                    {labelGrupoGi("G3")}
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Paper>
+              <Box sx={{ display: "flex", alignItems: "center", flex: "0 0 auto" }}>
                 <ReportButton programaPathSegment={idOrSlug} />
-              </Stack>
+              </Box>
             </Box>
             <ProgramaLastActivityLine programaId={programaId || undefined} programaPathSegment={idOrSlug} />
         </Box>

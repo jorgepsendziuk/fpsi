@@ -13,8 +13,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const result = await updateSession(request);
-  return result;
+  try {
+    return await updateSession(request);
+  } catch (e) {
+    console.error("[middleware] updateSession:", e);
+    return NextResponse.next({
+      request: { headers: request.headers },
+    });
+  }
 }
 
 export const config = {

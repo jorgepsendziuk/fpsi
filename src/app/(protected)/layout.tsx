@@ -20,8 +20,8 @@ export default function ProtectedLayout({
   const { data: user, isLoading } = useGetIdentity<IUser>();
   const router = useRouter();
   const pathname = usePathname();
-  /** /dashboard usa MainAppShell no layout filho; não empilhar Header aqui. */
-  const isDashboardShell = pathname === "/dashboard";
+  /** /dashboard e /referencias usam MainAppShell no layout filho; não empilhar Header aqui. */
+  const isDashboardShell = pathname === "/dashboard" || pathname.startsWith("/referencias");
 
   useEffect(() => {
     if (!isLoading && !user) {

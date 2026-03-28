@@ -1,5 +1,5 @@
 // React and hooks
-import React from 'react';
+import React, { useMemo } from 'react';
 
 // Material UI components
 import {
@@ -16,8 +16,6 @@ import {
   Divider,
   Tooltip,
   Alert,
-  Card,
-  CardContent,
   alpha,
   CircularProgress,
 } from '@mui/material';
@@ -27,9 +25,6 @@ import Grid from '@mui/material/Grid2';
 import SaveIcon from '@mui/icons-material/Save';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import InfoIcon from '@mui/icons-material/Info';
-import SecurityIcon from '@mui/icons-material/Security';
-import CategoryIcon from '@mui/icons-material/Category';
-import FunctionsIcon from '@mui/icons-material/Functions';
 import CircleIcon from '@mui/icons-material/Circle';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
@@ -47,11 +42,20 @@ import { respostas, respostasimnao, status_medida, status_plano_acao } from '../
 import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 import type { EvidenciaSugestao as EvidenciaSugestaoTipo } from '../../../lib/medidas/evidenciaRules';
 import { respostaAtualIgualSugestao } from '../../../lib/medidas/evidenciaRules';
+import {
+  GRUPO_IMPLEMENTACAO_HINT,
+  GRUPO_FILTRO_CUMULATIVO_RESUMO,
+  GRUPO_GI_PALETTE,
+  labelGrupoGi,
+  normalizeGrupoImpleCode,
+} from '../../../lib/utils/grupoImplementacao';
 
 // Styles
 import { medidaStyles } from './styles';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useTheme } from '@mui/material/styles';
+import { splitMedidaDescricao } from '@/lib/normas/medidaDescricao';
+import { NormasReferenciaSection } from '@/components/normas/NormasReferenciaSection';
 
 /**
  * Props for the Medida component
@@ -101,6 +105,11 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   const { getContrastTextColor } = useThemeColors();
   const theme = useTheme();
 
+  const { textoOrientativo, normasReferencia } = useMemo(
+    () => splitMedidaDescricao(medida.descricao ?? ''),
+    [medida.descricao]
+  );
+
   // Buscar a cor do status do plano de trabalho do sistema existente
   const statusInfo = status_plano_acao.find(status => status.id === programaMedida?.status_plano_acao);
 
@@ -135,136 +144,63 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   // Preparar array de respostas
   const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;
 
-  // Tooltips explicativos para os campos técnicos
-  const tooltips = {
-    cisv8: "CIS v8 (Center for Internet Security Controls v8): Identificador único da medida de segurança baseado nos controles CIS versão 8, que são as melhores práticas de segurança cibernética reconhecidas mundialmente.",
-    grupoImple: "Grupo de Implementação: Categoriza as medidas em grupos (G1, G2, G3) baseados na complexidade e prioridade de implementação. G1 são medidas básicas, G2 intermediárias e G3 avançadas.",
-    nistCsf: "Função NIST CSF (Cybersecurity Framework): Classifica a medida dentro das 5 funções principais do framework de segurança cibernética do NIST: Identificar, Proteger, Detectar, Responder e Recuperar."
-  };
+  const giCode = normalizeGrupoImpleCode(medida.grupo_imple) as 'G1' | 'G2' | 'G3' | null;
+  const giPalette = giCode ? GRUPO_GI_PALETTE[giCode] : null;
+
+  const grupoGiTooltip = `${GRUPO_IMPLEMENTACAO_HINT}\n\n${GRUPO_FILTRO_CUMULATIVO_RESUMO}`;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-          <Box sx={medidaStyles.container(theme)}>
-            
-            {/* Cards Técnicos da Medida */}
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              {/* Card CIS v8 */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Tooltip 
-                  title={tooltips.cisv8}
-                  arrow
-                  placement="top"
-                  enterDelay={300}
-                  leaveDelay={200}
+          <Box
+            sx={{
+              ...medidaStyles.container(theme),
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {giCode && giPalette && (
+              <Tooltip
+                title={
+                  <Box component="div" sx={{ maxWidth: 440, py: 0.25 }}>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-line', lineHeight: 1.5 }}>
+                      {grupoGiTooltip}
+                    </Typography>
+                  </Box>
+                }
+                arrow
+                placement="left"
+                enterDelay={250}
+                slotProps={{ tooltip: { sx: { maxWidth: 480 } } }}
+              >
+                <Box
+                  component="span"
+                  aria-label={`Grupo de implementação ${labelGrupoGi(giCode)}`}
+                  sx={{
+                    position: 'absolute',
+                    top: 10,
+                    right: 10,
+                    zIndex: 2,
+                    px: 2.35,
+                    py: 0.85,
+                    borderRadius: 2.5,
+                    fontWeight: 800,
+                    fontSize: '1.0625rem',
+                    letterSpacing: '0.1em',
+                    textTransform: 'none',
+                    color: giPalette.main,
+                    background: `linear-gradient(135deg, ${alpha(giPalette.main, 0.22)} 0%, ${alpha(giPalette.main, 0.1)} 100%)`,
+                    border: `1px solid ${alpha(giPalette.main, 0.42)}`,
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    boxShadow: `0 4px 20px ${alpha(giPalette.main, 0.18)}, inset 0 1px 0 ${alpha('#fff', 0.35)}`,
+                    cursor: 'help',
+                    userSelect: 'none',
+                  }}
                 >
-                  <Card 
-                    sx={{ 
-                      cursor: 'help',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 4,
-                        borderColor: 'primary.main'
-                      },
-                      border: `1px solid ${theme.palette.divider}`,
-                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`
-                    }}
-                  >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <SecurityIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                            CIS v8
-                          </Typography>
-                                                     <Typography variant="h6" fontWeight="bold" color="primary.main">
-                             {medida.id_cisv8 || 'N/A'}
-                           </Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Tooltip>
-              </Grid>
-
-              {/* Card Grupo de Implementação */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Tooltip 
-                  title={tooltips.grupoImple}
-                  arrow
-                  placement="top"
-                  enterDelay={300}
-                  leaveDelay={200}
-                >
-                  <Card 
-                    sx={{ 
-                      cursor: 'help',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 4,
-                        borderColor: 'secondary.main'
-                      },
-                      border: `1px solid ${theme.palette.divider}`,
-                      background: `linear-gradient(135deg, ${alpha(theme.palette.secondary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.02)} 100%)`
-                    }}
-                  >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <CategoryIcon sx={{ color: 'secondary.main', fontSize: 24 }} />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                            Grupo
-                          </Typography>
-                                                     <Typography variant="h6" fontWeight="bold" color="secondary.main">
-                             {medida.grupo_imple || 'N/A'}
-                           </Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Tooltip>
-              </Grid>
-
-              {/* Card Função NIST CSF */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Tooltip 
-                  title={tooltips.nistCsf}
-                  arrow
-                  placement="top"
-                  enterDelay={300}
-                  leaveDelay={200}
-                >
-                  <Card 
-                    sx={{ 
-                      cursor: 'help',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 4,
-                        borderColor: 'info.main'
-                      },
-                      border: `1px solid ${theme.palette.divider}`,
-                      background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.05)} 0%, ${alpha(theme.palette.info.main, 0.02)} 100%)`
-                    }}
-                  >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <FunctionsIcon sx={{ color: 'info.main', fontSize: 24 }} />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                            NIST CSF
-                          </Typography>
-                                                     <Typography variant="h6" fontWeight="bold" color="info.main">
-                             {medida.funcao_nist_csf || 'N/A'}
-                           </Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Tooltip>
-              </Grid>
-            </Grid>
+                  {labelGrupoGi(giCode)}
+                </Box>
+              </Tooltip>
+            )}
 
             {controle.diagnostico === 1 && evidenciaLoading && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -425,12 +361,16 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Alert>
             )}
 
-            {/* Seção de Descrição */}
+            {/* Seção de Descrição (sem bloco &quot;Normas de referência&quot;, exibido à parte) */}
             <Box sx={medidaStyles.descriptionSection(theme)}>
               <Typography sx={medidaStyles.descriptionText(theme)} align="justify">
-                &ldquo;{medida.descricao}&rdquo;
+                &ldquo;{textoOrientativo || medida.descricao}&rdquo;
               </Typography>
             </Box>
+
+            {normasReferencia && (
+              <NormasReferenciaSection normasReferencia={normasReferencia} />
+            )}
 
             {/* Formulário */}
             <Box sx={medidaStyles.formSection(theme)}>

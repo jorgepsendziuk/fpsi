@@ -23,7 +23,7 @@ import {
   Info as InfoIcon
 } from '@mui/icons-material';
 import MaturityChip from './MaturityChip';
-import type { GrupoImpleFilter } from '../../lib/utils/grupoImplementacao';
+import { subheaderGrupoFiltro, type GrupoImpleFilter } from '../../lib/utils/grupoImplementacao';
 
 interface DashboardProps {
   diagnosticos: any[];
@@ -133,11 +133,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <Card>
             <CardHeader 
               title="Indicadores"
-              subheader={
-                grupoImpleFilter !== 'all'
-                  ? `Indicadores considerando apenas medidas do grupo ${grupoImpleFilter}.`
-                  : 'Indicadores de todas as medidas aplicáveis.'
-              }
+              subheader={subheaderGrupoFiltro(grupoImpleFilter)}
               subheaderTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
               avatar={<DashboardIcon sx={{ color: theme.palette.primary.main, fontSize: 32 }} />}
               sx={{ pb: 1 }}

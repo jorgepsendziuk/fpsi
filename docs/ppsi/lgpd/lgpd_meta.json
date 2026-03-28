@@ -1,0 +1,29 @@
+{
+  "instrumento_id": "lei_13709_2018",
+  "nome_curto": "LGPD",
+  "nome_completo": "Lei nº 13.709, de 14 de agosto de 2018",
+  "arquivo_local": "lei_13709_2018_planalto_compilado.html",
+  "artigos_json": "lgpd_artigos.json",
+  "geracao_artigos": "python3 scripts/extract_lgpd_artigos.py",
+  "fonte_oficial": {
+    "tipo": "texto_compilado",
+    "url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/L13709compilado.htm",
+    "orgao": "Planalto"
+  },
+  "encoding_repositorio": "UTF-8",
+  "encoding_fonte_tipico": "ISO-8859-1",
+  "estrutura": {
+    "marcadores_artigo": [
+      "Artigos 1 a 9: padrão 'Art. Nº' (ordinal)",
+      "Artigos 10 a 65: padrão 'Art. N.' (número com ponto)"
+    ],
+    "capitulos": "Texto 'CAPÍTULO' romano em linha própria",
+    "ancoras_html_por_artigo": false,
+    "nota": "Segmentação por artigo exige parser; não há id por artigo confiável em todo o documento."
+  },
+  "compativel_com_modelo_instrumentos_json": {
+    "url_oficial": true,
+    "mapa_artigos_texto_completo": "possivel_com_parser",
+    "mapa_artigos_subset_educativo": "recomendado"
+  }
+}

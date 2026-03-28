@@ -1,8 +1,7 @@
 "use client";
 
-import React, { Suspense, useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import NextLink from "next/link";
 import {
   Box,
   Container,
@@ -48,7 +47,6 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
   CloudUpload as CloudUploadIcon,
-  MenuBook as MenuBookIcon,
 } from "@mui/icons-material";
 import { useGetIdentity } from "@refinedev/core";
 import * as dataService from "@/lib/services/dataService";
@@ -544,60 +542,8 @@ export default function DashboardPage() {
         </Card>
       </Box>
 
-      {/* Referência LGPD */}
-      <Box sx={{ mb: 4 }}>
-        <Card
-          sx={{
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            overflow: "hidden",
-            background: `linear-gradient(125deg, ${alpha(theme.palette.info.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
-          }}
-        >
-          <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.info.main, 0.15),
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MenuBookIcon sx={{ fontSize: 32, color: "info.main" }} />
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  LGPD
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Consulte os artigos mapeados no sistema (material educativo). Sempre valide no Planalto.
-                </Typography>
-              </Box>
-            </Box>
-            <CardActions sx={{ p: 0 }}>
-              <Button
-                component={NextLink}
-                href="/referencias/lgpd"
-                variant="contained"
-                color="info"
-                startIcon={<MenuBookIcon />}
-                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
-              >
-                Abrir referência
-              </Button>
-            </CardActions>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* Programas — Suspense: useSearchParams em ProgramasSection (abrir criação via ?novoPrograma=1) */}
-      <Suspense fallback={<Box sx={{ minHeight: 240 }} />}>
-        <ProgramasSection />
-      </Suspense>
+      {/* Programas */}
+      <ProgramasSection />
       {/* Empresas */}
       <Box sx={{ mb: 5 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 2 }}>

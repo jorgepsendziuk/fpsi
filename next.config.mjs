@@ -10,6 +10,13 @@ const withSerwist = withSerwistInit({
 
 const nextConfig = {
   turbopack: {},
+  /** Dev: cache em memória evita corrupção/ENOENT no disco (ex.: pasta em iCloud/Dropbox). */
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.cache = { type: "memory" };
+    }
+    return config;
+  },
   // Acelera dev/build: compila só os imports usados desses pacotes
   experimental: {
     optimizePackageImports: [

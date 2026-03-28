@@ -79,6 +79,8 @@ export interface Controle {
   nome: string;
   texto?: string;
   por_que_implementar?: string;
+  /** Guia PPSI 2.0 — orientações de implementação */
+  procedimentos_e_ferramentas?: string;
   fique_atento?: string | null;
   aplicabilidade_privacidade?: string;
   nivel?: number;
