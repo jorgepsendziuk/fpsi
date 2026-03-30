@@ -27,9 +27,11 @@ import * as dataService from "@/lib/services/dataService";
 type Props = {
   /** Segmento da URL do programa (id numérico ou slug), como em `programas/[id]`. */
   idOrSlug: string;
+  /** Rota para onde o botão de ajuda leva quando não há slug (ex.: painel ou página do programa). */
+  configurarHref?: string;
 };
 
-export function PortalPrivacidadePublicLinkCard({ idOrSlug }: Props) {
+export function PortalPrivacidadePublicLinkCard({ idOrSlug, configurarHref = "/dashboard" }: Props) {
   const theme = useTheme();
   const primary = theme.palette.primary.main;
   const [programa, setPrograma] = useState<{ nome?: string; slug?: string } | null>(null);
@@ -122,11 +124,11 @@ export function PortalPrivacidadePublicLinkCard({ idOrSlug }: Props) {
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Para titulares acessarem pedidos, reportes e contato na web, o programa precisa de um{" "}
-          <strong>slug</strong> (endereço curto, ex.: <code>meu-orgao</code>). Defina-o na criação do programa ou
-          nas opções do programa no painel.
+          <strong>slug</strong> (endereço curto, ex.: <code>meu-orgao</code>). No painel, em{" "}
+          <strong>Programas</strong>, use a opção para definir ou ajustar o slug.
         </Typography>
-        <Button component={Link} href="/dashboard" size="small" variant="outlined">
-          Ir ao painel de programas
+        <Button component={Link} href={configurarHref} size="small" variant="outlined">
+          Ir ao painel (programas)
         </Button>
       </Alert>
     );
