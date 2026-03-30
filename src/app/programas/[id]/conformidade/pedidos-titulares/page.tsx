@@ -32,8 +32,6 @@ import {
   Tooltip,
   useTheme,
   alpha,
-  Card,
-  CardContent,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -50,8 +48,6 @@ import {
   PictureAsPdf as PdfIcon,
   GetApp as GetAppIcon,
   Assignment as AssignmentIcon,
-  ContentCopy as CopyIcon,
-  QrCode2 as QrCodeIcon,
   HelpOutline as HelpOutlineIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
@@ -61,8 +57,6 @@ import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import type { PedidoTitularRow } from "@/lib/services/dataService";
-import { QRCodeSVG } from "qrcode.react";
-
 const PDF_MARGIN = 14;
 const PDF_PAGE_HEIGHT = 297;
 const PDF_LINE = 5;
@@ -125,7 +119,7 @@ export default function PedidosTitularesPage() {
   const idOrSlug = params.id as string;
   const { programaId, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
 
-  const [programa, setPrograma] = useState<{ nome?: string; slug?: string } | null>(null);
+  const [programa, setPrograma] = useState<{ nome?: string } | null>(null);
   const [pedidos, setPedidos] = useState<PedidoTitularRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -308,40 +302,6 @@ export default function PedidosTitularesPage() {
     else setSelectedIds(new Set(filteredPedidos.map((p) => p.id)));
   };
 
-  const publicUrl =
-    typeof window !== "undefined" && programa?.slug
-      ? `${window.location.origin}/${programa.slug}`
-      : programa?.slug
-        ? `https://[seu-dominio]/${programa.slug}`
-        : "";
-
-  const copyLink = () => {
-    if (!publicUrl) return;
-    navigator.clipboard.writeText(publicUrl).then(() => {});
-  };
-
-  const qrRef = React.useRef<HTMLDivElement>(null);
-  const downloadQrPng = () => {
-    if (!publicUrl || !qrRef.current) return;
-    const svg = qrRef.current.querySelector("svg");
-    if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      const a = document.createElement("a");
-      a.download = `QR-Portal-${programa?.slug ?? "privacidade"}.png`;
-      a.href = canvas.toDataURL("image/png");
-      a.click();
-    };
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-  };
-
   if (idLoading || (programaId == null && !loading)) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -414,37 +374,6 @@ export default function PedidosTitularesPage() {
           </Grid>
         </AccordionDetails>
       </Accordion>
-
-      {programa?.slug && (
-        <Card sx={{ mb: 3, bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
-          <CardContent>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Link do portal de privacidade (para titulares)
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Distribua este link para titulares solicitarem acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento ou oposição.
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-              <TextField
-                size="small"
-                fullWidth
-                sx={{ maxWidth: 420 }}
-                value={publicUrl}
-                InputProps={{ readOnly: true }}
-              />
-              <Button startIcon={<CopyIcon />} variant="outlined" onClick={copyLink} disabled={!publicUrl}>
-                Copiar link
-              </Button>
-              <Box ref={qrRef} sx={{ p: 1, bgcolor: "white", borderRadius: 1, border: "1px solid", borderColor: "divider" }}>
-                <QRCodeSVG value={publicUrl || " "} size={80} level="M" />
-              </Box>
-              <Button size="small" variant="outlined" startIcon={<QrCodeIcon />} onClick={downloadQrPng} disabled={!publicUrl}>
-                Baixar QR (PNG)
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
 
       <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
         <FormControl size="small" sx={{ minWidth: 160 }}>

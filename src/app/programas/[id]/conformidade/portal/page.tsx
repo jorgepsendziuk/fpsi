@@ -8,6 +8,7 @@ import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { ConformidadeHubCard, PORTAL_SECTIONS } from "../ConformidadeHubCard";
+import { PortalPrivacidadePublicLinkCard } from "@/components/conformidade/PortalPrivacidadePublicLinkCard";
 
 export default function PortalPrivacidadeHubPage() {
   const params = useParams();
@@ -23,6 +24,7 @@ export default function PortalPrivacidadeHubPage() {
         description="Canais do site público do programa — titulares, reportes e contato."
       />
       <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
+      <PortalPrivacidadePublicLinkCard idOrSlug={idOrSlug} />
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: "md" }}>
         O que chega pelo portal público: exercício de direitos do titular (art. 18 LGPD), reportes e mensagens do formulário
         de contato.
