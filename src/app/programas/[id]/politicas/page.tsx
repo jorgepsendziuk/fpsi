@@ -8,8 +8,6 @@ import {
   CardContent,
   Button,
   Box,
-  Breadcrumbs,
-  Link,
   Grid,
   Paper,
   useTheme,
@@ -19,7 +17,6 @@ import {
   IconButton
 } from "@mui/material";
 import {
-  Policy as PolicyIcon,
   PictureAsPdf as PictureAsPdfIcon,
   ArrowBack as ArrowBackIcon,
   Backup as BackupIcon,
@@ -36,6 +33,7 @@ import {
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { loadPoliticaSectionsForPdf } from "../../../../lib/utils/loadPoliticaSectionsForPdf";
 
 interface PoliticaInfo {
@@ -259,50 +257,24 @@ export default function ProgramaPoliticasPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Header com Breadcrumbs */}
-        <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-          <Stack spacing={2}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={handleVoltar}
-                sx={{ minWidth: 'auto' }}
-              >
-                Voltar
-              </Button>
-              
-              <Breadcrumbs separator="›">
-                <Link
-                  color="inherit"
-                  href="/dashboard"
-                  sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                >
-                  Programas
-                </Link>
-                <Link
-                  color="inherit"
-                  href={`/programas/${idOrSlug}`}
-                  sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                >
-                  {programa?.nome || 'Programa'}
-                </Link>
-                <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PolicyIcon sx={{ mr: 0.5, fontSize: 20 }} />
-                  Políticas
-                </Typography>
-              </Breadcrumbs>
-            </Box>
-
-            <Box>
-              <Typography variant="body1" color="text.secondary" sx={{ mt: 0 }}>
-                Gerencie e edite as políticas institucionais do programa{' '}
+        <PageHeroHeader
+          title="Políticas e documentos"
+          icon={<PrivacyTipIcon sx={{ fontSize: 30 }} aria-hidden />}
+          description={
+            <>
+              <Typography variant="body2" component="span" display="block">
+                Políticas institucionais, aviso de privacidade e outros documentos citados no portal — programa{" "}
                 <strong>{programa?.nome || programa?.nome_fantasia}</strong>
               </Typography>
               <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1.5 }} />
-            </Box>
-          </Stack>
-        </Paper>
+            </>
+          }
+          trailing={
+            <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleVoltar}>
+              Voltar
+            </Button>
+          }
+        />
 
         {pdfError && (
           <Typography color="error" variant="body2" sx={{ mb: 2 }}>
@@ -310,7 +282,7 @@ export default function ProgramaPoliticasPage() {
           </Typography>
         )}
 
-        {/* Grid de Políticas */}
+        {/* Grid de políticas e documentos (mesmo catálogo / editor) */}
         <Grid container spacing={3}>
           {POLITICAS_DISPONIVEIS.map((politica) => {
             const row = politicasResumo?.get(politica.id);
@@ -492,15 +464,15 @@ export default function ProgramaPoliticasPage() {
           }}
         >
           <Typography variant="h6" color="primary" gutterBottom>
-            💡 Sobre as Políticas
+            💡 Sobre políticas e documentos
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            As políticas institucionais são documentos fundamentais que estabelecem diretrizes, 
-            procedimentos e controles para proteger os ativos de informação da organização.
+            Aqui você mantém políticas de SI e privacidade e pode alojar textos que o titular encontra no início da jornada
+            (por exemplo, aviso de privacidade) e outros documentos referenciados no portal de privacidade do programa.
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
             <strong>Última gravação</strong> é a data do último salvamento no conteúdo. <strong>Início da vigência</strong> e{" "}
-            <strong>prazo de revisão</strong> são editados no editor de cada política (metadados por documento).
+            <strong>prazo de revisão</strong> são editados no editor de cada documento (metadados por item).
           </Typography>
           <Typography variant="body2" color="text.secondary">
             O <strong>marcador PDF</strong> no canto do card baixa o documento sem abrir o editor. No editor, use{" "}

@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import * as dataService from '../../../lib/services/dataService';
 import {
   TIPO_POLITICA_POSIN,
+  TIPO_POLITICA_PROTECAO_DADOS,
   buildEvidenciaContext,
   getEvidenciaSugestao,
   textoJustificativaSugestao,
@@ -30,6 +31,7 @@ export interface MedidaContainerProps {
   controle: Controle;
   /** The program ID */
   programaId: number;
+  programaPathSegment?: string;
   /** Function to handle changes to the measure */
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
@@ -44,6 +46,7 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
   programaMedida,
   controle,
   programaId,
+  programaPathSegment,
   handleMedidaChange,
   responsaveis,
 }) => {
@@ -78,10 +81,19 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
     (async () => {
       setEvidenciaLoading(true);
       try {
-        const programa = await dataService.fetchProgramaById(programaId);
-        const posin = await dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_POSIN);
+        const [programa, posin, protecaoDados, gruposRaw] = await Promise.all([
+          dataService.fetchProgramaById(programaId),
+          dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_POSIN),
+          dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_PROTECAO_DADOS),
+          dataService.fetchGovernancaGruposMembros(programaId),
+        ]);
         if (cancelled) return;
-        const ctx = buildEvidenciaContext(programa, posin);
+        const gruposGovernanca = {
+          comiteSi: gruposRaw.comite_seguranca_informacao.length,
+          comiteDados: gruposRaw.comite_protecao_dados.length,
+          etir: gruposRaw.etir.length,
+        };
+        const ctx = buildEvidenciaContext(programa, posin, protecaoDados, gruposGovernanca);
         setEvidenciaSugestao(getEvidenciaSugestao(medida.id_medida, ctx));
       } catch {
         if (!cancelled) setEvidenciaSugestao(null);
@@ -201,6 +213,7 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
       programaMedida={programaMedida}
       controle={controle}
       programaId={programaId}
+      programaPathSegment={programaPathSegment}
       handleMedidaChange={handleMedidaChange}
       responsaveis={responsaveis}
       localValues={localValues} 

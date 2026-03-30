@@ -396,17 +396,7 @@ export function ProgramasSection() {
     <Box sx={{ mb: 4 }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, flexWrap: "wrap", gap: 2 }}>
         <Box>
-          <Typography
-            variant="h5"
-            component="h2"
-            sx={{
-              fontWeight: "bold",
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              color: "transparent",
-            }}
-          >
+          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600, letterSpacing: "0.02em", color: "text.primary" }}>
             {viewExcluidos ? "Lixeira de programas" : "Programas"}
           </Typography>
           <Typography variant="body2" color="text.secondary">

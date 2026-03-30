@@ -8,7 +8,6 @@ import {
   Container,
   Typography,
   Box,
-  Breadcrumbs,
   Link,
   Paper,
   Button,
@@ -43,8 +42,9 @@ import {
   Delete as DeleteIcon,
   Map as MapIcon,
 } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
-import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
+import { formatDateTimePtBr } from "@/components/common/LastUpdateInfo";
 import {
   SETOR_AREA_OPCOES,
   FINALIDADE_OPCOES,
@@ -281,34 +281,22 @@ export default function MapeamentoDadosPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programas
+      <PageHeroHeader
+        title="Mapeamento de dados"
+        icon={<MapIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Levantamento com listas de escolha para primeira linha; vincule ao ROPA ao cadastrar cada operação."
+        trailing={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
+            Novo levantamento
+          </Button>
+        }
+      />
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+        A coluna «Atualizado» reflete a última gravação de cada levantamento.{" "}
+        <Link component={NextLink} href={`/programas/${idOrSlug}/auditoria`} underline="hover" color="primary">
+          Histórico completo
         </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programa
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Tratamento de dados e riscos
-        </Link>
-        <Typography color="text.primary">Mapeamento de dados</Typography>
-      </Breadcrumbs>
-
-      <ProgramaLastActivityLine programaId={programaIdNum} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
-
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <MapIcon sx={{ fontSize: 32, color: "primary.main" }} />
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Levantamento com listas de escolha para primeira linha; vincule ao ROPA ao cadastrar cada operação.
-            </Typography>
-          </Box>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
-          Novo levantamento
-        </Button>
-      </Box>
+      </Typography>
 
       {listError && (
         <Paper elevation={0} variant="outlined" sx={{ p: 2, mb: 2, borderColor: "error.main" }}>
@@ -331,19 +319,22 @@ export default function MapeamentoDadosPage() {
                 <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}><strong>Titulares</strong></TableCell>
                 <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}><strong>Finalidade</strong></TableCell>
                 <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}><strong>Transf. int.</strong></TableCell>
+                <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, whiteSpace: "nowrap" }}>
+                  <strong>Atualizado</strong>
+                </TableCell>
                 <TableCell align="right"><strong>Ações</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">Carregando…</Typography>
                   </TableCell>
                 </TableRow>
               ) : list.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary" component="span">
                       Nenhum levantamento cadastrado. Use &quot;Novo levantamento&quot; e depois associe no{" "}
                       <NextLink
@@ -382,6 +373,16 @@ export default function MapeamentoDadosPage() {
                     </TableCell>
                     <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
                       {labelTransferencia(row.transferencia_internacional)}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        display: { xs: "none", sm: "table-cell" },
+                        fontSize: "0.75rem",
+                        color: "text.secondary",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.updated_at ? formatDateTimePtBr(row.updated_at) : "—"}
                     </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => handleOpenEdit(row)} aria-label="Editar">

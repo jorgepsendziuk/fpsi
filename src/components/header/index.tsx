@@ -10,6 +10,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import SecurityIcon from "@mui/icons-material/Security";
 import PolicyIcon from "@mui/icons-material/Policy";
 import PeopleIcon from "@mui/icons-material/People";
+import GroupIcon from "@mui/icons-material/Group";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import PersonIcon from "@mui/icons-material/Person";
 import GavelIcon from "@mui/icons-material/Gavel";
@@ -77,6 +78,12 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       description: "Visão geral do programa"
     },
     {
+      label: "Estrutura de Governança",
+      icon: <GroupIcon />,
+      path: `/programas/${programaId}/responsabilidades`,
+      description: "Responsáveis, papéis LGPD e instituições"
+    },
+    {
       label: "Diagnósticos",
       icon: <SecurityIcon />,
       path: `/programas/${programaId}/diagnostico`,
@@ -101,16 +108,10 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       description: "Pedidos dos titulares, reportes e contato"
     },
     {
-      label: "Políticas",
+      label: "Políticas e documentos",
       icon: <PolicyIcon />,
       path: `/programas/${programaId}/politicas`,
-      description: "Políticas institucionais"
-    },
-    {
-      label: "Responsáveis",
-      icon: <PeopleIcon />,
-      path: `/programas/${programaId}/responsabilidades`,
-      description: "Gestão de responsáveis"
+      description: "Políticas, avisos e textos do portal",
     },
     {
       label: "Usuários",
@@ -225,8 +226,8 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
     if (pathname.includes('/conformidade/reportes')) return 'Reportes do portal';
     if (pathname.includes('/conformidade/contato')) return 'Contato do portal';
     if (pathname.includes('/conformidade')) return 'Conformidade';
-    if (pathname.includes('/politicas')) return 'Políticas';
-    if (pathname.includes('/responsabilidades')) return 'Responsáveis';
+    if (pathname.includes("/politicas")) return "Políticas e documentos";
+    if (pathname.includes('/responsabilidades')) return 'Estrutura de Governança';
     if (pathname.includes('/usuarios')) return 'Usuários';
     if (pathname === '/dashboard') return 'Dashboard';
     return 'FPSI';

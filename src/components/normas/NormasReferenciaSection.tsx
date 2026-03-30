@@ -3,7 +3,6 @@
 import React, { useMemo, useState } from "react";
 import {
   Box,
-  Button,
   Chip,
   Dialog,
   DialogContent,
@@ -15,14 +14,16 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import GavelIcon from "@mui/icons-material/Gavel";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
   extractLgpdArtigoNumbers,
   isLgpdNormaSegment,
   LGPD_PLANALTO_COMPILADO_URL,
   splitNormasSegments,
 } from "@/lib/normas/lgpdRefs";
+import { resolveNormaReferenciaUrl } from "@/lib/normas/normaExternaRefs";
 import { getLgpdArtigoTexto } from "@/lib/normas/lgpdArtigosData";
-import { LgpdArtigoViewer, LgpdMultiArtigoViewer } from "./LgpdArtigoViewer";
+import { LgpdMultiArtigoViewer } from "./LgpdArtigoViewer";
 
 function chipLabel(segment: string, max = 52): string {
   const t = segment.replace(/\s+/g, " ").trim();
@@ -42,7 +43,8 @@ export function NormasReferenciaSection({ normasReferencia }: { normasReferencia
 
   if (segments.length === 0) return null;
 
-  const openSegment = (segment: string) => {
+  /** Só diálogo: LGPD com artigos no app, ou norma sem URL mapeada. */
+  const openDialogForSegment = (segment: string) => {
     if (isLgpdNormaSegment(segment)) {
       const artigos = extractLgpdArtigoNumbers(segment);
       const comTexto = artigos.filter((n) => getLgpdArtigoTexto(n));
@@ -53,6 +55,15 @@ export function NormasReferenciaSection({ normasReferencia }: { normasReferencia
     }
     setDlg({ kind: "generico", segment });
   };
+
+  function externaParaSegmento(segment: string): { url: string; siteLabel: string } | null {
+    const lgpd = isLgpdNormaSegment(segment);
+    const artigos = lgpd ? extractLgpdArtigoNumbers(segment) : [];
+    const comTexto = lgpd ? artigos.filter((n) => getLgpdArtigoTexto(n)) : [];
+    if (lgpd && comTexto.length > 0) return null;
+    if (lgpd) return { url: LGPD_PLANALTO_COMPILADO_URL, siteLabel: "Planalto" };
+    return resolveNormaReferenciaUrl(segment);
+  }
 
   return (
     <>
@@ -75,17 +86,59 @@ export function NormasReferenciaSection({ normasReferencia }: { normasReferencia
           </Typography>
         </Box>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
-          Clique para ver o texto no sistema (LGPD) ou a citação completa (demais normas).
+          LGPD com artigos no sistema abre o texto aqui; demais referências mapeadas abrem o site oficial em nova aba;
+          sem mapeamento, abre só a citação do guia.
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {segments.map((seg, i) => {
             const lgpd = isLgpdNormaSegment(seg);
+            const artigos = lgpd ? extractLgpdArtigoNumbers(seg) : [];
+            const comTexto = lgpd ? artigos.filter((n) => getLgpdArtigoTexto(n)) : [];
+            const lgpdInterno = lgpd && comTexto.length > 0;
+            const externa = externaParaSegmento(seg);
+            const icon = lgpdInterno ? (
+              <MenuBookIcon sx={{ fontSize: 18 }} aria-hidden />
+            ) : externa ? (
+              <OpenInNewIcon sx={{ fontSize: 18 }} aria-hidden />
+            ) : (
+              <GavelIcon sx={{ fontSize: 18 }} aria-hidden />
+            );
+            const tip = externa
+              ? `Abrir ${externa.siteLabel} em nova aba (texto oficial)`
+              : lgpdInterno
+                ? "Ver artigos no sistema"
+                : "Ver citação completa";
+
+            if (externa) {
+              return (
+                <Chip
+                  key={i}
+                  component="a"
+                  href={externa.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  clickable
+                  icon={icon}
+                  label={chipLabel(seg)}
+                  title={tip}
+                  color={lgpd ? "primary" : "default"}
+                  variant={lgpd ? "filled" : "outlined"}
+                  sx={{
+                    height: "auto",
+                    py: 0.5,
+                    "& .MuiChip-label": { whiteSpace: "normal", textAlign: "left", lineHeight: 1.35 },
+                  }}
+                />
+              );
+            }
+
             return (
               <Chip
                 key={i}
-                icon={lgpd ? <MenuBookIcon sx={{ fontSize: 18 }} /> : <GavelIcon sx={{ fontSize: 18 }} />}
+                icon={icon}
                 label={chipLabel(seg)}
-                onClick={() => openSegment(seg)}
+                title={tip}
+                onClick={() => openDialogForSegment(seg)}
                 color={lgpd ? "primary" : "default"}
                 variant={lgpd ? "filled" : "outlined"}
                 sx={{
@@ -114,7 +167,9 @@ export function NormasReferenciaSection({ normasReferencia }: { normasReferencia
             </Typography>
             {dlg.kind !== "closed" && (
               <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                Fonte interna (LGPD) ou citação do guia; sempre confira o diploma oficial.
+                {dlg.kind === "lgpd"
+                  ? "Texto dos artigos integrado ao FPSI; link ao final para o Planalto."
+                  : "Citação conforme o catálogo do PPSI 2.0 — confira sempre a fonte oficial."}
               </Typography>
             )}
           </Box>
@@ -141,9 +196,6 @@ export function NormasReferenciaSection({ normasReferencia }: { normasReferencia
               <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.75 }}>
                 {dlg.segment}
               </Typography>
-              <Button sx={{ mt: 2 }} variant="outlined" href={LGPD_PLANALTO_COMPILADO_URL} target="_blank" rel="noopener noreferrer">
-                Planalto — LGPD (compilado)
-              </Button>
             </Box>
           )}
         </DialogContent>

@@ -1,15 +1,12 @@
 import React from "react";
 import { Typography, Box, Button } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
-import { useThemeColors } from "./hooks/useThemeColors";
 
 interface ProgramHeaderProps {
   handleCreatePrograma: () => void;
 }
 
 const ProgramHeader = ({ handleCreatePrograma }: ProgramHeaderProps) => {
-  const { getContrastTextColor } = useThemeColors();
-  
   return (
     <Box sx={{ 
       mb: 3, 
@@ -19,16 +16,8 @@ const ProgramHeader = ({ handleCreatePrograma }: ProgramHeaderProps) => {
       alignItems: { xs: 'flex-start', sm: 'center' },
       gap: { xs: 2, sm: 0 }
     }}>
-      <Typography 
-        variant="h4" 
-        component="h2" 
-        sx={{ 
-          fontWeight: 600,
-          color: getContrastTextColor(),
-          fontSize: { xs: '1.5rem', sm: '2rem', md: '2rem' }
-        }}
-      >
-        Programas de Privacidade e Segurança da Informação
+      <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600, letterSpacing: "0.02em", color: "text.primary" }}>
+        Programas de privacidade e segurança da informação
       </Typography>
       <Button
         variant="contained"

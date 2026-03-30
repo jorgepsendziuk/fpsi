@@ -72,8 +72,8 @@ export default function DemoPage() {
     },
     {
       icon: <PolicyIcon color="primary" />,
-      title: "Políticas",
-      description: "10 políticas pré-configuradas com editor moderno"
+      title: "Políticas e documentos",
+      description: "Catálogo com editor e PDF — inclui espaço para textos do portal",
     },
     {
       icon: <GroupIcon color="primary" />,
@@ -114,7 +114,7 @@ export default function DemoPage() {
             </Typography>
             <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: 600, mx: 'auto' }}>
               Acesse um programa pré-configurado com dados reais de demonstração, 
-              incluindo diagnósticos, controles, medidas e políticas.
+              incluindo diagnósticos, controles, medidas e políticas/documentos.
             </Typography>
           </Paper>
 
@@ -168,7 +168,7 @@ export default function DemoPage() {
                     onClick={handleViewPolicies}
                     sx={{ py: 1.5, fontSize: '1.1rem', borderRadius: 2 }}
                   >
-                    Ver Políticas
+                    Ver políticas e documentos
                   </Button>
                 </Stack>
               </Stack>
@@ -230,7 +230,7 @@ export default function DemoPage() {
               
               <Card variant="outlined" sx={{ flex: 1, textAlign: 'center', p: 2 }}>
                 <Typography variant="h3" fontWeight="bold" color="warning.main">10</Typography>
-                <Typography variant="body1">Políticas</Typography>
+                <Typography variant="body1">Políticas e documentos</Typography>
               </Card>
             </Stack>
           </Paper>

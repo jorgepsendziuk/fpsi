@@ -7,7 +7,6 @@ import {
   Container,
   Typography,
   Box,
-  Breadcrumbs,
   Link,
   Paper,
   Button,
@@ -58,6 +57,7 @@ import {
 } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
 import dayjs from "dayjs";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import type { PedidoTitularRow } from "@/lib/services/dataService";
@@ -359,46 +359,29 @@ export default function PedidosTitularesPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programas
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programa
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Portal de privacidade
-        </Link>
-        <Typography color="text.primary">Pedidos dos titulares</Typography>
-      </Breadcrumbs>
-
+      <PageHeroHeader
+        title="Pedidos de titulares"
+        icon={<AssignmentIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Registro de pedidos de acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento e oposição (art. 18 LGPD)"
+        trailing={
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Tooltip title="Gerar PDF dos pedidos selecionados">
+              <span>
+                <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfSelected} disabled={selectedIds.size === 0}>
+                  Imprimir selecionados ({selectedIds.size})
+                </Button>
+              </span>
+            </Tooltip>
+            <Button variant="outlined" startIcon={<PdfIcon />} onClick={() => exportPdfBatch(filteredPedidos)} disabled={filteredPedidos.length === 0}>
+              Imprimir todos
+            </Button>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
+              Novo pedido
+            </Button>
+          </Stack>
+        }
+      />
       <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
-
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <AssignmentIcon sx={{ fontSize: 32, color: "primary.main" }} />
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Registro de pedidos de acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento e oposição (art. 18 LGPD)
-            </Typography>
-          </Box>
-        </Box>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Tooltip title="Gerar PDF dos pedidos selecionados">
-            <span>
-              <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfSelected} disabled={selectedIds.size === 0}>
-                Imprimir selecionados ({selectedIds.size})
-              </Button>
-            </span>
-          </Tooltip>
-          <Button variant="outlined" startIcon={<PdfIcon />} onClick={() => exportPdfBatch(filteredPedidos)} disabled={filteredPedidos.length === 0}>
-            Imprimir todos
-          </Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
-            Novo pedido
-          </Button>
-        </Stack>
-      </Box>
 
       <Accordion defaultExpanded={false} elevation={0} sx={{ mb: 3, border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: 1 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>

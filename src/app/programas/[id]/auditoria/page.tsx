@@ -1,13 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   Container,
   Typography,
   Box,
-  Breadcrumbs,
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -24,16 +22,15 @@ import {
   Chip,
   useTheme,
   alpha,
-  Avatar,
 } from "@mui/material";
-import { ArrowBack as ArrowBackIcon, History as HistoryIcon } from "@mui/icons-material";
+import { History as HistoryIcon } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 const ACTION_LABELS: Record<string, string> = {
   create: "Criou",
@@ -73,22 +70,16 @@ const RESOURCE_LABELS: Record<string, string> = {
 
 export default function AuditoriaPage() {
   const params = useParams();
-  const router = useRouter();
   const theme = useTheme();
   const idOrSlug = params.id as string;
   const { programaId, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
 
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [programa, setPrograma] = useState<{ nome?: string } | null>(null);
   const [filterAction, setFilterAction] = useState<string>("");
   const [filterResource, setFilterResource] = useState<string>("");
   const [filterDesde, setFilterDesde] = useState<dayjs.Dayjs | null>(null);
   const [filterAte, setFilterAte] = useState<dayjs.Dayjs | null>(null);
-
-  useEffect(() => {
-    dataService.fetchProgramaByIdOrSlug(idOrSlug).then(setPrograma).catch(() => setPrograma(null));
-  }, [idOrSlug]);
 
   useEffect(() => {
     if (programaId == null) return;
@@ -107,8 +98,6 @@ export default function AuditoriaPage() {
       .catch(() => setActivities([]))
       .finally(() => setLoading(false));
   }, [programaId, filterAction, filterResource, filterDesde, filterAte]);
-
-  const programaName = programa?.nome || `Programa`;
 
   if (idLoading || (programaId == null && !loading)) {
     return (
@@ -130,59 +119,23 @@ export default function AuditoriaPage() {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Breadcrumbs sx={{ mb: 2 }}>
-            <Link
-              href="/dashboard"
-              underline="hover"
-              color="inherit"
-              sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
-              onClick={(e) => {
-                e.preventDefault();
-                router.push("/dashboard");
-              }}
-            >
-              <ArrowBackIcon sx={{ mr: 0.5 }} fontSize="small" />
-              Programas
-            </Link>
-            <Link
-              href={`/programas/${idOrSlug}`}
-              underline="hover"
-              color="inherit"
-              sx={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.preventDefault();
-                router.push(`/programas/${idOrSlug}`);
-              }}
-            >
-              {programaName}
-            </Link>
-            <Typography color="text.primary">Histórico de Atividades</Typography>
-          </Breadcrumbs>
-
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-            <Avatar
-              sx={{
-                width: 56,
-                height: 56,
-                background: `linear-gradient(135deg, #455a64 0%, #78909c 100%)`,
-              }}
-            >
-              <HistoryIcon fontSize="large" />
-            </Avatar>
-            <Box>
-              <Typography variant="body1" color="text.secondary">
+        <PageHeroHeader
+          title="Auditoria"
+          icon={<HistoryIcon sx={{ fontSize: 30 }} aria-hidden />}
+          description={
+            <>
+              <Typography variant="body2" component="span" display="block">
                 Trilha de auditoria — quem fez o quê, quando (LGPD art. 37, Framework FPSI Controle 8)
               </Typography>
-            </Box>
-          </Box>
-          <ProgramaLastActivityLine
-            programaId={programaId}
-            programaPathSegment={idOrSlug}
-            showHistoricoLink={false}
-            sx={{ mt: 1 }}
-          />
-        </Box>
+              <ProgramaLastActivityLine
+                programaId={programaId}
+                programaPathSegment={idOrSlug}
+                showHistoricoLink={false}
+                sx={{ mt: 1.5 }}
+              />
+            </>
+          }
+        />
 
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3 }}>
           <FormControl size="small" sx={{ minWidth: 140 }}>

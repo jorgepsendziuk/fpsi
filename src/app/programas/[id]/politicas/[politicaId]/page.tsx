@@ -7,8 +7,6 @@ import {
   Paper,
   Typography,
   Box,
-  Breadcrumbs,
-  Link,
   Button,
   Stack,
   Alert,
@@ -22,6 +20,7 @@ import {
   Policy as PolicyIcon,
   Assignment as AssignmentIcon
 } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import SectionDisplay from './components/SectionDisplay';
 import PDFDownloadButton from './components/PDFDownloadButton';
 import {
@@ -367,108 +366,70 @@ export default function PoliticaPage() {
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', py: 2 }}>
       <Container maxWidth="lg" sx={{ px: 2 }}>
         <Paper elevation={3} sx={{ p: 3, mb: 2 }}>
-          {/* Header com Breadcrumbs */}
           <Stack spacing={2} sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={handleVoltar}
-                sx={{ minWidth: 'auto' }}
-              >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleVoltar} sx={{ minWidth: "auto" }}>
                 Voltar
               </Button>
-              
-              <Breadcrumbs separator="›">
-                <Link
-                  color="inherit"
-                  href="/dashboard"
-                  sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                >
-                  Programas
-                </Link>
-                <Link
-                  color="inherit"
-                  href={`/programas/${idOrSlug}`}
-                  sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                >
-                  {programa?.nome || 'Programa'}
-                </Link>
-                <Link
-                  color="inherit"
-                  href={`/programas/${idOrSlug}/politicas`}
-                  sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                >
-                  Políticas
-                </Link>
-                <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
-                  {politicaConfig.icon}
-                  <Box component="span" sx={{ ml: 0.5 }}>
-                    {politicaConfig.nome}
-                  </Box>
-                </Typography>
-              </Breadcrumbs>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
-              <Box>
-                <Typography 
-                  variant="h4" 
-                  component="h1" 
-                  sx={{ 
-                    fontWeight: 'bold',
-                    color: politicaConfig.cor,
-                    mb: 1
-                  }}
-                >
-                  Editor de Políticas
-                </Typography>
-                <Typography variant="h5" color="text.primary" sx={{ mb: 1 }}>
-                  {politicaConfig.nome}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {politicaConfig.descricao} • Programa: <strong>{programa?.nome || programa?.nome_fantasia}</strong>
-                </Typography>
-                <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1.5 }} />
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2, maxWidth: 420 }}>
-                  <DatePicker
-                    label="Início da vigência"
-                    value={inicioVigencia ? dayjs(inicioVigencia) : null}
-                    onChange={(d) => setInicioVigencia(d ? d.format('YYYY-MM-DD') : '')}
-                    format="DD/MM/YYYY"
-                    slotProps={{
-                      textField: { size: 'small', fullWidth: true },
-                    }}
-                  />
-                  <DatePicker
-                    label="Prazo de revisão"
-                    value={prazoRevisao ? dayjs(prazoRevisao) : null}
-                    onChange={(d) => setPrazoRevisao(d ? d.format('YYYY-MM-DD') : '')}
-                    format="DD/MM/YYYY"
-                    slotProps={{
-                      textField: { size: 'small', fullWidth: true },
-                    }}
+            <PageHeroHeader
+              title="Editor de documentos"
+              icon={<PolicyIcon sx={{ fontSize: 30 }} aria-hidden />}
+              description={
+                <>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                    <Box sx={{ color: "text.primary", display: "flex", alignItems: "center" }}>{politicaConfig.icon}</Box>
+                    <Typography variant="subtitle2" component="p" sx={{ fontWeight: 600, color: "text.primary", m: 0 }}>
+                      {politicaConfig.nome}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    {politicaConfig.descricao} • Programa: <strong>{programa?.nome || programa?.nome_fantasia}</strong>
+                  </Typography>
+                  <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1.5 }} />
+                </>
+              }
+              trailing={
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={saving || loadingModel}
+                    onClick={handleSalvarPrograma}
+                  >
+                    {saving ? "Salvando…" : "Salvar no programa"}
+                  </Button>
+                  <PDFDownloadButton
+                    sections={sections}
+                    nomeFantasia={programa?.nome || programa?.nome_fantasia || ""}
+                    politicaNome={politicaConfig.nome}
+                    programa={programa}
                   />
                 </Stack>
-              </Box>
-              
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  disabled={saving || loadingModel}
-                  onClick={handleSalvarPrograma}
-                >
-                  {saving ? 'Salvando…' : 'Salvar no programa'}
-                </Button>
-                <PDFDownloadButton 
-                  sections={sections} 
-                  nomeFantasia={programa?.nome || programa?.nome_fantasia || ''} 
-                  politicaNome={politicaConfig.nome}
-                  programa={programa}
-                />
-              </Stack>
-            </Box>
+              }
+            />
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ maxWidth: 420 }}>
+              <DatePicker
+                label="Início da vigência"
+                value={inicioVigencia ? dayjs(inicioVigencia) : null}
+                onChange={(d) => setInicioVigencia(d ? d.format("YYYY-MM-DD") : "")}
+                format="DD/MM/YYYY"
+                slotProps={{
+                  textField: { size: "small", fullWidth: true },
+                }}
+              />
+              <DatePicker
+                label="Prazo de revisão"
+                value={prazoRevisao ? dayjs(prazoRevisao) : null}
+                onChange={(d) => setPrazoRevisao(d ? d.format("YYYY-MM-DD") : "")}
+                format="DD/MM/YYYY"
+                slotProps={{
+                  textField: { size: "small", fullWidth: true },
+                }}
+              />
+            </Stack>
           </Stack>
         </Paper>
 

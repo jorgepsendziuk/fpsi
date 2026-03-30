@@ -5,16 +5,16 @@ import { Box, Typography, List, ListItem, ListItemIcon, ListItemText } from "@mu
 import { Description as DescriptionIcon } from "@mui/icons-material";
 
 const mockPoliticas = [
-  { nome: "Política de Segurança da Informação", tipo: "Segurança" },
-  { nome: "Política de Privacidade", tipo: "Privacidade" },
-  { nome: "Política de Proteção de Dados", tipo: "Proteção de dados" },
+  { nome: "Política de Segurança da Informação", tipo: "Política" },
+  { nome: "Aviso de privacidade (site/app)", tipo: "Documento do portal" },
+  { nome: "Política de Proteção de Dados Pessoais", tipo: "Política" },
 ];
 
 export function PoliticasPreview() {
   return (
     <Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
       <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-        Políticas Institucionais
+        Políticas e documentos
       </Typography>
       <List dense disablePadding>
         {mockPoliticas.map((p, i) => (

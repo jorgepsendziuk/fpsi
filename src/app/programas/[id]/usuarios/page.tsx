@@ -1,17 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   Container,
   Typography,
-  Breadcrumbs,
-  Link,
   Box,
   Alert,
   CircularProgress
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
 import { UserManagement } from '../../../../components/user-management/UserManagement';
 import { useUserPermissions, useDemoPermissions } from '../../../../hooks/useUserPermissions';
 import { useProgramaIdFromParam } from '../../../../hooks/useProgramaIdFromParam';
@@ -20,7 +17,6 @@ import * as dataService from '../../../../lib/services/dataService';
 import { ProgramaLastActivityLine } from '@/components/common/ProgramaLastActivityLine';
 
 export default function UsuariosPage() {
-  const router = useRouter();
   const params = useParams();
   const idOrSlug = params.id as string;
   const { programaId, loading: idLoading, error: idError } = useProgramaIdFromParam(idOrSlug);
@@ -80,28 +76,6 @@ export default function UsuariosPage() {
   if (error || idError || permissions.error) {
     return (
       <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Box sx={{ mb: 3 }}>
-          <Breadcrumbs sx={{ mb: 1 }}>
-            <Link 
-              href="/dashboard" 
-              underline="hover" 
-              color="inherit" 
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              <ArrowBack sx={{ mr: 0.5 }} fontSize="small" />
-              Programas
-            </Link>
-            <Link 
-              href={`/programas/${idOrSlug}`} 
-              underline="hover" 
-              color="inherit"
-            >
-              {programa?.nome || programa?.nome_fantasia || `Programa #${programaId}`}
-            </Link>
-            <Typography color="text.primary">Usuários</Typography>
-          </Breadcrumbs>
-        </Box>
-
         <Alert severity="error" sx={{ mt: 3 }}>
           {error || idError || permissions.error}
         </Alert>
@@ -123,28 +97,8 @@ export default function UsuariosPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
-      {/* Breadcrumb */}
       <Box sx={{ mb: 3 }}>
-        <Breadcrumbs sx={{ mb: 1 }}>
-          <Link 
-            href="/dashboard" 
-            underline="hover" 
-            color="inherit" 
-            sx={{ display: 'flex', alignItems: 'center' }}
-          >
-            <ArrowBack sx={{ mr: 0.5 }} fontSize="small" />
-            Programas
-          </Link>
-          <Link 
-            href={`/programas/${idOrSlug}`} 
-            underline="hover" 
-            color="inherit"
-          >
-            {programaName}
-          </Link>
-          <Typography color="text.primary">Usuários</Typography>
-        </Breadcrumbs>
-        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1 }} />
+        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} />
       </Box>
 
       {/* Modo Demo Alert */}

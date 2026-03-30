@@ -146,9 +146,9 @@ export function ModuloSistemaFlipCard({
         return (
           <Stack spacing={0.75}>
             <Typography component="div" sx={backHeadingSx}>
-              Resumo
+              Estrutura de Governança
             </Typography>
-            <Typography component="div" sx={backBodySx}>Utilizadores no programa: {responsabilidades.usuarios}</Typography>
+            <Typography component="div" sx={backBodySx}>Responsáveis no programa: {responsabilidades.usuarios}</Typography>
             <Typography component="div" sx={backBodySx}>Papéis (instituições): {responsabilidades.papeisInstituicoes}</Typography>
             <Typography component="div" sx={backBodySx}>Conexões: {responsabilidades.conexoes}</Typography>
           </Stack>
@@ -217,7 +217,7 @@ export function ModuloSistemaFlipCard({
         return (
           <Stack spacing={0.75}>
             <Typography component="div" sx={backHeadingSx}>
-              Políticas (catálogo)
+              Políticas e documentos (catálogo)
             </Typography>
             <Typography component="div" sx={backBodySx}>Implementadas: {politicas.implementadas}</Typography>
             <Typography component="div" sx={backBodySx}>Não implementadas: {politicas.naoImplementadas}</Typography>

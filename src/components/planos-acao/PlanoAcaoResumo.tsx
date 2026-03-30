@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Card,
@@ -24,11 +24,13 @@ import {
   Select,
   MenuItem,
   FormControl,
+  InputLabel,
   Checkbox,
-  Button
+  Button,
+  TextField,
+  Stack,
 } from '@mui/material';
 import {
-  Assignment as AssignmentIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Warning as WarningIcon,
@@ -114,6 +116,10 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
   const [filtroPrioridade, setFiltroPrioridade] = useState<'todos' | 'prioritarias'>('todos');
   const [filtroResposta, setFiltroResposta] = useState<'todos' | 'respondidas' | 'nao_respondidas'>('todos');
   const [filtroStatus, setFiltroStatus] = useState<number | 'todos'>('todos');
+  const [filtroResponsavel, setFiltroResponsavel] = useState<number | 'todos' | 'sem'>('todos');
+  const [filtroDiagnosticoId, setFiltroDiagnosticoId] = useState<number | 'todos'>('todos');
+  const [filtroStatusMedida, setFiltroStatusMedida] = useState<number | 'todos'>('todos');
+  const [filtroTexto, setFiltroTexto] = useState('');
   const [selectedMedidas, setSelectedMedidas] = useState<Set<string>>(new Set());
 
   const loadMedidasForControle = useCallback(
@@ -410,6 +416,87 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
     [programaId]
   );
 
+  const textoBuscaNorm = useMemo(() => filtroTexto.trim().toLowerCase(), [filtroTexto]);
+
+  const filtrosAtivos = useMemo(
+    () =>
+      filtroPrioridade !== 'todos' ||
+      filtroResposta !== 'todos' ||
+      filtroStatus !== 'todos' ||
+      filtroResponsavel !== 'todos' ||
+      filtroDiagnosticoId !== 'todos' ||
+      filtroStatusMedida !== 'todos' ||
+      textoBuscaNorm.length > 0,
+    [
+      filtroPrioridade,
+      filtroResposta,
+      filtroStatus,
+      filtroResponsavel,
+      filtroDiagnosticoId,
+      filtroStatusMedida,
+      textoBuscaNorm,
+    ]
+  );
+
+  const diagnosticosVisiveis = useMemo(
+    () =>
+      filtroDiagnosticoId === 'todos'
+        ? diagnosticos
+        : diagnosticos.filter((d) => d.id === filtroDiagnosticoId),
+    [diagnosticos, filtroDiagnosticoId]
+  );
+
+  const responsaveisOrdenados = useMemo(
+    () =>
+      [...responsaveis].sort((a, b) =>
+        String(a?.nome ?? '').localeCompare(String(b?.nome ?? ''), 'pt-BR', { sensitivity: 'base' })
+      ),
+    [responsaveis]
+  );
+
+  const aplicarFiltrosMedidas = useCallback(
+    (medidasRaw: MedidaPlanoAcao[]) => {
+      let medidas = medidasRaw;
+      if (filtroPrioridade === 'prioritarias') medidas = medidas.filter((m) => m.prioridade);
+      if (filtroResposta === 'respondidas')
+        medidas = medidas.filter((m) => m.resposta != null && String(m.resposta).trim() !== '');
+      if (filtroResposta === 'nao_respondidas')
+        medidas = medidas.filter((m) => m.resposta == null || String(m.resposta).trim() === '');
+      if (filtroStatus !== 'todos') medidas = medidas.filter((m) => m.status_plano_acao === filtroStatus);
+      if (filtroResponsavel === 'sem') medidas = medidas.filter((m) => !m.responsavel);
+      else if (filtroResponsavel !== 'todos')
+        medidas = medidas.filter((m) => m.responsavel === filtroResponsavel);
+      if (filtroStatusMedida !== 'todos')
+        medidas = medidas.filter((m) => m.status_medida === filtroStatusMedida);
+      if (textoBuscaNorm) {
+        medidas = medidas.filter((m) => {
+          const cod = String(m.id_medida ?? '').toLowerCase();
+          const txt = String(m.medida ?? '').toLowerCase();
+          return cod.includes(textoBuscaNorm) || txt.includes(textoBuscaNorm);
+        });
+      }
+      return medidas;
+    },
+    [
+      filtroPrioridade,
+      filtroResposta,
+      filtroStatus,
+      filtroResponsavel,
+      filtroStatusMedida,
+      textoBuscaNorm,
+    ]
+  );
+
+  const limparFiltros = useCallback(() => {
+    setFiltroPrioridade('todos');
+    setFiltroResposta('todos');
+    setFiltroStatus('todos');
+    setFiltroResponsavel('todos');
+    setFiltroDiagnosticoId('todos');
+    setFiltroStatusMedida('todos');
+    setFiltroTexto('');
+  }, []);
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" p={4}>
@@ -442,52 +529,20 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         '& .MuiChip-root': { border: '1px solid #ddd !important' }
       }
     }}>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography
-            variant="h4"
+      <Box className="no-print" sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+        <Tooltip title="Gerar PDF / Imprimir">
+          <IconButton
+            onClick={handleGeneratePDF}
+            color="primary"
+            size="large"
             sx={{
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 1,
-              display: 'flex',
-              alignItems: 'center'
+              backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              "&:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.2) },
             }}
           >
-            <AssignmentIcon sx={{ mr: 1, color: '#667eea' }} />
-            Plano de Trabalho
-          </Typography>
-          <Box component="div" sx={{ color: "text.secondary" }}>
-            <Typography variant="body1" component="span" sx={{ fontWeight: 600, color: "text.primary" }}>
-              {programaName}
-            </Typography>
-            {programaOrganizacao ? (
-              <Typography variant="body2" component="div" sx={{ mt: 0.25 }}>
-                {programaOrganizacao}
-              </Typography>
-            ) : null}
-            <Typography variant="body2" component="div" sx={{ mt: programaOrganizacao ? 0.5 : 0.25 }}>
-              Acompanhamento resumido das medidas por diagnóstico e controle
-            </Typography>
-          </Box>
-        </Box>
-        <Box className="no-print">
-          <Tooltip title="Gerar PDF / Imprimir">
-            <IconButton
-              onClick={handleGeneratePDF}
-              color="primary"
-              size="large"
-              sx={{
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
-              }}
-            >
-              <PrintIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
+            <PrintIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <Box sx={{ mb: 2, display: 'flex', gap: 1.5, flexWrap: 'wrap', '@media print': { mb: 1 } }}>
@@ -529,20 +584,164 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         </Card>
       </Box>
 
-      <Box className="no-print" sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>Prioridade:</Typography>
-        <Chip label="Todas" onClick={() => setFiltroPrioridade('todos')} color={filtroPrioridade === 'todos' ? 'primary' : 'default'} variant={filtroPrioridade === 'todos' ? 'filled' : 'outlined'} size="small" />
-        <Chip label="Prioritárias" onClick={() => setFiltroPrioridade('prioritarias')} color={filtroPrioridade === 'prioritarias' ? 'primary' : 'default'} variant={filtroPrioridade === 'prioritarias' ? 'filled' : 'outlined'} size="small" />
-        <Typography variant="body2" color="text.secondary" sx={{ mx: 1 }}>Resposta:</Typography>
-        <Chip label="Todas" onClick={() => setFiltroResposta('todos')} color={filtroResposta === 'todos' ? 'primary' : 'default'} variant={filtroResposta === 'todos' ? 'filled' : 'outlined'} size="small" />
-        <Chip label="Respondidas" onClick={() => setFiltroResposta('respondidas')} color={filtroResposta === 'respondidas' ? 'primary' : 'default'} variant={filtroResposta === 'respondidas' ? 'filled' : 'outlined'} size="small" />
-        <Chip label="Não respondidas" onClick={() => setFiltroResposta('nao_respondidas')} color={filtroResposta === 'nao_respondidas' ? 'primary' : 'default'} variant={filtroResposta === 'nao_respondidas' ? 'filled' : 'outlined'} size="small" />
-        <Typography variant="body2" color="text.secondary" sx={{ mx: 1 }}>Status:</Typography>
-        <Chip label="Todos" onClick={() => setFiltroStatus('todos')} color={filtroStatus === 'todos' ? 'primary' : 'default'} variant={filtroStatus === 'todos' ? 'filled' : 'outlined'} size="small" />
-        {status_plano_acao.filter((s) => s.id !== 1).map((s) => (
-          <Chip key={s.id} label={s.label} onClick={() => setFiltroStatus(s.id)} color={filtroStatus === s.id ? 'primary' : 'default'} variant={filtroStatus === s.id ? 'filled' : 'outlined'} size="small" />
-        ))}
-      </Box>
+      <Paper className="no-print" variant="outlined" sx={{ mb: 2, p: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+          Filtros
+        </Typography>
+        <Stack spacing={1.5}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1.5,
+              alignItems: 'flex-end',
+            }}
+          >
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel id="filtro-diagnostico-label">Diagnóstico</InputLabel>
+              <Select
+                labelId="filtro-diagnostico-label"
+                label="Diagnóstico"
+                value={filtroDiagnosticoId === 'todos' ? 'todos' : String(filtroDiagnosticoId)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFiltroDiagnosticoId(v === 'todos' ? 'todos' : Number(v));
+                }}
+              >
+                <MenuItem value="todos">Todos</MenuItem>
+                {diagnosticos.map((d) => (
+                  <MenuItem key={d.id} value={String(d.id)}>
+                    {d.nome}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 220 }}>
+              <InputLabel id="filtro-responsavel-label">Responsável</InputLabel>
+              <Select
+                labelId="filtro-responsavel-label"
+                label="Responsável"
+                value={
+                  filtroResponsavel === 'todos'
+                    ? 'todos'
+                    : filtroResponsavel === 'sem'
+                      ? 'sem'
+                      : String(filtroResponsavel)
+                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === 'todos') setFiltroResponsavel('todos');
+                  else if (v === 'sem') setFiltroResponsavel('sem');
+                  else setFiltroResponsavel(Number(v));
+                }}
+              >
+                <MenuItem value="todos">Todos</MenuItem>
+                <MenuItem value="sem">Sem responsável</MenuItem>
+                {responsaveisOrdenados.map((r) => (
+                  <MenuItem key={r.id} value={String(r.id)}>
+                    {r.nome}
+                    {r.departamento ? ` (${r.departamento})` : ''}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel id="filtro-status-plano-label">Plano de trabalho</InputLabel>
+              <Select
+                labelId="filtro-status-plano-label"
+                label="Plano de trabalho"
+                value={filtroStatus === 'todos' ? 'todos' : String(filtroStatus)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFiltroStatus(v === 'todos' ? 'todos' : Number(v));
+                }}
+              >
+                <MenuItem value="todos">Todos</MenuItem>
+                {status_plano_acao.filter((s) => s.id !== 1).map((s) => (
+                  <MenuItem key={s.id} value={String(s.id)}>
+                    {s.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel id="filtro-status-medida-label">Status da medida</InputLabel>
+              <Select
+                labelId="filtro-status-medida-label"
+                label="Status da medida"
+                value={filtroStatusMedida === 'todos' ? 'todos' : String(filtroStatusMedida)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFiltroStatusMedida(v === 'todos' ? 'todos' : Number(v));
+                }}
+              >
+                <MenuItem value="todos">Todos</MenuItem>
+                {status_medida.map((s) => (
+                  <MenuItem key={s.id} value={String(s.id)}>
+                    {s.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              size="small"
+              label="Buscar"
+              placeholder="Código ou texto da medida"
+              value={filtroTexto}
+              onChange={(e) => setFiltroTexto(e.target.value)}
+              sx={{ minWidth: 220, flex: '1 1 200px' }}
+            />
+            {filtrosAtivos && (
+              <Button size="small" variant="outlined" onClick={limparFiltros}>
+                Limpar filtros
+              </Button>
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+              Prioridade:
+            </Typography>
+            <Chip
+              label="Todas"
+              onClick={() => setFiltroPrioridade('todos')}
+              color={filtroPrioridade === 'todos' ? 'primary' : 'default'}
+              variant={filtroPrioridade === 'todos' ? 'filled' : 'outlined'}
+              size="small"
+            />
+            <Chip
+              label="Prioritárias"
+              onClick={() => setFiltroPrioridade('prioritarias')}
+              color={filtroPrioridade === 'prioritarias' ? 'primary' : 'default'}
+              variant={filtroPrioridade === 'prioritarias' ? 'filled' : 'outlined'}
+              size="small"
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ mx: 1 }}>
+              Resposta:
+            </Typography>
+            <Chip
+              label="Todas"
+              onClick={() => setFiltroResposta('todos')}
+              color={filtroResposta === 'todos' ? 'primary' : 'default'}
+              variant={filtroResposta === 'todos' ? 'filled' : 'outlined'}
+              size="small"
+            />
+            <Chip
+              label="Respondidas"
+              onClick={() => setFiltroResposta('respondidas')}
+              color={filtroResposta === 'respondidas' ? 'primary' : 'default'}
+              variant={filtroResposta === 'respondidas' ? 'filled' : 'outlined'}
+              size="small"
+            />
+            <Chip
+              label="Não respondidas"
+              onClick={() => setFiltroResposta('nao_respondidas')}
+              color={filtroResposta === 'nao_respondidas' ? 'primary' : 'default'}
+              variant={filtroResposta === 'nao_respondidas' ? 'filled' : 'outlined'}
+              size="small"
+            />
+          </Box>
+        </Stack>
+      </Paper>
 
       {selectedMedidas.size > 0 && (
         <Box className="no-print" sx={{ mb: 2, p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.08), borderRadius: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -566,7 +765,13 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         </Box>
       )}
 
-      {diagnosticos.map((diagnostico) => (
+      {diagnosticosVisiveis.length === 0 && filtroDiagnosticoId !== 'todos' && (
+        <Alert severity="info" sx={{ mb: 2 }} className="no-print">
+          Nenhum diagnóstico corresponde ao filtro selecionado.
+        </Alert>
+      )}
+
+      {diagnosticosVisiveis.map((diagnostico) => (
         <Accordion key={diagnostico.id} sx={{ mb: 1.5 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ py: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -580,12 +785,14 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
               const medidasRaw = shouldUseDemoData(programaId)
                 ? controle.medidas
                 : (medidasByControle[controle.id] ?? []);
-              let medidas = medidasRaw;
-              if (filtroPrioridade === 'prioritarias') medidas = medidas.filter((m) => m.prioridade);
-              if (filtroResposta === 'respondidas') medidas = medidas.filter((m) => m.resposta != null && String(m.resposta).trim() !== '');
-              if (filtroResposta === 'nao_respondidas') medidas = medidas.filter((m) => m.resposta == null || String(m.resposta).trim() === '');
-              if (filtroStatus !== 'todos') medidas = medidas.filter((m) => m.status_plano_acao === filtroStatus);
+              const medidas = aplicarFiltrosMedidas(medidasRaw);
+              const medidasCarregadas =
+                shouldUseDemoData(programaId) || medidasByControle[controle.id] !== undefined;
               const isLoading = loadingControles.has(controle.id);
+              const chipMedidasLabel =
+                filtrosAtivos && medidasCarregadas && medidasRaw.length > 0
+                  ? `${medidas.length} de ${medidasRaw.length} medidas`
+                  : `${controle.qtdMedidas} medidas`;
 
               return (
                 <Accordion
@@ -608,7 +815,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
                       />
                       <ControleIcon color="secondary" />
                       <Typography variant="subtitle1" fontWeight="600" sx={{ fontSize: '1rem' }}>{controle.nome}</Typography>
-                      <Chip label={`${controle.qtdMedidas} medidas`} size="small" color="secondary" variant="outlined" />
+                      <Chip label={chipMedidasLabel} size="small" color="secondary" variant="outlined" />
                       {isLoading && <CircularProgress size={16} sx={{ ml: 1 }} />}
                     </Box>
                   </AccordionSummary>
@@ -620,7 +827,15 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
                     ) : medidas.length === 0 ? (
                       <Box sx={{ py: 2, textAlign: 'center' }}>
                         <Typography variant="body2" color="text.secondary">
-                          {filtroPrioridade === 'prioritarias' ? 'Nenhuma medida prioritária neste controle' : 'Nenhuma medida'}
+                          {!medidasCarregadas && !shouldUseDemoData(programaId)
+                            ? 'Abra o controle para carregar as medidas'
+                            : medidasRaw.length === 0
+                              ? 'Nenhuma medida neste controle'
+                              : filtrosAtivos
+                                ? 'Nenhuma medida corresponde aos filtros neste controle'
+                                : filtroPrioridade === 'prioritarias'
+                                  ? 'Nenhuma medida prioritária neste controle'
+                                  : 'Nenhuma medida'}
                         </Typography>
                       </Box>
                     ) : (

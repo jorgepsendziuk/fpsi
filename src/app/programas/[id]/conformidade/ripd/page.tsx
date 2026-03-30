@@ -7,7 +7,6 @@ import {
   Container,
   Typography,
   Box,
-  Breadcrumbs,
   Link,
   Paper,
   Button,
@@ -46,6 +45,7 @@ import {
   Description as DescriptionIcon,
   PictureAsPdf as PdfIcon,
 } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { buildRipdPdfDocument } from "@/lib/utils/ripdPdf";
@@ -301,34 +301,17 @@ export default function RIPDPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programas
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programa
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Tratamento de dados e riscos
-        </Link>
-        <Typography color="text.primary">RIPD / AIPD</Typography>
-      </Breadcrumbs>
-
+      <PageHeroHeader
+        title="RIPD"
+        icon={<DescriptionIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Relatório de impacto à proteção de dados pessoais (art. 38 LGPD)"
+        trailing={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
+            Novo relatório
+          </Button>
+        }
+      />
       <ProgramaLastActivityLine programaId={programaIdNum} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
-
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <DescriptionIcon sx={{ fontSize: 32, color: "primary.main" }} />
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Relatório de Impacto à Proteção de Dados Pessoais (Art. 38 LGPD)
-            </Typography>
-          </Box>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
-          Novo relatório
-        </Button>
-      </Box>
 
       <Alert severity="info" sx={{ mb: 2 }}>
         O relatório deve conter, no mínimo, os elementos dos incisos I a IV do art. 38 (descrição dos dados, metodologia e segurança,

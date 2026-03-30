@@ -15,7 +15,8 @@ import {
   IconButton,
   Divider,
   Card,
-  CardContent
+  CardContent,
+  Link,
 } from '@mui/material';
 import {
   Visibility,
@@ -262,8 +263,13 @@ export default function DemoLoginPage() {
 
           {/* Footer */}
           <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" display="block">
               Sistema FPSI • Versão Demo
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+              <Link href="/privacidade" underline="hover">
+                Privacidade e cookies
+              </Link>
             </Typography>
           </Box>
         </Paper>

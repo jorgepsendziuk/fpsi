@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { PageHeroHeader } from '@/components/common/PageHeroHeader';
 import {
   Box,
   Typography,
@@ -37,6 +38,7 @@ import {
   ToggleButtonGroup
 } from '@mui/material';
 import {
+  People as PeopleIcon,
   PersonAdd as PersonAddIcon,
   MoreVert as MoreVertIcon,
   Edit as EditIcon,
@@ -334,34 +336,22 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       <Grid container spacing={3}>
         {/* Header */}
         <Grid item xs={12}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Box>
-              <Typography 
-                variant="h4" 
-                sx={{ 
-                  fontWeight: 'bold',
-                  background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: 1
-                }}
-              >
-                Gerenciar Usuários
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {programaName}
-              </Typography>
-            </Box>
-            {hasPermission('can_invite_users') && (
-              <Button
-                variant="contained"
-                startIcon={<PersonAddIcon />}
-                onClick={() => setInviteDialogOpen(true)}
-              >
-                Convidar Usuário
-              </Button>
-            )}
-          </Box>
+          <PageHeroHeader
+            title="Usuários"
+            icon={<PeopleIcon sx={{ fontSize: 30 }} aria-hidden />}
+            description={programaName}
+            trailing={
+              hasPermission("can_invite_users") ? (
+                <Button
+                  variant="contained"
+                  startIcon={<PersonAddIcon />}
+                  onClick={() => setInviteDialogOpen(true)}
+                >
+                  Convidar usuário
+                </Button>
+              ) : null
+            }
+          />
         </Grid>
 
         {/* O que cada papel faz - compacto com tooltips */}

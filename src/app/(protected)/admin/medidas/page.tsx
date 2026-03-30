@@ -19,6 +19,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { Checklist as ChecklistIcon } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 interface Medida {
   id: number;
@@ -53,12 +54,11 @@ export default function AdminMedidasPage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-        <ChecklistIcon color="primary" sx={{ fontSize: 32 }} />
-        <Typography variant="h5" fontWeight="bold">
-          Medidas
-        </Typography>
-      </Box>
+      <PageHeroHeader
+        title="Medidas"
+        icon={<ChecklistIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Medidas por controle (perguntas, descrições, id_cisv8)."
+      />
       <Box sx={{ mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 250 }}>
           <InputLabel>Controle</InputLabel>

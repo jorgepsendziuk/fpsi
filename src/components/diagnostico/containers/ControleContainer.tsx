@@ -49,6 +49,8 @@ export interface ControleContainerProps {
   ) => { score: number; label: string };
   /** Filtro global GI cumulativo: GI2 lista GI1+GI2; GI3 lista GI1+GI2+GI3 (maturidade do controle continua com todas). */
   grupoImpleFilter?: GrupoImpleFilter;
+  /** Segmento de URL do programa (link «Histórico completo» na linha de atualização do controle). */
+  programaPathSegment?: string;
 }
 
 /**
@@ -67,6 +69,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   programaMedidas: programaMedidasFromPage,
   getControleMaturity,
   grupoImpleFilter = 'all',
+  programaPathSegment,
 }) => {
   // Store measures locally
   const [medidas, setMedidas] = useState<Medida[]>([]);
@@ -172,6 +175,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
       diagnostico={diagnostico}
       medidas={medidasParaLista}
       programaId={programaId}
+      programaPathSegment={programaPathSegment}
       responsaveis={responsaveis}
       handleINCCChange={handleINCCChange}
       handleMedidaChange={handleMedidaChange}

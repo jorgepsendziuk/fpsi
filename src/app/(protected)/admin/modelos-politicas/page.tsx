@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { Policy as PolicyIcon, Edit as EditIcon } from "@mui/icons-material";
 import Link from "next/link";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import type { PoliticaModelo } from "@/lib/types/admin";
 
 export default function AdminModelosPoliticasPage() {
@@ -37,9 +38,7 @@ export default function AdminModelosPoliticasPage() {
   if (loading) {
     return (
       <Container maxWidth="lg">
-        <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
-          Modelos de Políticas
-        </Typography>
+        <PageHeroHeader title="Modelos de políticas" icon={<PolicyIcon sx={{ fontSize: 30 }} aria-hidden />} />
         <Grid container spacing={2}>
           {[1, 2, 3].map((i) => (
             <Grid item xs={12} md={6} key={i}>
@@ -53,14 +52,11 @@ export default function AdminModelosPoliticasPage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Modelos de Políticas
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Edite os templates de políticas que serão usados ao criar políticas nos programas.
-        </Typography>
-      </Box>
+      <PageHeroHeader
+        title="Modelos de políticas"
+        icon={<PolicyIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Edite os templates de políticas que serão usados ao criar políticas nos programas."
+      />
 
       <Grid container spacing={3}>
         {modelos.map((m) => (

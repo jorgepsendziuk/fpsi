@@ -14,7 +14,7 @@ export function ResponsabilidadesPreview() {
   return (
     <Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
       <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-        Estrutura de Tratamento
+        Estrutura de Governança
       </Typography>
       <List dense disablePadding>
         {papeis.map((p, i) => (

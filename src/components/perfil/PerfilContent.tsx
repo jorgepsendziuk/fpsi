@@ -23,6 +23,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useGetIdentity, useUpdatePassword } from "@refinedev/core";
 import { SelectWithAdd } from "@/components/common/SelectWithAdd";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 type IUser = {
   id: string;
@@ -192,19 +193,11 @@ export function PerfilContent({ compact = false }: PerfilContentProps) {
   return (
     <Stack spacing={3}>
       {!compact && (
-        <Typography
-          variant="h5"
-          component="h2"
-          sx={{
-            fontWeight: "bold",
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-          }}
-        >
-          Perfil e Configurações
-        </Typography>
+        <PageHeroHeader
+          title="Perfil e configurações"
+          icon={<PersonIcon sx={{ fontSize: 30 }} aria-hidden />}
+          description="Dados da conta, cargo, departamento e senha."
+        />
       )}
 
       {/* Dados pessoais */}

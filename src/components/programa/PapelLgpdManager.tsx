@@ -247,6 +247,8 @@ export function PapelLgpdManager({ programaId, idOrSlug }: PapelLgpdManagerProps
         p: 3,
         borderRadius: 3,
         mb: 4,
+        display: "flex",
+        flexDirection: "column",
         background: theme.palette.mode === "dark"
           ? "linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(46, 125, 50, 0.08) 100%)"
           : "linear-gradient(135deg, rgba(25, 118, 210, 0.04) 0%, rgba(46, 125, 50, 0.04) 100%)",
@@ -260,9 +262,8 @@ export function PapelLgpdManager({ programaId, idOrSlug }: PapelLgpdManagerProps
           </Typography>
         </Box>
       </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Cadastre instituições nos papéis LGPD (controlador(es), contratante(s), operador(es)) e defina as conexões entre elas.
-        Pode ser sua empresa, órgão, prestadores ou operadores.
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Instituições nos papéis LGPD e vínculos entre elas (controlador, contratante, operador).
       </Typography>
 
       {error && (
@@ -271,30 +272,43 @@ export function PapelLgpdManager({ programaId, idOrSlug }: PapelLgpdManagerProps
         </Alert>
       )}
 
-      <Grid container spacing={3}>
-        {/* Diagrama: 50% */}
-        <Grid item xs={12} md={6}>
-          <Box sx={{ height: "100%", minHeight: 200, borderRadius: 2, overflow: "hidden" }}>
+      <Grid container spacing={3} alignItems="stretch" sx={{ flex: 1, minHeight: 0 }}>
+        {/* Diagrama: mesma altura da coluna de cadastro; preenche 100% da célula */}
+        <Grid item xs={12} md={6} sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: { xs: 320, md: 400 },
+              width: "100%",
+              borderRadius: 2,
+              overflow: "hidden",
+              border: 1,
+              borderColor: "divider",
+              bgcolor: "background.default",
+            }}
+          >
             {loading ? (
-              <Skeleton variant="rectangular" height="100%" sx={{ borderRadius: 2, minHeight: 200 }} />
+              <Skeleton variant="rectangular" sx={{ flex: 1, minHeight: { xs: 320, md: 400 }, borderRadius: 2 }} />
             ) : (
-              <Box sx={{ height: "100%", width: "100%" }}>
-              <PapelLgpdDiagram
-                programaId={programaId}
-                idOrSlug={idOrSlug}
-                data={data}
-                embedded
-                onNodeClick={handleOpenEditInst}
-                onEdgeClick={handleOpenEditVinculo}
-              />
+              <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }}>
+                <PapelLgpdDiagram
+                  programaId={programaId}
+                  idOrSlug={idOrSlug}
+                  data={data}
+                  embedded
+                  onNodeClick={handleOpenEditInst}
+                  onEdgeClick={handleOpenEditVinculo}
+                />
               </Box>
             )}
           </Box>
         </Grid>
 
         {/* Cadastro: 50% */}
-        <Grid item xs={12} md={6}>
-          <Box sx={{ pl: isMobile ? 0 : 1 }}>
+        <Grid item xs={12} md={6} sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <Box sx={{ pl: isMobile ? 0 : 1, flex: 1, width: "100%" }}>
       {/* Instituições por papel */}
       {PAPEIS.map((papel) => {
         const items = getInstituicoesByPapel(papel.key);

@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/profiles/privacy-consent/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/Users/jorgepsendziuk/Documents/fpsi/src/app/api/profiles/privacy-consent/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

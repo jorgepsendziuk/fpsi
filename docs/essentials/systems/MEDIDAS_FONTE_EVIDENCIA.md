@@ -5,29 +5,37 @@ Este documento registra o **cruzamento** entre medidas do framework (catálogo e
 ## Princípios
 
 - As sugestões são **assistidas**: o avaliador continua responsável pela resposta oficial em `programa_medida`.
-- **Nomeação no cadastro ≠ ato institucional** completo: o sistema só infere a partir do que foi modelado (ex.: responsável vinculado ao programa).
+- **Nomeação no cadastro ≠ ato institucional** completo: o sistema só infere a partir do que foi modelado (ex.: pessoa vinculada ao papel no programa; membros listados nos grupos).
 - Para medidas sem entidade equivalente no produto, a avaliação permanece **manual**.
 
-## Controle 0 — Estruturação básica (medidas 0.1 a 0.7)
+## Diagnóstico 1 — medidas `0.1` … `0.12` (PPSI 2.0, Controle 0)
 
-Escala de resposta no diagnóstico 1: **Sim** (id 1) / **Não** (id 2), conforme [`METODOLOGIA_AVALIACAO_FRAMEWORK.md`](./METODOLOGIA_AVALIACAO_FRAMEWORK.md).
+Escala de resposta: **Sim** (id 1) / **Não** (id 2), conforme [`METODOLOGIA_AVALIACAO_FRAMEWORK.md`](./METODOLOGIA_AVALIACAO_FRAMEWORK.md).
 
-| id_medida | Pergunta (resumo) | Tipo de fonte | Caminho / predicado | Confiança | Observações |
-|-----------|-------------------|---------------|---------------------|-----------|-------------|
-| 0.1 | Autoridade máxima de TI | `programa` | `responsavel_ti` numérico > 0 | média | Não valida portaria ou ato formal fora do sistema. |
-| 0.2 | Gestor de SI | `programa` | `responsavel_si` > 0 | média | Idem. |
-| 0.3 | Responsável controle interno | `programa` | `responsavel_controle_interno` > 0 | média | Idem. |
-| 0.4 | Comitê de SI | — | — | — | **Sem fonte no sistema** (avaliação manual até existir cadastro). |
-| 0.5 | ETIR | — | — | — | **Sem fonte no sistema** (avaliação manual). |
-| 0.6 | POSIN | `politica_programa` | `tipo_politica = politica_seguranca_informacao` e seções com texto preenchido | média | Indício de política elaborada no FPSI; aprovação pela autoridade máxima não é inferida automaticamente. |
-| 0.7 | Encarregado (DPO) | `programa` | `responsavel_privacidade` > 0 | média | Alinhado ao cadastro de responsáveis do programa. |
+As medidas **0.1 a 0.8** estão alinhadas à página **Programa → Estrutura de Governança** (`/programas/[id]/responsabilidades`), com abas **Papéis e equipe**, **Comitê SI**, **Comitê priva** e **ETIR**. A UI do diagnóstico oferece link direto com `?aba=equipe|si|priva|etir`.
+
+| id_medida | Pergunta (resumo) | Tipo de fonte | Caminho / predicado | Confiança | Onde no FPSI |
+|-----------|-------------------|---------------|---------------------|-----------|----------------|
+| 0.1 | Alta administração / SGRC | `programa` | `representante_alta_administracao` numérico > 0 | média | Aba **Papéis e equipe** — representante da alta administração. |
+| 0.2 | Gestor de TIC (Port. 778) | `programa` | `gestor_tic` > 0 | média | Aba **Papéis e equipe** — gestor de TIC. |
+| 0.3 | Gestor de SI | `programa` | `gestor_seguranca_informacao` > 0 | média | Aba **Papéis e equipe** — gestor de SI. |
+| 0.4 | Encarregado (DPO) | `programa` | `encarregado_dados_pessoais` > 0 | média | Aba **Papéis e equipe** — encarregado. |
+| 0.5 | Gestão da integridade | `programa` | `responsavel_gestao_integridade` > 0 | média | Aba **Papéis e equipe** — responsável pela gestão da integridade. |
+| 0.6 | Comitê de SI | `programa_grupo_governanca` | ≥1 membro em `comite_seguranca_informacao` | média | Aba **Comitê SI**. |
+| 0.7 | Comitê de proteção de dados | `programa_grupo_governanca` | ≥1 membro em `comite_protecao_dados` | média | Aba **Comitê priva**. |
+| 0.8 | ETIR | `programa_grupo_governanca` | ≥1 membro em `etir` | média | Aba **ETIR**. |
+| 0.9 | PGSI | — | — | baixa | **Sem modelo** equivalente no FPSI (manual). |
+| 0.10 | PGP | — | — | baixa | **Sem modelo** equivalente no FPSI (manual). |
+| 0.11 | POSIN | `politica_programa` | `tipo_politica = politica_seguranca_informacao` e seções com texto | média | Módulo **Políticas** do programa. |
+| 0.12 | Política de Proteção de Dados Pessoais | `politica_programa` | `tipo_politica = politica_protecao_dados_pessoais` e seções com texto | média | Idem. |
 
 ## Próximas fases (iteração)
 
 - **Fase B:** incluir medidas cujo atendimento possa ser inferido de **inventário**, **ROPA**, **registro de incidentes**, etc., quando esses módulos estiverem estáveis.
-- **Fase C:** cadastros ou integrações para estruturas como Comitê de SI e ETIR, ou tabela administrável `medida_fonte` se o mapeamento precisar mudar sem deploy.
+- **Fase C:** modelos ou integrações para **PGSI/PGP** (0.9–0.10), ou tabela administrável `medida_fonte` se o mapeamento precisar mudar sem deploy.
 
 ## Referências
 
 - Metodologia: [`METODOLOGIA_AVALIACAO_FRAMEWORK.md`](./METODOLOGIA_AVALIACAO_FRAMEWORK.md)
 - Catálogo de medidas (espelho): [`src/lib/services/medidas.json`](../../../src/lib/services/medidas.json)
+- Abas da governança: [`src/lib/governanca/abaGovernanca.ts`](../../../src/lib/governanca/abaGovernanca.ts)

@@ -22,12 +22,13 @@ import PrintIcon from "@mui/icons-material/Print";
 import { useParams, useRouter } from "next/navigation";
 import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
-import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { useMaturityCache } from "@/components/diagnostico/hooks/useMaturityCache";
 import PoliticaStylePrintHeader from "@/components/diagnostico/relatorio/PoliticaStylePrintHeader";
 import type { Controle, Diagnostico, Medida, ProgramaMedida } from "@/lib/types/types";
 import type { PoliticaProgramaDados } from "@/lib/utils/politicaPlaceholders";
 import { alpha } from "@mui/material/styles";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
+import DescriptionIcon from "@mui/icons-material/Description";
 
 const DOC_TITLE = "RELATÓRIO DE TODOS OS CONTROLES";
 const COL_INDICADOR = "Indicador de Maturidade do Controle";
@@ -289,18 +290,26 @@ export default function DiagnosticoRelatorioPage() {
         }}
       />
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box className="no-print" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-          <IconButton
-            color="primary"
-            aria-label="Voltar"
-            onClick={() => router.push(`/programas/${idOrSlug}/diagnostico`)}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-          <Button variant="contained" startIcon={<PrintIcon />} onClick={handlePrint}>
-            Imprimir ou salvar em PDF
-          </Button>
-          <ProgramaLastActivityLine programaId={programaId || undefined} programaPathSegment={idOrSlug} />
+        <Box className="no-print" sx={{ mb: 2 }}>
+          <PageHeroHeader
+            title="Relatório de todos os controles"
+            icon={<DescriptionIcon sx={{ fontSize: 30 }} aria-hidden />}
+            description="Datas de atualização por controle e medida estão no diagnóstico interativo e na auditoria por tipo de recurso."
+            trailing={
+              <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+                <IconButton
+                  color="primary"
+                  aria-label="Voltar"
+                  onClick={() => router.push(`/programas/${idOrSlug}/diagnostico`)}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+                <Button variant="contained" startIcon={<PrintIcon />} onClick={handlePrint}>
+                  Imprimir ou salvar em PDF
+                </Button>
+              </Box>
+            }
+          />
         </Box>
 
         {error ? (

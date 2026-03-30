@@ -11,7 +11,8 @@ import Image from 'next/image';
 import { ColorModeContextProvider } from "@contexts/color-mode";
 import { authProviderClient } from "@providers/auth-provider";
 import { dataProvider } from "@providers/data-provider";
-import { Analytics } from "@vercel/analytics/react";
+import { AppPrivacyChrome } from "@/components/privacy/AppPrivacyChrome";
+import { ConditionalAnalytics } from "@/components/privacy/ConditionalAnalytics";
 
 export const metadata: Metadata = {
   title: "FPSI - Framework de Privacidade e Segurança da Informação",
@@ -114,9 +115,10 @@ export default function RootLayout({
                     }}
                   >
                     {children}
+                    <AppPrivacyChrome />
                     <RefineKbar />
                   </Refine>
-                <Analytics />
+                <ConditionalAnalytics />
                 </DevtoolsProvider>
               </RefineSnackbarProvider>
             </ColorModeContextProvider>

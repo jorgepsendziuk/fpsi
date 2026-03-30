@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ReactFlow,
@@ -11,6 +11,7 @@ import {
   Position,
   type Node,
   type Edge,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Box, Paper, Typography, Button, Skeleton, Alert } from "@mui/material";
@@ -304,6 +305,7 @@ export function PapelLgpdDiagram({
   const [error, setError] = useState<string | null>(null);
 
   const data = dataProp ?? dataState;
+  const hasData = Boolean(data && (data.instituicoes?.length ?? 0) > 0);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
     if (!data) return { nodes: [], edges: [] };
@@ -314,11 +316,43 @@ export function PapelLgpdDiagram({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rfInstanceRef = useRef<ReactFlowInstance | null>(null);
 
   useEffect(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
+
+  const fitDiagram = useCallback(() => {
+    requestAnimationFrame(() => {
+      rfInstanceRef.current?.fitView({ padding: 0.18, duration: 0 });
+    });
+  }, []);
+
+  const onFlowInit = useCallback(
+    (inst: ReactFlowInstance) => {
+      rfInstanceRef.current = inst;
+      inst.fitView({ padding: 0.18, duration: 0 });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!hasData) {
+      rfInstanceRef.current = null;
+      return;
+    }
+    fitDiagram();
+  }, [hasData, initialNodes.length, initialEdges.length, fitDiagram]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !hasData) return;
+    const ro = new ResizeObserver(() => fitDiagram());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [hasData, fitDiagram]);
 
   const fetchData = useCallback(async () => {
     if (dataProp != null) return;
@@ -376,10 +410,19 @@ export function PapelLgpdDiagram({
     );
   }
 
-  const hasData = data && (data.instituicoes?.length ?? 0) > 0;
-
   const diagramContent = (
-    <Box sx={{ flex: 1, minHeight: embedded ? 200 : 400, width: "100%", height: "100%" }}>
+    <Box
+      ref={containerRef}
+      sx={{
+        flex: 1,
+        minHeight: embedded ? 0 : 400,
+        width: "100%",
+        height: embedded ? "100%" : "auto",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {hasData ? (
         <ReactFlow
           nodes={nodes}
@@ -387,15 +430,21 @@ export function PapelLgpdDiagram({
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onInit={onFlowInit}
           onNodeClick={onNodeClick ? handleNodeClick : undefined}
           onEdgeClick={onEdgeClick ? handleEdgeClick : undefined}
-          fitView
-          fitViewOptions={{ padding: 0.2 }}
           nodesDraggable
           nodesConnectable={false}
           elementsSelectable
           proOptions={{ hideAttribution: true }}
-          style={{ borderRadius: 8, background: "#fafafa" }}
+          style={{
+            borderRadius: 8,
+            background: "#fafafa",
+            width: "100%",
+            height: embedded ? "100%" : 400,
+            flex: embedded ? 1 : undefined,
+            minHeight: embedded ? 0 : 400,
+          }}
         >
           <Background gap={12} size={1} color="#e0e0e0" />
           <Controls showInteractive={false} />
@@ -406,7 +455,9 @@ export function PapelLgpdDiagram({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: embedded ? 180 : 300,
+            flex: embedded ? 1 : undefined,
+            minHeight: embedded ? 0 : 300,
+            height: embedded ? "100%" : undefined,
             color: "#666",
             fontSize: 14,
             textAlign: "center",
@@ -421,8 +472,8 @@ export function PapelLgpdDiagram({
             {embedded
               ? "Cadastre instituições como controlador(es), contratante(s) e operador(es) abaixo para exibir o diagrama."
               : showManageButton
-                ? "Cadastre instituições como controlador(es), contratante(s) e operador(es) em Responsabilidades para exibir o diagrama."
-                : "Cadastre ou edite instituições e vínculos no card Responsabilidades (Módulos ao lado)."}
+                ? "Cadastre instituições como controlador(es), contratante(s) e operador(es) em Estrutura de Governança para exibir o diagrama."
+                : "Cadastre ou edite instituições e vínculos no card Estrutura de Governança (módulos ao lado)."}
           </Typography>
           {!embedded && !isDemoMode && showManageButton && (
             <Button
@@ -431,7 +482,7 @@ export function PapelLgpdDiagram({
               onClick={() => router.push(`/programas/${idOrSlug}/responsabilidades`)}
               sx={{ mt: 1, borderRadius: 2, textTransform: "none" }}
             >
-              Ir para Responsabilidades
+              Ir para Estrutura de Governança
             </Button>
           )}
         </Box>
@@ -441,7 +492,7 @@ export function PapelLgpdDiagram({
 
   if (embedded) {
     return (
-      <Box sx={{ height: "100%", minHeight: 200, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ flex: 1, minHeight: 0, height: "100%", display: "flex", flexDirection: "column" }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}

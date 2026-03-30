@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import { Category as CategoryIcon } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 interface Diagnostico {
   id: number;
@@ -38,12 +39,11 @@ export default function AdminDiagnosticosPage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-        <CategoryIcon color="primary" sx={{ fontSize: 32 }} />
-        <Typography variant="h5" fontWeight="bold">
-          Diagnósticos
-        </Typography>
-      </Box>
+      <PageHeroHeader
+        title="Diagnósticos"
+        icon={<CategoryIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Categorias de diagnóstico (descrição, cor, índice, maturidade)."
+      />
       <TableContainer component={Paper}>
         <Table>
           <TableHead>

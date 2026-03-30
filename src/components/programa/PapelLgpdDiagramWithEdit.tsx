@@ -32,7 +32,7 @@ interface PapelLgpdDiagramWithEditProps {
   programaId: number;
   idOrSlug: string;
   isDemoMode?: boolean;
-  /** Padrão true. Na página inicial do programa use false para ocultar Gerenciar e indicar edição pelo card Responsabilidades. */
+  /** Padrão true. Na página inicial do programa use false para ocultar Gerenciar e indicar edição pelo card Estrutura de Governança. */
   showManageButton?: boolean;
 }
 

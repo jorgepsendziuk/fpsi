@@ -18,6 +18,7 @@ import {
   Alert,
   alpha,
   CircularProgress,
+  Link,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
@@ -42,6 +43,7 @@ import { respostas, respostasimnao, status_medida, status_plano_acao } from '../
 import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 import type { EvidenciaSugestao as EvidenciaSugestaoTipo } from '../../../lib/medidas/evidenciaRules';
 import { respostaAtualIgualSugestao } from '../../../lib/medidas/evidenciaRules';
+import { hrefEstruturaGovernanca } from '@/lib/governanca/abaGovernanca';
 import {
   GRUPO_IMPLEMENTACAO_HINT,
   GRUPO_FILTRO_CUMULATIVO_RESUMO,
@@ -56,6 +58,8 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { useTheme } from '@mui/material/styles';
 import { splitMedidaDescricao } from '@/lib/normas/medidaDescricao';
 import { NormasReferenciaSection } from '@/components/normas/NormasReferenciaSection';
+import { ResourceLastUpdateLine } from '@/components/common/ResourceLastUpdateLine';
+import NextLink from 'next/link';
 
 /**
  * Props for the Medida component
@@ -69,6 +73,7 @@ export interface MedidaProps {
   controle: Controle;
   /** The program ID */
   programaId: number;
+  programaPathSegment?: string;
   /** Function to handle changes to the measure */
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   /** List of available responsibles */
@@ -93,6 +98,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   programaMedida,
   controle,
   programaId,
+  programaPathSegment,
   handleMedidaChange,
   responsaveis,
   localValues,
@@ -202,6 +208,17 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Tooltip>
             )}
 
+            {programaMedida?.id ? (
+              <ResourceLastUpdateLine
+                programaId={programaId}
+                programaPathSegment={programaPathSegment}
+                resourceType="medida"
+                resourceId={programaMedida.id}
+                dbUpdatedAt={programaMedida.updated_at ?? null}
+                sx={{ mb: 2 }}
+              />
+            ) : null}
+
             {controle.diagnostico === 1 && evidenciaLoading && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <CircularProgress size={18} />
@@ -238,6 +255,24 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                     {' — '}
                     {evidenciaSugestao.motivo}
                   </Typography>
+                  {evidenciaSugestao.governancaContexto && programaPathSegment ? (
+                    <Box sx={{ mt: 1.25 }}>
+                      <Link
+                        component={NextLink}
+                        href={hrefEstruturaGovernanca(
+                          programaPathSegment,
+                          evidenciaSugestao.governancaContexto.aba
+                        )}
+                        underline="hover"
+                        fontWeight={600}
+                      >
+                        Abrir Estrutura de Governança
+                      </Link>
+                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                        {evidenciaSugestao.governancaContexto.detalhe}
+                      </Typography>
+                    </Box>
+                  ) : null}
                 </Alert>
               )}
 
@@ -245,7 +280,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               !evidenciaLoading &&
               evidenciaSugestao &&
               !evidenciaSugestao.regraDefinida &&
-              (medida.id_medida === '0.4' || medida.id_medida === '0.5') && (
+              (medida.id_medida || "").trim().startsWith("0.") && (
                 <Alert severity="info" sx={{ mb: 2 }}>
                   {evidenciaSugestao.motivo}
                 </Alert>

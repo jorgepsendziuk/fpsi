@@ -14,7 +14,8 @@ export interface LastUpdateInfoProps {
   prefix?: string;
 }
 
-function formatDateTime(value: string | Date): string {
+/** Data/hora curta pt-BR (reutilizável em tabelas e cartões). */
+export function formatDateTimePtBr(value: string | Date): string {
   const d = typeof value === "string" ? new Date(value) : value;
   if (isNaN(d.getTime())) return "";
   return d.toLocaleDateString("pt-BR", {
@@ -34,7 +35,7 @@ export function LastUpdateInfo({
 }: LastUpdateInfoProps) {
   if (!updatedAt) return null;
 
-  const formatted = formatDateTime(updatedAt);
+  const formatted = formatDateTimePtBr(updatedAt);
   if (!formatted) return null;
 
   const byUser = userName?.trim();

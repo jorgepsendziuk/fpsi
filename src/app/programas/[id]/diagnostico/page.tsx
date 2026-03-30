@@ -7,8 +7,6 @@ import {
   Button,
   Container,
   Typography,
-  Breadcrumbs,
-  Link,
   Paper,
   Drawer,
   List,
@@ -69,7 +67,6 @@ import 'dayjs/locale/pt-br';
 
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
-import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../../components/diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../../components/diagnostico/containers/ControleContainer";
@@ -77,6 +74,7 @@ import { useMaturityCache } from "../../../../components/diagnostico/hooks/useMa
 import MaturityChip from "../../../../components/diagnostico/MaturityChip";
 import Dashboard from "../../../../components/diagnostico/Dashboard";
 import ReportButton from "../../../../components/diagnostico/ReportButton";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import {
   GrupoImpleFilter,
   GRUPO_IMPLEMENTACAO_HINT,
@@ -620,20 +618,20 @@ export default function DiagnosticoPage() {
     console.log(`handleMedidaChange: medida ${medidaId}, controle ${controleId}, field ${field}, value ${value}`);
     
     try {
-      await dataService.updateProgramaMedida(medidaId, controleId, programaId, { [field]: value });
-      
+      const updatedRow = await dataService.updateProgramaMedida(medidaId, controleId, programaId, {
+        [field]: value,
+      });
+
       // Invalidar cache de maturidade
       invalidateCache('controle', controleId);
-      
-      // Atualizar programaMedidas local
+
+      // Atualizar programaMedidas local (inclui updated_at do banco)
       const key = `${medidaId}-${controleId}-${programaId}`;
       setProgramaMedidas(prev => {
+        const base = prev[key] || {};
         const newProgramaMedidas = {
-        ...prev,
-          [key]: {
-            ...prev[key],
-            [field]: value
-          }
+          ...prev,
+          [key]: updatedRow ? { ...base, ...updatedRow } : { ...base, [field]: value },
         };
         
         // Atualizar selectedNode se for uma medida
@@ -1059,7 +1057,7 @@ export default function DiagnosticoPage() {
                 </Box>
               }
               title={
-                <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: "text.primary" }}>
                   {selectedNode.data.descricao}
                 </Typography>
               }
@@ -1229,6 +1227,7 @@ export default function DiagnosticoPage() {
               programaMedida={programaMedida}
               controle={controle}
               programaId={programaId}
+              programaPathSegment={idOrSlug}
               handleMedidaChange={handleMedidaChange}
               responsaveis={responsaveis}
             />
@@ -1268,14 +1267,20 @@ export default function DiagnosticoPage() {
         try {
           const programaControleId = controle.programa_controle_id;
           if (programaControleId) {
-            await dataService.updateControleNivel(programaControleId, novoNivel);
-            
+            const pcRow = await dataService.updateControleNivel(programaControleId, novoNivel, programaId);
+
             // Atualizar estado local imediatamente
             setControles(prev => {
               const newControles = { ...prev };
               if (newControles[diagnostico.id]) {
-                newControles[diagnostico.id] = newControles[diagnostico.id].map(c => 
-                  c.id === controleId ? { ...c, nivel: novoNivel } : c
+                newControles[diagnostico.id] = newControles[diagnostico.id].map((c) =>
+                  c.id === controleId
+                    ? {
+                        ...c,
+                        nivel: novoNivel,
+                        programa_controle_updated_at: pcRow?.updated_at ?? c.programa_controle_updated_at,
+                      }
+                    : c
                 );
               }
               return newControles;
@@ -1283,9 +1288,14 @@ export default function DiagnosticoPage() {
             
             // Atualizar selectedNode se for o controle atual
             if (selectedNode?.type === 'controle' && selectedNode.data.id === controleId) {
-              setSelectedNode(prev => ({
+              setSelectedNode((prev) => ({
                 ...prev!,
-                data: { ...prev!.data, nivel: novoNivel }
+                data: {
+                  ...prev!.data,
+                  nivel: novoNivel,
+                  programa_controle_updated_at:
+                    pcRow?.updated_at ?? (prev!.data as Controle).programa_controle_updated_at,
+                },
               }));
             }
             
@@ -1315,6 +1325,7 @@ export default function DiagnosticoPage() {
               controle={controle}
               diagnostico={diagnostico}
               programaId={programaId}
+              programaPathSegment={idOrSlug}
               state={controleState}
               handleINCCChange={handleINCCChange}
               handleMedidaFetch={handleMedidaFetch}
@@ -1363,30 +1374,17 @@ export default function DiagnosticoPage() {
         {/* Header */}
         <Paper elevation={1} sx={{ borderRadius: 0, mb: 0 }}>
           <Box sx={{ px: 3, py: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <IconButton onClick={() => router.back()} color="primary">
-              <ArrowBackIcon />
-            </IconButton>
-            
-              <Box sx={{ flex: 1 }}>
-                <Breadcrumbs>
-                  <Link underline="hover" color="inherit" href="/dashboard">
-                    Programas
-                  </Link>
-                  <Link underline="hover" color="inherit" href={`/programas/${idOrSlug}`}>
-                    {programa?.nome || programa?.nome_fantasia || programa?.razao_social || `Programa ${programaId}`}
-                  </Link>
-                  <Typography color="text.primary">Diagnósticos</Typography>
-                </Breadcrumbs>
-            </Box>
-            
+            <PageHeroHeader
+              title="Diagnóstico"
+              icon={<AssessmentIcon sx={{ fontSize: 30 }} aria-hidden />}
+              description="Controles e medidas por diagnóstico (CIS · PPSI 2.0). Use o filtro de grupos de implementação abaixo."
+            />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+              <Box sx={{ flex: 1 }} />
               {isMobile && (
-            <IconButton 
-              color="primary"
-                  onClick={() => setDrawerOpen(!drawerOpen)}
-            >
+                <IconButton color="primary" onClick={() => setDrawerOpen(!drawerOpen)} aria-label="Menu">
                   <MenuIcon />
-            </IconButton>
+                </IconButton>
               )}
             </Box>
 
@@ -1437,7 +1435,7 @@ export default function DiagnosticoPage() {
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{ display: "block", mt: 0.75, maxWidth: 360, lineHeight: 1.35 }}
+                      sx={{ display: "block", mt: 0.75, maxWidth: 500, lineHeight: 1.35 }}
                     >
                       {GRUPO_GI_ESCOPO_DIAGNOSTICO}
                     </Typography>
@@ -1554,7 +1552,9 @@ export default function DiagnosticoPage() {
                 <ReportButton programaPathSegment={idOrSlug} />
               </Box>
             </Box>
-            <ProgramaLastActivityLine programaId={programaId || undefined} programaPathSegment={idOrSlug} />
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+              As datas de atualização deste diagnóstico aparecem em cada controle (nível INCC) e em cada medida ao abrir o detalhe.
+            </Typography>
         </Box>
         </Paper>
 

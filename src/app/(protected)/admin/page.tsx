@@ -24,6 +24,7 @@ import {
   ArrowForward as ArrowForwardIcon,
 } from "@mui/icons-material";
 import Link from "next/link";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 const ADMIN_CARDS = [
   {
@@ -82,17 +83,11 @@ export default function AdminDashboardPage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-          <AdminPanelIcon color="primary" sx={{ fontSize: 32 }} />
-          <Typography variant="h4" fontWeight="bold">
-            Área de Administração
-          </Typography>
-        </Box>
-        <Typography variant="body1" color="text.secondary">
-          Gerencie modelos de políticas, controles, medidas, diagnósticos e demais entidades globais do sistema.
-        </Typography>
-      </Box>
+      <PageHeroHeader
+        title="Área de administração"
+        icon={<AdminPanelIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Gerencie modelos de políticas, controles, medidas, diagnósticos e demais entidades globais do sistema."
+      />
 
       <Grid container spacing={3}>
         {ADMIN_CARDS.map((card) => (

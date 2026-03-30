@@ -4,11 +4,11 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import NextLink from "next/link";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import {
   Container,
   Typography,
   Box,
-  Breadcrumbs,
   Link,
   Paper,
   Button,
@@ -54,8 +54,8 @@ import {
 import * as dataService from "@/lib/services/dataService";
 import { getPoliticaNomeProgramaRotulo } from "@/lib/utils/politicaPlaceholders";
 import { buildRopaPdfDocument } from "@/lib/utils/ropaPdf";
-import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
-import { useLastActivity } from "@/hooks/useLastActivity";
+import { ResourceLastUpdateLine } from "@/components/common/ResourceLastUpdateLine";
+import { formatDateTimePtBr } from "@/components/common/LastUpdateInfo";
 type ProgramaMembroUsuario = {
   user_id: string;
   nome: string | null;
@@ -79,6 +79,8 @@ export interface OperacaoTratamento {
   /** FK opcional para levantamento em `mapeamento_dados` */
   mapeamentoId: string;
   mapeamentoNome?: string | null;
+  /** ISO da última alteração da linha `ropa` */
+  updatedAtIso?: string | null;
   /** Campos opcionais da linha `ropa` (quando preenchidos no banco) */
   responsavel?: string | null;
   retencao?: string | null;
@@ -151,6 +153,7 @@ function rowToOperacao(r: dataService.RopaRow, mapeamentoNome?: string | null): 
     finalidade: r.finalidade ?? "",
     baseLegal: r.base_legal ?? "",
     createdAt: r.created_at ? r.created_at.slice(0, 10) : "",
+    updatedAtIso: r.updated_at ?? null,
     mapeamentoId: r.mapeamento_id != null ? String(r.mapeamento_id) : "",
     mapeamentoNome: mapeamentoNome ?? null,
     responsavel: r.responsavel ?? null,
@@ -314,8 +317,6 @@ export default function ROPAPage() {
   const [mapeamentos, setMapeamentos] = useState<dataService.MapeamentoDadosRow[]>([]);
   /** Cadastro do programa — logo, CNPJ e portal no cabeçalho do PDF (como nas políticas) */
   const [programa, setPrograma] = useState<Record<string, unknown> | null>(null);
-
-  const { lastActivity } = useLastActivity(programaIdNum ?? undefined, undefined, undefined);
 
   const loadVersoes = useCallback(async () => {
     if (programaIdNum == null) return;
@@ -659,45 +660,26 @@ export default function ROPAPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programas
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programa
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Tratamento de dados e riscos
-        </Link>
-        <Typography color="text.primary">ROPA</Typography>
-      </Breadcrumbs>
-
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <StorageIcon sx={{ fontSize: 32, color: "primary.main" }} />
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Registro das Operações de Tratamento (art. 37 LGPD)
+      <PageHeroHeader
+        title="ROPA"
+        icon={<StorageIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description={
+          <>
+            <Typography variant="body2" component="span" display="block">
+              Registro das operações de tratamento (art. 37 LGPD)
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
-              <LastUpdateInfo
-                updatedAt={registro?.updated_at ?? lastActivity?.created_at}
-                userName={lastActivity?.user_name}
-                compact
-              />
-              <Link
-                component={NextLink}
-                href={`/programas/${idOrSlug}/auditoria`}
-                variant="caption"
-                underline="hover"
-                color="primary"
-              >
-                Histórico completo
-              </Link>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
+            <ResourceLastUpdateLine
+              programaId={programaIdNum}
+              programaPathSegment={idOrSlug}
+              resourceType="registro_ropa"
+              resourceId={registro?.id ?? null}
+              dbUpdatedAt={registro?.updated_at ?? null}
+              compact
+              sx={{ mt: 0.5 }}
+            />
+          </>
+        }
+      />
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
         <Button variant="outlined" startIcon={<ExcelIcon />} onClick={exportExcel} disabled={operacoes.length === 0}>
@@ -805,19 +787,22 @@ export default function ROPAPage() {
               <TableCell><strong>Finalidade</strong></TableCell>
               <TableCell><strong>Hipótese legal</strong></TableCell>
               <TableCell><strong>Mapeamento</strong></TableCell>
+              <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, whiteSpace: "nowrap" }}>
+                <strong>Atualizado</strong>
+              </TableCell>
               <TableCell align="right"><strong>Ações</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">Carregando…</Typography>
                 </TableCell>
               </TableRow>
             ) : operacoes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">Nenhum processo cadastrado. Clique em &quot;Adicionar processo&quot; para informar processo, finalidade e hipótese legal (art. 7º e 11 LGPD).</Typography>
                 </TableCell>
               </TableRow>
@@ -831,6 +816,16 @@ export default function ROPAPage() {
                   <TableCell sx={{ maxWidth: 280 }}>{op.finalidade}</TableCell>
                   <TableCell>{op.baseLegal}</TableCell>
                   <TableCell sx={{ maxWidth: 200 }}>{op.mapeamentoNome?.trim() || "—"}</TableCell>
+                  <TableCell
+                    sx={{
+                      display: { xs: "none", sm: "table-cell" },
+                      fontSize: "0.75rem",
+                      color: "text.secondary",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {op.updatedAtIso ? formatDateTimePtBr(op.updatedAtIso) : "—"}
+                  </TableCell>
                   <TableCell align="right">
                     <Tooltip title="Exportar PDF">
                       <IconButton size="small" onClick={() => void exportPdfBatch([op])} aria-label="Exportar PDF">

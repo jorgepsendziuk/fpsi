@@ -30,6 +30,8 @@ import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '..
 
 // Components
 import MaturityChip from '../MaturityChip';
+import { ResourceLastUpdateLine } from '@/components/common/ResourceLastUpdateLine';
+import { formatDateTimePtBr } from '@/components/common/LastUpdateInfo';
 
 // Utils
 import { incc } from '../../../lib/utils/utils';
@@ -52,6 +54,7 @@ export interface ControleProps {
   medidas: Medida[];
   /** The program ID */
   programaId: number;
+  programaPathSegment?: string;
   /** List of available responsibles */
   responsaveis: Responsavel[];
   /** Function to handle changes to the NCC level */
@@ -123,6 +126,7 @@ const ControleComponent: React.FC<ControleProps> = ({
   diagnostico,
   medidas,
   programaId,
+  programaPathSegment,
   responsaveis,
   handleINCCChange,
   handleMedidaChange,
@@ -194,6 +198,16 @@ const ControleComponent: React.FC<ControleProps> = ({
                 >
                   {controle.nome}
                 </Typography>
+                {controle.programa_controle_id ? (
+                  <ResourceLastUpdateLine
+                    programaId={programaId}
+                    programaPathSegment={programaPathSegment}
+                    resourceType="controle"
+                    resourceId={controle.programa_controle_id}
+                    dbUpdatedAt={controle.programa_controle_updated_at ?? null}
+                    sx={{ mt: 1 }}
+                  />
+                ) : null}
               </Box>
             </Box>
             
@@ -494,6 +508,11 @@ const ControleComponent: React.FC<ControleProps> = ({
                           >
                             Medida {medida.id_medida || medida.id}
                           </Typography>
+                          {medida.programa_medida?.updated_at ? (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+                              Atualizado em {formatDateTimePtBr(medida.programa_medida.updated_at)}
+                            </Typography>
+                          ) : null}
                         </Box>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>

@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import { Business as BusinessIcon } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 interface Departamento {
   id: number;
@@ -36,12 +37,11 @@ export default function AdminDepartamentosPage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-        <BusinessIcon color="primary" sx={{ fontSize: 32 }} />
-        <Typography variant="h5" fontWeight="bold">
-          Departamentos
-        </Typography>
-      </Box>
+      <PageHeroHeader
+        title="Departamentos"
+        icon={<BusinessIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Departamentos institucionais."
+      />
       <TableContainer component={Paper}>
         <Table>
           <TableHead>

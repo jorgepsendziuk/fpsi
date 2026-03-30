@@ -7,9 +7,12 @@
  */
 
 export { PageTitle } from './PageTitle';
+export { AppScreenTitle, appScreenTitleSx } from './AppScreenTitle';
+export { PageHeroHeader } from './PageHeroHeader';
 export { StandardCard } from './StandardCard';
 export { StandardButton, StandardFab } from './StandardButton';
-export { LastUpdateInfo } from './LastUpdateInfo';
+export { LastUpdateInfo, formatDateTimePtBr } from './LastUpdateInfo';
 export { ProgramaLastActivityLine } from './ProgramaLastActivityLine';
+export { ResourceLastUpdateLine } from './ResourceLastUpdateLine';
 
 // Tipos são exportados diretamente pelos componentes quando necessário

@@ -384,14 +384,12 @@ export default function DashboardPage() {
             {greetingIcon}
           </Box>
           <Typography
-            variant="h4"
-            component="h1"
+            variant="subtitle1"
+            component="h2"
             sx={{
-              fontWeight: "bold",
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              color: "transparent",
+              fontWeight: 600,
+              letterSpacing: "0.02em",
+              color: "text.primary",
               mb: 0.5,
             }}
           >
@@ -496,103 +494,125 @@ export default function DashboardPage() {
         </Box>
       </Box>
 
-      {/* Perfil e Configurações */}
-      <Box sx={{ mb: 5 }}>
-        <Card
-          sx={{
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            overflow: "hidden",
-            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.04)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
-          }}
-        >
-          <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.primary.main, 0.12),
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <PersonIcon sx={{ fontSize: 32, color: "primary.main" }} />
+      {/* Perfil e LGPD — metade da largura cada, lado a lado (empilham no xs) */}
+      <Grid container spacing={2} sx={{ mb: 5 }}>
+        <Grid item xs={12} sm={6}>
+          <Card
+            sx={{
+              height: "100%",
+              borderRadius: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              overflow: "hidden",
+              background: `linear-gradient(125deg, ${alpha(theme.palette.info.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                gap: 2,
+                "&:last-child": { pb: 2 },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, minWidth: 0 }}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    flexShrink: 0,
+                    borderRadius: 2,
+                    bgcolor: alpha(theme.palette.info.main, 0.15),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <MenuBookIcon sx={{ fontSize: 28, color: "info.main" }} />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                    LGPD
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    Acesse todos os artigos da Lei Geral de Proteção de Dados (LGPD), organizados para consulta fácil e aprendizado direto no sistema.
+                  </Typography>
+                </Box>
               </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Perfil e Configurações
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Edite nome, telefone, cargo, departamento e altere sua senha.
-                </Typography>
+              <CardActions sx={{ p: 0, pt: 0, justifyContent: "flex-start" }}>
+                <Button
+                  component={NextLink}
+                  href="/referencias/lgpd"
+                  variant="contained"
+                  color="info"
+                  size="small"
+                  startIcon={<MenuBookIcon />}
+                  sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                >
+                  Abrir referência
+                </Button>
+              </CardActions>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Card
+            sx={{
+              height: "100%",
+              borderRadius: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              overflow: "hidden",
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.04)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                gap: 2,
+                "&:last-child": { pb: 2 },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, minWidth: 0 }}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    flexShrink: 0,
+                    borderRadius: 2,
+                    bgcolor: alpha(theme.palette.primary.main, 0.12),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <PersonIcon sx={{ fontSize: 28, color: "primary.main" }} />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                    Perfil e Configurações
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    Nome, telefone, cargo, departamento e senha.
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-            <CardActions sx={{ p: 0 }}>
-              <Button
-                variant="contained"
-                startIcon={<SettingsIcon />}
-                onClick={() => setOpenPerfilDialog(true)}
-                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
-              >
-                Abrir Perfil
-              </Button>
-            </CardActions>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* Referência LGPD */}
-      <Box sx={{ mb: 4 }}>
-        <Card
-          sx={{
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            overflow: "hidden",
-            background: `linear-gradient(125deg, ${alpha(theme.palette.info.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
-          }}
-        >
-          <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.info.main, 0.15),
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MenuBookIcon sx={{ fontSize: 32, color: "info.main" }} />
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  LGPD
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Consulte os artigos mapeados no sistema (material educativo). Sempre valide no Planalto.
-                </Typography>
-              </Box>
-            </Box>
-            <CardActions sx={{ p: 0 }}>
-              <Button
-                component={NextLink}
-                href="/referencias/lgpd"
-                variant="contained"
-                color="info"
-                startIcon={<MenuBookIcon />}
-                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
-              >
-                Abrir referência
-              </Button>
-            </CardActions>
-          </CardContent>
-        </Card>
-      </Box>
+              <CardActions sx={{ p: 0, pt: 0, justifyContent: "flex-start" }}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<SettingsIcon />}
+                  onClick={() => setOpenPerfilDialog(true)}
+                  sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                >
+                  Abrir Perfil
+                </Button>
+              </CardActions>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Programas — Suspense: useSearchParams em ProgramasSection (abrir criação via ?novoPrograma=1) */}
       <Suspense fallback={<Box sx={{ minHeight: 240 }} />}>
@@ -602,17 +622,7 @@ export default function DashboardPage() {
       <Box sx={{ mb: 5 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 2 }}>
           <Box>
-          <Typography
-            variant="h5"
-            component="h2"
-            sx={{
-              fontWeight: "bold",
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              color: "transparent",
-            }}
-          >
+          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600, letterSpacing: "0.02em", color: "text.primary" }}>
               Empresas
             </Typography>
             <Typography variant="body2" color="text.secondary">

@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { LgpdArtigoViewer } from "@/components/normas/LgpdArtigoViewer";
@@ -21,6 +22,10 @@ import {
   filterLgpdOutlineByQuery,
   pruneLgpdOutline,
 } from "@/lib/normas/lgpdOutline";
+import {
+  collectArtigosNumerosMatchingBody,
+  normalizeLgpdQuery,
+} from "@/lib/normas/lgpdTextSearch";
 import type { LgpdArtigosPayload } from "@/lib/normas/lgpdArtigosTypes";
 import { LGPD_PLANALTO_COMPILADO_URL } from "@/lib/normas/lgpdRefs";
 
@@ -114,22 +119,40 @@ export default function LgpdReferenciaPageClient() {
     () => pruneLgpdOutline(arvoreBase, numerosSet),
     [arvoreBase, numerosSet],
   );
+
+  const bodyMatchingNumeros = useMemo(() => {
+    if (!payload?.artigos) return new Set<number>();
+    return collectArtigosNumerosMatchingBody(payload.artigos, filtro);
+  }, [payload, filtro]);
+
   const outlineVisivel = useMemo(
-    () => filterLgpdOutlineByQuery(prunedOutline, filtro),
-    [prunedOutline, filtro],
+    () => filterLgpdOutlineByQuery(prunedOutline, filtro, { bodyMatchingNumeros }),
+    [prunedOutline, filtro, bodyMatchingNumeros],
   );
   const expandAllTree = filtro.trim().length > 0;
 
   const filtrados = useMemo(() => {
-    const q = filtro.trim().toLowerCase();
+    const q = normalizeLgpdQuery(filtro);
     if (!q) return numeros;
-    return numeros.filter((n) => String(n).includes(q) || `artigo ${n}`.includes(q));
-  }, [numeros, filtro]);
+    return numeros.filter(
+      (n) =>
+        normalizeLgpdQuery(String(n)).includes(q) ||
+        normalizeLgpdQuery(`artigo ${n}`).includes(q) ||
+        bodyMatchingNumeros.has(n),
+    );
+  }, [numeros, filtro, bodyMatchingNumeros]);
 
   useEffect(() => {
     if (numeros.length === 0) return;
     if (!numeros.includes(artigo)) setArtigo(numeros[0]);
   }, [numeros, artigo]);
+
+  /** Com filtro ativo, manter artigo visível dentro do conjunto que corresponde à busca. */
+  useEffect(() => {
+    if (filtro.trim() === "") return;
+    if (filtrados.length === 0) return;
+    if (!filtrados.includes(artigo)) setArtigo(filtrados[0]);
+  }, [filtro, filtrados, artigo]);
 
   const texto = useMemo(() => {
     if (!payload) return "";
@@ -169,34 +192,19 @@ export default function LgpdReferenciaPageClient() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ mb: 3, display: "flex", alignItems: "flex-start", gap: 2, flexWrap: "wrap" }}>
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            borderRadius: 2,
-            bgcolor: "primary.main",
-            color: "primary.contrastText",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <MenuBookIcon />
-        </Box>
-        <Box sx={{ flex: "1 1 280px" }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 800, mb: 0.5 }}>
-            LGPD
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+      <PageHeroHeader
+        title="LGPD"
+        icon={<MenuBookIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description={
+          <>
             Lei nº 13.709/2018 — ({meta.total_artigos} artigos mapeados).{" "}
             <Link href={LGPD_PLANALTO_COMPILADO_URL} target="_blank" rel="noopener noreferrer">
               Referência oficial — Planalto
             </Link>
             .
-          </Typography>
-        </Box>
-      </Box>
+          </>
+        }
+      />
 
       <Box
         sx={{
@@ -227,7 +235,7 @@ export default function LgpdReferenciaPageClient() {
             size="small"
             fullWidth
             label="Filtrar"
-            placeholder="Número do artigo ou palavra"
+            placeholder="Artigo, título do sumário ou texto do artigo"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             sx={{ mb: 1, px: 0.5 }}

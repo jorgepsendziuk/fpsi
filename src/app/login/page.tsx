@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthPage } from "@refinedev/mui";
-import { Box, useTheme, IconButton, Tooltip, CircularProgress } from "@mui/material";
+import { Box, useTheme, IconButton, Tooltip, CircularProgress, Typography, Link } from "@mui/material";
 import { DarkModeOutlined, LightModeOutlined, Google } from "@mui/icons-material";
 import { ColorModeContext } from "@contexts/color-mode";
 import { useContext, useEffect } from "react";
@@ -167,6 +167,17 @@ export default function Login() {
             </Box>
           }
         />
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2, maxWidth: 420, px: 2 }}>
+          Ao entrar, você confirma que leu o{' '}
+          <Link href="/privacidade" underline="hover">
+            aviso de privacidade
+          </Link>{' '}
+          e as{' '}
+          <Link href="/privacidade#cookies" underline="hover">
+            preferências de cookies
+          </Link>
+          . No primeiro acesso após o login, pediremos confirmação registrada em sua conta.
+        </Typography>
       </Box>
     </Box>
   );

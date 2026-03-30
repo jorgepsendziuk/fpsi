@@ -6,7 +6,6 @@ import {
   Typography,
   Grid,
   Box,
-  Breadcrumbs,
   Link,
   Stack,
   Divider,
@@ -63,12 +62,13 @@ import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { LastUpdateInfo } from "@/components/common/LastUpdateInfo";
 import { useLastActivity } from "@/hooks/useLastActivity";
 import { getProgramaLogoDisplayUrl, isProgramaDemonstracao } from "@/lib/utils/programaDemoLogo";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import NextLink from "next/link";
 import { ModuloSistemaFlipCard, MODULO_FLIP_STRIP_WIDTH_PX } from "@/components/programa/ModuloSistemaFlipCard";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
 
-/** Ordem: tratamento/riscos → papéis → diagnóstico → plano → políticas → portal público → usuários → auditoria */
+/** Ordem: estrutura de governança → tratamento/riscos → diagnóstico → plano → políticas/documentos → portal → usuários → auditoria */
 const sections: Array<{
   key: string;
   title: string;
@@ -79,6 +79,16 @@ const sections: Array<{
   gradient: string;
 }> = [
   {
+    key: "responsabilidades",
+    title: "Estrutura de Governança",
+    icon: <Group fontSize="large" />,
+    description:
+      "Instruções e campos para responsáveis institucionais (SI, privacidade, TIC, integridade), referência normativa PPSI 2.0 e diagrama de papéis LGPD",
+    path: "responsabilidades",
+    color: "#607d8b",
+    gradient: "linear-gradient(135deg, #607d8b 0%, #78909c 100%)",
+  },
+  {
     key: "conformidade-tratamento",
     title: "Tratamento de dados e riscos",
     icon: <GavelIcon fontSize="large" />,
@@ -86,15 +96,6 @@ const sections: Array<{
     path: "conformidade",
     color: "#1976d2",
     gradient: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
-  },
-  {
-    key: "responsabilidades",
-    title: "Responsabilidades",
-    icon: <Group fontSize="large" />,
-    description: "Defina responsáveis e suas atribuições",
-    path: "responsabilidades",
-    color: "#607d8b",
-    gradient: "linear-gradient(135deg, #607d8b 0%, #78909c 100%)"
   },
   {
     key: "diagnostico",
@@ -116,9 +117,10 @@ const sections: Array<{
   },
   {
     key: "politicas",
-    title: "Políticas",
+    title: "Políticas e documentos",
     icon: <Policy fontSize="large" />,
-    description: "Crie e gerencie políticas institucionais (segurança, privacidade, proteção de dados e outras)",
+    description:
+      "Políticas institucionais, aviso de privacidade e outros textos que você publica ou cita no portal de privacidade",
     path: "politicas",
     color: "#9c27b0",
     gradient: "linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%)",
@@ -252,7 +254,7 @@ export default function ProgramaMainPage() {
   const [editField, setEditField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  /** Destaca o card Responsabilidades quando o cursor está sobre o diagrama Estrutura de Tratamento */
+  /** Destaca o card Estrutura de Governança quando o cursor está sobre o diagrama Estrutura de Tratamento */
   const [diagramHover, setDiagramHover] = useState(false);
   const [setorSaving, setSetorSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState<string | null>(null);
@@ -682,176 +684,94 @@ export default function ProgramaMainPage() {
     ? !!(orgaoNome || programa.sigla || programa.unidade)
     : !!(programa.nome_fantasia || programa.razao_social);
 
-  return (
-    <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link
-          href="/dashboard"
-          underline="hover"
-          color="inherit"
-          sx={{ display: "flex", alignItems: "center" }}
+  const logoSlot = (
+    <Box
+      sx={{
+        position: "relative",
+        flexShrink: 0,
+        width: 96,
+        height: 96,
+      }}
+    >
+      {logoDisplayUrl ? (
+        <Box
+          component="img"
+          src={logoDisplayUrl}
+          alt="Logo"
+          sx={{
+            width: 96,
+            height: 96,
+            borderRadius: 2,
+            objectFit: "contain",
+            bgcolor: alpha(theme.palette.primary.main, 0.06),
+            p: 0.75,
+            display: "block",
+          }}
+        />
+      ) : (
+        <Avatar
+          sx={{
+            width: 96,
+            height: 96,
+            borderRadius: 2,
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+          }}
         >
-          <ArrowBack sx={{ mr: 0.5 }} fontSize="small" />
-          Programas
-        </Link>
-        <Typography color="text.primary">{programaName}</Typography>
-      </Breadcrumbs>
-
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2.5, flex: 1, minWidth: 0, flexWrap: "wrap" }}>
-            <Box
-              sx={{
-                position: "relative",
-                flexShrink: 0,
-                width: 96,
-                height: 96,
-              }}
-            >
-              {logoDisplayUrl ? (
-                <Box
-                  component="img"
-                  src={logoDisplayUrl}
-                  alt="Logo"
-                  sx={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: 2,
-                    objectFit: "contain",
-                    bgcolor: alpha(theme.palette.primary.main, 0.06),
-                    p: 0.75,
-                    display: "block",
-                  }}
-                />
-              ) : (
-                <Avatar
-                  sx={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: 2,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                  }}
-                >
-                  <SecurityIcon sx={{ fontSize: 48 }} />
-                </Avatar>
-              )}
-              {!isDemoMode && !isProgramaDemoInstitucional && (
-                <IconButton
-                  component="label"
-                  size="small"
-                  disabled={!!logoUploading}
-                  aria-label={programa.logo_programa || programa.logo_orgao_empresa ? "Trocar logo" : "Enviar logo"}
-                  sx={{
-                    position: "absolute",
-                    bottom: -2,
-                    right: -2,
-                    width: 30,
-                    height: 30,
-                    p: 0,
-                    bgcolor: "background.paper",
-                    border: `1px solid ${theme.palette.divider}`,
-                    boxShadow: 1,
-                    "&:hover": { bgcolor: "action.hover" },
-                  }}
-                >
-                  {logoUploading === "programa" ? (
-                    <CircularProgress size={16} thickness={5} />
-                  ) : (
-                    <CloudUploadIcon sx={{ fontSize: 16 }} />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) handleLogoUpload("programa", f);
-                      e.target.value = "";
-                    }}
-                  />
-                </IconButton>
-              )}
-            </Box>
-            <Box sx={{ minWidth: 0, pt: 0.25 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-                {programaName}
-              </Typography>
-              {hasSubtitle && (
-                <Stack spacing={0.35} sx={{ mt: 1 }}>
-                  {isOrgaoPublico ? (
-                    <>
-                      {orgaoNome && (
-                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
-                          {orgaoNome}
-                        </Typography>
-                      )}
-                      {!orgaoNome && programa.sigla && (
-                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
-                          {programa.sigla}
-                        </Typography>
-                      )}
-                      {!orgaoNome && programa.unidade && (
-                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: "0.9375rem", letterSpacing: "0.01em" }}>
-                          {programa.unidade}
-                        </Typography>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {programa.nome_fantasia && (
-                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
-                          {programa.nome_fantasia}
-                        </Typography>
-                      )}
-                      {programa.razao_social && (
-                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: "0.9375rem", letterSpacing: "0.01em" }}>
-                          {programa.razao_social}
-                        </Typography>
-                      )}
-                    </>
-                  )}
-                </Stack>
-              )}
-              {!isDemoMode && (
-                <Box
-                  sx={{
-                    mt: hasSubtitle ? 1.25 : 1,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <LastUpdateInfo
-                    updatedAt={programa.updated_at ?? lastActivity?.created_at}
-                    userName={lastActivity?.user_name}
-                    compact
-                  />
-                  <Link
-                    component={NextLink}
-                    href={`/programas/${idOrSlug}/auditoria`}
-                    variant="caption"
-                    underline="hover"
-                    color="primary"
-                  >
-                    Histórico completo
-                  </Link>
-                </Box>
-              )}
-            </Box>
-          </Box>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            flexWrap="wrap"
-            useFlexGap
-            alignItems="stretch"
-            sx={{
-              flexShrink: 0,
-              width: { xs: "100%", sm: "auto" },
-              justifyContent: { xs: "stretch", sm: "flex-end" },
+          <SecurityIcon sx={{ fontSize: 48 }} />
+        </Avatar>
+      )}
+      {!isDemoMode && !isProgramaDemoInstitucional && (
+        <IconButton
+          component="label"
+          size="small"
+          disabled={!!logoUploading}
+          aria-label={programa.logo_programa || programa.logo_orgao_empresa ? "Trocar logo" : "Enviar logo"}
+          sx={{
+            position: "absolute",
+            bottom: -2,
+            right: -2,
+            width: 30,
+            height: 30,
+            p: 0,
+            bgcolor: "background.paper",
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: 1,
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          {logoUploading === "programa" ? (
+            <CircularProgress size={16} thickness={5} />
+          ) : (
+            <CloudUploadIcon sx={{ fontSize: 16 }} />
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleLogoUpload("programa", f);
+              e.target.value = "";
             }}
-          >
+          />
+        </IconButton>
+      )}
+    </Box>
+  );
+
+  const dadosButtons = (
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={2}
+      flexWrap="wrap"
+      useFlexGap
+      alignItems="stretch"
+      sx={{
+        flexShrink: 0,
+        width: { xs: "100%", sm: "auto" },
+        justifyContent: { xs: "stretch", sm: "flex-end" },
+      }}
+    >
             <Button
               variant="contained"
               aria-expanded={Boolean(dadosProgramaPopoverAnchor)}
@@ -939,8 +859,75 @@ export default function ProgramaMainPage() {
               </Box>
             </Button>
           </Stack>
-        </Box>
-      </Box>
+  );
+
+  return (
+    <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}>
+      <PageHeroHeader
+        iconSlot={logoSlot}
+        title={programaName}
+        description={
+          hasSubtitle || !isDemoMode ? (
+            <>
+              {hasSubtitle && (
+                <Stack spacing={0.35} sx={{ mb: !isDemoMode ? 1 : 0 }}>
+                  {isOrgaoPublico ? (
+                    <>
+                      {orgaoNome && (
+                        <Typography variant="body1" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
+                          {orgaoNome}
+                        </Typography>
+                      )}
+                      {!orgaoNome && programa.sigla && (
+                        <Typography variant="body1" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
+                          {programa.sigla}
+                        </Typography>
+                      )}
+                      {!orgaoNome && programa.unidade && (
+                        <Typography variant="body1" sx={{ fontSize: "0.9375rem", letterSpacing: "0.01em" }}>
+                          {programa.unidade}
+                        </Typography>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {programa.nome_fantasia && (
+                        <Typography variant="body1" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
+                          {programa.nome_fantasia}
+                        </Typography>
+                      )}
+                      {programa.razao_social && (
+                        <Typography variant="body1" sx={{ fontSize: "0.9375rem", letterSpacing: "0.01em" }}>
+                          {programa.razao_social}
+                        </Typography>
+                      )}
+                    </>
+                  )}
+                </Stack>
+              )}
+              {!isDemoMode && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+                  <LastUpdateInfo
+                    updatedAt={programa.updated_at ?? lastActivity?.created_at}
+                    userName={lastActivity?.user_name}
+                    compact
+                  />
+                  <Link
+                    component={NextLink}
+                    href={`/programas/${idOrSlug}/auditoria`}
+                    variant="caption"
+                    underline="hover"
+                    color="primary"
+                  >
+                    Histórico completo
+                  </Link>
+                </Box>
+              )}
+            </>
+          ) : undefined
+        }
+        trailing={dadosButtons}
+      />
 
       <Popover
         open={Boolean(dadosProgramaPopoverAnchor)}
@@ -1202,7 +1189,7 @@ export default function ProgramaMainPage() {
           </Grid>
         </Grid>
 
-        {/* Estrutura de Tratamento (diagrama) — sem botão Gerenciar; edição indicada pelo destaque no card Responsabilidades ao passar o mouse */}
+        {/* Estrutura de Tratamento (diagrama) — sem botão Gerenciar; edição indicada pelo destaque no card Estrutura de Governança ao passar o mouse */}
         <Grid item xs={12} lg={4}>
           <Box
             onMouseEnter={() => setDiagramHover(true)}

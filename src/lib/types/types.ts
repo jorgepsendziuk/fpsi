@@ -36,10 +36,13 @@ export interface Programa {
   sgd_versao_diagnostico?: string | null;
   sgd_data_limite_retorno?: string | Date | null;
   sgd_retorno_data?: string | Date | null;
-  responsavel_controle_interno: number;
-  responsavel_si: number;
-  responsavel_privacidade: number;
-  responsavel_ti: number;
+  /** Representante da alta administração (PPSI 2.0 / cartilha de governança). */
+  representante_alta_administracao?: number | null;
+  /** Antes: responsável controle interno — gestão da integridade (Decreto 11.529/2023). */
+  responsavel_gestao_integridade?: number | null;
+  gestor_seguranca_informacao?: number | null;
+  encarregado_dados_pessoais?: number | null;
+  gestor_tic?: number | null;
   setor: number;
   cnpj: number;
   razao_social: string;
@@ -85,6 +88,8 @@ export interface Controle {
   aplicabilidade_privacidade?: string;
   nivel?: number;
   programa_controle_id?: number;
+  /** `programa_controle.updated_at` (última alteração do INCC / vínculo). */
+  programa_controle_updated_at?: string | null;
   programa?: number;
 }
 
@@ -145,6 +150,8 @@ export interface ProgramaMedida {
   nova_resposta: string;
   /** Indica se a medida é prioritária no plano de trabalho (Sim/Não) */
   prioridade?: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 /**
@@ -156,6 +163,11 @@ export interface Responsavel {
   departamento: string;
   email: string;
   nome: string;
+  cargo?: string;
+  orgao_vinculo_id?: number | null;
+  orgao_texto_livre?: string | null;
+  /** ISO date (YYYY-MM-DD) */
+  data_designacao?: string | null;
 }
 
 /**

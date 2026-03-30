@@ -326,7 +326,9 @@ export const fetchResponsaveis = async (programaId: number, retries = 3): Promis
   try {
     const { data, error } = await supabaseBrowserClient
       .from("responsavel")
-      .select("id, nome, email, departamento, programa")
+      .select(
+        "id, nome, email, departamento, programa, cargo, orgao_vinculo_id, orgao_texto_livre, data_designacao"
+      )
       .eq("programa", programaId)
       .order("nome", { ascending: true });
     
@@ -337,6 +339,50 @@ export const fetchResponsaveis = async (programaId: number, retries = 3): Promis
     return [];
   }
 };
+
+export type GovernancaGruposMembros = {
+  comite_seguranca_informacao: number[];
+  comite_protecao_dados: number[];
+  etir: number[];
+};
+
+export async function fetchGovernancaGruposMembros(programaId: number): Promise<GovernancaGruposMembros> {
+  try {
+    const res = await fetch(`/api/programas/${programaId}/governanca-grupos`, { credentials: "include" });
+    if (!res.ok) {
+      return { comite_seguranca_informacao: [], comite_protecao_dados: [], etir: [] };
+    }
+    const j = await res.json();
+    return {
+      comite_seguranca_informacao: Array.isArray(j.comite_seguranca_informacao) ? j.comite_seguranca_informacao : [],
+      comite_protecao_dados: Array.isArray(j.comite_protecao_dados) ? j.comite_protecao_dados : [],
+      etir: Array.isArray(j.etir) ? j.etir : [],
+    };
+  } catch {
+    return { comite_seguranca_informacao: [], comite_protecao_dados: [], etir: [] };
+  }
+}
+
+export async function saveGovernancaGruposMembros(
+  programaId: number,
+  membros: GovernancaGruposMembros
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/programas/${programaId}/governanca-grupos`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ membros }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: j?.error || res.statusText };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Erro" };
+  }
+}
 
 export const fetchControles = async (diagnosticoId: number, programaId: number): Promise<any[]> => {
   console.log(`fetchControles: Fetching controles for diagnostico ${diagnosticoId}, programa ${programaId}`);
@@ -358,7 +404,9 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
       *,
       programa_controle(
         id,
-        nivel
+        nivel,
+        updated_at,
+        created_at
       )
     `)
     .eq("diagnostico", diagnosticoId)
@@ -386,6 +434,7 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
       programa_controle_id: controle.programa_controle?.[0]?.id || null,
       programa: programaId,
       nivel: controle.programa_controle?.[0]?.nivel || 1,
+      programa_controle_updated_at: controle.programa_controle?.[0]?.updated_at ?? null,
       programa_controle: undefined // Remove the nested object
     };
   }) || [];
@@ -535,15 +584,31 @@ export const updateProgramaMedida = async (medidaId: number, controleId: number,
   }
 };
 
-export const updateControleNivel = async (programaControleId: number, newValue: number, programaId?: number) => {
-  const result = await supabaseBrowserClient
+export const updateControleNivel = async (
+  programaControleId: number,
+  newValue: number,
+  programaId?: number
+): Promise<{ id: number; nivel: number; updated_at: string } | null> => {
+  const { data, error } = await supabaseBrowserClient
     .from("programa_controle")
     .update({ nivel: newValue })
-    .eq("id", programaControleId);
-  if (!result.error && programaId) {
-    logActivityFromClient({ action: "update", resourceType: "controle", resourceId: programaControleId, programaId, details: { nivel: newValue } });
+    .eq("id", programaControleId)
+    .select("id, nivel, updated_at")
+    .single();
+  if (error) {
+    console.error("updateControleNivel:", error);
+    return null;
   }
-  return result;
+  if (data && programaId) {
+    logActivityFromClient({
+      action: "update",
+      resourceType: "controle",
+      resourceId: programaControleId,
+      programaId,
+      details: { nivel: newValue },
+    });
+  }
+  return data;
 };
 
 /** Estrutura mínima de medida para cálculos de maturidade (dashboard). */
@@ -961,7 +1026,7 @@ export const createPrograma = async (payload: CreateProgramaPayload) => {
   return result;
 };
 
-/** Garante criador em programa_users, cria responsável e seta programa.responsavel_privacidade. */
+/** Garante criador em programa_users, cria responsável e seta programa.encarregado_dados_pessoais. */
 export const setCreatorAsDPO = async (
   programaId: number,
   userId: string,
@@ -992,7 +1057,7 @@ export const setCreatorAsDPO = async (
   if (errResp || !responsavel) return { error: errResp };
   await supabaseBrowserClient
     .from("programa")
-    .update({ responsavel_privacidade: responsavel.id })
+    .update({ encarregado_dados_pessoais: responsavel.id })
     .eq("id", programaId);
   return { error: null };
 };

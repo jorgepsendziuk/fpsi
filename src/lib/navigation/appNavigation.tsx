@@ -109,6 +109,13 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
         { id: "visao", label: "Visão geral", path: base, icon: <DashboardIcon sx={iconSx} /> },
 
         {
+          id: "responsaveis",
+          label: "Estrutura de Governança",
+          path: `${base}/responsabilidades`,
+          icon: <GroupIcon sx={iconSx} />,
+        },
+
+        {
           id: "conf-hub",
           label: "Tratamento de dados e riscos",
           path: `${base}/conformidade`,
@@ -150,13 +157,6 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
         },
 
         {
-          id: "responsaveis",
-          label: "Responsabilidades",
-          path: `${base}/responsabilidades`,
-          icon: <GroupIcon sx={iconSx} />,
-        },
-
-        {
           id: "diag",
           label: "Diagnóstico",
           path: `${base}/diagnostico`,
@@ -179,7 +179,12 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
           path: `${base}/planos-acao`,
           icon: <AssignmentIcon sx={iconSx} />,
         },
-        { id: "politicas", label: "Políticas", path: `${base}/politicas`, icon: <PolicyIcon sx={iconSx} /> },
+        {
+          id: "politicas",
+          label: "Políticas e documentos",
+          path: `${base}/politicas`,
+          icon: <PolicyIcon sx={iconSx} />,
+        },
 
         {
           id: "portal-hub",
@@ -246,8 +251,8 @@ export function getAppShellPageTitle(pathname: string): string {
   if (pathname.includes("/conformidade/contato")) return "Contato do portal";
   if (pathname.includes("/conformidade/portal")) return "Portal de privacidade";
   if (pathname.includes("/conformidade")) return "Tratamento e riscos";
-  if (pathname.includes("/politicas")) return "Políticas";
-  if (pathname.includes("/responsabilidades")) return "Responsáveis";
+  if (pathname.includes("/politicas")) return "Políticas e documentos";
+  if (pathname.includes("/responsabilidades")) return "Estrutura de Governança";
   if (pathname.includes("/usuarios")) return "Usuários";
   if (pathname.includes("/auditoria")) return "Auditoria";
   if (pathname === "/dashboard") return "Início";

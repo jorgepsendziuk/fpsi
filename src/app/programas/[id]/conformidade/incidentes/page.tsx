@@ -7,7 +7,6 @@ import {
   Container,
   Typography,
   Box,
-  Breadcrumbs,
   Link,
   Paper,
   Button,
@@ -47,6 +46,7 @@ import {
 } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
 import dayjs from "dayjs";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import type { IncidenteRow } from "@/lib/services/dataService";
@@ -362,53 +362,36 @@ export default function IncidentesPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push("/dashboard")} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programas
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Programa
-        </Link>
-        <Link component="button" underline="hover" color="inherit" onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)} sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-          Tratamento de dados e riscos
-        </Link>
-        <Typography color="text.primary">Incidentes</Typography>
-      </Breadcrumbs>
-
+      <PageHeroHeader
+        title="Incidentes"
+        icon={<WarningIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Registro de incidentes de segurança que afetam dados pessoais; comunicação ANPD e titulares."
+        trailing={
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button variant="outlined" startIcon={<ExcelIcon />} onClick={exportExcel} disabled={incidentes.length === 0}>
+              Exportar Excel (CSV)
+            </Button>
+            <Tooltip title="Gerar PDF com todos os incidentes">
+              <span>
+                <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfAll} disabled={incidentes.length === 0}>
+                  Exportar todos em PDF
+                </Button>
+              </span>
+            </Tooltip>
+            <Tooltip title="Gerar PDF apenas dos incidentes marcados">
+              <span>
+                <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfSelected} disabled={selectedIds.size === 0}>
+                  Exportar selecionados em PDF ({selectedIds.size})
+                </Button>
+              </span>
+            </Tooltip>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
+              Novo incidente
+            </Button>
+          </Stack>
+        }
+      />
       <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
-
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <WarningIcon sx={{ fontSize: 32, color: "primary.main" }} />
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Registro de incidentes de segurança que afetam dados pessoais; comunicação ANPD e titulares.
-            </Typography>
-          </Box>
-        </Box>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button variant="outlined" startIcon={<ExcelIcon />} onClick={exportExcel} disabled={incidentes.length === 0}>
-            Exportar Excel (CSV)
-          </Button>
-          <Tooltip title="Gerar PDF com todos os incidentes">
-            <span>
-              <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfAll} disabled={incidentes.length === 0}>
-                Exportar todos em PDF
-              </Button>
-            </span>
-          </Tooltip>
-          <Tooltip title="Gerar PDF apenas dos incidentes marcados">
-            <span>
-              <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfSelected} disabled={selectedIds.size === 0}>
-                Exportar selecionados em PDF ({selectedIds.size})
-              </Button>
-            </span>
-          </Tooltip>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
-            Novo incidente
-          </Button>
-        </Stack>
-      </Box>
 
       <TableContainer component={Paper} elevation={1}>
         <Table size="small">

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import {
-  Box,
   Container,
   Typography,
   Paper,
@@ -15,6 +14,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import { Badge as BadgeIcon } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 interface Cargo {
   id: number;
@@ -36,12 +36,11 @@ export default function AdminCargosPage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-        <BadgeIcon color="primary" sx={{ fontSize: 32 }} />
-        <Typography variant="h5" fontWeight="bold">
-          Cargos
-        </Typography>
-      </Box>
+      <PageHeroHeader
+        title="Cargos"
+        icon={<BadgeIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Cargos institucionais disponíveis para perfis."
+      />
       <TableContainer component={Paper}>
         <Table>
           <TableHead>

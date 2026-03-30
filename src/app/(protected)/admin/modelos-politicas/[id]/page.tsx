@@ -12,7 +12,8 @@ import {
   Skeleton,
   alpha,
 } from "@mui/material";
-import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Policy as PolicyIcon } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import SectionDisplay from "@/app/programas/[id]/politicas/[politicaId]/components/SectionDisplay";
@@ -108,28 +109,27 @@ export default function AdminModeloPoliticaEditPage() {
               Voltar
             </Button>
           </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <Box>
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-                sx={{ color: modelo?.cor || "#2196F3", mb: 1 }}
-              >
-                Editar Modelo: {modelo?.nome}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {modelo?.descricao}
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? "Salvando..." : "Salvar"}
-            </Button>
-          </Box>
+          <PageHeroHeader
+            title="Editar modelo"
+            icon={<PolicyIcon sx={{ fontSize: 30 }} aria-hidden />}
+            description={
+              <>
+                <Typography variant="subtitle2" component="span" display="block" fontWeight={600}>
+                  {modelo?.nome}
+                </Typography>
+                {modelo?.descricao ? (
+                  <Typography variant="body2" component="span" display="block" sx={{ mt: 0.5 }}>
+                    {modelo.descricao}
+                  </Typography>
+                ) : null}
+              </>
+            }
+            trailing={
+              <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} disabled={saving}>
+                {saving ? "Salvando..." : "Salvar"}
+              </Button>
+            }
+          />
           {success && (
             <Alert severity="success" onClose={() => setSuccess(false)}>
               Modelo salvo com sucesso.

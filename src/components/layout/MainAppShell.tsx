@@ -55,6 +55,8 @@ import {
   parseProgramaNavItems,
 } from "@/lib/navigation/appNavigation";
 import type { EmpresaRow } from "@/lib/services/dataService";
+import { CookiePreferencesDialog } from "@/components/privacy/CookiePreferencesDialog";
+import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
 
 type IUser = { id: number; name: string; email: string; avatar: string };
 
@@ -83,6 +85,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   const [drawerWidth, setDrawerWidth] = useState(DRAWER_WIDTH_DEFAULT);
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [navGroupOpen, setNavGroupOpen] = useState<Record<string, boolean>>({});
+  const [cookiePrefsOpen, setCookiePrefsOpen] = useState(false);
   const prevProgramaForNavRef = useRef<string | null>(null);
 
   const programaMatch = pathname.match(/^\/programas\/([\w-]+)(\/|$)/);
@@ -746,7 +749,17 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               </Typography>
             </Box>
           ) : null}
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
+          <Typography
+            variant="subtitle1"
+            noWrap
+            component="h1"
+            sx={{
+              fontWeight: 600,
+              lineHeight: 1.35,
+              letterSpacing: "0.02em",
+              color: "text.primary",
+            }}
+          >
             {pageTitle}
           </Typography>
         </Box>
@@ -839,6 +852,17 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                     Administração
                   </MenuItem>
                 )}
+                <MenuItem
+                  onClick={() => {
+                    setCookiePrefsOpen(true);
+                    setUserMenuAnchor(null);
+                  }}
+                >
+                  <ListItemIcon>
+                    <PrivacyTipIcon fontSize="small" />
+                  </ListItemIcon>
+                  Privacidade e cookies
+                </MenuItem>
                 <Divider />
                 <MenuItem
                   onClick={() => {
@@ -882,6 +906,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                   </MenuItem>
                 ))}
               </Menu>
+              <CookiePreferencesDialog open={cookiePrefsOpen} onClose={() => setCookiePrefsOpen(false)} />
             </>
           )}
         </Box>

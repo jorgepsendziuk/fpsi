@@ -45,11 +45,21 @@ import { FeatureBanner } from "@/components/landing/FeatureBanners";
 import { StatsBanner } from "@/components/landing/StatsBanner";
 
 const features = [
+  {
+    key: "responsabilidades",
+    icon: <GroupIcon fontSize="large" color="primary" />,
+    title: "Estrutura de Governança",
+    description: "Responsáveis, papéis LGPD, instituições e atribuições (governança PPSI)",
+  },
   { key: "diagnostico", icon: <CheckCircleOutlineIcon fontSize="large" color="primary" />, title: "Diagnóstico", description: "Avalie a maturidade e realize diagnósticos completos" },
   { key: "planos-acao", icon: <AssignmentIcon fontSize="large" color="primary" />, title: "Plano de Trabalho", description: "Gerencie o plano de trabalho e acompanhe o progresso" },
   { key: "conformidade", icon: <GavelIcon fontSize="large" color="primary" />, title: "Conformidade LGPD", description: "ROPA, direitos dos titulares, RIPD e incidentes" },
-  { key: "politicas", icon: <PolicyIcon fontSize="large" color="primary" />, title: "Políticas", description: "Crie e gerencie políticas institucionais" },
-  { key: "responsabilidades", icon: <GroupIcon fontSize="large" color="primary" />, title: "Responsabilidades", description: "Defina responsáveis e suas atribuições" },
+  {
+    key: "politicas",
+    icon: <PolicyIcon fontSize="large" color="primary" />,
+    title: "Políticas e documentos",
+    description: "Políticas, aviso de privacidade e textos do portal",
+  },
   { key: "auditoria", icon: <SecurityIcon fontSize="large" color="primary" />, title: "Histórico de Atividades", description: "Trilha de auditoria (LGPD art. 37, Framework FPSI Controle 8)" },
 ];
 
@@ -94,25 +104,27 @@ const BANNER_DATA: Record<
     icon: <GavelIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
   },
   politicas: {
-    title: "Políticas",
-    tagline: "Centralize e gerencie políticas institucionais de segurança, privacidade e proteção de dados.",
+    title: "Políticas e documentos",
+    tagline:
+      "Centralize políticas de SI e privacidade, avisos ao titular e demais textos que o portal de privacidade exibe ou cita.",
     points: [
-      "Políticas de Segurança da Informação",
-      "Política de Privacidade e Proteção de Dados",
-      "Editor rico com versionamento",
-      "Controle de vigência e revisão",
+      "Catálogo de políticas institucionais (SI, proteção de dados, etc.)",
+      "Espaço para aviso de privacidade e documentos ligados ao portal",
+      "Editor rico e exportação em PDF",
+      "Vigência, revisão e última gravação por documento",
     ],
     gradient: "linear-gradient(135deg, #6a1b9a 0%, #7b1fa2 50%, #9c27b0 100%)",
     icon: <PolicyIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
   },
   responsabilidades: {
-    title: "Responsabilidades",
-    tagline: "Defina a estrutura de tratamento com controladores, contratantes e operadores (LGPD art. 5º).",
+    title: "Estrutura de Governança",
+    tagline:
+      "Formalize responsáveis, papéis LGPD e a cadeia de tratamento — base da governança em privacidade e segurança da informação (PPSI).",
     points: [
-      "Diagrama de papéis (controlador, contratante, operador)",
-      "Vínculos entre instituições e fluxo de dados",
-      "Responsáveis por programa e atribuições",
-      "Visão clara da cadeia de tratamento",
+      "Responsáveis do programa e equipe (controles SI, privacidade, TI)",
+      "Diagrama de papéis: controlador, contratante, operador (LGPD art. 5º)",
+      "Instituições, vínculos e fluxo de dados",
+      "Alinhamento a RACI e estrutura de governança do Framework",
     ],
     gradient: "linear-gradient(135deg, #455a64 0%, #546e7a 50%, #78909c 100%)",
     icon: <GroupIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
@@ -616,6 +628,13 @@ export default function HomePage() {
               sx={{ textTransform: 'none', mb: 1 }}
             >
               Sobre o projeto
+            </Button>
+            <Button
+              color="inherit"
+              onClick={() => router.push('/privacidade')}
+              sx={{ textTransform: 'none', mb: 1, ml: 1 }}
+            >
+              Privacidade e cookies
             </Button>
             <Typography variant="body2" color="text.secondary">
               © 2024 FPSI - Framework de Privacidade e Segurança da Informação. Código aberto.

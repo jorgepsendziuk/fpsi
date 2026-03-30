@@ -3,6 +3,8 @@
  * A estrutura (capítulos/seções/artigos) vem de `arvore` em `lgpd_artigos.json`,
  * gerada por `scripts/extract_lgpd_artigos.py` a partir do HTML do Planalto.
  */
+
+import { normalizeLgpdQuery } from "@/lib/normas/lgpdTextSearch";
 export type LgpdOutlineEntry = {
   id: string;
   titulo: string;
@@ -29,14 +31,27 @@ export function pruneLgpdOutline(
   return outline.map((n) => pruneNode(n, numeros)).filter((x): x is LgpdOutlineEntry => x !== null);
 }
 
-function filterNode(node: LgpdOutlineEntry, q: string): LgpdOutlineEntry | null {
+export type FilterLgpdOutlineOptions = {
+  /** Artigos cujo corpo (texto) contém a query — vindos de `collectArtigosNumerosMatchingBody`. */
+  bodyMatchingNumeros?: ReadonlySet<number>;
+};
+
+function filterNode(
+  node: LgpdOutlineEntry,
+  q: string,
+  bodyMatch: ReadonlySet<number>,
+): LgpdOutlineEntry | null {
   if (!q) return node;
   const filteredFilhos =
-    node.filhos?.map((f) => filterNode(f, q)).filter((x): x is LgpdOutlineEntry => x !== null) ?? [];
+    node.filhos?.map((f) => filterNode(f, q, bodyMatch)).filter((x): x is LgpdOutlineEntry => x !== null) ??
+    [];
   const matchedArts = (node.artigos ?? []).filter(
-    (n) => String(n).includes(q) || `artigo ${n}`.includes(q),
+    (n) =>
+      normalizeLgpdQuery(String(n)).includes(q) ||
+      normalizeLgpdQuery(`artigo ${n}`).includes(q) ||
+      bodyMatch.has(n),
   );
-  const titleHit = String(node.titulo ?? "").toLowerCase().includes(q);
+  const titleHit = normalizeLgpdQuery(node.titulo ?? "").includes(q);
 
   if (filteredFilhos.length > 0) {
     return {
@@ -47,21 +62,30 @@ function filterNode(node: LgpdOutlineEntry, q: string): LgpdOutlineEntry | null 
   }
   if (matchedArts.length > 0) return { ...node, artigos: matchedArts };
   if (titleHit && node.filhos?.length) {
-    const full = node.filhos.map((f) => filterNode(f, "")).filter((x): x is LgpdOutlineEntry => x !== null);
+    const full = node.filhos
+      .map((f) => filterNode(f, "", bodyMatch))
+      .filter((x): x is LgpdOutlineEntry => x !== null);
     return full.length ? { ...node, filhos: full } : null;
   }
   if (titleHit && (node.artigos?.length ?? 0) > 0) return node;
   return null;
 }
 
-/** Filtra por texto (número do artigo ou trecho do título). `outline` já deve estar podado. */
+/**
+ * Filtra por texto: número do artigo, trecho do título da árvore e/ou corpo do artigo
+ * (`bodyMatchingNumeros`). `outline` já deve estar podado.
+ */
 export function filterLgpdOutlineByQuery(
   outline: readonly LgpdOutlineEntry[],
   query: string,
+  options?: FilterLgpdOutlineOptions,
 ): LgpdOutlineEntry[] {
-  const q = query.trim().toLowerCase();
+  const q = normalizeLgpdQuery(query);
   if (!q) return [...outline];
-  return outline.map((n) => filterNode(n, q)).filter((x): x is LgpdOutlineEntry => x !== null);
+  const bodyMatch = options?.bodyMatchingNumeros ?? new Set<number>();
+  return outline
+    .map((n) => filterNode(n, q, bodyMatch))
+    .filter((x): x is LgpdOutlineEntry => x !== null);
 }
 
 /** Coleta ids de nós expansíveis (filhos e/ou artigos listados na árvore). */

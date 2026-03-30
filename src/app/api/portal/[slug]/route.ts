@@ -11,15 +11,25 @@ type ProgramaPortalRow = {
   atendimento_fone: string | null;
   atendimento_email: string | null;
   atendimento_site: string | null;
-  responsavel_privacidade: number | null;
+  encarregado_dados_pessoais: number | null;
   logo_orgao_empresa: string | null;
   logo_programa: string | null;
-  link_politica_privacidade: string | null;
-  link_aviso_titular: string | null;
-  link_cookies: string | null;
-  link_declaracao_seguranca: string | null;
-  link_reportar_vulnerabilidade: string | null;
+  link_politica_privacidade?: string | null;
+  link_aviso_titular?: string | null;
+  link_cookies?: string | null;
+  link_declaracao_seguranca?: string | null;
+  link_reportar_vulnerabilidade?: string | null;
 };
+
+const SELECT_PORTAL_BASE =
+  "id, nome, slug, razao_social, nome_fantasia, cnpj, atendimento_fone, atendimento_email, atendimento_site, encarregado_dados_pessoais, logo_orgao_empresa, logo_programa";
+
+const SELECT_PORTAL_WITH_LINKS = `${SELECT_PORTAL_BASE}, link_politica_privacidade, link_aviso_titular, link_cookies, link_declaracao_seguranca, link_reportar_vulnerabilidade`;
+
+function shouldRetryProgramaSelectWithoutLinks(err: { message?: string } | null): boolean {
+  const m = (err?.message ?? "").toLowerCase();
+  return m.includes("does not exist") && m.includes("link_");
+}
 
 /**
  * GET /api/portal/[slug]
@@ -42,14 +52,42 @@ export async function GET(
       console.error("[portal] SUPABASE_SERVICE_ROLE_KEY não configurada - configure na Vercel (Environment Variables)");
       return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
     }
-    const { data: programa, error: progError } = await supabase
+    let { data: programaRaw, error: progError } = await supabase
       .from("programa")
-      .select(
-        "id, nome, slug, razao_social, nome_fantasia, cnpj, atendimento_fone, atendimento_email, atendimento_site, responsavel_privacidade, logo_orgao_empresa, logo_programa, link_politica_privacidade, link_aviso_titular, link_cookies, link_declaracao_seguranca, link_reportar_vulnerabilidade"
-      )
+      .select(SELECT_PORTAL_WITH_LINKS)
       .eq("slug", slug.trim())
       .is("deleted_at", null)
       .maybeSingle();
+
+    let programa: ProgramaPortalRow | null = programaRaw as ProgramaPortalRow | null;
+
+    if (progError && shouldRetryProgramaSelectWithoutLinks(progError)) {
+      const retry = await supabase
+        .from("programa")
+        .select(SELECT_PORTAL_BASE)
+        .eq("slug", slug.trim())
+        .is("deleted_at", null)
+        .maybeSingle();
+      progError = retry.error;
+      const base = retry.data as Omit<
+        ProgramaPortalRow,
+        | "link_politica_privacidade"
+        | "link_aviso_titular"
+        | "link_cookies"
+        | "link_declaracao_seguranca"
+        | "link_reportar_vulnerabilidade"
+      > | null;
+      programa = base
+        ? {
+            ...base,
+            link_politica_privacidade: null,
+            link_aviso_titular: null,
+            link_cookies: null,
+            link_declaracao_seguranca: null,
+            link_reportar_vulnerabilidade: null,
+          }
+        : null;
+    }
 
     if (progError) {
       console.error("Erro ao buscar programa por slug:", progError);
@@ -67,11 +105,11 @@ export async function GET(
 
     let dpo_nome: string | null = null;
     let dpo_email: string | null = null;
-    if (row.responsavel_privacidade) {
+    if (row.encarregado_dados_pessoais) {
       const { data: resp } = await supabase
         .from("responsavel")
         .select("nome, email")
-        .eq("id", row.responsavel_privacidade)
+        .eq("id", row.encarregado_dados_pessoais)
         .maybeSingle();
       if (resp) {
         dpo_nome = resp.nome ?? null;

@@ -19,6 +19,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { Security as SecurityIcon } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 
 interface Controle {
   id: number;
@@ -52,12 +53,11 @@ export default function AdminControlesPage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-        <SecurityIcon color="primary" sx={{ fontSize: 32 }} />
-        <Typography variant="h5" fontWeight="bold">
-          Controles
-        </Typography>
-      </Box>
+      <PageHeroHeader
+        title="Controles"
+        icon={<SecurityIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Controles do framework de segurança (nome, texto, por que implementar)."
+      />
       <Box sx={{ mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel>Diagnóstico</InputLabel>

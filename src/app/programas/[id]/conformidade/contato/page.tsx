@@ -7,7 +7,6 @@ import {
   Container,
   Typography,
   Box,
-  Breadcrumbs,
   Link,
   Paper,
   Button,
@@ -26,6 +25,7 @@ import {
   ContactMail as ContactMailIcon,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import type { ProgramaContatoRow } from "@/lib/services/dataService";
@@ -105,57 +105,22 @@ export default function ContatoPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link
-          component="button"
-          underline="hover"
-          color="inherit"
-          onClick={() => router.push("/dashboard")}
-          sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}
-        >
-          Programas
-        </Link>
-        <Link
-          component="button"
-          underline="hover"
-          color="inherit"
-          onClick={() => router.push(`/programas/${idOrSlug}`)}
-          sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}
-        >
-          Programa
-        </Link>
-        <Link
-          component="button"
-          underline="hover"
-          color="inherit"
-          onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)}
-          sx={{ border: 0, background: "none", padding: 0, font: "inherit", cursor: "pointer" }}
-        >
-          Portal de privacidade
-        </Link>
-        <Typography color="text.primary">Contato do portal</Typography>
-      </Breadcrumbs>
-
+      <PageHeroHeader
+        title="Contato do portal"
+        icon={<ContactMailIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description="Mensagens enviadas pelo formulário de contato no portal público"
+        trailing={
+          <Button
+            variant="outlined"
+            startIcon={<ExcelIcon />}
+            onClick={exportExcel}
+            disabled={mensagens.length === 0}
+          >
+            Exportar Excel (CSV)
+          </Button>
+        }
+      />
       <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
-
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <ContactMailIcon sx={{ fontSize: 32, color: "primary.main" }} />
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Mensagens enviadas pelo formulário de contato no portal público
-            </Typography>
-          </Box>
-        </Box>
-        <Button
-          variant="outlined"
-          startIcon={<ExcelIcon />}
-          onClick={exportExcel}
-          disabled={mensagens.length === 0}
-        >
-          Exportar Excel (CSV)
-        </Button>
-      </Box>
 
       <TableContainer component={Paper} elevation={1}>
         <Table size="small">

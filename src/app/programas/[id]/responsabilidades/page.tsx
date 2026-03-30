@@ -1,115 +1,246 @@
 "use client";
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useParams } from "next/navigation";
-import { 
-  Container, 
-  Typography, 
-  Paper, 
-  Box, 
-  Button, 
-  Snackbar, 
-  Alert, 
-  Grid, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  Breadcrumbs, 
-  Link,
-  IconButton,
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Alert,
+  Autocomplete,
+  Box,
+  Button,
+  Container,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
-  Stack,
-  useTheme,
-  useMediaQuery,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
   List,
   ListItem,
+  ListItemSecondaryAction,
   ListItemText,
-  ListItemSecondaryAction
+  MenuItem,
+  Paper,
+  Select,
+  type SelectChangeEvent,
+  Snackbar,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import {
+  Add,
+  Business,
+  AccountBalance as AccountBalanceIcon,
+  AccountTreeOutlined,
+  CalendarMonth,
+  Cancel,
+  CrisisAlertOutlined,
+  Delete,
+  Edit,
+  Email,
+  GroupOutlined,
+  HelpOutlineOutlined,
+  Person,
+  PersonAdd,
+  PrivacyTipOutlined,
+  Save,
+  SecurityOutlined,
+} from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
-import { SelectWithAdd } from "@/components/common/SelectWithAdd";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { PapelLgpdManager } from "@/components/programa/PapelLgpdManager";
-import { 
-  Add, 
-  Edit, 
-  Delete, 
-  ArrowBack, 
-  Person, 
-  Email, 
-  Business,
-  Save,
-  Cancel,
-  PersonAdd
-} from "@mui/icons-material";
+import { GovernancaGrupoMembrosPicklist } from "@/components/programa/GovernancaGrupoMembrosPicklist";
+import { GovernancaPapelHintDialog } from "@/components/programa/GovernancaPpsiCartilhaPanel";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { logActivityFromClient } from "@/lib/services/auditClient";
+import type { Programa, Responsavel } from "@/lib/types/types";
+import {
+  getOrientacaoCampo,
+  type CampoResponsavelProgramaId,
+} from "@/content/governancaOrientacaoPrograma";
+import { CARGO_SUGESTOES, DEPARTAMENTO_SUGESTOES } from "@/lib/governanca/sugestoesCadastro";
+import {
+  governancaAbaQueryFromIndex,
+  governancaIndexFromQueryParam,
+} from "@/lib/governanca/abaGovernanca";
 
-interface Responsavel {
-  id: number;
-  nome: string;
-  email: string;
-  departamento: string;
-  programa: number;
-}
+type OrgaoRow = { id: number; nome: string };
 
-interface EditingResponsavel {
+type PapelDef = {
+  campoId: CampoResponsavelProgramaId;
+  dbField: keyof Pick<
+    Programa,
+    | "representante_alta_administracao"
+    | "responsavel_gestao_integridade"
+    | "gestor_seguranca_informacao"
+    | "encarregado_dados_pessoais"
+    | "gestor_tic"
+  >;
+};
+
+const PAPEIS_PROGRAMA: PapelDef[] = [
+  { campoId: "representante_alta_administracao", dbField: "representante_alta_administracao" },
+  { campoId: "responsavel_gestao_integridade", dbField: "responsavel_gestao_integridade" },
+  { campoId: "gestor_seguranca_informacao", dbField: "gestor_seguranca_informacao" },
+  { campoId: "encarregado_dados_pessoais", dbField: "encarregado_dados_pessoais" },
+  { campoId: "gestor_tic", dbField: "gestor_tic" },
+];
+
+type EditResponsavelForm = {
   id?: number;
   nome: string;
   email: string;
+  cargo: string;
   departamento: string;
+  orgMode: "programa" | "catalog" | "livre";
+  orgCatalogId: number | "";
+  orgLivre: string;
+  data_designacao: string;
+};
+
+const emptyForm = (): EditResponsavelForm => ({
+  nome: "",
+  email: "",
+  cargo: "",
+  departamento: "",
+  orgMode: "programa",
+  orgCatalogId: "",
+  orgLivre: "",
+  data_designacao: "",
+});
+
+function formatDataBR(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const p = String(iso).slice(0, 10);
+  if (p.length !== 10) return iso;
+  const [y, m, d] = p.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function responsavelParaForm(r: Responsavel, programaOrgaoId: number | undefined): EditResponsavelForm {
+  let orgMode: EditResponsavelForm["orgMode"] = "livre";
+  let orgCatalogId: number | "" = "";
+  let orgLivre = r.orgao_texto_livre?.trim() || "";
+  if (r.orgao_vinculo_id != null && programaOrgaoId != null && r.orgao_vinculo_id === programaOrgaoId) {
+    orgMode = "programa";
+  } else if (r.orgao_vinculo_id != null) {
+    orgMode = "catalog";
+    orgCatalogId = r.orgao_vinculo_id;
+  } else if (orgLivre) {
+    orgMode = "livre";
+  } else {
+    orgMode = programaOrgaoId ? "programa" : "livre";
+  }
+  return {
+    id: r.id,
+    nome: r.nome || "",
+    email: r.email || "",
+    cargo: r.cargo ?? "",
+    departamento: r.departamento ?? "",
+    orgMode,
+    orgCatalogId,
+    orgLivre,
+    data_designacao: r.data_designacao ? String(r.data_designacao).slice(0, 10) : "",
+  };
 }
 
 export default function ProgramaResponsaveisCRUDPage() {
   const params = useParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const idOrSlug = params.id as string;
   const { programaId: resolvedId, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
   const programaId = resolvedId ?? 0;
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState<{ message: string, severity: "success" | "error" } | null>(null);
-  const [controleInterno, setControleInterno] = useState("");
-  const [si, setSI] = useState("");
-  const [privacidade, setPrivacidade] = useState("");
-  const [ti, setTI] = useState("");
-  
-  // Estados para o modal de edição
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingResponsavel, setEditingResponsavel] = useState<EditingResponsavel>({
-    nome: "", email: "", departamento: ""
+  const [orgaos, setOrgaos] = useState<OrgaoRow[]>([]);
+  const [programaData, setProgramaData] = useState<Partial<Programa>>({});
+  const [papelResponsavelId, setPapelResponsavelId] = useState<Record<string, string>>({});
+  const [gruposMembros, setGruposMembros] = useState<dataService.GovernancaGruposMembros>({
+    comite_seguranca_informacao: [],
+    comite_protecao_dados: [],
+    etir: [],
   });
+
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingResponsavel, setEditingResponsavel] = useState<EditResponsavelForm>(emptyForm());
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Estado para dados do programa
-  const [programaData, setProgramaData] = useState<{ nome?: string; nome_fantasia?: string; razao_social?: string }>({});
-  
+  const [abaGovernanca, setAbaGovernanca] = useState(0);
+  const [hintCampo, setHintCampo] = useState<CampoResponsavelProgramaId | null>(null);
+
   const isMounted = useRef(true);
 
-  // Buscar responsáveis do programa
+  useEffect(() => {
+    const idx = governancaIndexFromQueryParam(searchParams.get("aba"));
+    if (idx != null) setAbaGovernanca(idx);
+  }, [searchParams]);
+
+  const handleAbaGovernancaChange = useCallback(
+    (_: React.SyntheticEvent, v: number) => {
+      setAbaGovernanca(v);
+      const q = governancaAbaQueryFromIndex(v);
+      if (q && pathname) router.replace(`${pathname}?aba=${q}`, { scroll: false });
+    },
+    [pathname, router]
+  );
+
+  const programaOrgaoId =
+    programaData.orgao != null && Number(programaData.orgao) > 0 ? Number(programaData.orgao) : undefined;
+  const nomeOrgaoPrograma = useMemo(() => {
+    if (programaOrgaoId == null) return "";
+    return orgaos.find((o) => o.id === programaOrgaoId)?.nome || `Órgão #${programaOrgaoId}`;
+  }, [orgaos, programaOrgaoId]);
+
+  const orgNomeById = useMemo(() => {
+    const m = new Map<number, string>();
+    orgaos.forEach((o) => m.set(o.id, o.nome));
+    return m;
+  }, [orgaos]);
+
+  const resolveOrgaoLabel = useCallback(
+    (r: Responsavel) => {
+      if (r.orgao_vinculo_id != null) {
+        return orgNomeById.get(r.orgao_vinculo_id) || `Órgão #${r.orgao_vinculo_id}`;
+      }
+      if (r.orgao_texto_livre?.trim()) return r.orgao_texto_livre.trim();
+      return "—";
+    },
+    [orgNomeById]
+  );
+
   const fetchResponsaveis = useCallback(async () => {
     setLoading(true);
     const data = await dataService.fetchResponsaveis(programaId);
     if (!isMounted.current) return;
-    setResponsaveis(data);
+    setResponsaveis((data || []) as Responsavel[]);
     setLoading(false);
   }, [programaId]);
 
-  // Sincronizar usuários do programa na tabela responsavel (para aparecerem nos combos e na lista)
   const syncResponsaveisFromUsers = useCallback(async () => {
     try {
       const res = await fetch(`/api/users?programaId=${programaId}`);
       if (!res.ok) return;
       const users = await res.json();
       const responsaveisAtuais = await dataService.fetchResponsaveis(programaId);
-      const emailsExistentes = new Set(responsaveisAtuais.map((r: Responsavel) => (r.email || "").trim().toLowerCase()));
+      const emailsExistentes = new Set(
+        (responsaveisAtuais || []).map((r: Responsavel) => (r.email || "").trim().toLowerCase())
+      );
       for (const u of users) {
         const email = (u.email || u.user_id || "").trim().toLowerCase();
         if (!email || emailsExistentes.has(email)) continue;
@@ -118,136 +249,182 @@ export default function ProgramaResponsaveisCRUDPage() {
           nome: u.nome || email,
           email,
           departamento: "",
+          cargo: "",
         });
         emailsExistentes.add(email);
       }
     } catch {
-      // ignora erro de sync
+      /* sync best-effort */
     }
   }, [programaId]);
 
-  // Buscar dados do programa para os campos principais
   const fetchProgramaCamposPrincipais = useCallback(async () => {
     const programa = await dataService.fetchProgramaById(programaId);
     if (!isMounted.current) return;
-    
-    // Salvar dados do programa
-    setProgramaData(programa);
-    
-    setControleInterno(programa.responsavel_controle_interno ? String(programa.responsavel_controle_interno) : "");
-    setSI(programa.responsavel_si ? String(programa.responsavel_si) : "");
-    setPrivacidade(programa.responsavel_privacidade ? String(programa.responsavel_privacidade) : "");
-    setTI(programa.responsavel_ti ? String(programa.responsavel_ti) : "");
+    if (!programa) return;
+    setProgramaData(programa as Programa);
+    const p = programa as Programa;
+    const next: Record<string, string> = {};
+    for (const { dbField } of PAPEIS_PROGRAMA) {
+      const v = p[dbField];
+      next[dbField as string] = typeof v === "number" && v > 0 ? String(v) : "";
+    }
+    setPapelResponsavelId(next);
   }, [programaId]);
+
+  const loadGrupos = useCallback(async () => {
+    const g = await dataService.fetchGovernancaGruposMembros(programaId);
+    if (!isMounted.current) return;
+    setGruposMembros(g);
+  }, [programaId]);
+
+  const loadOrgaos = useCallback(async () => {
+    const list = await dataService.fetchOrgaos();
+    if (!isMounted.current) return;
+    setOrgaos((list || []) as OrgaoRow[]);
+  }, []);
 
   useEffect(() => {
     if (!programaId) return;
     isMounted.current = true;
     const load = async () => {
+      await loadOrgaos();
+      if (!isMounted.current) return;
       await syncResponsaveisFromUsers();
       if (!isMounted.current) return;
       await fetchResponsaveis();
       if (!isMounted.current) return;
       await fetchProgramaCamposPrincipais();
+      if (!isMounted.current) return;
+      await loadGrupos();
     };
-    load();
-    return () => { isMounted.current = false; };
-  }, [programaId, syncResponsaveisFromUsers, fetchResponsaveis, fetchProgramaCamposPrincipais]);
+    void load();
+    return () => {
+      isMounted.current = false;
+    };
+  }, [programaId, syncResponsaveisFromUsers, fetchResponsaveis, fetchProgramaCamposPrincipais, loadGrupos, loadOrgaos]);
 
-  // Salvar campo de responsável principal
-  const handleSaveResponsavel = async (field: string, value: string) => {
+  const handleSaveResponsavelField = async (field: string, value: string) => {
     setLoading(true);
-    await dataService.updateProgramaField(programaId, field, value);
+    const payload = value === "" ? null : parseInt(value, 10);
+    await dataService.updateProgramaField(programaId, field, payload);
     if (!isMounted.current) return;
-    setSnackbar({ message: "Responsável atualizado!", severity: "success" });
+    setSnackbar({ message: "Papel atualizado.", severity: "success" });
     setLoading(false);
   };
 
-  // Handlers dos combos
-  const handleChangeCombo = (setter: any, field: string) => async (e: any) => {
-    const value = e.target.value;
-    setter(value);
-    await handleSaveResponsavel(field, value);
-  };
+  const handleChangePapel =
+    (dbField: string, setter: (v: string) => void) => async (e: SelectChangeEvent<string>) => {
+      const value = e.target.value;
+      setter(value);
+      await handleSaveResponsavelField(dbField, value);
+    };
 
-  // Handlers do modal
   const handleAddClick = () => {
-    setEditingResponsavel({ nome: "", email: "", departamento: "" });
+    setEditingResponsavel({
+      ...emptyForm(),
+      orgMode: programaOrgaoId ? "programa" : "livre",
+    });
     setIsEditing(false);
     setEditModalOpen(true);
   };
 
-  const handleEditClick = (responsavel: Responsavel) => {
-    setEditingResponsavel({
-      id: responsavel.id,
-      nome: responsavel.nome,
-      email: responsavel.email,
-      departamento: responsavel.departamento
-    });
+  const handleEditClick = (r: Responsavel) => {
+    setEditingResponsavel(responsavelParaForm(r, programaOrgaoId));
     setIsEditing(true);
     setEditModalOpen(true);
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir este responsável?")) return;
-    
+    if (!confirm("Tem certeza que deseja excluir esta pessoa da equipe do programa?")) return;
     setLoading(true);
     await supabaseBrowserClient.from("responsavel").delete().eq("id", id);
     if (!isMounted.current) return;
     await fetchResponsaveis();
-    if (!isMounted.current) return;
-    setSnackbar({ message: "Responsável removido!", severity: "success" });
+    await fetchProgramaCamposPrincipais();
+    await loadGrupos();
+    setSnackbar({ message: "Registro removido.", severity: "success" });
     setLoading(false);
+  };
+
+  const buildOrgaoPayload = (): { orgao_vinculo_id: number | null; orgao_texto_livre: string | null } => {
+    const f = editingResponsavel;
+    if (f.orgMode === "programa" && programaOrgaoId != null) {
+      return { orgao_vinculo_id: programaOrgaoId, orgao_texto_livre: null };
+    }
+    if (f.orgMode === "catalog" && f.orgCatalogId !== "" && typeof f.orgCatalogId === "number") {
+      return { orgao_vinculo_id: f.orgCatalogId, orgao_texto_livre: null };
+    }
+    const livre = f.orgLivre.trim();
+    return { orgao_vinculo_id: null, orgao_texto_livre: livre || null };
   };
 
   const handleSaveModal = async () => {
     if (!editingResponsavel.nome.trim() || !editingResponsavel.email.trim()) {
-      setSnackbar({ message: "Nome e email são obrigatórios!", severity: "error" });
+      setSnackbar({ message: "Nome e e-mail institucional são obrigatórios.", severity: "error" });
       return;
     }
+    const { orgao_vinculo_id, orgao_texto_livre } = buildOrgaoPayload();
+    const row = {
+      nome: editingResponsavel.nome.trim(),
+      email: editingResponsavel.email.trim(),
+      departamento: editingResponsavel.departamento.trim(),
+      cargo: editingResponsavel.cargo.trim(),
+      orgao_vinculo_id,
+      orgao_texto_livre,
+      data_designacao: editingResponsavel.data_designacao.trim() || null,
+    };
 
     setLoading(true);
-    
     if (isEditing && editingResponsavel.id) {
-      // Atualizar
-      await supabaseBrowserClient
-        .from("responsavel")
-        .update({
-          nome: editingResponsavel.nome,
-          email: editingResponsavel.email,
-          departamento: editingResponsavel.departamento
-        })
-        .eq("id", editingResponsavel.id);
-      logActivityFromClient({ action: "update", resourceType: "responsavel", resourceId: editingResponsavel.id, programaId });
-      setSnackbar({ message: "Responsável atualizado!", severity: "success" });
+      await supabaseBrowserClient.from("responsavel").update(row).eq("id", editingResponsavel.id);
+      logActivityFromClient({
+        action: "update",
+        resourceType: "responsavel",
+        resourceId: editingResponsavel.id,
+        programaId,
+      });
+      setSnackbar({ message: "Dados atualizados.", severity: "success" });
     } else {
-      // Criar novo
       const { data: inserted } = await supabaseBrowserClient
         .from("responsavel")
-        .insert({
-          programa: programaId,
-          nome: editingResponsavel.nome,
-          email: editingResponsavel.email,
-          departamento: editingResponsavel.departamento
-        })
+        .insert({ ...row, programa: programaId })
         .select("id")
         .single();
       if (inserted) {
-        logActivityFromClient({ action: "create", resourceType: "responsavel", resourceId: inserted.id, programaId });
+        logActivityFromClient({
+          action: "create",
+          resourceType: "responsavel",
+          resourceId: inserted.id,
+          programaId,
+        });
       }
-      setSnackbar({ message: "Responsável criado!", severity: "success" });
+      setSnackbar({ message: "Pessoa incluída na equipe.", severity: "success" });
     }
-    
+
     if (!isMounted.current) return;
     await fetchResponsaveis();
-    if (!isMounted.current) return;
     setEditModalOpen(false);
     setLoading(false);
   };
 
   const handleCloseModal = () => {
     setEditModalOpen(false);
-    setEditingResponsavel({ nome: "", email: "", departamento: "" });
+    setEditingResponsavel(emptyForm());
+  };
+
+  const saveGrupoMembros = async (patch: Partial<dataService.GovernancaGruposMembros>) => {
+    const next: dataService.GovernancaGruposMembros = { ...gruposMembros, ...patch };
+    setGruposMembros(next);
+    setLoading(true);
+    const r = await dataService.saveGovernancaGruposMembros(programaId, next);
+    setLoading(false);
+    if (!r.ok) {
+      setSnackbar({ message: r.error || "Erro ao salvar grupos.", severity: "error" });
+      await loadGrupos();
+      return;
+    }
+    setSnackbar({ message: "Composição dos grupos atualizada.", severity: "success" });
   };
 
   if (idLoading) {
@@ -267,305 +444,413 @@ export default function ProgramaResponsaveisCRUDPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Breadcrumbs sx={{ mb: 2 }}>
-          <Link href="/dashboard" underline="hover" color="inherit" sx={{ display: 'flex', alignItems: 'center' }}>
-            <ArrowBack sx={{ mr: 0.5 }} fontSize="small" />
-            Programas
-          </Link>
-          <Link 
-            href={`/programas/${idOrSlug}`}
-            underline="hover" 
-            color="inherit"
-            sx={{ 
-              maxWidth: '200px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              display: 'block'
-            }}
-            title={programaData.nome || programaData.nome_fantasia || programaData.razao_social}
-          >
-            {programaData.nome || programaData.nome_fantasia || programaData.razao_social || 'Carregando...'}
-          </Link>
-          <Typography color="text.primary">Responsáveis</Typography>
-        </Breadcrumbs>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
-          Gerencie os responsáveis principais e a equipe do programa
-        </Typography>
-        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1 }} />
-      </Box>
+      <PageHeroHeader
+        title="Estrutura de Governança"
+        icon={<AccountBalanceIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description={<ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 0.5 }} />}
+      />
 
-      {/* Definição de Responsáveis e Equipe do Programa - lado a lado no topo */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 3, 
-              borderRadius: 3, 
-              height: '100%',
-              background: theme.palette.mode === 'dark' 
-                ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
-                : 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)'
-            }}
-          >
-            <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-              <Person sx={{ mr: 1 }} />
-              Definição de Responsáveis
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Responsável Controle Interno</InputLabel>
-                  <Select 
-                    value={controleInterno} 
-                    label="Responsável Controle Interno" 
-                    onChange={handleChangeCombo(setControleInterno, "responsavel_controle_interno")}
-                  >
-                    <MenuItem value="">Não definido</MenuItem>
-                    {responsaveis.map((r) => (
-                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Responsável SI</InputLabel>
-                  <Select 
-                    value={si} 
-                    label="Responsável SI" 
-                    onChange={handleChangeCombo(setSI, "responsavel_si")}
-                  >
-                    <MenuItem value="">Não definido</MenuItem>
-                    {responsaveis.map((r) => (
-                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Responsável Privacidade</InputLabel>
-                  <Select 
-                    value={privacidade} 
-                    label="Responsável Privacidade" 
-                    onChange={handleChangeCombo(setPrivacidade, "responsavel_privacidade")}
-                  >
-                    <MenuItem value="">Não definido</MenuItem>
-                    {responsaveis.map((r) => (
-                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Responsável TI</InputLabel>
-                  <Select 
-                    value={ti} 
-                    label="Responsável TI" 
-                    onChange={handleChangeCombo(setTI, "responsavel_ti")}
-                  >
-                    <MenuItem value="">Não definido</MenuItem>
-                    {responsaveis.map((r) => (
-                      <MenuItem key={r.id} value={r.id}>{r.nome}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 3, borderRadius: 3, height: '100%' }}>
-            <Box sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          overflow: "hidden",
           mb: 3,
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? 2 : 0
-            }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-                <PersonAdd sx={{ mr: 1 }} />
-                Equipe do Programa ({responsaveis.length})
-              </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<Add />} 
-                onClick={handleAddClick}
-                sx={{ 
-                  borderRadius: 2,
-                  width: isMobile ? '100%' : 'auto'
-                }}
-              >
-                Adicionar Responsável
-              </Button>
-            </Box>
-
-                {responsaveis.length === 0 ? (
-              <Box sx={{ 
-                textAlign: 'center', 
-                py: 6,
-                color: 'text.secondary'
-              }}>
-                <PersonAdd sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                  Nenhum responsável cadastrado
-                </Typography>
-                <Typography variant="body2">
-                  Adicione responsáveis para começar a gerenciar a equipe
-                </Typography>
-              </Box>
-            ) : (
-              <List disablePadding sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-                {responsaveis.map((responsavel) => (
-                  <ListItem
-                    key={responsavel.id}
-                    sx={{
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      '&:last-child': { borderBottom: 'none' },
-                      py: 1.5,
-                      '&:hover': { bgcolor: 'action.hover' }
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle1" fontWeight="600">
-                          {responsavel.nome}
-                        </Typography>
-                      }
-                      secondaryTypographyProps={{ component: "div" }}
-                      secondary={
-                        <Stack direction="row" spacing={2} sx={{ mt: 0.5 }} flexWrap="wrap">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Email sx={{ fontSize: 14, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {responsavel.email}
-                            </Typography>
-                          </Box>
-                          {responsavel.departamento && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <Business sx={{ fontSize: 14, color: 'text.secondary' }} />
-                              <Typography variant="body2" color="text.secondary">
-                                {responsavel.departamento}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Stack>
-                      }
-                    />
-                    <ListItemSecondaryAction sx={{ display: 'flex', gap: 0.5 }}>
-                      <Button
-                        size="small"
-                        startIcon={<Edit />}
-                        onClick={() => handleEditClick(responsavel)}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        Editar
-                      </Button>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteClick(responsavel.id)}
-                        sx={{ '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' } }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Estrutura de Tratamento */}
-      <PapelLgpdManager programaId={programaId} idOrSlug={idOrSlug} />
-
-      {/* Modal de Edição */}
-      <Dialog 
-        open={editModalOpen} 
-        onClose={handleCloseModal}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: 3 }
+          border: 1,
+          borderColor: "divider",
+          boxShadow: (t) =>
+            t.palette.mode === "dark"
+              ? "0 8px 32px rgba(0,0,0,0.35)"
+              : "0 8px 32px rgba(25, 118, 210, 0.08), 0 1px 3px rgba(0,0,0,0.06)",
         }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          {isEditing ? 'Editar Responsável' : 'Novo Responsável'}
-        </DialogTitle>
+        <Tabs
+          value={abaGovernanca}
+          onChange={handleAbaGovernancaChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          sx={{
+            px: 1.5,
+            pt: 1.5,
+            gap: 0.5,
+            bgcolor: (t) => alpha(t.palette.primary.main, t.palette.mode === "dark" ? 0.12 : 0.06),
+            borderBottom: 1,
+            borderColor: "divider",
+            "& .MuiTab-root": {
+              minHeight: 52,
+              py: 1.25,
+              px: 2,
+              borderRadius: 2,
+              mb: 1,
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.9375rem",
+              color: "text.secondary",
+              transition: "background-color 0.2s, color 0.2s",
+            },
+            "& .MuiTab-root.Mui-selected": {
+              color: "primary.main",
+              bgcolor: "background.paper",
+              boxShadow: (t) => (t.palette.mode === "dark" ? "0 2px 8px rgba(0,0,0,0.4)" : "0 2px 12px rgba(0,0,0,0.08)"),
+            },
+            "& .MuiTabs-indicator": { display: "none" },
+          }}
+        >
+          <Tab icon={<GroupOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="Papéis e equipe" />
+          <Tab icon={<SecurityOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="Comitê de SI" />
+          <Tab icon={<PrivacyTipOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="Comitê de privacidade" />
+          <Tab icon={<CrisisAlertOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="ETIR" />
+          <Tab icon={<AccountTreeOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="Tratamento LGPD" />
+        </Tabs>
+
+        <Box sx={{ p: 3 }}>
+          {abaGovernanca === 0 && (
+            <Grid container spacing={3}>
+              <Grid item xs={12} lg={7}>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
+                  <Person color="primary" fontSize="small" />
+                  Papéis no programa
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2.5 }}>
+                  Escolha alguém da equipe. Use (?) para fundamentação legal e cartilha PPSI 2.0.
+                </Typography>
+                <Stack spacing={2.25}>
+                  {PAPEIS_PROGRAMA.map(({ campoId, dbField }) => {
+                    const rotulo = getOrientacaoCampo(campoId)?.rotulo || campoId;
+                    const fieldKey = dbField as string;
+                    return (
+                      <Box key={fieldKey} sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.75, lineHeight: 1.3 }}>
+                            {rotulo}
+                          </Typography>
+                          <FormControl fullWidth size="small">
+                            <Select
+                              displayEmpty
+                              value={papelResponsavelId[fieldKey] ?? ""}
+                              onChange={handleChangePapel(fieldKey, (v) =>
+                                setPapelResponsavelId((prev) => ({ ...prev, [fieldKey]: v }))
+                              )}
+                            >
+                              <MenuItem value="">
+                                <em>Não definido</em>
+                              </MenuItem>
+                              {responsaveis.map((r) => (
+                                <MenuItem key={r.id} value={String(r.id)}>
+                                  {r.nome}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Box>
+                        <Tooltip title="Ver fundamentação e referências">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            aria-label={`Ajuda: ${rotulo}`}
+                            onClick={() => setHintCampo(campoId)}
+                            sx={{ flexShrink: 0, mb: 0.35 }}
+                          >
+                            <HelpOutlineOutlined fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Grid>
+
+              <Grid item xs={12} lg={5}>
+                <Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 2, height: "100%" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 3,
+                      flexDirection: isMobile ? "column" : "row",
+                      gap: isMobile ? 2 : 0,
+                    }}
+                  >
+                    <Typography variant="h6" fontWeight="bold" sx={{ display: "flex", alignItems: "center" }}>
+                      <PersonAdd sx={{ mr: 1 }} />
+                      Equipe ({responsaveis.length})
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<Add />}
+                      onClick={handleAddClick}
+                      sx={{ borderRadius: 2, width: isMobile ? "100%" : "auto" }}
+                    >
+                      Incluir pessoa
+                    </Button>
+                  </Box>
+
+                  {responsaveis.length === 0 ? (
+                    <Box sx={{ textAlign: "center", py: 6, color: "text.secondary" }}>
+                      <PersonAdd sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                      <Typography variant="h6" sx={{ mb: 1 }}>
+                        Nenhuma pessoa cadastrada
+                      </Typography>
+                      <Typography variant="body2">
+                        Inclua integrantes para designá-los aos papéis, comitês e ETIR.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <List disablePadding sx={{ border: 1, borderColor: "divider", borderRadius: 2, overflow: "hidden" }}>
+                      {responsaveis.map((responsavel) => (
+                        <ListItem
+                          key={responsavel.id}
+                          sx={{
+                            borderBottom: "1px solid",
+                            borderColor: "divider",
+                            "&:last-child": { borderBottom: "none" },
+                            py: 1.5,
+                            "&:hover": { bgcolor: "action.hover" },
+                          }}
+                        >
+                          <ListItemText
+                            primary={
+                              <Typography variant="subtitle1" fontWeight={600}>
+                                {responsavel.nome}
+                                {responsavel.cargo ? (
+                                  <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                                    — {responsavel.cargo}
+                                  </Typography>
+                                ) : null}
+                              </Typography>
+                            }
+                            secondaryTypographyProps={{ component: "div" }}
+                            secondary={
+                              <Stack direction="row" spacing={2} sx={{ mt: 0.5 }} flexWrap="wrap" useFlexGap>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                  <Email sx={{ fontSize: 14, color: "text.secondary" }} />
+                                  <Typography variant="body2" color="text.secondary">
+                                    {responsavel.email}
+                                  </Typography>
+                                </Box>
+                                {responsavel.departamento ? (
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                    <Business sx={{ fontSize: 14, color: "text.secondary" }} />
+                                    <Typography variant="body2" color="text.secondary">
+                                      {responsavel.departamento}
+                                    </Typography>
+                                  </Box>
+                                ) : null}
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                  <Business sx={{ fontSize: 14, color: "text.secondary" }} />
+                                  <Typography variant="body2" color="text.secondary">
+                                    {resolveOrgaoLabel(responsavel)}
+                                  </Typography>
+                                </Box>
+                                {responsavel.data_designacao ? (
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                    <CalendarMonth sx={{ fontSize: 14, color: "text.secondary" }} />
+                                    <Typography variant="body2" color="text.secondary">
+                                      Designação: {formatDataBR(responsavel.data_designacao)}
+                                    </Typography>
+                                  </Box>
+                                ) : null}
+                              </Stack>
+                            }
+                          />
+                          <ListItemSecondaryAction sx={{ display: "flex", gap: 0.5 }}>
+                            <Button
+                              size="small"
+                              startIcon={<Edit />}
+                              onClick={() => handleEditClick(responsavel)}
+                              sx={{ borderRadius: 2 }}
+                            >
+                              Editar
+                            </Button>
+                            <IconButton size="small" color="error" onClick={() => handleDeleteClick(responsavel.id)}>
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
+          )}
+
+          {abaGovernanca === 1 && (
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                Integrantes do comitê de segurança da informação (equivalente institucional). Atas e atos ficam fora do FPSI.
+              </Typography>
+              <GovernancaGrupoMembrosPicklist
+                responsaveis={responsaveis}
+                selectedIds={gruposMembros.comite_seguranca_informacao}
+                onChange={(ids) => void saveGrupoMembros({ comite_seguranca_informacao: ids })}
+                disabled={loading}
+              />
+            </Stack>
+          )}
+
+          {abaGovernanca === 2 && (
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                Integrantes do comitê de proteção de dados (equivalente). Formalização no órgão, não neste cadastro.
+              </Typography>
+              <GovernancaGrupoMembrosPicklist
+                responsaveis={responsaveis}
+                selectedIds={gruposMembros.comite_protecao_dados}
+                onChange={(ids) => void saveGrupoMembros({ comite_protecao_dados: ids })}
+                disabled={loading}
+              />
+            </Stack>
+          )}
+
+          {abaGovernanca === 3 && (
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                ETIR — Equipe de Prevenção, Tratamento e Resposta a Incidentes Cibernéticos — referência de membros da equipe do programa para governança e evidências no diagnóstico.
+              </Typography>
+              <GovernancaGrupoMembrosPicklist
+                responsaveis={responsaveis}
+                selectedIds={gruposMembros.etir}
+                onChange={(ids) => void saveGrupoMembros({ etir: ids })}
+                disabled={loading}
+              />
+            </Stack>
+          )}
+
+          {abaGovernanca === 4 && <PapelLgpdManager programaId={programaId} idOrSlug={idOrSlug} />}
+        </Box>
+      </Paper>
+
+      <GovernancaPapelHintDialog campoId={hintCampo} open={hintCampo != null} onClose={() => setHintCampo(null)} />
+
+      <Dialog open={editModalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ pb: 1 }}>{isEditing ? "Editar pessoa" : "Incluir pessoa"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               label="Nome"
               fullWidth
+              required
               value={editingResponsavel.nome}
               onChange={(e) => setEditingResponsavel({ ...editingResponsavel, nome: e.target.value })}
-              required
             />
             <TextField
-              label="Email"
+              label="E-mail institucional"
               type="email"
               fullWidth
+              required
               value={editingResponsavel.email}
               onChange={(e) => setEditingResponsavel({ ...editingResponsavel, email: e.target.value })}
-              required
             />
-            <SelectWithAdd
-              label="Departamento"
-              value={editingResponsavel.departamento}
-              onChange={(v) => setEditingResponsavel({ ...editingResponsavel, departamento: String(v) })}
-              fetchUrl="/api/departamentos"
-              createUrl="/api/departamentos"
-              addDialogTitle="Novo departamento"
-              addFieldLabel="Nome do departamento"
-              valueAs="nome"
+            <Autocomplete
+              freeSolo
+              options={CARGO_SUGESTOES}
+              inputValue={editingResponsavel.cargo}
+              onInputChange={(_, v) => setEditingResponsavel((prev) => ({ ...prev, cargo: v }))}
+              renderInput={(params) => <TextField {...params} label="Cargo" placeholder="Selecione ou digite" />}
+            />
+            <Autocomplete
+              freeSolo
+              options={DEPARTAMENTO_SUGESTOES}
+              inputValue={editingResponsavel.departamento}
+              onInputChange={(_, v) => setEditingResponsavel((prev) => ({ ...prev, departamento: v }))}
+              renderInput={(params) => (
+                <TextField {...params} label="Departamento / lotação" placeholder="Selecione ou digite" />
+              )}
+            />
+            <FormControl fullWidth size="small">
+              <InputLabel>Órgão</InputLabel>
+              <Select
+                label="Órgão"
+                value={
+                  editingResponsavel.orgMode === "programa"
+                    ? "programa"
+                    : editingResponsavel.orgMode === "livre"
+                      ? "livre"
+                      : "catalog"
+                }
+                onChange={(e) => {
+                  const v = e.target.value as string;
+                  if (v === "programa") {
+                    setEditingResponsavel({ ...editingResponsavel, orgMode: "programa", orgCatalogId: "", orgLivre: "" });
+                  } else if (v === "livre") {
+                    setEditingResponsavel({ ...editingResponsavel, orgMode: "livre", orgCatalogId: "" });
+                  } else {
+                    setEditingResponsavel({ ...editingResponsavel, orgMode: "catalog", orgLivre: "" });
+                  }
+                }}
+              >
+                {programaOrgaoId != null ? (
+                  <MenuItem value="programa">Órgão do programa ({nomeOrgaoPrograma})</MenuItem>
+                ) : null}
+                <MenuItem value="catalog">Outro órgão (catálogo)</MenuItem>
+                <MenuItem value="livre">Outro (texto livre)</MenuItem>
+              </Select>
+            </FormControl>
+            {editingResponsavel.orgMode === "catalog" ? (
+              <FormControl fullWidth size="small">
+                <InputLabel>Órgão no catálogo</InputLabel>
+                <Select
+                  label="Órgão no catálogo"
+                  value={editingResponsavel.orgCatalogId === "" ? "" : String(editingResponsavel.orgCatalogId)}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setEditingResponsavel({
+                      ...editingResponsavel,
+                      orgCatalogId: raw === "" ? "" : parseInt(raw, 10),
+                    });
+                  }}
+                >
+                  <MenuItem value="">Selecione…</MenuItem>
+                  {orgaos.map((o) => (
+                    <MenuItem key={o.id} value={String(o.id)}>
+                      {o.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : null}
+            {editingResponsavel.orgMode === "livre" ? (
+              <TextField
+                label="Órgão / unidade (texto livre)"
+                fullWidth
+                value={editingResponsavel.orgLivre}
+                onChange={(e) => setEditingResponsavel({ ...editingResponsavel, orgLivre: e.target.value })}
+              />
+            ) : null}
+            <TextField
+              label="Data de designação"
+              type="date"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={editingResponsavel.data_designacao}
+              onChange={(e) => setEditingResponsavel({ ...editingResponsavel, data_designacao: e.target.value })}
             />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button 
-            onClick={handleCloseModal}
-            startIcon={<Cancel />}
-            sx={{ borderRadius: 2 }}
-          >
+          <Button onClick={handleCloseModal} startIcon={<Cancel />} sx={{ borderRadius: 2 }}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSaveModal}
-            variant="contained"
-            startIcon={<Save />}
-            disabled={loading}
-            sx={{ borderRadius: 2 }}
-          >
-            {isEditing ? 'Salvar' : 'Criar'}
+          <Button onClick={() => void handleSaveModal()} variant="contained" startIcon={<Save />} disabled={loading} sx={{ borderRadius: 2 }}>
+            {isEditing ? "Salvar" : "Criar"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
       <Snackbar
         open={!!snackbar}
         autoHideDuration={3000}
         onClose={() => setSnackbar(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert 
-          onClose={() => setSnackbar(null)} 
-          severity={snackbar?.severity || "success"} 
-          sx={{ width: '100%' }}
-        >
+        <Alert onClose={() => setSnackbar(null)} severity={snackbar?.severity || "success"} sx={{ width: "100%" }}>
           {snackbar?.message || ""}
         </Alert>
       </Snackbar>
     </Container>
   );
-} 
+}

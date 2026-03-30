@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/audit/activities/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/Users/jorgepsendziuk/Documents/fpsi/src/app/api/audit/activities/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

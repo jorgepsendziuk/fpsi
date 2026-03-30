@@ -2,17 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   Container,
   Typography,
-  Breadcrumbs,
-  Link,
   Box,
   Alert,
   CircularProgress
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { Assignment as AssignmentIcon } from '@mui/icons-material';
 
 const PlanoAcaoResumo = dynamic(
   () => import('../../../../components/planos-acao/PlanoAcaoResumo'),
@@ -24,9 +22,9 @@ import { shouldUseDemoData } from '../../../../lib/services/demoDataService';
 import * as dataService from '../../../../lib/services/dataService';
 import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from '../../../../lib/utils/programaDisplay';
 import { ProgramaLastActivityLine } from '@/components/common/ProgramaLastActivityLine';
+import { PageHeroHeader } from '@/components/common/PageHeroHeader';
 
 export default function PlanosAcaoPage() {
-  const router = useRouter();
   const params = useParams();
   const idOrSlug = params.id as string;
   const { programaId, loading: idLoading, error: idError } = useProgramaIdFromParam(idOrSlug);
@@ -86,28 +84,6 @@ export default function PlanosAcaoPage() {
   if (error || idError || permissions.error) {
     return (
       <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Box sx={{ mb: 3 }}>
-          <Breadcrumbs sx={{ mb: 1 }}>
-            <Link 
-              href="/dashboard" 
-              underline="hover" 
-              color="inherit" 
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              <ArrowBack sx={{ mr: 0.5 }} fontSize="small" />
-              Programas
-            </Link>
-            <Link 
-              href={`/programas/${idOrSlug}`} 
-              underline="hover" 
-              color="inherit"
-            >
-              {programa ? getProgramaTituloPrincipal(programa) : `Programa #${programaId}`}
-            </Link>
-            <Typography color="text.primary">Plano de Trabalho</Typography>
-          </Breadcrumbs>
-        </Box>
-
         <Alert severity="error" sx={{ mt: 3 }}>
           {error || idError || permissions.error}
         </Alert>
@@ -130,29 +106,26 @@ export default function PlanosAcaoPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
-      {/* Breadcrumb */}
-      <Box sx={{ mb: 3 }}>
-        <Breadcrumbs sx={{ mb: 1 }}>
-          <Link 
-            href="/dashboard" 
-            underline="hover" 
-            color="inherit" 
-            sx={{ display: 'flex', alignItems: 'center' }}
-          >
-            <ArrowBack sx={{ mr: 0.5 }} fontSize="small" />
-            Programas
-          </Link>
-          <Link 
-            href={`/programas/${idOrSlug}`} 
-            underline="hover" 
-            color="inherit"
-          >
-            {programaName}
-          </Link>
-          <Typography color="text.primary">Plano de Trabalho</Typography>
-        </Breadcrumbs>
-        <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1 }} />
-      </Box>
+      <PageHeroHeader
+        title="Plano de trabalho"
+        icon={<AssignmentIcon sx={{ fontSize: 30 }} aria-hidden />}
+        description={
+          <>
+            <Typography variant="body1" component="span" sx={{ fontWeight: 600, color: "text.primary", display: "block" }}>
+              {programaName}
+            </Typography>
+            {programaOrganizacao ? (
+              <Typography variant="body2" component="span" display="block" sx={{ mt: 0.25 }}>
+                {programaOrganizacao}
+              </Typography>
+            ) : null}
+            <Typography variant="body2" component="span" display="block" sx={{ mt: programaOrganizacao ? 0.5 : 0.25 }}>
+              Acompanhamento resumido das medidas por diagnóstico e controle
+            </Typography>
+            <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1.5 }} />
+          </>
+        }
+      />
 
       {/* Modo Demo Alert */}
       {isDemoMode && (
