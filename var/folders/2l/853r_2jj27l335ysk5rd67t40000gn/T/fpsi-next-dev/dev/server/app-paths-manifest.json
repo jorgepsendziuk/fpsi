@@ -1,9 +1,13 @@
 {
+  "/api/programas/route": "app/api/programas/route.js",
+  "/api/profiles/route": "app/api/profiles/route.js",
+  "/api/empresas/route": "app/api/empresas/route.js",
+  "/api/admin/check/route": "app/api/admin/check/route.js",
   "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/api/audit/log/route": "app/api/audit/log/route.js",
   "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js",
   "/programas/[id]/responsabilidades/page": "app/programas/[id]/responsabilidades/page.js",
   "/programas/[id]/conformidade/page": "app/programas/[id]/conformidade/page.js",
   "/programas/[id]/conformidade/mapeamento/page": "app/programas/[id]/conformidade/mapeamento/page.js",
-  "/programas/[id]/diagnostico/relatorio/page": "app/programas/[id]/diagnostico/relatorio/page.js"
+  "/programas/[id]/diagnostico/relatorio/page": "app/programas/[id]/diagnostico/relatorio/page.js",
+  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
 }
