@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import NextLink from "next/link";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
@@ -34,6 +34,15 @@ import {
   FormControlLabel,
   Checkbox,
   Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  Tooltip,
+  Chip,
+  Alert,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -41,6 +50,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Map as MapIcon,
+  ExpandMore as ExpandMoreIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from "@mui/icons-material";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
@@ -58,6 +69,9 @@ import {
   labelTitular,
   labelTransferencia,
 } from "@/lib/utils/mapeamentoDadosOptions";
+import { filtrarMapeamentoProcessosModelo } from "@/lib/data/mapeamentoProcessosModelo";
+import type { MapeamentoSugestaoItem } from "@/lib/ai/suggestMapeamentosSchema";
+import { sugestaoItemToMapeamentoPayload } from "@/lib/ai/sugestaoToMapeamentoPayload";
 
 type MapeamentoFormState = {
   id: string;
@@ -159,6 +173,27 @@ export default function MapeamentoDadosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<MapeamentoFormState>(emptyForm());
 
+  const [catSearch, setCatSearch] = useState("");
+  const [catSetorFilter, setCatSetorFilter] = useState<string>("");
+
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiFocusSetores, setAiFocusSetores] = useState<string[]>([]);
+  const [aiCount, setAiCount] = useState(5);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiDrafts, setAiDrafts] = useState<MapeamentoSugestaoItem[]>([]);
+  const [aiSelected, setAiSelected] = useState<Set<number>>(new Set());
+  const [aiSaving, setAiSaving] = useState(false);
+
+  const catalogFiltrado = useMemo(
+    () =>
+      filtrarMapeamentoProcessosModelo({
+        busca: catSearch || undefined,
+        setor_areas: catSetorFilter ? [catSetorFilter] : undefined,
+      }),
+    [catSearch, catSetorFilter]
+  );
+
   const loadList = () => {
     if (programaIdNum == null) return;
     setLoading(true);
@@ -203,6 +238,104 @@ export default function MapeamentoDadosPage() {
     setEditingId(null);
     setForm(emptyForm());
     setOpen(true);
+  };
+
+  const aplicarItemCatalogo = (item: (typeof catalogFiltrado)[number]) => {
+    const setor = item.setor_area_sugerido;
+    setEditingId(null);
+    setForm({
+      ...emptyForm(),
+      nome: item.titulo,
+      descricao: item.descricao_curta ?? "",
+      setorArea: setor ?? "outro",
+      setorOutro: setor ? "" : item.area_rotulo,
+    });
+    setOpen(true);
+  };
+
+  const abrirDialogoIA = () => {
+    setAiError(null);
+    setAiDrafts([]);
+    setAiSelected(new Set());
+    setAiDialogOpen(true);
+  };
+
+  const fecharDialogoIA = () => {
+    setAiDialogOpen(false);
+    setAiLoading(false);
+    setAiError(null);
+  };
+
+  const alternarFocoSetorIA = (key: string) => {
+    setAiFocusSetores((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  };
+
+  const gerarSugestoesIA = async () => {
+    if (programaIdNum == null) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/ai/suggest-mapeamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          programaId: programaIdNum,
+          count: aiCount,
+          focusSetorAreas: aiFocusSetores.length ? aiFocusSetores : undefined,
+        }),
+      });
+      const data = (await res.json()) as { error?: string; details?: string; suggestions?: MapeamentoSugestaoItem[] };
+      if (!res.ok) {
+        setAiError(data.error || data.details || `Erro ${res.status}`);
+        setAiDrafts([]);
+        setAiSelected(new Set());
+        return;
+      }
+      const list = data.suggestions ?? [];
+      setAiDrafts(list);
+      setAiSelected(new Set(list.map((_, i) => i)));
+    } catch (e) {
+      console.error(e);
+      setAiError("Falha de rede ou resposta inválida.");
+      setAiDrafts([]);
+      setAiSelected(new Set());
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const alternarSelecaoIA = (index: number) => {
+    setAiSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const gravarSugestoesIASelecionadas = async () => {
+    if (programaIdNum == null || aiDrafts.length === 0) return;
+    const indices = Array.from(aiSelected).sort((a, b) => a - b);
+    if (indices.length === 0) {
+      alert("Marca pelo menos uma sugestão.");
+      return;
+    }
+    setAiSaving(true);
+    try {
+      for (const i of indices) {
+        const row = aiDrafts[i];
+        if (!row) continue;
+        const payload = sugestaoItemToMapeamentoPayload({ ...row, nome: row.nome.trim() || `Sugestão ${i + 1}` });
+        await dataService.createMapeamentoDados(programaIdNum, payload);
+      }
+      loadList();
+      fecharDialogoIA();
+    } catch (e) {
+      console.error(e);
+      alert("Não foi possível gravar todas as sugestões. Verifica permissões e tenta de novo.");
+    } finally {
+      setAiSaving(false);
+    }
   };
 
   const handleOpenEdit = (row: dataService.MapeamentoDadosRow) => {
@@ -286,9 +419,18 @@ export default function MapeamentoDadosPage() {
         icon={<MapIcon sx={{ fontSize: 30 }} aria-hidden />}
         description="Levantamento com listas de escolha para primeira linha; vincule ao ROPA ao cadastrar cada operação."
         trailing={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
-            Novo levantamento
-          </Button>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ xs: "stretch", sm: "center" }}>
+            <Tooltip title="Gera rascunhos com base no cadastro do programa. Revisão humana obrigatória; não substitui parecer do encarregado/DPO.">
+              <span>
+                <Button variant="outlined" startIcon={<AutoAwesomeIcon />} onClick={abrirDialogoIA}>
+                  Sugerir com IA
+                </Button>
+              </span>
+            </Tooltip>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
+              Novo levantamento
+            </Button>
+          </Stack>
         }
       />
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
@@ -308,6 +450,79 @@ export default function MapeamentoDadosPage() {
           </Typography>
         </Paper>
       )}
+
+      <Accordion defaultExpanded={false} sx={{ mb: 2 }} variant="outlined">
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography fontWeight={600}>Processos de referência (modelo LGPD)</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Lista curada a partir da planilha em{" "}
+            <Typography component="span" variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
+              docs/improvements/Padrão Inicial - 01 - LGPD - Data Mapping…
+            </Typography>
+            . Serve para inspirar o preenchimento; adapte ao teu contexto.
+          </Alert>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
+            <TextField
+              size="small"
+              label="Pesquisar"
+              value={catSearch}
+              onChange={(e) => setCatSearch(e.target.value)}
+              fullWidth
+            />
+            <FormControl size="small" sx={{ minWidth: 220 }}>
+              <InputLabel id="cat-setor-filter">Setor</InputLabel>
+              <Select
+                labelId="cat-setor-filter"
+                label="Setor"
+                value={catSetorFilter}
+                onChange={(e) => setCatSetorFilter(e.target.value as string)}
+              >
+                <MenuItem value="">
+                  <em>Todos</em>
+                </MenuItem>
+                {SETOR_AREA_OPCOES.map((o) => (
+                  <MenuItem key={o.key} value={o.key}>
+                    {o.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
+          <List dense sx={{ maxHeight: 320, overflow: "auto", bgcolor: alpha(theme.palette.primary.main, 0.04), borderRadius: 1 }}>
+            {catalogFiltrado.length === 0 ? (
+              <ListItem>
+                <ListItemText primary="Nenhum processo corresponde ao filtro." />
+              </ListItem>
+            ) : (
+              catalogFiltrado.map((item, idx) => (
+                <ListItem
+                  key={`${item.titulo}-${idx}`}
+                  secondaryAction={
+                    <Button size="small" onClick={() => aplicarItemCatalogo(item)}>
+                      Usar como base
+                    </Button>
+                  }
+                  sx={{ alignItems: "flex-start", pr: 18 }}
+                >
+                  <ListItemText
+                    primary={item.titulo}
+                    secondary={
+                      <span>
+                        <Chip size="small" label={item.area_rotulo} sx={{ mr: 0.5, my: 0.25 }} variant="outlined" />
+                        {item.setor_area_sugerido ? (
+                          <Chip size="small" label={labelSetorArea(item.setor_area_sugerido)} sx={{ my: 0.25 }} />
+                        ) : null}
+                      </span>
+                    }
+                  />
+                </ListItem>
+              ))
+            )}
+          </List>
+        </AccordionDetails>
+      </Accordion>
 
       <Paper elevation={1} sx={{ overflow: "hidden" }}>
         <TableContainer sx={{ maxWidth: "100%" }}>
@@ -624,6 +839,119 @@ export default function MapeamentoDadosPage() {
           </Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando…" : editingId ? "Salvar" : "Cadastrar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={aiDialogOpen} onClose={fecharDialogoIA} maxWidth="md" fullWidth scroll="paper">
+        <DialogTitle>Sugerir levantamentos com IA</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Alert severity="warning">
+              As sugestões são rascunhos automáticos: não constituem aconselhamento jurídico. O encarregado/DPO deve rever
+              antes de usar em auditoria ou relatórios. Dados pessoais de titulares não são enviados ao serviço externo —
+              apenas o contexto institucional do programa.
+            </Alert>
+            <Typography variant="caption" color="text.secondary">
+              Limite: 20 pedidos por hora por utilizador e programa. É necessário{" "}
+              <Typography component="span" variant="caption" fontWeight={700}>
+                OPENAI_API_KEY
+              </Typography>{" "}
+              configurada no servidor.
+            </Typography>
+            <FormControl fullWidth size="small">
+              <InputLabel id="ai-count-label">Quantidade de sugestões</InputLabel>
+              <Select
+                labelId="ai-count-label"
+                label="Quantidade de sugestões"
+                value={aiCount}
+                onChange={(e) => setAiCount(Number(e.target.value))}
+              >
+                {[3, 4, 5, 6, 7].map((n) => (
+                  <MenuItem key={n} value={n}>
+                    {n}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Typography variant="subtitle2" color="text.secondary">
+              Focar em setores (opcional)
+            </Typography>
+            <FormGroup row sx={{ flexWrap: "wrap", gap: 0.5 }}>
+              {SETOR_AREA_OPCOES.map((o) => (
+                <FormControlLabel
+                  key={o.key}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={aiFocusSetores.includes(o.key)}
+                      onChange={() => alternarFocoSetorIA(o.key)}
+                    />
+                  }
+                  label={o.label}
+                />
+              ))}
+            </FormGroup>
+            <Button variant="outlined" onClick={() => void gerarSugestoesIA()} disabled={aiLoading}>
+              {aiLoading ? "A gerar…" : "Gerar sugestões"}
+            </Button>
+            {aiError && (
+              <Alert severity="error" onClose={() => setAiError(null)}>
+                {aiError}
+              </Alert>
+            )}
+            {aiDrafts.length > 0 && (
+              <>
+                <Typography variant="subtitle2">Pré-visualização — edita o nome antes de gravar</Typography>
+                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 360 }}>
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell padding="checkbox" />
+                        <TableCell>Nome</TableCell>
+                        <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>Setor</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {aiDrafts.map((row, i) => (
+                        <TableRow key={i}>
+                          <TableCell padding="checkbox">
+                            <Checkbox checked={aiSelected.has(i)} onChange={() => alternarSelecaoIA(i)} />
+                          </TableCell>
+                          <TableCell>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              value={row.nome}
+                              onChange={(e) =>
+                                setAiDrafts((prev) =>
+                                  prev.map((p, j) => (j === i ? { ...p, nome: e.target.value } : p))
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                            {labelSetorArea(row.setor_area)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={fecharDialogoIA} disabled={aiSaving}>
+            Fechar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => void gravarSugestoesIASelecionadas()}
+            disabled={aiSaving || aiDrafts.length === 0}
+          >
+            {aiSaving ? "A gravar…" : "Gravar selecionados"}
           </Button>
         </DialogActions>
       </Dialog>

@@ -37,6 +37,7 @@ import {
   FormControlLabel,
   FormGroup,
   Autocomplete,
+  Alert,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -50,8 +51,10 @@ import {
   Sync as SyncIcon,
   History as HistoryIcon,
   PersonAdd as PersonAddIcon,
+  PlaylistAdd as PlaylistAddIcon,
 } from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
+import { buildRopaPayloadFromMapeamento } from "@/lib/utils/mapeamentoParaRopa";
 import { getPoliticaNomeProgramaRotulo } from "@/lib/utils/politicaPlaceholders";
 import { buildRopaPdfDocument } from "@/lib/utils/ropaPdf";
 import { ResourceLastUpdateLine } from "@/components/common/ResourceLastUpdateLine";
@@ -317,6 +320,9 @@ export default function ROPAPage() {
   const [mapeamentos, setMapeamentos] = useState<dataService.MapeamentoDadosRow[]>([]);
   /** Cadastro do programa — logo, CNPJ e portal no cabeçalho do PDF (como nas políticas) */
   const [programa, setPrograma] = useState<Record<string, unknown> | null>(null);
+  const [bulkMapDialogOpen, setBulkMapDialogOpen] = useState(false);
+  const [bulkMapSelected, setBulkMapSelected] = useState<Set<number>>(new Set());
+  const [bulkMapSaving, setBulkMapSaving] = useState(false);
 
   const loadVersoes = useCallback(async () => {
     if (programaIdNum == null) return;
@@ -563,6 +569,81 @@ export default function ROPAPage() {
     }
   };
 
+  const handleOpenBulkFromMapeamento = () => {
+    const linked = new Set(
+      operacoes
+        .map((o) => (o.mapeamentoId ? Number(o.mapeamentoId) : NaN))
+        .filter((n) => !Number.isNaN(n))
+    );
+    setBulkMapSelected(new Set(mapeamentos.filter((m) => !linked.has(m.id)).map((m) => m.id)));
+    setBulkMapDialogOpen(true);
+  };
+
+  const toggleBulkMap = (id: number) => {
+    setBulkMapSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkCreateFromMapeamento = async () => {
+    if (programaIdNum == null) return;
+    if (!registroForm.gestor_responsavel_user_id?.trim()) {
+      alert(
+        "Seleciona o gestor responsável no cabeçalho do ROPA. Abre \"Adicionar processo\", preenche o gestor e grava uma operação — ou usa este diálogo depois de o cabeçalho estar completo."
+      );
+      return;
+    }
+    const ids = Array.from(bulkMapSelected);
+    if (ids.length === 0) {
+      alert("Seleciona pelo menos um levantamento de mapeamento.");
+      return;
+    }
+    setBulkMapSaving(true);
+    try {
+      const savedRegistro = await dataService.upsertRegistroRopa(programaIdNum, {
+        organizacao: registroForm.organizacao || null,
+        cnpj: registroForm.cnpj || null,
+        endereco: registroForm.endereco || null,
+        atividade_principal: registroForm.atividade_principal || null,
+        gestor_responsavel_user_id: registroForm.gestor_responsavel_user_id.trim(),
+        gestor_responsavel: registroForm.gestor_responsavel || null,
+        email: registroForm.email || null,
+        telefone: registroForm.telefone || null,
+        data_registro: registroForm.data_registro || null,
+        categorias_titulares: registroForm.categorias_titulares,
+        medidas_seguranca: registroForm.medidas_seguranca || null,
+        tipos_dados_pessoais: registroForm.tipos_dados_pessoais,
+        outros_dados_pessoais: registroForm.outros_dados_pessoais || null,
+        compartilhamento: registroForm.compartilhamento || null,
+        periodo_armazenamento: registroForm.periodo_armazenamento || null,
+        observacoes: registroForm.observacoes || null,
+      });
+      setRegistro(savedRegistro);
+      setRegistroForm(registroRowToForm(savedRegistro, empresaRopaDefaults || undefined));
+
+      const nomePorId = new Map(mapeamentos.map((m) => [m.id, m.nome]));
+      const sorted = ids.sort((a, b) => a - b);
+      for (const mid of sorted) {
+        const m = mapeamentos.find((x) => x.id === mid);
+        if (!m) continue;
+        const payload = buildRopaPayloadFromMapeamento(m);
+        const created = await dataService.createRopa(programaIdNum, payload, savedRegistro.id);
+        const nomeMap = nomePorId.get(mid) ?? null;
+        setOperacoes((prev) => [...prev, rowToOperacao(created, nomeMap)]);
+      }
+      setBulkMapDialogOpen(false);
+      setBulkMapSelected(new Set());
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível criar todas as operações.");
+    } finally {
+      setBulkMapSaving(false);
+    }
+  };
+
   const exportExcel = useCallback(() => {
     const headers = ["Processo", "Finalidade", "Hipótese legal", "Mapeamento", "Data registro"];
     const rows = operacoes.map((o) => [
@@ -696,6 +777,18 @@ export default function ROPAPage() {
           <span>
             <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfSelected} disabled={selectedIds.size === 0}>
               Exportar selecionadas em PDF ({selectedIds.size})
+            </Button>
+          </span>
+        </Tooltip>
+        <Tooltip title="Cria operações de tratamento a partir dos levantamentos já cadastrados em Mapeamento de dados. A hipótese legal vem como texto genérico para revisão.">
+          <span>
+            <Button
+              variant="outlined"
+              startIcon={<PlaylistAddIcon />}
+              onClick={handleOpenBulkFromMapeamento}
+              disabled={mapeamentos.length === 0}
+            >
+              A partir do mapeamento
             </Button>
           </span>
         </Tooltip>
@@ -1037,6 +1130,58 @@ export default function ROPAPage() {
           </Button>
           <Button variant="contained" onClick={handleRegistrarVersao} disabled={savingVersao}>
             {savingVersao ? "Salvando…" : "Registrar versão"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={bulkMapDialogOpen} onClose={() => !bulkMapSaving && setBulkMapDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Operações a partir do mapeamento</DialogTitle>
+        <DialogContent dividers>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Serão criadas linhas no ROPA com finalidade e categorias derivadas do levantamento. A hipótese legal fica como
+            texto genérico — deve ser revista antes de relatórios ou auditoria.
+          </Alert>
+          {mapeamentos.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              Não há levantamentos. Cadastra primeiro em{" "}
+              <Link component={NextLink} href={`/programas/${idOrSlug}/conformidade/mapeamento`}>
+                Mapeamento de dados
+              </Link>
+              .
+            </Typography>
+          ) : (
+            <FormGroup>
+              {mapeamentos.map((m) => (
+                <FormControlLabel
+                  key={m.id}
+                  control={<Checkbox checked={bulkMapSelected.has(m.id)} onChange={() => toggleBulkMap(m.id)} />}
+                  label={
+                    <span>
+                      <Typography variant="body2" component="span" fontWeight={600}>
+                        {m.nome}
+                      </Typography>
+                      {operacoes.some((o) => o.mapeamentoId === String(m.id)) ? (
+                        <Typography component="span" variant="caption" color="warning.main" sx={{ ml: 1 }}>
+                          (já existe operação ligada)
+                        </Typography>
+                      ) : null}
+                    </span>
+                  }
+                />
+              ))}
+            </FormGroup>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkMapDialogOpen(false)} disabled={bulkMapSaving}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => void handleBulkCreateFromMapeamento()}
+            disabled={bulkMapSaving || mapeamentos.length === 0 || bulkMapSelected.size === 0}
+          >
+            {bulkMapSaving ? "A criar…" : `Criar ${bulkMapSelected.size} operação(ões)`}
           </Button>
         </DialogActions>
       </Dialog>
