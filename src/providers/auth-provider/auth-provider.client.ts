@@ -7,10 +7,10 @@ export const authProviderClient: AuthProvider = {
   login: async ({ email, password, providerName }) => {
     // Login social (OAuth)
     if (providerName) {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
       const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
-      const redirectTo = redirect
-        ? `${typeof window !== "undefined" ? window.location.origin : ""}${redirect.startsWith("/") ? redirect : "/" + redirect}`
-        : `${typeof window !== "undefined" ? window.location.origin : ""}/dashboard`;
+      const nextPath = redirect ? (redirect.startsWith("/") ? redirect : `/${redirect}`) : "/dashboard";
+      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
       const { data, error } =
         await supabaseBrowserClient.auth.signInWithOAuth({
           provider: providerName as "google" | "github" | "azure" | "facebook",

@@ -127,9 +127,9 @@ const sections: Array<{
   },
   {
     key: "portal-privacidade",
-    title: "Portal de privacidade",
+    title: "Titulares e canais públicos",
     icon: <PublicIcon fontSize="large" />,
-    description: "Pedidos dos titulares, reportes e contato recebidos pelo portal público do programa",
+    description: "Pedidos dos titulares, reportes e contato, e acesso ao site público (portal de privacidade) do programa",
     path: "conformidade/portal",
     color: "#0288d1",
     gradient: "linear-gradient(135deg, #0288d1 0%, #03a9f4 100%)",

@@ -230,7 +230,7 @@ export function ModuloSistemaFlipCard({
         return (
           <Stack spacing={0.75}>
             <Typography component="div" sx={backHeadingSx}>
-              Portal
+              Titulares e público
             </Typography>
             <Typography component="div" sx={backBodySx}>Pedidos titulares: {portal.pedidosTitulares}</Typography>
             <Typography component="div" sx={backBodySx}>Reportes: {portal.reportes}</Typography>

@@ -1,8 +1,9 @@
 {
-  "/api/profiles/privacy-consent/route": "app/api/profiles/privacy-consent/route.js",
   "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/api/portal/[slug]/route": "app/api/portal/[slug]/route.js",
-  "/api/profiles/route": "app/api/profiles/route.js",
-  "/[slug]/page": "app/[slug]/page.js",
-  "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js"
+  "/api/audit/log/route": "app/api/audit/log/route.js",
+  "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js",
+  "/programas/[id]/responsabilidades/page": "app/programas/[id]/responsabilidades/page.js",
+  "/programas/[id]/conformidade/page": "app/programas/[id]/conformidade/page.js",
+  "/programas/[id]/conformidade/mapeamento/page": "app/programas/[id]/conformidade/mapeamento/page.js",
+  "/programas/[id]/diagnostico/relatorio/page": "app/programas/[id]/diagnostico/relatorio/page.js"
 }

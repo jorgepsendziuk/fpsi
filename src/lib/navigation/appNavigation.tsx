@@ -188,7 +188,7 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
 
         {
           id: "portal-hub",
-          label: "Portal de privacidade",
+          label: "Titulares e canais públicos",
           path: `${base}/conformidade/portal`,
           icon: <PublicIcon sx={iconSx} />,
           hasNestedNav: true,
@@ -234,32 +234,6 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
       ],
     },
   ];
-}
-
-/** Título curto para a barra superior (espelha a lógica anterior do Header). */
-export function getAppShellPageTitle(pathname: string): string {
-  if (pathname.startsWith("/admin")) return "Administração";
-  if (pathname.includes("/diagnostico/relatorio")) return "Relatório do diagnóstico";
-  if (pathname.includes("/diagnostico")) return "Diagnóstico";
-  if (pathname.includes("/planos-acao")) return "Plano de trabalho";
-  if (pathname.includes("/conformidade/mapeamento")) return "Mapeamento de dados";
-  if (pathname.includes("/conformidade/ropa")) return "ROPA";
-  if (pathname.includes("/conformidade/pedidos-titulares")) return "Pedidos dos titulares";
-  if (pathname.includes("/conformidade/ripd")) return "RIPD / AIPD";
-  if (pathname.includes("/conformidade/incidentes")) return "Incidentes";
-  if (pathname.includes("/conformidade/reportes")) return "Reportes do portal";
-  if (pathname.includes("/conformidade/contato")) return "Contato do portal";
-  if (pathname.includes("/conformidade/portal")) return "Portal de privacidade";
-  if (pathname.includes("/conformidade")) return "Tratamento e riscos";
-  if (pathname.includes("/politicas")) return "Políticas e documentos";
-  if (pathname.includes("/responsabilidades")) return "Estrutura de Governança";
-  if (pathname.includes("/usuarios")) return "Usuários";
-  if (pathname.includes("/auditoria")) return "Auditoria";
-  if (pathname === "/dashboard") return "Início";
-  if (pathname.startsWith("/referencias/lgpd")) return "LGPD";
-  if (pathname.startsWith("/perfil")) return "Perfil";
-  if (pathname.match(/^\/programas\/[^/]+\/?$/)) return "Programa";
-  return "FPSI";
 }
 
 /** Evita marcar pai e filho ao mesmo tempo: escolhe o path mais específico que casa com a URL. */

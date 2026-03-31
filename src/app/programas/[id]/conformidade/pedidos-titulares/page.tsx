@@ -616,7 +616,7 @@ export default function PedidosTitularesPage() {
 
       <Box sx={{ mt: 2 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)}>
-          Voltar ao portal de privacidade
+          Voltar a titulares e canais públicos
         </Button>
       </Box>
     </Container>

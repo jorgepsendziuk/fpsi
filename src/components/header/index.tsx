@@ -102,10 +102,10 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       description: "ROPA, RIPD e incidentes"
     },
     {
-      label: "Portal de privacidade",
+      label: "Titulares e canais públicos",
       icon: <PublicIcon />,
       path: `/programas/${programaId}/conformidade/portal`,
-      description: "Pedidos dos titulares, reportes e contato"
+      description: "Pedidos, reportes, contato e portal público"
     },
     {
       label: "Políticas e documentos",

@@ -176,7 +176,7 @@ export default function ReportesPage() {
           startIcon={<ArrowBackIcon />}
           onClick={() => router.push(`/programas/${idOrSlug}/conformidade/portal`)}
         >
-          Voltar ao portal de privacidade
+          Voltar a titulares e canais públicos
         </Button>
       </Box>
     </Container>

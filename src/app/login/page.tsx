@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthPage } from "@refinedev/mui";
-import { Box, useTheme, IconButton, Tooltip, CircularProgress, Typography, Link } from "@mui/material";
+import { Box, useTheme, IconButton, Tooltip, CircularProgress, Typography, Link, Alert } from "@mui/material";
 import { DarkModeOutlined, LightModeOutlined, Google } from "@mui/icons-material";
 import { ColorModeContext } from "@contexts/color-mode";
 import { useContext, useEffect } from "react";
@@ -86,6 +86,17 @@ export default function Login() {
       </Box>
 
       <Box sx={{ position: 'relative' }}>
+        {searchParams.get("error") === "oauth" && (
+          <Alert severity="error" sx={{ maxWidth: 420, mb: 2, mx: "auto" }}>
+            {searchParams.get("error_description")?.slice(0, 500) ||
+              "Não foi possível concluir o login com Google. Verifique a configuração do projeto no Supabase e no Google Cloud."}
+          </Alert>
+        )}
+        {searchParams.get("error") === "auth" && (
+          <Alert severity="error" sx={{ maxWidth: 420, mb: 2, mx: "auto" }}>
+            Sessão não pôde ser criada. Tente de novo ou use e-mail e senha.
+          </Alert>
+        )}
         <AuthPage 
           type="login"
           providers={[

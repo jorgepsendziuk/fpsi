@@ -557,8 +557,24 @@ export const updateProgramaMedida = async (medidaId: number, controleId: number,
       console.error(`updateProgramaMedida: Error updating existing record:`, error);
       throw error;
     }
-    
-    logActivityFromClient({ action: "update", resourceType: "medida", resourceId: existingRecord.id, programaId });
+
+    const { data: medMeta } = await supabaseBrowserClient
+      .from("medida")
+      .select("id_medida, medida")
+      .eq("id", medidaId)
+      .maybeSingle();
+    logActivityFromClient({
+      action: "update",
+      resourceType: "medida",
+      resourceId: existingRecord.id,
+      programaId,
+      details: {
+        medida_catalogo_id: medidaId,
+        controle_id: controleId,
+        id_medida: medMeta?.id_medida ?? null,
+        titulo_curto: medMeta?.medida != null ? String(medMeta.medida).slice(0, 400) : null,
+      },
+    });
     console.log(`updateProgramaMedida: Updated existing record`);
     return data;
   } else {
@@ -577,8 +593,24 @@ export const updateProgramaMedida = async (medidaId: number, controleId: number,
       console.error(`updateProgramaMedida: Error creating new record:`, error);
       throw error;
     }
-    
-    logActivityFromClient({ action: "create", resourceType: "medida", resourceId: data.id, programaId });
+
+    const { data: medMetaCreate } = await supabaseBrowserClient
+      .from("medida")
+      .select("id_medida, medida")
+      .eq("id", medidaId)
+      .maybeSingle();
+    logActivityFromClient({
+      action: "create",
+      resourceType: "medida",
+      resourceId: data.id,
+      programaId,
+      details: {
+        medida_catalogo_id: medidaId,
+        controle_id: controleId,
+        id_medida: medMetaCreate?.id_medida ?? null,
+        titulo_curto: medMetaCreate?.medida != null ? String(medMetaCreate.medida).slice(0, 400) : null,
+      },
+    });
     console.log(`updateProgramaMedida: Created new record`);
     return data;
   }

@@ -2,7 +2,9 @@
 export type GrupoImpleFilter = "all" | "G1" | "G2" | "G3";
 
 /** Texto do guia (CIS / PPSI 2.0) para tooltip do seletor de grupos. */
-export const GRUPO_IMPLEMENTACAO_HINT = `O CIS Controls é composto por um conjunto de 153 medidas, que são divididas em 18 controles e categorizadas em três Grupos de Implementação (GIs). As medidas visam a mitigação das vulnerabilidades dos mais comuns aos mais avançados tipos de ataque. Dessa forma, objetivando criar uma estratégia de priorização de medidas, o CIS elaborou uma metodologia de implementação das medidas com base nos referidos GIs. De modo resumido:
+export const GRUPO_IMPLEMENTACAO_HINT = `Os grupos GI aplicam-se às medidas do diagnóstico de Segurança da Informação (classificação CIS). Nos demais diagnósticos as medidas não possuem GI.
+
+O CIS Controls é composto por um conjunto de 153 medidas, que são divididas em 18 controles e categorizadas em três Grupos de Implementação (GIs). As medidas visam a mitigação das vulnerabilidades dos mais comuns aos mais avançados tipos de ataque. Dessa forma, objetivando criar uma estratégia de priorização de medidas, o CIS elaborou uma metodologia de implementação das medidas com base nos referidos GIs. De modo resumido:
 
 • o primeiro grupo (GI1), também conhecido como higiene cibernética, formado por 56 medidas básicas, foi concebido para instituições de pequeno a médio porte, com limitação no corpo de profissionais de TI e na experiência em segurança da informação;
 
@@ -12,10 +14,6 @@ export const GRUPO_IMPLEMENTACAO_HINT = `O CIS Controls é composto por um conju
 
 /** Como o filtro do diagnóstico aplica essa lógica cumulativa (GI2 soma o GI1; GI3 soma os dois anteriores). */
 export const GRUPO_FILTRO_CUMULATIVO_RESUMO = `No filtro desta tela, o nível escolhido é cumulativo: GI1 mostra só medidas classificadas como GI1; GI2 mostra medidas GI1 e GI2; GI3 mostra medidas GI1, GI2 e GI3 — coerente com o fato de cada grupo de implementação englobar o anterior.`;
-
-/** GI (CIS) classifica medidas do segmento de Segurança da Informação; base e privacidade não usam GI. */
-export const GRUPO_GI_ESCOPO_DIAGNOSTICO =
-  "Os grupos GI aplicam-se às medidas do diagnóstico de Segurança da Informação (classificação CIS). Nos demais diagnósticos as medidas não possuem GI.";
 
 /** Cores alinhadas ao guia PPSI 2.0: GI1 verde, GI2 cobre/laranja, GI3 teal escuro. */
 export const GRUPO_GI_PALETTE: Record<"G1" | "G2" | "G3", { main: string; contrastText: string }> = {

@@ -45,7 +45,6 @@ import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from "@/lib/
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import type { AppNavItem } from "@/lib/navigation/appNavigation";
 import {
-  getAppShellPageTitle,
   getBestMatchingNavPath,
   getGlobalNavSections,
   getProgramaNavSections,
@@ -57,6 +56,7 @@ import {
 import type { EmpresaRow } from "@/lib/services/dataService";
 import { CookiePreferencesDialog } from "@/components/privacy/CookiePreferencesDialog";
 import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 type IUser = { id: number; name: string; email: string; avatar: string };
 
@@ -240,8 +240,6 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     document.addEventListener("mouseup", onUp);
   };
 
-  const pageTitle = getAppShellPageTitle(pathname);
-
   const handleNavigate = (path: string) => {
     router.push(path);
     setMobileOpen(false);
@@ -359,6 +357,131 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             fontWeight: selected ? 700 : isSub ? 500 : 600,
             color: selected ? "primary.main" : "text.primary",
           }}
+          sx={{ position: "relative", zIndex: 1 }}
+        />
+      </ListItemButton>
+    );
+  };
+
+  /** Link real `/{slug}` do portal de privacidade (mesmo item que no hub), no grupo do menu. */
+  const renderNavPortalPublicLeaf = () => {
+    if (!programaId || !activePrograma) return null;
+    const slug = activePrograma.slug?.trim();
+    const lineColor = alpha(theme.palette.divider, 0.4);
+    const spineX = 14;
+    const conn = { isLast: true as const };
+    const rowSx = {
+      position: "relative" as const,
+      borderRadius: 2,
+      mb: 0.25,
+      py: 1,
+      pl: 3.5,
+      pr: 1.5,
+      ml: 0,
+      overflow: "hidden" as const,
+    };
+    const connector = (
+      <Box
+        sx={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: spineX + 18,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+        aria-hidden
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            left: spineX,
+            top: 0,
+            bottom: conn.isLast ? "50%" : 0,
+            width: 0,
+            borderLeft: `1px solid ${lineColor}`,
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            left: spineX,
+            top: "50%",
+            width: 12,
+            height: 0,
+            borderTop: `1px solid ${lineColor}`,
+            transform: "translateY(-50%)",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            left: spineX + 10,
+            top: "50%",
+            width: 4,
+            height: 4,
+            borderRadius: "50%",
+            bgcolor: alpha(theme.palette.primary.main, 0.45),
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      </Box>
+    );
+    const primaryLabel = (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
+        <span>Portal público (site)</span>
+      </Box>
+    );
+
+    if (!slug) {
+      return (
+        <Tooltip
+          key="nav-portal-public"
+          title="Defina o slug do programa na lista de programas do painel para publicar o site."
+        >
+          <span style={{ display: "block" }}>
+            <ListItemButton disabled sx={rowSx}>
+              {connector}
+              <ListItemIcon
+                sx={{ minWidth: 36, color: "text.disabled", position: "relative", zIndex: 1 }}
+              >
+                <OpenInNewIcon sx={{ fontSize: 20 }} />
+              </ListItemIcon>
+              <ListItemText
+                primary={primaryLabel}
+                secondary="Defina o slug do programa"
+                primaryTypographyProps={{ component: "div", variant: "body2", fontWeight: 500 }}
+                secondaryTypographyProps={{ variant: "caption" }}
+                sx={{ position: "relative", zIndex: 1 }}
+              />
+            </ListItemButton>
+          </span>
+        </Tooltip>
+      );
+    }
+
+    const href = `/${encodeURIComponent(slug)}`;
+
+    return (
+      <ListItemButton
+        key="nav-portal-public"
+        component="a"
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => setMobileOpen(false)}
+        sx={rowSx}
+      >
+        {connector}
+        <ListItemIcon sx={{ minWidth: 36, color: "text.secondary", position: "relative", zIndex: 1 }}>
+          <OpenInNewIcon sx={{ fontSize: 20 }} />
+        </ListItemIcon>
+        <ListItemText
+          primary={primaryLabel}
+          secondary={href}
+          primaryTypographyProps={{ component: "div", variant: "body2", fontWeight: 500 }}
+          secondaryTypographyProps={{ variant: "caption", sx: { fontFamily: "monospace", wordBreak: "break-all" } }}
           sx={{ position: "relative", zIndex: 1 }}
         />
       </ListItemButton>
@@ -523,9 +646,13 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                           <List component="div" dense disablePadding>
                             {block.subs.map((sub, idx) =>
                               renderNavLeafRow(sub, {
-                                subConnector: { isLast: idx === block.subs.length - 1 },
+                                subConnector: {
+                                  isLast:
+                                    idx === block.subs.length - 1 && block.groupId !== "portal",
+                                },
                               })
                             )}
+                            {block.groupId === "portal" ? renderNavPortalPublicLeaf() : null}
                           </List>
                         </Collapse>
                       </React.Fragment>
@@ -663,17 +790,15 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     >
       <Toolbar
         sx={{
-          minHeight: { xs: programaContextLabel ? 60 : 56, md: programaContextLabel ? 68 : 64 },
-          alignItems: programaContextLabel ? "flex-start" : "center",
-          py: programaContextLabel ? 1 : 0,
-          pt: programaContextLabel ? 1.25 : undefined,
+          minHeight: { xs: 56, md: 64 },
+          alignItems: "center",
         }}
       >
         <IconButton
           color="inherit"
           edge="start"
           onClick={() => setMobileOpen(true)}
-          sx={{ mr: 1, display: { md: "none" }, mt: programaContextLabel ? 0.25 : 0 }}
+          sx={{ mr: 1, display: { md: "none" } }}
           aria-label="Abrir menu"
         >
           <MenuIcon />
@@ -684,7 +809,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               color="inherit"
               edge="start"
               onClick={() => setSidebarHidden((h) => !h)}
-              sx={{ mr: 1, mt: programaContextLabel ? 0.25 : 0 }}
+              sx={{ mr: 1 }}
               aria-label={sidebarHidden ? "Mostrar menu" : "Ocultar menu"}
             >
               {sidebarHidden ? <MenuOpenIcon /> : <ChevronLeftIcon />}
@@ -696,9 +821,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             flexGrow: 1,
             minWidth: 0,
             display: "flex",
-            flexDirection: "column",
-            alignItems: "stretch",
-            justifyContent: "center",
+            alignItems: "center",
+            justifyContent: "flex-start",
           }}
         >
           {programaContextLabel ? (
@@ -712,7 +836,6 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 alignItems: "center",
                 gap: 0.75,
                 minWidth: 0,
-                mb: 0.35,
                 textDecoration: "none",
                 color: "inherit",
                 "&:hover .programa-ativo-label": { color: "primary.main" },
@@ -723,25 +846,25 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 src={activePrograma ? getProgramaLogoDisplayUrl(activePrograma) ?? undefined : undefined}
                 alt=""
                 sx={{
-                  width: 22,
-                  height: 22,
+                  width: 26,
+                  height: 26,
                   flexShrink: 0,
                   fontSize: 12,
                   bgcolor: alpha(theme.palette.primary.main, 0.14),
                   color: "primary.main",
                 }}
               >
-                <FolderIcon sx={{ fontSize: 15 }} />
+                <FolderIcon sx={{ fontSize: 16 }} />
               </Avatar>
               <Typography
                 className="programa-ativo-label"
-                variant="caption"
+                variant="subtitle2"
                 component="span"
                 noWrap
                 sx={{
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                  color: "text.secondary",
+                  fontWeight: 700,
+                  letterSpacing: 0.15,
+                  color: "text.primary",
                   minWidth: 0,
                 }}
               >
@@ -749,19 +872,6 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               </Typography>
             </Box>
           ) : null}
-          <Typography
-            variant="subtitle1"
-            noWrap
-            component="h1"
-            sx={{
-              fontWeight: 600,
-              lineHeight: 1.35,
-              letterSpacing: "0.02em",
-              color: "text.primary",
-            }}
-          >
-            {pageTitle}
-          </Typography>
         </Box>
         <Box
           sx={{
@@ -769,8 +879,6 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             alignItems: "center",
             gap: 0.5,
             flexShrink: 0,
-            alignSelf: programaContextLabel ? "flex-start" : "center",
-            mt: programaContextLabel ? 0.25 : 0,
           }}
         >
           <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"}>

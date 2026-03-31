@@ -79,7 +79,6 @@ import {
   GrupoImpleFilter,
   GRUPO_IMPLEMENTACAO_HINT,
   GRUPO_FILTRO_CUMULATIVO_RESUMO,
-  GRUPO_GI_ESCOPO_DIAGNOSTICO,
   GRUPO_GI_PALETTE,
   labelGrupoGi,
   matchesGrupoFilter,
@@ -1429,16 +1428,6 @@ export default function DiagnosticoPage() {
                     >
                       Grupos de implementação (GI)
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-                      Priorização CIS · PPSI 2.0
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block", mt: 0.75, maxWidth: 500, lineHeight: 1.35 }}
-                    >
-                      {GRUPO_GI_ESCOPO_DIAGNOSTICO}
-                    </Typography>
                   </Box>
                   <Tooltip
                     title={
@@ -1448,9 +1437,6 @@ export default function DiagnosticoPage() {
                         </Typography>
                         <Typography variant="body2" component="p" sx={{ mt: 2, fontWeight: 600, lineHeight: 1.5 }}>
                           {GRUPO_FILTRO_CUMULATIVO_RESUMO}
-                        </Typography>
-                        <Typography variant="caption" component="p" sx={{ mt: 1.5, display: "block", opacity: 0.95 }}>
-                          {GRUPO_GI_ESCOPO_DIAGNOSTICO}
                         </Typography>
                         <Typography variant="caption" component="p" sx={{ mt: 1, display: "block", opacity: 0.95 }}>
                           Filtra a árvore, as listas e a visão geral. Na tela de um controle, o índice de maturidade do controle continua considerando todas as medidas.

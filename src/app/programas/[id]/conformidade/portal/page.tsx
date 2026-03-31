@@ -19,9 +19,9 @@ export default function PortalPrivacidadeHubPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <PageHeroHeader
-        title="Portal de privacidade"
+        title="Titulares e canais públicos"
         icon={<PublicIcon sx={{ fontSize: 30 }} aria-hidden />}
-        description="Canais do site público do programa — titulares, reportes e contato."
+        description="Gestão interna do que chega pelo site público (pedidos, reportes, contato) e link para o portal de privacidade."
       />
       <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
       <PortalPrivacidadePublicLinkCard idOrSlug={idOrSlug} />
