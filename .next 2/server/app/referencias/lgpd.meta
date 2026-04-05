@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(protected)/layout,_N_T_/(protected)/referencias/layout,_N_T_/(protected)/referencias/lgpd/layout,_N_T_/(protected)/referencias/lgpd/page,_N_T_/referencias/lgpd"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KHByb3RlY3RlZCk/referencias/lgpd/__PAGE__",
+    "/!KHByb3RlY3RlZCk/referencias/lgpd",
+    "/!KHByb3RlY3RlZCk/referencias",
+    "/!KHByb3RlY3RlZCk",
+    "/_index",
+    "/_head"
+  ]
+}

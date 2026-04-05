@@ -1,0 +1,178 @@
+{
+  "../node_modules/@supabase/auth-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
+    "id": 97736,
+    "files": []
+  },
+  "../node_modules/@supabase/functions-js/dist/module/helper.js -> @supabase/node-fetch": {
+    "id": 97736,
+    "files": []
+  },
+  "../node_modules/@supabase/realtime-js/dist/module/RealtimeClient.js -> @supabase/node-fetch": {
+    "id": 97736,
+    "files": []
+  },
+  "../node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
+    "id": 97736,
+    "files": []
+  },
+  "../node_modules/jspdf/dist/jspdf.es.min.js -> canvg": {
+    "id": 3167,
+    "files": [
+      "static/chunks/bc98253f.b50765b70c666750.js",
+      "static/chunks/5902.fb397904de83b2a3.js"
+    ]
+  },
+  "../node_modules/jspdf/dist/jspdf.es.min.js -> dompurify": {
+    "id": 13125,
+    "files": [
+      "static/chunks/3125.9ca5283ca0e77600.js"
+    ]
+  },
+  "../node_modules/jspdf/dist/jspdf.es.min.js -> html2canvas": {
+    "id": 82201,
+    "files": [
+      "static/chunks/ad2866b8.6c51983a1eb56136.js"
+    ]
+  },
+  "app/programas/[id]/planos-acao/page.tsx -> ../../../../components/planos-acao/PlanoAcaoResumo": {
+    "id": 71108,
+    "files": [
+      "static/chunks/3021-6216effb982f87ff.js",
+      "static/chunks/7464-8c4a2729f106788b.js",
+      "static/chunks/7466-785db8e0de55c677.js",
+      "static/chunks/108-e663525e5af880e0.js",
+      "static/chunks/323-830e486da6aedd48.js",
+      "static/chunks/9271-986ebec5ccc4b205.js",
+      "static/chunks/3989-3be8c5a2b4c2c42e.js",
+      "static/chunks/5473-1225b4f8d5f0fac2.js",
+      "static/chunks/7291-ca6a280eae242200.js",
+      "static/chunks/4055.f33a8a96ad67ee24.js",
+      "static/chunks/1108.500029624c188390.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/icons/default/icons.min.js": {
+    "id": 8478,
+    "files": [
+      "static/chunks/8478.3558efee8785827d.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/models/dom/model.min.js": {
+    "id": 87298,
+    "files": [
+      "static/chunks/7298.3137bd6a16ef6828.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/advlist": {
+    "id": 8884,
+    "files": [
+      "static/chunks/8884.404140f1a607d356.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/autolink": {
+    "id": 39446,
+    "files": [
+      "static/chunks/9446.4c87df423679bdaa.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/charmap": {
+    "id": 55471,
+    "files": [
+      "static/chunks/5471.f14f45f519f36251.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/code": {
+    "id": 9508,
+    "files": [
+      "static/chunks/9508.944176eb10ce7683.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/fullscreen": {
+    "id": 80232,
+    "files": [
+      "static/chunks/232.152b2cf06c85ce5f.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/insertdatetime": {
+    "id": 21702,
+    "files": [
+      "static/chunks/9321.b2dd04b6c8609966.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/link": {
+    "id": 52921,
+    "files": [
+      "static/chunks/5302.30b7ecfa8985a29d.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/lists": {
+    "id": 89272,
+    "files": [
+      "static/chunks/9272.07abd870bccabd1c.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/preview": {
+    "id": 18933,
+    "files": [
+      "static/chunks/8933.31ae3a7ee6ce19d7.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/searchreplace": {
+    "id": 82277,
+    "files": [
+      "static/chunks/2277.005b76b331cdb65e.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/table": {
+    "id": 38453,
+    "files": [
+      "static/chunks/89274f8f.e539204f7a6e3161.js",
+      "static/chunks/8453.f109c87f421c6b5d.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/visualblocks": {
+    "id": 58303,
+    "files": [
+      "static/chunks/8303.558bc3781e2c9d5f.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/plugins/wordcount": {
+    "id": 35026,
+    "files": [
+      "static/chunks/5026.9b0e566af1688269.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/skins/content/default/content.js": {
+    "id": 74685,
+    "files": [
+      "static/chunks/4685.0b3b24e9f2ff3e0b.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/skins/ui/oxide/content.js": {
+    "id": 89170,
+    "files": [
+      "static/chunks/9170.190bcabef7c7b86d.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/skins/ui/oxide/skin.js": {
+    "id": 67116,
+    "files": [
+      "static/chunks/7116.90010161880b8025.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/themes/silver/theme.min.js": {
+    "id": 35059,
+    "files": [
+      "static/chunks/c5a0f058.5ebef212cfe87b6a.js"
+    ]
+  },
+  "app/programas/[id]/politicas/[politicaId]/components/SectionDisplay.tsx -> tinymce/tinymce": {
+    "id": 24272,
+    "files": [
+      "static/chunks/4bcf67bb.ca992d07f4934f34.js"
+    ]
+  },
+  "lib/services/demoDataService.ts -> ./dataService": {
+    "id": 83744,
+    "files": []
+  }
+}

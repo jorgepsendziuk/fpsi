@@ -1,0 +1,11 @@
+var R=require("../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/programas/[id]/papel-lgpd/vinculo/route.js")
+R.c("server/chunks/[root-of-the-server]__0d739362._.js")
+R.c("server/chunks/_aeb44b8a._.js")
+R.c("server/chunks/node_modules_dfad4f36._.js")
+R.c("server/chunks/node_modules_7b29b765._.js")
+R.c("server/chunks/node_modules_ae5569c2._.js")
+R.c("server/chunks/[root-of-the-server]__6fe577fe._.js")
+R.c("server/chunks/[root-of-the-server]__f64b3208._.js")
+R.c("server/chunks/ce889_server_app_api_programas_[id]_papel-lgpd_vinculo_route_actions_3c83386c.js")
+R.m(344980)
+module.exports=R.m(344980).exports

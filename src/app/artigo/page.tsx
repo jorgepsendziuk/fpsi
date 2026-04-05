@@ -76,10 +76,10 @@ export default function ArtigoPage() {
         {/* Folha de rosto */}
         <Paper variant="outlined" sx={{ p: 4, mb: 4 }}>
           <Typography variant="h5" component="h1" sx={{ fontWeight: "bold", textAlign: "center", textTransform: "uppercase", mb: 1 }}>
-            FPSI: implementação open source do framework do Programa de Privacidade e Segurança da Informação (PPSI 2.0) com assistência por Inteligência Artificial integrada aos fluxos de conformidade
+            Implementação open source do framework do Programa de Privacidade e Segurança da Informação (PPSI 2.0) com assistência por Inteligência Artificial integrada aos fluxos de conformidade
           </Typography>
           <Typography variant="h6" sx={{ textAlign: "center", fontStyle: "italic", textTransform: "uppercase", mb: 3 }}>
-            FPSI: OPEN-SOURCE IMPLEMENTATION OF THE BRAZILIAN PPSI 2.0 PROGRAM&apos;S PRIVACY AND INFORMATION SECURITY FRAMEWORK WITH INTEGRATED ARTIFICIAL INTELLIGENCE ASSISTANCE FOR COMPLIANCE WORKFLOWS
+            OPEN-SOURCE IMPLEMENTATION OF THE BRAZILIAN PPSI 2.0 PROGRAM&apos;S PRIVACY AND INFORMATION SECURITY FRAMEWORK WITH INTEGRATED ARTIFICIAL INTELLIGENCE ASSISTANCE FOR COMPLIANCE WORKFLOWS
           </Typography>
           <Typography variant="body2" sx={{ textAlign: "right", mb: 2 }}>
             Jorge Felipe Roman Psendziuk
@@ -108,13 +108,13 @@ export default function ArtigoPage() {
         {/* Resumo e Abstract */}
         <Paper id="resumo" variant="outlined" sx={{ p: 3, mb: 3, scrollMarginTop: 80 }}>
           <Typography variant="body1" paragraph>
-            <Box component="span" sx={{ fontWeight: "bold" }}>RESUMO:</Box> A transformação digital e a LGPD impulsionaram ferramentas de governança em privacidade e segurança da informação. Em 2023, o Ministério da Gestão e da Inovação em Serviços Públicos instituiu o PPSI e o respectivo framework de privacidade e segurança da informação, com ferramenta oficial em Excel para diagnóstico de controles; a dependência de planilha limita acessibilidade, colaboração e interoperabilidade. O artigo apresenta o FPSI — implementação open source desse framework (Next.js, React, Supabase) —, alinhada ao PPSI 2.0 e à metodologia oficial vigente, com diagnóstico, plano de trabalho, políticas, ROPA, portal e pedidos de titulares, mapeamento de dados, auditoria e camada educativa (LGPD, CIS, NIST, ISO), além de assistência por IA a levantamentos e fluxo ao ROPA, com validação no servidor e revisão humana obrigatória.
+            <Box component="span" sx={{ fontWeight: "bold" }}>RESUMO:</Box> A transformação digital e a LGPD impulsionaram ferramentas de governança em privacidade e segurança da informação. Em 2023, o Ministério da Gestão e da Inovação em Serviços Públicos instituiu o PPSI e o respectivo framework de privacidade e segurança da informação, com ferramenta oficial em Excel para diagnóstico de controles; a dependência de planilha limita acessibilidade, colaboração e interoperabilidade. O artigo apresenta o FPSI, implementação open source desse framework, alinhada ao PPSI 2.0 e à metodologia oficial vigente, com diagnóstico, plano de trabalho, políticas, ROPA, portal e pedidos de titulares, mapeamento de dados, auditoria e camada educativa (LGPD, CIS, NIST, ISO), além de assistência por IA a levantamentos e fluxo ao ROPA, com validação no servidor e revisão humana obrigatória.
           </Typography>
           <Typography variant="body1" paragraph>
             <Box component="span" sx={{ fontWeight: "bold" }}>Palavras-chave:</Box> LGPD; PPSI 2.0; software livre; inteligência artificial; privacidade e segurança da informação.
           </Typography>
           <Typography variant="body1" paragraph sx={{ fontStyle: "italic" }}>
-            <Box component="span" sx={{ fontWeight: "bold", fontStyle: "normal" }}>ABSTRACT:</Box> Digital transformation and Brazil&apos;s LGPD have increased demand for privacy and information security tooling. In 2023, the Ministry of Management and Innovation established the PPSI and its privacy and information security framework, with an official Excel workbook; spreadsheet dependence limits accessibility, collaboration, and interoperability. This article presents FPSI, an open-source implementation of that framework (Next.js, React, Supabase), aligned with PPSI 2.0 and the current official methodology, covering maturity diagnosis, work plans, policies, ROPA, a privacy portal and data-subject requests, personal-data mapping, audit trail, an educational layer (LGPD, CIS, NIST, ISO), and AI-assisted mapping drafts with server-side validation and mandatory human review toward ROPA.
+            <Box component="span" sx={{ fontWeight: "bold", fontStyle: "normal" }}>ABSTRACT:</Box> Digital transformation and Brazil&apos;s LGPD have increased demand for privacy and information security tooling. In 2023, the Ministry of Management and Innovation established the PPSI and its privacy and information security framework, with an official Excel workbook; spreadsheet dependence limits accessibility, collaboration, and interoperability. This article presents FPSI, an open-source implementation of that framework, aligned with PPSI 2.0 and the current official methodology, covering maturity diagnosis, work plans, policies, ROPA, a privacy portal and data-subject requests, personal-data mapping, audit trail, an educational layer (LGPD, CIS, NIST, ISO), and AI-assisted mapping drafts with server-side validation and mandatory human review toward ROPA.
           </Typography>
           <Typography variant="body1" paragraph sx={{ fontStyle: "italic" }}>
             <Box component="span" sx={{ fontWeight: "bold", fontStyle: "normal" }}>Keywords:</Box> LGPD; PPSI 2.0; open-source software; artificial intelligence; privacy and information security.
@@ -189,7 +189,7 @@ export default function ArtigoPage() {
             3 Proposta: implementação open source
           </Typography>
           <Typography variant="body1" paragraph>
-            Propõe-se o FPSI: implementação web espelhando a ferramenta oficial de apoio ao framework do PPSI (React, Node.js, Supabase), em modelo open source, favorecendo colaboração, acesso multiplataforma e implantação em nuvem ou on-premises (autenticação, PostgreSQL, APIs REST).
+            Propõe-se o FPSI, implementação web espelhando a ferramenta oficial de apoio ao framework do PPSI, em modelo open source, favorecendo colaboração, acesso multiplataforma e implantação em nuvem ou on-premises.
           </Typography>
           <Typography variant="body1" paragraph>
             A justificativa da abertura do código inclui: (1) Colaboração da comunidade — permitir que a comunidade contribua com evoluções no referencial do PPSI e no software FPSI; (2) Implantação ampla — facilitar a implantação em órgãos públicos, empresas e consultores independentes, sem custo de licença; (3) PaaS (Privacy as a Service) — permitir que plataformas ofereçam o serviço hospedado, mantendo a possibilidade de auditoria do código; (4) Adaptabilidade — garantir que organizações possam adaptar o código à sua realidade, customizando fluxos, campos ou integrações. O código é distribuído sob licença MIT e está disponível em <Link href="https://github.com/jorgepsendziuk/fpsi" target="_blank" rel="noopener noreferrer">github.com/jorgepsendziuk/fpsi</Link>. O sistema está hospedado em <Link href="https://fpsi.com.br" target="_blank" rel="noopener noreferrer">fpsi.com.br</Link>, com um programa de demonstração disponível para visualização do funcionamento.
@@ -208,7 +208,7 @@ export default function ArtigoPage() {
             A implementação cobre os seguintes módulos, alinhados ao referencial oficial do framework do PPSI e ao Programa PPSI 2.0: diagnóstico de maturidade, plano de trabalho, políticas, ROPA, portal de privacidade, pedidos dos titulares, conformidade LGPD (incluindo mapeamento de dados pessoais com listas de domínio compatíveis com o inventário, normas e documentos de referência por programa e vínculo entre levantamentos e operações de tratamento quando aplicável), responsáveis, governança de papéis e auditoria.
           </Typography>
           <Box sx={{ mb: 2, border: "1px solid", borderColor: "divider", overflow: "hidden", "& img": { display: "block", maxWidth: "100%", height: "auto" } }}>
-            <Image src="/artigo/Painel.jpg" alt="Painel do programa FPSI: módulos do sistema e estrutura de tratamento" width={1200} height={800} style={{ width: "100%", height: "auto" }} />
+            <Image src="/artigo/Painel.jpg" alt="Painel da plataforma FPSI — módulos do sistema e estrutura de tratamento" width={1200} height={800} style={{ width: "100%", height: "auto" }} />
           </Box>
           <Typography variant="caption" display="block" sx={{ mb: 2, fontStyle: "italic", color: "text.primary" }}>
             Figura 1. Painel do programa com módulos do sistema e estrutura de tratamento (controlador, operador).
@@ -235,7 +235,7 @@ export default function ArtigoPage() {
             4.2 Arquitetura técnica
           </Typography>
           <Typography variant="body1" paragraph>
-            Frontend: Next.js 15, React 19, TypeScript, Material-UI. Backend: Supabase (autenticação por e-mail/senha e OAuth, banco de dados PostgreSQL, APIs REST, Row Level Security).
+            A solução adota arquitetura em camadas (cliente e servidor), com autenticação de usuários, persistência em banco relacional e APIs, podendo ser implantada em nuvem ou on-premises.
           </Typography>
           <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>
             4.3 Multi-cliente
@@ -253,7 +253,7 @@ export default function ArtigoPage() {
             O diferencial educativo consiste em integrar o diagnóstico e a conformidade a uma trilha de referências: dispositivos da LGPD, fundamentos do próprio programa e de seu framework e encadeamento com referenciais internacionais citados na base normativa do PPSI (como CIS, NIST e ISO/IEC), de modo que o usuário navegue da medida ou do levantamento ao texto normativo ou guia que a justifica — sem substituir parecer jurídico, mas reduzindo fricção na capacitação das equipes.
           </Typography>
           <Typography variant="body1" paragraph>
-            No eixo de IA: catálogo e painel de processos de referência no mapeamento; API em servidor com rascunhos validados contra domínios fechados, metadados institucionais apenas, pré-visualização editável e gravação após aceitação pelo analista ou DPO; evolução prevista para ROPA a partir de levantamentos validados, com limites de taxa no servidor.
+            No mapeamento de dados (inventário LGPD), o sistema oferece um painel de processos de referência, com tipologia de setores e finalidades, que o analista consulta e copia para o formulário de levantamento, acelerando o preenchimento sem substituir o juízo de negócio. A função &quot;Sugerir levantamentos com IA&quot; chama, no servidor, um modelo de linguagem que recebe apenas metadados institucionais do programa e da organização (nome, escopo, atividade) — não envia dados pessoais de titulares — e devolve rascunhos em formato estruturado. Cada sugestão é validada e saneada contra as mesmas listas fechadas do inventário (setor, finalidade, meios de armazenamento, categorias de dados, titular, transferência internacional, entre outras), garantindo que só valores admitidos pelo modelo de registro entram na base; o usuário pré-visualiza, seleciona as linhas aceitas e grava-as como novos levantamentos, com aviso explícito de que o output é assistência operacional, não parecer jurídico. A API aplica limite de taxa por utilizador e programa. A evolução prevista é reutilizar o mesmo desenho para apoiar a redação de operações de ROPA a partir de levantamentos já validados.
           </Typography>
         </Paper>
 
@@ -263,7 +263,10 @@ export default function ArtigoPage() {
             5 Considerações sobre governança, auditoria e accountability
           </Typography>
           <Typography variant="body1" paragraph>
-            Trilha de auditoria (Controle 8, art. 37 LGPD) e código aberto permitem verificar fórmulas, tratamento de dados e riscos, reforçando accountability perante órgãos de controle e a comunidade técnica.
+            O FPSI inclui módulo de auditoria por programa, com listagem paginada e filtros por período, usuário, tipo de ação e tipo de recurso, para reconstituir quem alterou o quê e quando ao longo do ciclo de conformidade. As operações relevantes na aplicação autenticada geram registros com a ação (criação, alteração, exclusão e, conforme o fluxo, visualização, aprovação, rejeição, convite, exportação, restauração, envio ou download de arquivos, entre outras), o recurso afetado — por exemplo respostas a medidas e níveis de controle no diagnóstico, planos de ação, políticas e relatórios, levantamentos de mapeamento de dados, operações e cabeçalho de ROPA, versões congeladas do ROPA (snapshot para histórico), pedidos de titulares, RIPD, incidentes, governança LGPD e dados cadastrais ligados ao programa —, identificador interno, programa e usuário. Nas APIs, quando aplicável, guardam-se ainda endereço IP e agente de usuário; ações originadas no portal público dos titulares podem ficar registradas com origem distinta e sem usuário de backoffice. O desenho procura não persistir dados pessoais sensíveis dos titulares no campo de detalhes da trilha, alinhado à minimização e à finalidade probatória do registro.
+          </Typography>
+          <Typography variant="body1" paragraph>
+            Em conjunto, a trilha sustenta a demonstração de responsabilização e de registro de operações prevista no art. 37 da LGPD e o alinhamento ao Controle 8 do framework (gestão de registros de auditoria). O código aberto permite, adicionalmente, rever a lógica de auditoria e as fórmulas de maturidade implementadas no software, reforçando accountability perante órgãos de controle e a comunidade técnica.
           </Typography>
         </Paper>
 

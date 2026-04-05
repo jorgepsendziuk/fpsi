@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { ColorModeContextProvider } from "@contexts/color-mode";
 import { authProviderClient } from "@providers/auth-provider";
 import { dataProvider } from "@providers/data-provider";
+import { BetaRibbon } from "@/components/BetaRibbon";
 import { AppPrivacyChrome } from "@/components/privacy/AppPrivacyChrome";
 import { ConditionalAnalytics } from "@/components/privacy/ConditionalAnalytics";
 
@@ -114,6 +115,7 @@ export default function RootLayout({
                       breadcrumb: false,
                     }}
                   >
+                    <BetaRibbon />
                     {children}
                     <AppPrivacyChrome />
                     <RefineKbar />

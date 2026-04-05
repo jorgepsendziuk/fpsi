@@ -508,13 +508,14 @@ export default function MapeamentoDadosPage() {
                 >
                   <ListItemText
                     primary={item.titulo}
+                    secondaryTypographyProps={{ component: "div" }}
                     secondary={
-                      <span>
+                      <>
                         <Chip size="small" label={item.area_rotulo} sx={{ mr: 0.5, my: 0.25 }} variant="outlined" />
                         {item.setor_area_sugerido ? (
                           <Chip size="small" label={labelSetorArea(item.setor_area_sugerido)} sx={{ my: 0.25 }} />
                         ) : null}
-                      </span>
+                      </>
                     }
                   />
                 </ListItem>

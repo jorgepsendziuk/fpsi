@@ -35,7 +35,12 @@ const TREE_MIN = 280;
 const TREE_MAX = 640;
 const TREE_DEFAULT = 420;
 
-export default function LgpdReferenciaPageClient() {
+export type LgpdReferenciaPageClientProps = {
+  /** Painel embutido (ex.: drawer na landing) — sem menu lateral da app. */
+  embedded?: boolean;
+};
+
+export default function LgpdReferenciaPageClient({ embedded = false }: LgpdReferenciaPageClientProps) {
   const [payload, setPayload] = useState<LgpdArtigosPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -167,7 +172,7 @@ export default function LgpdReferenciaPageClient() {
 
   if (loadError) {
     return (
-      <Container maxWidth="sm" sx={{ py: 6 }}>
+      <Container maxWidth="sm" sx={{ py: embedded ? 3 : 6 }}>
         <Typography variant="h6" gutterBottom>
           LGPD
         </Typography>
@@ -182,7 +187,14 @@ export default function LgpdReferenciaPageClient() {
 
   if (!payload) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: embedded ? "40vh" : "50vh",
+        }}
+      >
         <CircularProgress aria-label="A carregar LGPD" />
       </Box>
     );
@@ -191,10 +203,17 @@ export default function LgpdReferenciaPageClient() {
   const meta = payload.meta;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container
+      maxWidth={embedded ? false : "xl"}
+      sx={{
+        py: embedded ? 1.5 : 4,
+        px: embedded ? { xs: 1.5, sm: 2 } : undefined,
+      }}
+    >
       <PageHeroHeader
         title="LGPD"
         icon={<MenuBookIcon sx={{ fontSize: 30 }} aria-hidden />}
+        sx={embedded ? { mb: 2 } : undefined}
         description={
           <>
             Lei nº 13.709/2018 — ({meta.total_artigos} artigos mapeados).{" "}
@@ -226,8 +245,12 @@ export default function LgpdReferenciaPageClient() {
             maxWidth: { md: TREE_MAX },
             flexShrink: 0,
             position: { md: "sticky" },
-            top: { md: 88 },
-            maxHeight: { md: "calc(100vh - 120px)" },
+            top: { md: embedded ? 8 : 88 },
+            maxHeight: {
+              md: embedded
+                ? "min(72dvh, calc(100dvh - 220px))"
+                : "calc(100vh - 120px)",
+            },
             overflow: "auto",
           }}
         >

@@ -19,12 +19,15 @@ import ContactMailIcon from "@mui/icons-material/ContactMail";
 import HomeIcon from "@mui/icons-material/Home";
 import PersonIcon from "@mui/icons-material/Person";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 export type AppNavItem = {
   id: string;
   label: string;
   path: string;
   icon: React.ReactNode;
+  /** Encerra sessão (navega por `useLogout` em vez de `path`) */
+  action?: "logout";
   /** Legado: use isSubItem */
   indent?: 0 | 1;
   /** Subitem (indentação, linha guia, seta) — alinhado aos hubs no card da página do programa */
@@ -88,6 +91,13 @@ export function getGlobalNavSections(): AppNavSection[] {
           icon: <MenuBookIcon sx={iconSx} />,
         },
         { id: "perfil", label: "Perfil", path: "/perfil", icon: <PersonIcon sx={iconSx} /> },
+        {
+          id: "sair",
+          label: "Sair",
+          path: "#",
+          icon: <LogoutIcon sx={iconSx} />,
+          action: "logout",
+        },
       ],
     },
   ];

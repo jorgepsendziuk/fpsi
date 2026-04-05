@@ -1,0 +1,3 @@
+module.exports=[381905,a=>{"use strict";let b="/logo_p.png";function c(a){if(!a)return!1;if("demo"===a.slug||1===a.id)return!0;let b=(a.nome||"").toLowerCase();return!!(b.includes("demonstração")||b.includes("demonstracao"))}a.s(["FPSI_LOGO_PUBLIC_URL",0,b,"getProgramaLogoDisplayUrl",0,function(a){if(!a)return null;if(c(a))return b;let d=a.logo_programa||a.logo_orgao_empresa;return d?String(d):null},"isProgramaDemonstracao",0,c])},940023,a=>{"use strict";var b=a.i(187924),c=a.i(835202),d=a.i(48185);a.s(["default",0,function({children:a}){return(0,b.jsx)(d.MainAppShell,{children:(0,b.jsx)(c.Box,{component:"main",sx:{flexGrow:1,bgcolor:"background.default",minHeight:"100%"},children:a})})}])}];
+
+//# sourceMappingURL=src_7d0831cb._.js.map

@@ -108,7 +108,10 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   }, [programaId]);
 
   const flatPaths = useMemo(
-    () => navSections.flatMap((s) => s.items.map((i) => i.path)),
+    () =>
+      navSections.flatMap((s) =>
+        s.items.filter((i) => i.action !== "logout").map((i) => i.path)
+      ),
     [navSections]
   );
   const activePath = getBestMatchingNavPath(pathname, flatPaths);
@@ -257,6 +260,38 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     item: AppNavItem,
     opts?: { subConnector?: { isLast: boolean } }
   ) => {
+    if (item.action === "logout") {
+      const isSub = Boolean(item.isSubItem || item.indent === 1);
+      return (
+        <ListItemButton
+          key={item.id}
+          onClick={() => {
+            setMobileOpen(false);
+            logout();
+          }}
+          sx={{
+            borderRadius: 2,
+            mb: 0.25,
+            py: 1,
+            pl: isSub ? 1.25 : 1.5,
+            pr: 1.5,
+            ml: isSub ? 1.25 : 0,
+            color: "text.secondary",
+            "&:hover": {
+              bgcolor: alpha(theme.palette.error.main, 0.08),
+              color: "error.main",
+            },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: isSub ? 36 : 40, color: "inherit" }}>{item.icon}</ListItemIcon>
+          <ListItemText
+            primary={item.label}
+            primaryTypographyProps={{ variant: "body2", fontWeight: 600, color: "inherit" }}
+          />
+        </ListItemButton>
+      );
+    }
+
     const selected = activePath === item.path;
     const isSub = Boolean(item.isSubItem || item.indent === 1);
     const conn = opts?.subConnector;

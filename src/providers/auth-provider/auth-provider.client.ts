@@ -3,11 +3,19 @@
 import type { AuthProvider } from "@refinedev/core";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 
+/** Origem pública do app: env fixa (produção/Vercel) ou URL atual no browser. */
+function getPublicOrigin(): string {
+  if (typeof window === "undefined") return "";
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  return window.location.origin;
+}
+
 export const authProviderClient: AuthProvider = {
   login: async ({ email, password, providerName }) => {
     // Login social (OAuth)
     if (providerName) {
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const origin = getPublicOrigin();
       const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
       const nextPath = redirect ? (redirect.startsWith("/") ? redirect : `/${redirect}`) : "/dashboard";
       const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
@@ -97,7 +105,7 @@ export const authProviderClient: AuthProvider = {
   forgotPassword: async ({ email }) => {
     const redirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}/login`
+        ? `${getPublicOrigin()}/login`
         : "/login";
 
     const { error } = await supabaseBrowserClient.auth.resetPasswordForEmail(

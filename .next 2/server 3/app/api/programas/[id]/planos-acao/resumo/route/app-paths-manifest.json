@@ -1,0 +1,3 @@
+{
+  "/api/programas/[id]/planos-acao/resumo/route": "app/api/programas/[id]/planos-acao/resumo/route.js"
+}

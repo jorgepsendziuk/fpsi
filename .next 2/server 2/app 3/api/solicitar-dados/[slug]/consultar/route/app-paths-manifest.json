@@ -1,0 +1,3 @@
+{
+  "/api/solicitar-dados/[slug]/consultar/route": "app/api/solicitar-dados/[slug]/consultar/route.js"
+}

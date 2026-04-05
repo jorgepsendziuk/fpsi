@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/auth/layout,_N_T_/auth/aceitar-convite/layout,_N_T_/auth/aceitar-convite/page,_N_T_/auth/aceitar-convite"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/auth/aceitar-convite/__PAGE__",
+    "/auth/aceitar-convite",
+    "/auth",
+    "/_index",
+    "/_head"
+  ]
+}

@@ -1,0 +1,3 @@
+{
+  "/(protected)/admin/modelos-politicas/[id]/page": "app/(protected)/admin/modelos-politicas/[id]/page.js"
+}

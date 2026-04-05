@@ -1,0 +1,698 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/admin/modelos-politicas/[id]",
+      "regex": "^/admin/modelos\\-politicas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/modelos\\-politicas/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/politica-modelo/[id]",
+      "regex": "^/api/admin/politica\\-modelo/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/politica\\-modelo/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/empresas/[id]",
+      "regex": "^/api/empresas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/empresas/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/portal/[slug]",
+      "regex": "^/api/portal/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/portal/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/portal/[slug]/contato",
+      "regex": "^/api/portal/([^/]+?)/contato(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/portal/(?<nxtPslug>[^/]+?)/contato(?:/)?$"
+    },
+    {
+      "page": "/api/portal/[slug]/reportar",
+      "regex": "^/api/portal/([^/]+?)/reportar(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/portal/(?<nxtPslug>[^/]+?)/reportar(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]",
+      "regex": "^/api/programas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/logo",
+      "regex": "^/api/programas/([^/]+?)/logo(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/logo(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/modulos-resumo",
+      "regex": "^/api/programas/([^/]+?)/modulos\\-resumo(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/modulos\\-resumo(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/papel-lgpd",
+      "regex": "^/api/programas/([^/]+?)/papel\\-lgpd(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/papel\\-lgpd(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/papel-lgpd/instituicao",
+      "regex": "^/api/programas/([^/]+?)/papel\\-lgpd/instituicao(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/papel\\-lgpd/instituicao(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/papel-lgpd/instituicao/[instId]",
+      "regex": "^/api/programas/([^/]+?)/papel\\-lgpd/instituicao/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPinstId": "nxtPinstId"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/papel\\-lgpd/instituicao/(?<nxtPinstId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/papel-lgpd/vinculo",
+      "regex": "^/api/programas/([^/]+?)/papel\\-lgpd/vinculo(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/papel\\-lgpd/vinculo(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/papel-lgpd/vinculo/[vinculoId]",
+      "regex": "^/api/programas/([^/]+?)/papel\\-lgpd/vinculo/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPvinculoId": "nxtPvinculoId"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/papel\\-lgpd/vinculo/(?<nxtPvinculoId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/pedidos-titulares",
+      "regex": "^/api/programas/([^/]+?)/pedidos\\-titulares(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/pedidos\\-titulares(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/pedidos-titulares/[pedidoId]",
+      "regex": "^/api/programas/([^/]+?)/pedidos\\-titulares/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPpedidoId": "nxtPpedidoId"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/pedidos\\-titulares/(?<nxtPpedidoId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/programas/[id]/planos-acao/resumo",
+      "regex": "^/api/programas/([^/]+?)/planos\\-acao/resumo(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/programas/(?<nxtPid>[^/]+?)/planos\\-acao/resumo(?:/)?$"
+    },
+    {
+      "page": "/api/solicitar-dados/[slug]/consultar",
+      "regex": "^/api/solicitar\\-dados/([^/]+?)/consultar(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/solicitar\\-dados/(?<nxtPslug>[^/]+?)/consultar(?:/)?$"
+    },
+    {
+      "page": "/api/solicitar-dados/[slug]/enviar",
+      "regex": "^/api/solicitar\\-dados/([^/]+?)/enviar(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/solicitar\\-dados/(?<nxtPslug>[^/]+?)/enviar(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]",
+      "regex": "^/programas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/auditoria",
+      "regex": "^/programas/([^/]+?)/auditoria(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/auditoria(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade",
+      "regex": "^/programas/([^/]+?)/conformidade(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/contato",
+      "regex": "^/programas/([^/]+?)/conformidade/contato(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/contato(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/incidentes",
+      "regex": "^/programas/([^/]+?)/conformidade/incidentes(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/incidentes(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/mapeamento",
+      "regex": "^/programas/([^/]+?)/conformidade/mapeamento(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/mapeamento(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/pedidos-titulares",
+      "regex": "^/programas/([^/]+?)/conformidade/pedidos\\-titulares(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/pedidos\\-titulares(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/portal",
+      "regex": "^/programas/([^/]+?)/conformidade/portal(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/portal(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/reportes",
+      "regex": "^/programas/([^/]+?)/conformidade/reportes(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/reportes(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/ripd",
+      "regex": "^/programas/([^/]+?)/conformidade/ripd(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/ripd(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/conformidade/ropa",
+      "regex": "^/programas/([^/]+?)/conformidade/ropa(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/conformidade/ropa(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/diagnostico",
+      "regex": "^/programas/([^/]+?)/diagnostico(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/diagnostico(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/diagnostico/relatorio",
+      "regex": "^/programas/([^/]+?)/diagnostico/relatorio(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/diagnostico/relatorio(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/planos-acao",
+      "regex": "^/programas/([^/]+?)/planos\\-acao(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/planos\\-acao(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/politicas",
+      "regex": "^/programas/([^/]+?)/politicas(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/politicas(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/politicas/[politicaId]",
+      "regex": "^/programas/([^/]+?)/politicas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPpoliticaId": "nxtPpoliticaId"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/politicas/(?<nxtPpoliticaId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/responsabilidades",
+      "regex": "^/programas/([^/]+?)/responsabilidades(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/responsabilidades(?:/)?$"
+    },
+    {
+      "page": "/programas/[id]/usuarios",
+      "regex": "^/programas/([^/]+?)/usuarios(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/programas/(?<nxtPid>[^/]+?)/usuarios(?:/)?$"
+    },
+    {
+      "page": "/[slug]",
+      "regex": "^/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/[slug]/aviso-portal-titular",
+      "regex": "^/([^/]+?)/aviso\\-portal\\-titular(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/(?<nxtPslug>[^/]+?)/aviso\\-portal\\-titular(?:/)?$"
+    },
+    {
+      "page": "/[slug]/cookies",
+      "regex": "^/([^/]+?)/cookies(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/(?<nxtPslug>[^/]+?)/cookies(?:/)?$"
+    },
+    {
+      "page": "/[slug]/declaracao-seguranca",
+      "regex": "^/([^/]+?)/declaracao\\-seguranca(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/(?<nxtPslug>[^/]+?)/declaracao\\-seguranca(?:/)?$"
+    },
+    {
+      "page": "/[slug]/politica-privacidade",
+      "regex": "^/([^/]+?)/politica\\-privacidade(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/(?<nxtPslug>[^/]+?)/politica\\-privacidade(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/admin/cargos",
+      "regex": "^/admin/cargos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/cargos(?:/)?$"
+    },
+    {
+      "page": "/admin/config",
+      "regex": "^/admin/config(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/config(?:/)?$"
+    },
+    {
+      "page": "/admin/controles",
+      "regex": "^/admin/controles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/controles(?:/)?$"
+    },
+    {
+      "page": "/admin/departamentos",
+      "regex": "^/admin/departamentos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/departamentos(?:/)?$"
+    },
+    {
+      "page": "/admin/diagnosticos",
+      "regex": "^/admin/diagnosticos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/diagnosticos(?:/)?$"
+    },
+    {
+      "page": "/admin/medidas",
+      "regex": "^/admin/medidas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/medidas(?:/)?$"
+    },
+    {
+      "page": "/admin/modelos-politicas",
+      "regex": "^/admin/modelos\\-politicas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/modelos\\-politicas(?:/)?$"
+    },
+    {
+      "page": "/api/admin/cargos",
+      "regex": "^/api/admin/cargos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/cargos(?:/)?$"
+    },
+    {
+      "page": "/api/admin/check",
+      "regex": "^/api/admin/check(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/check(?:/)?$"
+    },
+    {
+      "page": "/api/admin/controles",
+      "regex": "^/api/admin/controles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/controles(?:/)?$"
+    },
+    {
+      "page": "/api/admin/departamentos",
+      "regex": "^/api/admin/departamentos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/departamentos(?:/)?$"
+    },
+    {
+      "page": "/api/admin/diagnosticos",
+      "regex": "^/api/admin/diagnosticos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/diagnosticos(?:/)?$"
+    },
+    {
+      "page": "/api/admin/medidas",
+      "regex": "^/api/admin/medidas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/medidas(?:/)?$"
+    },
+    {
+      "page": "/api/admin/politica-modelo",
+      "regex": "^/api/admin/politica\\-modelo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/politica\\-modelo(?:/)?$"
+    },
+    {
+      "page": "/api/artigo/export-word",
+      "regex": "^/api/artigo/export\\-word(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/artigo/export\\-word(?:/)?$"
+    },
+    {
+      "page": "/api/audit/activities",
+      "regex": "^/api/audit/activities(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/audit/activities(?:/)?$"
+    },
+    {
+      "page": "/api/audit/last-activity",
+      "regex": "^/api/audit/last\\-activity(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/audit/last\\-activity(?:/)?$"
+    },
+    {
+      "page": "/api/audit/log",
+      "regex": "^/api/audit/log(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/audit/log(?:/)?$"
+    },
+    {
+      "page": "/api/cargos",
+      "regex": "^/api/cargos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cargos(?:/)?$"
+    },
+    {
+      "page": "/api/departamentos",
+      "regex": "^/api/departamentos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/departamentos(?:/)?$"
+    },
+    {
+      "page": "/api/empresas",
+      "regex": "^/api/empresas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/empresas(?:/)?$"
+    },
+    {
+      "page": "/api/generate-pdf",
+      "regex": "^/api/generate\\-pdf(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/generate\\-pdf(?:/)?$"
+    },
+    {
+      "page": "/api/invites",
+      "regex": "^/api/invites(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/invites(?:/)?$"
+    },
+    {
+      "page": "/api/invites/accept",
+      "regex": "^/api/invites/accept(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/invites/accept(?:/)?$"
+    },
+    {
+      "page": "/api/invites/validate",
+      "regex": "^/api/invites/validate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/invites/validate(?:/)?$"
+    },
+    {
+      "page": "/api/profiles",
+      "regex": "^/api/profiles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/profiles(?:/)?$"
+    },
+    {
+      "page": "/api/profiles/avatar",
+      "regex": "^/api/profiles/avatar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/profiles/avatar(?:/)?$"
+    },
+    {
+      "page": "/api/profiles/verify",
+      "regex": "^/api/profiles/verify(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/profiles/verify(?:/)?$"
+    },
+    {
+      "page": "/api/programas",
+      "regex": "^/api/programas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/programas(?:/)?$"
+    },
+    {
+      "page": "/api/relatorio",
+      "regex": "^/api/relatorio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/relatorio(?:/)?$"
+    },
+    {
+      "page": "/api/users",
+      "regex": "^/api/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/users(?:/)?$"
+    },
+    {
+      "page": "/api/users/cadastrar",
+      "regex": "^/api/users/cadastrar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/users/cadastrar(?:/)?$"
+    },
+    {
+      "page": "/apple-icon.png",
+      "regex": "^/apple\\-icon\\.png(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/apple\\-icon\\.png(?:/)?$"
+    },
+    {
+      "page": "/artigo",
+      "regex": "^/artigo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/artigo(?:/)?$"
+    },
+    {
+      "page": "/auth/aceitar-convite",
+      "regex": "^/auth/aceitar\\-convite(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/aceitar\\-convite(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/demo",
+      "regex": "^/demo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/demo(?:/)?$"
+    },
+    {
+      "page": "/demo/login",
+      "regex": "^/demo/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/demo/login(?:/)?$"
+    },
+    {
+      "page": "/forgot-password",
+      "regex": "^/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/icon.ico",
+      "regex": "^/icon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/icon.png",
+      "regex": "^/icon\\.png(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.png(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/manifest.webmanifest",
+      "regex": "^/manifest\\.webmanifest(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/manifest\\.webmanifest(?:/)?$"
+    },
+    {
+      "page": "/offline",
+      "regex": "^/offline(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/offline(?:/)?$"
+    },
+    {
+      "page": "/perfil",
+      "regex": "^/perfil(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/perfil(?:/)?$"
+    },
+    {
+      "page": "/programas",
+      "regex": "^/programas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programas(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/sobre",
+      "regex": "^/sobre(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sobre(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

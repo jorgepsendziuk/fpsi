@@ -1,7 +1,11 @@
 {
-  "/artigo/page": "app/artigo/page.js",
-  "/login/page": "app/login/page.js",
+  "/api/programas/[id]/papel-lgpd/route": "app/api/programas/[id]/papel-lgpd/route.js",
+  "/api/programas/[id]/papel-lgpd/vinculo/[vinculoId]/route": "app/api/programas/[id]/papel-lgpd/vinculo/[vinculoId]/route.js",
+  "/api/programas/[id]/papel-lgpd/instituicao/[instId]/route": "app/api/programas/[id]/papel-lgpd/instituicao/[instId]/route.js",
+  "/api/programas/[id]/papel-lgpd/instituicao/route": "app/api/programas/[id]/papel-lgpd/instituicao/route.js",
   "/programas/[id]/conformidade/mapeamento/page": "app/programas/[id]/conformidade/mapeamento/page.js",
-  "/(protected)/referencias/lgpd/page": "app/(protected)/referencias/lgpd/page.js",
+  "/programas/[id]/page": "app/programas/[id]/page.js",
+  "/programas/[id]/responsabilidades/page": "app/programas/[id]/responsabilidades/page.js",
+  "/divulgacao/page": "app/divulgacao/page.js",
   "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
 }

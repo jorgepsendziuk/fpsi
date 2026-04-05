@@ -1,0 +1,3 @@
+module.exports=[726899,a=>{"use strict";var b=a.i(413787);a.s(["Container",()=>b.default])},979489,a=>{"use strict";var b=a.i(148949);a.s(["Paper",()=>b.default])},904324,a=>{"use strict";var b=a.i(187924),c=a.i(835202),d=a.i(726899),e=a.i(715467),f=a.i(979489),g=a.i(413851);a.s(["default",0,function(){return(0,b.jsxs)(d.Container,{maxWidth:"md",children:[(0,b.jsxs)(c.Box,{sx:{display:"flex",alignItems:"center",gap:1,mb:3},children:[(0,b.jsx)(g.default,{color:"primary",sx:{fontSize:32}}),(0,b.jsx)(e.Typography,{variant:"h5",fontWeight:"bold",children:"Configurações"})]}),(0,b.jsx)(f.Paper,{sx:{p:3},children:(0,b.jsx)(e.Typography,{color:"text.secondary",children:"Configurações gerais do sistema. Em desenvolvimento."})})]})}])}];
+
+//# sourceMappingURL=_e83d17ba._.js.map

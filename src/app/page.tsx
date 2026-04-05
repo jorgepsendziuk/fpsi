@@ -38,11 +38,13 @@ import {
   DarkModeOutlined,
   LightModeOutlined,
   PlayArrow as PlayArrowIcon,
+  MenuBook as MenuBookIcon,
 } from "@mui/icons-material";
 import Image from "next/image";
 import { ColorModeContext } from "@contexts/color-mode";
 import { FeatureBanner } from "@/components/landing/FeatureBanners";
 import { StatsBanner } from "@/components/landing/StatsBanner";
+import { LgpdReferenciaDrawer } from "@/components/normas/LgpdReferenciaDrawer";
 
 const features = [
   {
@@ -156,6 +158,7 @@ export default function HomePage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [lgpdDrawerOpen, setLgpdDrawerOpen] = useState(false);
   const { mode, setMode } = useContext(ColorModeContext);
   
   const { data: user, isLoading: userLoading } = useGetIdentity<IUser>();
@@ -219,6 +222,14 @@ export default function HomePage() {
             sx={{ mr: 1, textTransform: 'none' }}
           >
             Artigo
+          </Button>
+          <Button
+            color="inherit"
+            onClick={() => setLgpdDrawerOpen(true)}
+            startIcon={<MenuBookIcon sx={{ fontSize: 20 }} />}
+            sx={{ mr: 1, textTransform: 'none' }}
+          >
+            Referência LGPD
           </Button>
           <Button
             color="inherit"
@@ -419,6 +430,24 @@ export default function HomePage() {
                     >
                       Ver Demonstração
                     </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={() => setLgpdDrawerOpen(true)}
+                      startIcon={<MenuBookIcon />}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5, 
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        borderWidth: 2,
+                        '&:hover': {
+                          borderWidth: 2
+                        }
+                      }}
+                    >
+                      Consultar LGPD
+                    </Button>
                   </>
                 ) : (
                   <>
@@ -453,6 +482,24 @@ export default function HomePage() {
                       }}
                     >
                       Ver Demonstração
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={() => setLgpdDrawerOpen(true)}
+                      startIcon={<MenuBookIcon />}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5, 
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        borderWidth: 2,
+                        '&:hover': {
+                          borderWidth: 2
+                        }
+                      }}
+                    >
+                      Consultar LGPD
                     </Button>
                   </>
                 )}
@@ -624,6 +671,13 @@ export default function HomePage() {
             </Button>
             <Button
               color="inherit"
+              onClick={() => setLgpdDrawerOpen(true)}
+              sx={{ textTransform: 'none', mb: 1, mr: 1 }}
+            >
+              Referência LGPD
+            </Button>
+            <Button
+              color="inherit"
               onClick={() => router.push('/sobre')}
               sx={{ textTransform: 'none', mb: 1 }}
             >
@@ -642,6 +696,8 @@ export default function HomePage() {
           </Box>
         </Container>
       </Box>
+
+      <LgpdReferenciaDrawer open={lgpdDrawerOpen} onClose={() => setLgpdDrawerOpen(false)} />
     </Box>
   );
 }

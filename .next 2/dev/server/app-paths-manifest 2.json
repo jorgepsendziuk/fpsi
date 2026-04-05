@@ -1,0 +1,7 @@
+{
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/api/portal/[slug]/route": "app/api/portal/[slug]/route.js",
+  "/[slug]/page": "app/[slug]/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/programas/[id]/page": "app/programas/[id]/page.js"
+}

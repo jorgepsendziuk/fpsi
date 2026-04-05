@@ -1,7 +1,19 @@
 "use client";
 
 import { AuthPage } from "@refinedev/mui";
-import { Box, useTheme, IconButton, Tooltip, CircularProgress, Typography, Link, Alert } from "@mui/material";
+import {
+  Box,
+  useTheme,
+  IconButton,
+  Tooltip,
+  CircularProgress,
+  Typography,
+  Link,
+  Alert,
+  Button,
+  Divider,
+} from "@mui/material";
+import NextLink from "next/link";
 import { DarkModeOutlined, LightModeOutlined, Google } from "@mui/icons-material";
 import { ColorModeContext } from "@contexts/color-mode";
 import { useContext, useEffect } from "react";
@@ -162,19 +174,44 @@ export default function Login() {
             </Box>
           }
           registerLink={
-            <Box sx={{ fontSize: '0.875rem', color: 'text.secondary', textAlign: 'center' }}>
-              Não tem uma conta?{' '}
-              <Box 
-                component="a" 
-                href="/register" 
-                sx={{ 
-                  color: 'primary.main', 
-                  textDecoration: 'none',
-                  '&:hover': { textDecoration: 'underline' }
+            <Box sx={{ width: "100%", mt: 0.5 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  my: 2,
+                }}
+              >
+                <Divider sx={{ flex: 1 }} />
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                  Novo por aqui?
+                </Typography>
+                <Divider sx={{ flex: 1 }} />
+              </Box>
+              <Button
+                component={NextLink}
+                href="/register"
+                fullWidth
+                variant="contained"
+                color="secondary"
+                size="large"
+                sx={{
+                  fontWeight: 700,
+                  py: 1.25,
+                  boxShadow: 2,
+                  "&:hover": { boxShadow: 4 },
                 }}
               >
                 Criar conta
-              </Box>
+              </Button>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", textAlign: "center", mt: 1.25, lineHeight: 1.4 }}
+              >
+                Cadastro gratuito com e-mail ou Google
+              </Typography>
             </Box>
           }
         />

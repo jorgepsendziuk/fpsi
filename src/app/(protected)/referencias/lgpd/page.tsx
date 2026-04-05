@@ -1,3 +1,7 @@
 "use client";
 
-export { default } from "./LgpdReferenciaPageClient";
+import LgpdReferenciaPageClient from "./LgpdReferenciaPageClient";
+
+export default function LgpdReferenciaPage() {
+  return <LgpdReferenciaPageClient />;
+}

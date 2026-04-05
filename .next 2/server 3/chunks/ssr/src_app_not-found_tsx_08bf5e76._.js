@@ -1,0 +1,3 @@
+module.exports=[336394,a=>{"use strict";var b=a.i(187924),c=a.i(636372),d=a.i(553644),e=a.i(572131),f=a.i(200078);a.s(["default",0,function(){return(0,b.jsx)(f.ColorModeContextProvider,{children:(0,b.jsx)(d.RefineSnackbarProvider,{children:(0,b.jsx)(e.Suspense,{children:(0,b.jsx)(c.Authenticated,{children:(0,b.jsx)(d.ErrorComponent,{})},"not-found")})})})}])}];
+
+//# sourceMappingURL=src_app_not-found_tsx_08bf5e76._.js.map
