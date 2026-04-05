@@ -1,8 +1,9 @@
 {
-  "/api/programas/[id]/papel-lgpd/route": "app/api/programas/[id]/papel-lgpd/route.js",
-  "/api/programas/[id]/papel-lgpd/vinculo/[vinculoId]/route": "app/api/programas/[id]/papel-lgpd/vinculo/[vinculoId]/route.js",
-  "/api/programas/[id]/papel-lgpd/instituicao/[instId]/route": "app/api/programas/[id]/papel-lgpd/instituicao/[instId]/route.js",
-  "/api/programas/[id]/papel-lgpd/instituicao/route": "app/api/programas/[id]/papel-lgpd/instituicao/route.js",
+  "/api/programas/[id]/route": "app/api/programas/[id]/route.js",
+  "/api/programas/route": "app/api/programas/route.js",
+  "/api/empresas/route": "app/api/empresas/route.js",
+  "/api/admin/check/route": "app/api/admin/check/route.js",
+  "/api/profiles/route": "app/api/profiles/route.js",
   "/programas/[id]/conformidade/mapeamento/page": "app/programas/[id]/conformidade/mapeamento/page.js",
   "/programas/[id]/page": "app/programas/[id]/page.js",
   "/programas/[id]/responsabilidades/page": "app/programas/[id]/responsabilidades/page.js",
