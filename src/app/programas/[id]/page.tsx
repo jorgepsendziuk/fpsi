@@ -50,6 +50,7 @@ import {
   Place as PlaceIcon,
   Description as DescriptionIcon,
   Event as EventIcon,
+  MeetingRoom as MeetingRoomIcon,
 } from "@mui/icons-material";
 import { PapelLgpdDiagramWithEdit } from "@/components/programa/PapelLgpdDiagramWithEdit";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -68,7 +69,7 @@ import NextLink from "next/link";
 import { ModuloSistemaFlipCard, MODULO_FLIP_STRIP_WIDTH_PX } from "@/components/programa/ModuloSistemaFlipCard";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
 
-/** Ordem: estrutura de governança → tratamento/riscos → diagnóstico → plano → políticas/documentos → portal → usuários → auditoria */
+/** Ordem: escritório (camada visual opcional) → estrutura de governança → … → auditoria */
 const sections: Array<{
   key: string;
   title: string;
@@ -78,6 +79,16 @@ const sections: Array<{
   color: string;
   gradient: string;
 }> = [
+  {
+    key: "escritorio-governanca",
+    title: "Escritório de governança",
+    icon: <MeetingRoomIcon fontSize="large" />,
+    description:
+      "Navegação em formato de sala: mesas, papéis e atalhos aos setores (mesmos módulos do painel, visão gamificada em evolução)",
+    path: "escritorio",
+    color: "#5d4037",
+    gradient: "linear-gradient(135deg, #5d4037 0%, #8d6e63 100%)",
+  },
   {
     key: "responsabilidades",
     title: "Estrutura de Governança",

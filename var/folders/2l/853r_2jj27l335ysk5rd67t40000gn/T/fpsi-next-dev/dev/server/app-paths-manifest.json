@@ -1,9 +1,15 @@
 {
-  "/api/artigo/export-word/route": "app/api/artigo/export-word/route.js",
   "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/artigo/page": "app/artigo/page.js",
-  "/[slug]/page": "app/[slug]/page.js",
+  "/api/programas/[id]/route": "app/api/programas/[id]/route.js",
+  "/api/programas/route": "app/api/programas/route.js",
+  "/api/empresas/route": "app/api/empresas/route.js",
+  "/api/admin/check/route": "app/api/admin/check/route.js",
+  "/api/profiles/route": "app/api/profiles/route.js",
+  "/api/programas/[id]/governanca-grupos/route": "app/api/programas/[id]/governanca-grupos/route.js",
+  "/api/programas/[id]/modulos-resumo/route": "app/api/programas/[id]/modulos-resumo/route.js",
+  "/page": "app/page.js",
   "/programas/[id]/page": "app/programas/[id]/page.js",
-  "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js",
-  "/(protected)/referencias/lgpd/page": "app/(protected)/referencias/lgpd/page.js"
+  "/programas/[id]/escritorio/page": "app/programas/[id]/escritorio/page.js",
+  "/programas/[id]/responsabilidades/page": "app/programas/[id]/responsabilidades/page.js",
+  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
 }

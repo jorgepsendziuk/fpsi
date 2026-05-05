@@ -592,7 +592,7 @@ export default function HomePage() {
               </Typography>
               <Typography variant="body1" color="text.secondary" paragraph>
                 DPOs (Encarregados de Dados), Gestores de TI e de Segurança da Informação, órgãos públicos, 
-                pequenas empresas e consultores que conduzem programas de privacidade e segurança. 
+                empresas e consultores que conduzem programas de privacidade e segurança. 
                 Roteiro alinhado ao Framework PPSI e à LGPD, com avaliação de maturidade e plano de trabalho em um só lugar.
               </Typography>
             </Grid>

@@ -37,6 +37,9 @@ Documentação técnica completa do Framework de Privacidade e Segurança da Inf
 #### ⚙️ **[Operações](essentials/operations/)**
 - **[Operational](essentials/operations/OPERATIONAL.md)** - Documentação operacional
 
+#### 🎮 **[Features em evolução](essentials/features/)**
+- **[Escritório de governança (camada visual / PPSI)](essentials/features/OFFICE_RPG_GOVERNANCA.md)** - Metáfora de escritório 2D como interface alternativa ao painel do programa
+
 ### 📋 **Guias Práticos**
 
 #### 👑 **[Admin Guide](guides/ADMIN_GUIDE.md)**

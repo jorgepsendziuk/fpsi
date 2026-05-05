@@ -6,7 +6,7 @@ Implementação web do **Framework de Privacidade e Segurança da Informação (
 
 - **DPOs** (Encarregados pelo Tratamento de Dados Pessoais)
 - **Gestores de TI e de Segurança da Informação**
-- Órgãos públicos, pequenas empresas e consultores que conduzem programas de privacidade e segurança
+- Órgãos públicos,  empresas e consultores que conduzem programas de privacidade e segurança
 
 Roteiro alinhado ao Framework PPSI: diagnóstico de maturidade, controles (segurança e privacidade), plano de trabalho e políticas em um só lugar.
 

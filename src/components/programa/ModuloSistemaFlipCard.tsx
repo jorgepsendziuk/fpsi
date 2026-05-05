@@ -130,6 +130,18 @@ export function ModuloSistemaFlipCard({
     const { planoAcao, conformidade, responsabilidades, maturidade, politicas, portal, auditoria } = resumo;
 
     switch (section.key) {
+      case "escritorio-governanca":
+        return (
+          <Stack spacing={0.75}>
+            <Typography component="div" sx={backHeadingSx}>
+              Camada visual
+            </Typography>
+            <Typography component="div" sx={backBodySx}>
+              A mesma aplicação em outro desenho: sala, corredor e (em breve) personagens dos papéis
+              PPSI 2.0. Sem dados extra — só navegação.
+            </Typography>
+          </Stack>
+        );
       case "conformidade-tratamento":
         return (
           <Stack spacing={0.75}>

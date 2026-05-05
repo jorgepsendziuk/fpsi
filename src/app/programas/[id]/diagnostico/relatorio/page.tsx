@@ -294,7 +294,6 @@ export default function DiagnosticoRelatorioPage() {
           <PageHeroHeader
             title="Relatório de todos os controles"
             icon={<DescriptionIcon sx={{ fontSize: 30 }} aria-hidden />}
-            description="Datas de atualização por controle e medida estão no diagnóstico interativo e na auditoria por tipo de recurso."
             trailing={
               <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
                 <IconButton
