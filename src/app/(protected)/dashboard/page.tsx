@@ -54,6 +54,7 @@ import { useGetIdentity } from "@refinedev/core";
 import * as dataService from "@/lib/services/dataService";
 import { Programa } from "@/lib/types/types";
 import { ProgramasSection } from "@/components/dashboard/ProgramasSection";
+import { DashboardOperacionalSection } from "@/components/dashboard/DashboardOperacionalSection";
 import { PerfilContent } from "@/components/perfil/PerfilContent";
 
 type GreetingKind = "manha" | "tarde" | "noite";
@@ -493,6 +494,8 @@ export default function DashboardPage() {
           </Stack>
         </Box>
       </Box>
+
+      <DashboardOperacionalSection />
 
       {/* Perfil e LGPD — metade da largura cada, lado a lado (empilham no xs) */}
       <Grid container spacing={2} sx={{ mb: 5 }}>

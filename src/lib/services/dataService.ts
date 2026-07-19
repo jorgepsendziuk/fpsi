@@ -189,6 +189,8 @@ export const fetchPlanoAcaoResumo = async (programaId: number): Promise<{
   return res.json();
 };
 
+import type { PendenciasResumo } from "@/lib/types/pendencias";
+
 /** Resumo agregado para os versos dos cards «Módulos do Sistema» (home do programa). */
 export type ModulosResumoApi = {
   planoAcao: {
@@ -229,6 +231,14 @@ export type ModulosResumoApi = {
     contato: number;
   };
   publicPortalPath: string | null;
+  pendencias?: PendenciasResumo;
+  postura?: {
+    maturidadeMedia: number | null;
+    dsarAbertos: number;
+    reportesNovos: number;
+    riscosTotal: number;
+    riscosCriticos: number;
+  };
   auditoria: Array<{
     id: number;
     action: string;
@@ -243,6 +253,15 @@ export const fetchModulosResumo = async (programaId: number): Promise<ModulosRes
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || "Erro ao carregar resumo dos módulos");
+  }
+  return res.json();
+};
+
+export const fetchDashboardResumo = async () => {
+  const res = await fetch("/api/dashboard/resumo", { credentials: "include" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao carregar dashboard");
   }
   return res.json();
 };
@@ -1861,7 +1880,12 @@ export type ProgramaReporteRow = {
   nome: string | null;
   email: string;
   descricao: string;
+  status?: string;
+  responsavel_user_id?: string | null;
+  observacoes_internas?: string | null;
+  incidente_id?: number | null;
   created_at: string;
+  updated_at?: string;
 };
 
 export const fetchProgramaReportes = async (programaId: number): Promise<ProgramaReporteRow[]> => {
@@ -1883,7 +1907,122 @@ export type ProgramaContatoRow = {
   email: string;
   assunto: string | null;
   mensagem: string;
+  status?: string;
+  responsavel_user_id?: string | null;
+  observacoes_internas?: string | null;
   created_at: string;
+  updated_at?: string;
+};
+
+export const updateProgramaReporte = async (
+  programaId: number,
+  reporteId: number,
+  body: Partial<Pick<ProgramaReporteRow, "status" | "observacoes_internas" | "responsavel_user_id" | "incidente_id">>
+) => {
+  const res = await fetch(`/api/programas/${programaId}/reportes/${reporteId}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao atualizar reporte");
+  }
+  return res.json();
+};
+
+export const updateProgramaContato = async (
+  programaId: number,
+  contatoId: number,
+  body: Partial<Pick<ProgramaContatoRow, "status" | "observacoes_internas" | "responsavel_user_id">>
+) => {
+  const res = await fetch(`/api/programas/${programaId}/contato/${contatoId}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao atualizar contato");
+  }
+  return res.json();
+};
+
+export type ProgramaRiscoRow = {
+  id: number;
+  programa_id: number;
+  titulo: string;
+  descricao: string | null;
+  categoria: string;
+  origem_tipo: string | null;
+  origem_id: number | null;
+  probabilidade: string;
+  impacto: string;
+  score_inerente: number | null;
+  score_residual: number | null;
+  status: string;
+  estrategia_mitigacao: string | null;
+  responsavel: string | null;
+  data_revisao: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const fetchProgramaRiscos = async (programaId: number): Promise<ProgramaRiscoRow[]> => {
+  const res = await fetch(`/api/programas/${programaId}/riscos`, { credentials: "include" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao carregar riscos");
+  }
+  return res.json();
+};
+
+export const createProgramaRisco = async (
+  programaId: number,
+  body: Partial<ProgramaRiscoRow>
+): Promise<ProgramaRiscoRow> => {
+  const res = await fetch(`/api/programas/${programaId}/riscos`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao criar risco");
+  }
+  return res.json();
+};
+
+export const updateProgramaRisco = async (
+  programaId: number,
+  riscoId: number,
+  body: Partial<ProgramaRiscoRow>
+): Promise<ProgramaRiscoRow> => {
+  const res = await fetch(`/api/programas/${programaId}/riscos/${riscoId}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao atualizar risco");
+  }
+  return res.json();
+};
+
+export const deleteProgramaRisco = async (programaId: number, riscoId: number) => {
+  const res = await fetch(`/api/programas/${programaId}/riscos/${riscoId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Erro ao excluir risco");
+  }
 };
 
 export const fetchProgramaContato = async (programaId: number): Promise<ProgramaContatoRow[]> => {

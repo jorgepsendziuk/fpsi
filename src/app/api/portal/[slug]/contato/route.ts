@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { logActivity } from "@/lib/services/auditService";
+import { notifyDpoTeam, resolveProgramaNotifyEmails } from "@/lib/server/notifyDpo";
 
 /**
  * POST /api/portal/[slug]/contato
@@ -17,7 +18,7 @@ export async function POST(
     const admin = createSupabaseAdminClient();
     if (!admin) return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
 
-    const { data: programa } = await admin.from("programa").select("id").eq("slug", slug.trim()).maybeSingle();
+    const { data: programa } = await admin.from("programa").select("id, nome, slug").eq("slug", slug.trim()).maybeSingle();
     if (!programa) return NextResponse.json({ error: "Programa não encontrado" }, { status: 404 });
 
     const body = await request.json();
@@ -51,6 +52,17 @@ export async function POST(
       programaId: programa.id,
       origem: "portal_publico",
       req: { headers: request.headers },
+    });
+
+    const emails = await resolveProgramaNotifyEmails(admin, programa.id as number);
+    void notifyDpoTeam({
+      event: "novo_contato",
+      programaId: programa.id as number,
+      programaNome: String(programa.nome || `Programa ${programa.id}`),
+      programaSlug: (programa.slug as string) || slug.trim(),
+      titulo: `Nova mensagem de contato: ${assunto || nome}`,
+      detalhes: email,
+      emails,
     });
 
     return NextResponse.json({ ok: true, message: "Mensagem enviada com sucesso." });

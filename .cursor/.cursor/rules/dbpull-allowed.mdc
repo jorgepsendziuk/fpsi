@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+description: Supabase CLI e migrations — válido só neste repositório (FPSI), não é regra global do Cursor.
+---
+
+**Escopo:** esta regra fica em `.cursor/rules/` **dentro do projeto FPSI**; vale apenas com este workspace aberto. Outros repositórios não herdam isso.
+
+aqui pode fazer db pull pelo supabase cli, ja esta configurado.
+
+**Migrations:** ao criar ou alterar arquivos em `supabase/migrations/`, aplicar no remoto com `supabase db push` (ou `supabase migration up` conforme o fluxo do projeto). O usuário autoriza aplicar automaticamente; não executar comandos que apaguem dados de produção fora de migrations.

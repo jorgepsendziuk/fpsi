@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { computePlanoAcaoResumo } from "@/lib/server/planoAcaoResumo";
+import { fetchPendenciasPrograma } from "@/lib/server/pendenciasService";
 
 function politicaTemConteudoMinimo(secoes: unknown): boolean {
   if (!Array.isArray(secoes)) return false;
@@ -61,6 +62,10 @@ export async function GET(
       { count: pedidosTitulares },
       { count: reportesPortal },
       { count: contatoPortal },
+      { count: riscosCount },
+      { count: riscosCriticos },
+      { count: dsarAbertos },
+      { count: reportesNovos },
       { data: atividadesRecentes },
     ] = await Promise.all([
       computePlanoAcaoResumo(supabase, programaId),
@@ -78,10 +83,27 @@ export async function GET(
       supabase.from("diagnostico").select("id, descricao"),
       supabase.from("politica_modelo").select("tipo_politica").eq("ativo", true),
       supabase.from("politica_programa").select("tipo_politica, secoes").eq("programa_id", programaId),
-      supabase.from("programa").select("slug").eq("id", programaId).maybeSingle(),
+      supabase.from("programa").select("slug, nome").eq("id", programaId).maybeSingle(),
       supabase.from("pedido_titular").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
       supabase.from("programa_reportes").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
       supabase.from("programa_contato").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
+      supabase.from("programa_risco").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
+      supabase
+        .from("programa_risco")
+        .select("*", { count: "exact", head: true })
+        .eq("programa_id", programaId)
+        .in("status", ["identificado", "em_tratamento"])
+        .gte("score_residual", 12),
+      supabase
+        .from("pedido_titular")
+        .select("*", { count: "exact", head: true })
+        .eq("programa_id", programaId)
+        .in("status", ["recebido", "em_analise"]),
+      supabase
+        .from("programa_reportes")
+        .select("*", { count: "exact", head: true })
+        .eq("programa_id", programaId)
+        .eq("status", "novo"),
       supabase
         .from("user_activities")
         .select("id, action, resource_type, created_at, details")
@@ -119,6 +141,20 @@ export async function GET(
     const politicasImplementadas = tiposImplementados.size;
     const politicasNaoImplementadas = Math.max(0, politicasCatalogoTotal - politicasImplementadas);
 
+    const progNome = (programaRow as { nome?: string } | null)?.nome || `Programa ${programaId}`;
+    const progSlug = programaRow?.slug ?? null;
+    const pendencias = await fetchPendenciasPrograma(
+      supabase,
+      programaId,
+      { id: programaId, nome: progNome, slug: progSlug },
+      15
+    );
+
+    const maturidadeMedia =
+      maturidade.length > 0
+        ? maturidade.reduce((s, m) => s + Number(m.score), 0) / maturidade.length
+        : null;
+
     return NextResponse.json({
       planoAcao: planoRes.data,
       conformidade: {
@@ -144,6 +180,14 @@ export async function GET(
         contato: contatoPortal ?? 0,
       },
       publicPortalPath: programaRow?.slug ? `/${programaRow.slug}` : null,
+      pendencias,
+      postura: {
+        maturidadeMedia,
+        dsarAbertos: dsarAbertos ?? 0,
+        reportesNovos: reportesNovos ?? 0,
+        riscosTotal: riscosCount ?? 0,
+        riscosCriticos: riscosCriticos ?? 0,
+      },
       auditoria: (atividadesRecentes || []).map(
         (a: { id: number; action: string; resource_type: string; created_at: string; details: unknown }) => ({
           id: a.id,

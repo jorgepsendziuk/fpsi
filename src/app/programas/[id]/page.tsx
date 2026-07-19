@@ -51,6 +51,9 @@ import {
   Description as DescriptionIcon,
   Event as EventIcon,
   MeetingRoom as MeetingRoomIcon,
+  WarningAmber as WarningAmberIcon,
+  DashboardCustomize as DashboardCustomizeIcon,
+  ViewModule as ViewModuleIcon,
 } from "@mui/icons-material";
 import { PapelLgpdDiagramWithEdit } from "@/components/programa/PapelLgpdDiagramWithEdit";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -67,6 +70,12 @@ import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import NextLink from "next/link";
 import { ModuloSistemaFlipCard, MODULO_FLIP_STRIP_WIDTH_PX } from "@/components/programa/ModuloSistemaFlipCard";
+import { ProgramaOperacionalDashboard } from "@/components/programa/ProgramaOperacionalDashboard";
+import {
+  getProgramaHomeViewMode,
+  setProgramaHomeViewMode,
+  type ProgramaHomeViewMode,
+} from "@/components/programa/programaHomeViewMode";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
 
 /** Ordem: escritório (camada visual opcional) → estrutura de governança → … → auditoria */
@@ -107,6 +116,15 @@ const sections: Array<{
     path: "conformidade",
     color: "#1976d2",
     gradient: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+  },
+  {
+    key: "riscos",
+    title: "Gestão de Riscos",
+    icon: <WarningAmberIcon fontSize="large" />,
+    description: "Registro de riscos, matriz 5×5 e acompanhamento de mitigação",
+    path: "riscos",
+    color: "#d32f2f",
+    gradient: "linear-gradient(135deg, #c62828 0%, #ef5350 100%)",
   },
   {
     key: "diagnostico",
@@ -210,6 +228,27 @@ const programaEscopoField: ProgramaFieldDef = {
   fullRow: true,
 };
 
+/** Formalização do encarregado (ANPD Res. 18/2024) */
+const dpoFormalizacaoFields: ProgramaFieldDef[] = [
+  {
+    key: "dpo_notificacao_email",
+    label: "E-mail para alertas operacionais (DSAR, reportes)",
+    icon: <EmailIcon />,
+  },
+  {
+    key: "dpo_ato_designacao_data",
+    label: "Data do ato formal de designação",
+    icon: <EventIcon />,
+    kind: "date",
+  },
+  {
+    key: "dpo_ato_designacao_texto",
+    label: "Texto/resumo do ato de designação",
+    icon: <DescriptionIcon />,
+    fullRow: true,
+  },
+];
+
 /** Apenas órgão público — rastreio do envio e retorno do diagnóstico ao SGD/ME */
 const sgdUsoFields: ProgramaFieldDef[] = [
   {
@@ -248,6 +287,7 @@ const sgdRetornoFields: ProgramaFieldDef[] = [
 ];
 
 const SGD_DATE_KEYS = new Set(["sgd_data_limite_retorno", "sgd_retorno_data"]);
+const DPO_DATE_KEYS = new Set(["dpo_ato_designacao_data"]);
 
 const SGD_NULLABLE_TEXT_KEYS = new Set([
   "sgd_numero_documento_nota_tecnica",
@@ -305,8 +345,13 @@ export default function ProgramaMainPage() {
   const [modulosResumo, setModulosResumo] = useState<ModulosResumoApi | null>(null);
   const [modulosResumoLoading, setModulosResumoLoading] = useState(false);
   const [modulosResumoError, setModulosResumoError] = useState(false);
+  const [homeViewMode, setHomeViewMode] = useState<ProgramaHomeViewMode>("dashboard");
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
   const canHover = useMediaQuery("(hover: hover)", { noSsr: true });
+
+  useEffect(() => {
+    setHomeViewMode(getProgramaHomeViewMode());
+  }, []);
 
   useEffect(() => {
     if (!programaId) {
@@ -390,6 +435,11 @@ export default function ProgramaMainPage() {
       setEditValue(s);
       return;
     }
+    if (DPO_DATE_KEYS.has(field)) {
+      const s = value != null && value !== "" ? String(value).slice(0, 10) : "";
+      setEditValue(s);
+      return;
+    }
     setEditValue(value != null ? String(value) : "");
   };
 
@@ -456,7 +506,8 @@ export default function ProgramaMainPage() {
 
   const handleSave = async (field: string) => {
     const isSgdDate = SGD_DATE_KEYS.has(field);
-    const isDateField = isSgdDate;
+    const isDpoDate = DPO_DATE_KEYS.has(field);
+    const isDateField = isSgdDate || isDpoDate;
     if (!programaId) {
       handleCancel();
       return;
@@ -471,6 +522,8 @@ export default function ProgramaMainPage() {
       "atendimento_site",
       "atividade_principal_organizacao",
       "descricao_escopo",
+      "dpo_notificacao_email",
+      "dpo_ato_designacao_texto",
       ...Array.from(SGD_NULLABLE_TEXT_KEYS),
     ];
     if (!isDateField && !editValue.trim() && !nullableProgramaFields.includes(field)) {
@@ -968,6 +1021,16 @@ export default function ProgramaMainPage() {
             {renderEditableField(programaEscopoField, programa.descricao_escopo ?? "", canEditProgramaFieldsUi)}
           </Grid>
         </Grid>
+        <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mt: 3, mb: 1 }}>
+          Encarregado — formalização (ANPD 18/2024)
+        </Typography>
+        <Grid container spacing={2}>
+          {dpoFormalizacaoFields.map((field) => (
+            <Grid item xs={12} md={field.fullRow ? 12 : 6} key={field.key}>
+              {renderEditableField(field, programa[field.key] ?? "", canEditProgramaFieldsUi)}
+            </Grid>
+          ))}
+        </Grid>
       </Popover>
 
       <Popover
@@ -1128,7 +1191,35 @@ export default function ProgramaMainPage() {
         </Alert>
       )}
 
-      {/* Grid principal — módulos com mais largura útil; diagrama à direita */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={homeViewMode === "dashboard" ? <ViewModuleIcon /> : <DashboardCustomizeIcon />}
+          onClick={() => {
+            const next = homeViewMode === "dashboard" ? "modulos" : "dashboard";
+            setHomeViewMode(next);
+            setProgramaHomeViewMode(next);
+          }}
+        >
+          {homeViewMode === "dashboard" ? "Ver módulos (cards)" : "Ver painel operacional"}
+        </Button>
+      </Box>
+
+      {homeViewMode === "dashboard" ? (
+        <ProgramaOperacionalDashboard
+          idOrSlug={idOrSlug}
+          programaId={programa.id}
+          isDemoMode={isDemoMode}
+          modulosResumo={modulosResumo}
+          modulosResumoLoading={modulosResumoLoading}
+          sections={sections}
+          onSwitchToModulos={() => {
+            setHomeViewMode("modulos");
+            setProgramaHomeViewMode("modulos");
+          }}
+        />
+      ) : (
       <Grid container spacing={{ xs: 3, lg: 3 }} alignItems="stretch">
         {/* Seções principais: 8/12 em desktop para caber 3 cards em xl */}
         <Grid item xs={12} lg={8}>
@@ -1216,6 +1307,7 @@ export default function ProgramaMainPage() {
           </Box>
         </Grid>
       </Grid>
+      )}
 
     </Container>
   );

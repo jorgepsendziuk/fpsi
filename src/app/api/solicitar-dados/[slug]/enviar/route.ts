@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { logActivity } from "@/lib/services/auditService";
+import { notifyDpoTeam, resolveProgramaNotifyEmails } from "@/lib/server/notifyDpo";
 
 const TIPOS_VALIDOS = new Set([
   "acesso",
@@ -38,7 +39,7 @@ export async function POST(
 
     const { data: programa } = await admin
       .from("programa")
-      .select("id")
+      .select("id, nome, slug")
       .eq("slug", slug.trim())
       .maybeSingle();
 
@@ -102,6 +103,17 @@ export async function POST(
       origem: "portal_publico",
       details: { tipo, origem: "formulario_publico" },
       req: { headers: request.headers },
+    });
+
+    const emails = await resolveProgramaNotifyEmails(admin, programaId);
+    void notifyDpoTeam({
+      event: "novo_dsar",
+      programaId,
+      programaNome: String(programa.nome || `Programa ${programaId}`),
+      programaSlug: (programa.slug as string) || slug.trim(),
+      titulo: `Novo pedido de titular: ${data.protocolo}`,
+      detalhes: `${nome_titular} — ${tipo}`,
+      emails,
     });
 
     return NextResponse.json({
