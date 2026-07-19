@@ -386,9 +386,11 @@ export const DEMO_ORGAOS = [
   }
 ];
 
-// Função para verificar se está no modo demo
+// Função para verificar se está no modo demo (backoffice do programa demo, não o portal público /demo)
 export const isDemoMode = () => {
-  return typeof window !== 'undefined' && window.location.pathname.includes('/demo');
+  if (typeof window === "undefined") return false;
+  const path = window.location.pathname;
+  return path.startsWith("/programas/demo") || path === "/programas/1" || path.startsWith("/demo/login");
 };
 
 // Função para obter dados demo

@@ -3,6 +3,7 @@ import { mergeControleData } from "./controlesData";
 import { sortMedidasByIdMedida } from "@/lib/utils/medidaSort";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
 import { logActivityFromClient } from "./auditClient";
+import type { EvidenciaConformidadeSnapshot } from "@/lib/medidas/evidenciaRules";
 
 
 
@@ -380,6 +381,40 @@ export async function fetchGovernancaGruposMembros(programaId: number): Promise<
   } catch {
     return { comite_seguranca_informacao: [], comite_protecao_dados: [], etir: [] };
   }
+}
+
+/** Contagens para sugestão automática de medidas (ROPA, portal, etc.). */
+export async function fetchEvidenciaConformidadeSnapshot(
+  programaId: number
+): Promise<EvidenciaConformidadeSnapshot> {
+  const [ropaRes, mapRes, incRes, pedRes, ripdRes, programa, posin, protecao] = await Promise.all([
+    supabaseBrowserClient.from("ropa").select("id", { count: "exact", head: true }).eq("programa_id", programaId),
+    supabaseBrowserClient
+      .from("mapeamento_dados")
+      .select("id", { count: "exact", head: true })
+      .eq("programa_id", programaId),
+    supabaseBrowserClient.from("incidente").select("id", { count: "exact", head: true }).eq("programa_id", programaId),
+    supabaseBrowserClient
+      .from("pedido_titular")
+      .select("id", { count: "exact", head: true })
+      .eq("programa_id", programaId),
+    supabaseBrowserClient.from("ripd").select("id", { count: "exact", head: true }).eq("programa_id", programaId),
+    fetchProgramaById(programaId),
+    fetchPoliticaProgramaByTipo(programaId, "politica_seguranca_informacao"),
+    fetchPoliticaProgramaByTipo(programaId, "politica_protecao_dados_pessoais"),
+  ]);
+
+  const slug = programa?.slug;
+  return {
+    ropaCount: ropaRes.count ?? 0,
+    mapeamentoCount: mapRes.count ?? 0,
+    incidenteCount: incRes.count ?? 0,
+    pedidoTitularCount: pedRes.count ?? 0,
+    ripdCount: ripdRes.count ?? 0,
+    temSlugPortal: typeof slug === "string" && slug.trim().length > 0,
+    temPoliticaProtecao: protecao != null,
+    temPosin: posin != null,
+  };
 }
 
 export async function saveGovernancaGruposMembros(

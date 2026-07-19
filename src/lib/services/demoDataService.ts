@@ -1,6 +1,8 @@
 // Service que substitui as chamadas de API por dados reais no modo demo
 // O modo demo agora usa dados reais do banco de dados, apenas simula delays
 
+import { DEMO_PROGRAMA } from "@/lib/data/demoData";
+
 // Import do dataService real
 let realDataService: any = null;
 const getRealDataService = async () => {
@@ -186,10 +188,13 @@ export const demoDataService = {
   }
 };
 
-// Função para verificar se deve usar dados demo
+// Função para verificar se deve usar dados demo (painel do programa demo, não portal público /demo)
 export const shouldUseDemoData = (programaId?: number) => {
-  // Usar dados demo APENAS se está na rota /demo
-  return (typeof window !== 'undefined' && window.location.pathname.includes('/demo'));
+  if (typeof window === "undefined") return false;
+  const path = window.location.pathname;
+  if (path.startsWith("/programas/demo") || path === "/programas/1") return true;
+  if (programaId === DEMO_PROGRAMA.id) return true;
+  return false;
 };
 
 // Factory function que retorna o service apropriado

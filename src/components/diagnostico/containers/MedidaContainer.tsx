@@ -72,20 +72,18 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
   const [evidenciaLoading, setEvidenciaLoading] = useState(false);
 
   useEffect(() => {
-    if (controle.diagnostico !== 1) {
-      setEvidenciaSugestao(null);
-      setEvidenciaLoading(false);
-      return;
-    }
     let cancelled = false;
     (async () => {
       setEvidenciaLoading(true);
       try {
-        const [programa, posin, protecaoDados, gruposRaw] = await Promise.all([
+        const [programa, posin, protecaoDados, gruposRaw, conformidade] = await Promise.all([
           dataService.fetchProgramaById(programaId),
           dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_POSIN),
           dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_PROTECAO_DADOS),
           dataService.fetchGovernancaGruposMembros(programaId),
+          controle.diagnostico !== 1
+            ? dataService.fetchEvidenciaConformidadeSnapshot(programaId)
+            : Promise.resolve(undefined),
         ]);
         if (cancelled) return;
         const gruposGovernanca = {
@@ -93,7 +91,13 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
           comiteDados: gruposRaw.comite_protecao_dados.length,
           etir: gruposRaw.etir.length,
         };
-        const ctx = buildEvidenciaContext(programa, posin, protecaoDados, gruposGovernanca);
+        const ctx = buildEvidenciaContext(
+          programa,
+          posin,
+          protecaoDados,
+          gruposGovernanca,
+          conformidade
+        );
         setEvidenciaSugestao(getEvidenciaSugestao(medida.id_medida, ctx));
       } catch {
         if (!cancelled) setEvidenciaSugestao(null);

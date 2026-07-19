@@ -42,7 +42,7 @@ import { respostas, respostasimnao, status_medida, status_plano_acao } from '../
 // Types
 import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 import type { EvidenciaSugestao as EvidenciaSugestaoTipo } from '../../../lib/medidas/evidenciaRules';
-import { respostaAtualIgualSugestao } from '../../../lib/medidas/evidenciaRules';
+import { respostaAtualIgualSugestao, labelRespostaSugerida } from '../../../lib/medidas/evidenciaRules';
 import { hrefEstruturaGovernanca } from '@/lib/governanca/abaGovernanca';
 import {
   GRUPO_IMPLEMENTACAO_HINT,
@@ -219,7 +219,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               />
             ) : null}
 
-            {controle.diagnostico === 1 && evidenciaLoading && (
+            {evidenciaLoading && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <CircularProgress size={18} />
                 <Typography variant="body2" color="text.secondary">
@@ -228,8 +228,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Box>
             )}
 
-            {controle.diagnostico === 1 &&
-              !evidenciaLoading &&
+            {!evidenciaLoading &&
               evidenciaSugestao?.regraDefinida &&
               evidenciaSugestao.respostaSugerida != null && (
                 <Alert
@@ -251,7 +250,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                   }
                 >
                   <Typography variant="body2">
-                    <strong>{evidenciaSugestao.respostaSugerida === 1 ? 'Sim' : 'Não'}</strong>
+                    <strong>{labelRespostaSugerida(evidenciaSugestao)}</strong>
                     {' — '}
                     {evidenciaSugestao.motivo}
                   </Typography>

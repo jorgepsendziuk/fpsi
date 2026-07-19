@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { logActivity } from "@/lib/services/auditService";
 import { notifyDpoTeam, resolveProgramaNotifyEmails } from "@/lib/server/notifyDpo";
+import { checkPortalRateLimit } from "@/lib/server/portalRateLimit";
 
 /**
  * POST /api/portal/[slug]/contato
@@ -14,6 +15,14 @@ export async function POST(
   try {
     const { slug } = await params;
     if (!slug?.trim()) return NextResponse.json({ error: "Slug obrigatório" }, { status: 400 });
+
+    const rate = checkPortalRateLimit(request, `contato:${slug.trim()}`);
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: "Muitas solicitações. Tente novamente mais tarde." },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfterSec) } }
+      );
+    }
 
     const admin = createSupabaseAdminClient();
     if (!admin) return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });

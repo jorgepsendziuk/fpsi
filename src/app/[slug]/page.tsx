@@ -70,7 +70,7 @@ function PortalDocLink({
 }
 
 const RESERVED_SLUGS = new Set([
-  "programas", "login", "sobre", "perfil", "api", "auth", "register", "forgot-password", "demo", "artigo", "favicon.ico",
+  "programas", "login", "sobre", "perfil", "api", "auth", "register", "forgot-password", "artigo", "favicon.ico",
 ]);
 
 const TIPOS_DSAR = [

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { logActivity } from "@/lib/services/auditService";
 import { notifyDpoTeam, resolveProgramaNotifyEmails } from "@/lib/server/notifyDpo";
+import { checkPortalRateLimit } from "@/lib/server/portalRateLimit";
 
 const TIPOS_VALIDOS = new Set([
   "acesso",
@@ -26,6 +27,14 @@ export async function POST(
     const { slug } = await params;
     if (!slug || typeof slug !== "string") {
       return NextResponse.json({ error: "Slug obrigatório" }, { status: 400 });
+    }
+
+    const rate = checkPortalRateLimit(request, `dsar:${slug.trim()}`);
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: "Muitas solicitações. Tente novamente mais tarde." },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfterSec) } }
+      );
     }
 
     const admin = createSupabaseAdminClient();
