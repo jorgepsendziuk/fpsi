@@ -50,6 +50,18 @@ export function DashboardOperacionalSection() {
 
   return (
     <Box sx={{ mb: 2 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          display: "block",
+          mb: 1,
+          color: "text.secondary",
+          letterSpacing: "0.08em",
+          fontSize: "0.68rem",
+        }}
+      >
+        Operação
+      </Typography>
       <DashboardKpiStrip kpis={resumo?.kpis} loading={loading} compact />
 
       <Grid container spacing={1.5} sx={{ mt: 0.25 }}>
@@ -57,22 +69,22 @@ export function DashboardOperacionalSection() {
           <PendenciasPanel
             pendencias={resumo?.pendencias}
             loading={loading}
-            title="Pendências"
+            title="Pendências prioritárias"
             emptyMessage={
               error
                 ? "Não foi possível carregar pendências."
                 : "Nenhuma pendência entre seus programas."
             }
             dense
-            maxItems={5}
-            maxHeight={210}
+            maxItems={6}
+            maxHeight={240}
           />
         </Grid>
         <Grid item xs={12} md={5}>
           <Box
             sx={{
               height: "100%",
-              maxHeight: 210,
+              maxHeight: 240,
               overflow: "auto",
               border: `1px solid ${theme.palette.divider}`,
               borderRadius: 2,
@@ -93,7 +105,7 @@ export function DashboardOperacionalSection() {
                 fontSize: "0.65rem",
               }}
             >
-              Por programa
+              Programas
             </Typography>
             {loading && (
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
