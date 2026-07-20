@@ -57,12 +57,13 @@ import type { EmpresaRow } from "@/lib/services/dataService";
 import { CookiePreferencesDialog } from "@/components/privacy/CookiePreferencesDialog";
 import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { landing } from "@/components/landing/landingTokens";
 
 type IUser = { id: number; name: string; email: string; avatar: string };
 
-const DRAWER_WIDTH_DEFAULT = 288;
-const DRAWER_WIDTH_MIN = 220;
-const DRAWER_WIDTH_MAX = 440;
+const DRAWER_WIDTH_DEFAULT = 248;
+const DRAWER_WIDTH_MIN = 200;
+const DRAWER_WIDTH_MAX = 380;
 const LS_WIDTH = "fpsi-sidebar-width";
 const LS_HIDDEN = "fpsi-sidebar-hidden";
 
@@ -270,12 +271,13 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             logout();
           }}
           sx={{
-            borderRadius: 2,
-            mb: 0.25,
-            py: 1,
-            pl: isSub ? 1.25 : 1.5,
-            pr: 1.5,
-            ml: isSub ? 1.25 : 0,
+            borderRadius: 1.5,
+            mb: 0.1,
+            py: 0.45,
+            minHeight: 34,
+            pl: isSub ? 1.25 : 1.25,
+            pr: 1,
+            ml: isSub ? 1 : 0,
             color: "text.secondary",
             "&:hover": {
               bgcolor: alpha(theme.palette.error.main, 0.08),
@@ -283,10 +285,10 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             },
           }}
         >
-          <ListItemIcon sx={{ minWidth: isSub ? 36 : 40, color: "inherit" }}>{item.icon}</ListItemIcon>
+          <ListItemIcon sx={{ minWidth: isSub ? 30 : 32, color: "inherit" }}>{item.icon}</ListItemIcon>
           <ListItemText
             primary={item.label}
-            primaryTypographyProps={{ variant: "body2", fontWeight: 600, color: "inherit" }}
+            primaryTypographyProps={{ variant: "body2", fontWeight: 600, fontSize: "0.8125rem", color: "inherit" }}
           />
         </ListItemButton>
       );
@@ -311,12 +313,13 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         onClick={() => setMobileOpen(false)}
         sx={{
           position: "relative",
-          borderRadius: 2,
-          mb: 0.25,
-          py: 1,
-          pl: conn ? 3.5 : isSub ? 1.25 : 1.5,
-          pr: 1.5,
-          ml: conn ? 0 : isSub ? 1.25 : 0,
+          borderRadius: 1.5,
+          mb: 0.1,
+          py: 0.45,
+          minHeight: 34,
+          pl: conn ? 3.25 : isSub ? 1.25 : 1.25,
+          pr: 1,
+          ml: conn ? 0 : isSub ? 1 : 0,
           overflow: "hidden",
           "&.Mui-selected": {
             bgcolor: alpha(theme.palette.primary.main, 0.14),
@@ -376,7 +379,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         ) : null}
         <ListItemIcon
           sx={{
-            minWidth: isSub ? 36 : 40,
+            minWidth: isSub ? 30 : 32,
             color: selected ? "primary.main" : "text.secondary",
             position: "relative",
             zIndex: 1,
@@ -390,6 +393,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             component: "div",
             variant: "body2",
             fontWeight: selected ? 700 : isSub ? 500 : 600,
+            fontSize: "0.8125rem",
             color: selected ? "primary.main" : "text.primary",
           }}
           sx={{ position: "relative", zIndex: 1 }}
@@ -407,11 +411,12 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     const conn = { isLast: true as const };
     const rowSx = {
       position: "relative" as const,
-      borderRadius: 2,
-      mb: 0.25,
-      py: 1,
-      pl: 3.5,
-      pr: 1.5,
+      borderRadius: 1.5,
+      mb: 0.1,
+      py: 0.45,
+      minHeight: 34,
+      pl: 3.25,
+      pr: 1,
       ml: 0,
       overflow: "hidden" as const,
     };
@@ -523,69 +528,86 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const isDark = theme.palette.mode === "dark";
+
   const drawer = (
     <Box
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background:
-          theme.palette.mode === "dark"
-            ? `linear-gradient(180deg, ${alpha(theme.palette.primary.dark, 0.35)} 0%, ${theme.palette.background.paper} 38%)`
-            : `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${theme.palette.background.paper} 40%)`,
+        background: isDark
+          ? `linear-gradient(180deg, ${landing.navy} 0%, ${landing.ink} 42%, ${theme.palette.background.paper} 100%)`
+          : `linear-gradient(180deg, ${landing.mist} 0%, ${alpha("#FFFFFF", 0.96)} 38%, ${theme.palette.background.paper} 100%)`,
       }}
     >
       <Box
         sx={{
-          px: 2.5,
-          py: 2.5,
+          px: 1.5,
+          py: 1.1,
           borderBottom: 1,
           borderColor: "divider",
           flexShrink: 0,
         }}
       >
         <Link href="/dashboard" style={{ textDecoration: "none", color: "inherit" }} onClick={() => setMobileOpen(false)}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
               sx={{
-                borderRadius: 2,
-                p: 0.75,
-                background: alpha(theme.palette.primary.main, 0.15),
+                borderRadius: 1.5,
+                p: 0.45,
+                background: isDark ? alpha("#fff", 0.08) : alpha(landing.blue, 0.1),
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                lineHeight: 0,
               }}
             >
-              <Image src="/logo_p.png" alt="FPSI" width={36} height={36} />
+              <Image src="/logo_p.png" alt="FPSI" width={26} height={26} />
             </Box>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={800} letterSpacing={0.4}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                variant="subtitle2"
+                fontWeight={900}
+                letterSpacing="-0.02em"
+                sx={{ lineHeight: 1.05, color: isDark ? landing.heroText : landing.text }}
+              >
                 FPSI
               </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block", lineHeight: 1.25, whiteSpace: "normal" }}
-              >
-                Privacidade e segurança da informação
-              </Typography>
+              {programaContextLabel ? (
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{
+                    display: "block",
+                    maxWidth: 170,
+                    color: isDark ? landing.heroMuted : "text.secondary",
+                    fontSize: "0.65rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {programaContextLabel}
+                </Typography>
+              ) : null}
             </Box>
           </Box>
         </Link>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: "auto", py: 1, px: 1 }}>
+      <Box sx={{ flex: 1, overflow: "auto", py: 0.5, px: 0.75 }}>
         {navSections.map((section) => (
-          <Box key={section.id} sx={{ mb: 2 }}>
+          <Box key={section.id} sx={{ mb: 1 }}>
             <Typography
               variant="overline"
               sx={{
-                px: 1.5,
-                py: 1,
+                px: 1.25,
+                py: 0.35,
                 display: "block",
                 color: "text.secondary",
-                letterSpacing: 1.2,
+                letterSpacing: 0.9,
                 fontWeight: 700,
+                fontSize: "0.65rem",
+                lineHeight: 1.2,
               }}
             >
               {section.title}
@@ -609,7 +631,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                           sx={{
                             display: "flex",
                             alignItems: "stretch",
-                            mb: 0.25,
+                            mb: 0.1,
                             gap: 0,
                           }}
                         >
@@ -622,10 +644,11 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                               flex: 1,
                               minWidth: 0,
                               position: "relative",
-                              borderRadius: 2,
-                              py: 1,
-                              pl: 1.5,
-                              pr: 0.5,
+                              borderRadius: 1.5,
+                              py: 0.45,
+                              minHeight: 34,
+                              pl: 1.25,
+                              pr: 0.25,
                               "&.Mui-selected": {
                                 bgcolor: alpha(theme.palette.primary.main, 0.14),
                                 "&:hover": {
@@ -636,7 +659,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                           >
                             <ListItemIcon
                               sx={{
-                                minWidth: 40,
+                                minWidth: 32,
                                 color: hubSelected ? "primary.main" : "text.secondary",
                               }}
                             >
@@ -648,6 +671,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                                 component: "div",
                                 variant: "body2",
                                 fontWeight: hubSelected ? 700 : 600,
+                                fontSize: "0.8125rem",
                                 color: hubSelected ? "primary.main" : "text.primary",
                               }}
                             />
@@ -664,13 +688,14 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                             sx={{
                               alignSelf: "center",
                               flexShrink: 0,
-                              mr: 0.25,
+                              mr: 0.15,
+                              p: 0.35,
                               color: "text.secondary",
                             }}
                           >
                             <ExpandMoreIcon
                               sx={{
-                                fontSize: 22,
+                                fontSize: 18,
                                 transition: theme.transitions.create("transform"),
                                 transform: open ? "rotate(0deg)" : "rotate(-90deg)",
                               }}
@@ -698,17 +723,19 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           </Box>
         ))}
 
-        <Divider sx={{ my: 1 }} />
+        <Divider sx={{ my: 0.75 }} />
 
         <Typography
           variant="overline"
           sx={{
-            px: 1.5,
-            py: 1,
+            px: 1.25,
+            py: 0.35,
             display: "block",
             color: "text.secondary",
-            letterSpacing: 1.2,
+            letterSpacing: 0.9,
             fontWeight: 700,
+            fontSize: "0.65rem",
+            lineHeight: 1.2,
           }}
         >
           Programas
@@ -719,34 +746,33 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             href="/dashboard?novoPrograma=1"
             onClick={() => setMobileOpen(false)}
             sx={{
-              borderRadius: 2,
-              mb: 0.75,
-              py: 1,
-              border: `1px dashed ${alpha(theme.palette.primary.main, 0.4)}`,
+              borderRadius: 1.5,
+              mb: 0.35,
+              py: 0.45,
+              minHeight: 34,
+              border: `1px dashed ${alpha(theme.palette.primary.main, 0.35)}`,
               bgcolor: alpha(theme.palette.primary.main, 0.04),
               "&:hover": {
                 bgcolor: alpha(theme.palette.primary.main, 0.1),
               },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 44, mt: 0.25 }}>
+            <ListItemIcon sx={{ minWidth: 32 }}>
               <Avatar
                 variant="rounded"
                 sx={{
-                  width: 36,
-                  height: 36,
-                  fontSize: 18,
-                  bgcolor: alpha(theme.palette.primary.main, 0.18),
+                  width: 26,
+                  height: 26,
+                  bgcolor: alpha(theme.palette.primary.main, 0.16),
                   color: "primary.main",
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.35)}`,
                 }}
               >
-                <AddIcon sx={{ fontSize: 22 }} />
+                <AddIcon sx={{ fontSize: 16 }} />
               </Avatar>
             </ListItemIcon>
             <ListItemText
               primary="Novo programa"
-              primaryTypographyProps={{ variant: "body2", fontWeight: 700, color: "primary.main" }}
+              primaryTypographyProps={{ variant: "body2", fontWeight: 700, fontSize: "0.8125rem", color: "primary.main" }}
             />
           </ListItemButton>
           {programas.map((p) => {
@@ -762,10 +788,11 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 selected={selected}
                 onClick={() => setMobileOpen(false)}
                 sx={{
-                  borderRadius: 2,
-                  mb: 0.25,
-                  py: 1,
-                  alignItems: "flex-start",
+                  borderRadius: 1.5,
+                  mb: 0.1,
+                  py: 0.4,
+                  minHeight: 34,
+                  alignItems: "center",
                   "&.Mui-selected": {
                     bgcolor: alpha(theme.palette.primary.main, 0.14),
                     "&:hover": {
@@ -774,292 +801,226 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 44, mt: 0.25 }}>
+                <ListItemIcon sx={{ minWidth: 32 }}>
                   <Avatar
                     variant="rounded"
                     src={thumb}
                     alt=""
                     sx={{
-                      width: 36,
-                      height: 36,
-                      fontSize: 18,
+                      width: 26,
+                      height: 26,
+                      fontSize: 12,
                       bgcolor: alpha(theme.palette.primary.main, 0.12),
                       color: "primary.main",
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                     }}
                   >
-                    <FolderIcon sx={{ fontSize: 22 }} />
+                    <FolderIcon sx={{ fontSize: 16 }} />
                   </Avatar>
                 </ListItemIcon>
                 <ListItemText
                   primary={getProgramaTituloPrincipal(p)}
-                  secondary={getProgramaTituloOrganizacao(p) || undefined}
                   primaryTypographyProps={{
                     variant: "body2",
                     fontWeight: selected ? 700 : 500,
+                    fontSize: "0.8125rem",
                     noWrap: true,
                     color: selected ? "primary.main" : "text.primary",
                   }}
-                  secondaryTypographyProps={{ variant: "caption", noWrap: true }}
                 />
               </ListItemButton>
             );
           })}
         </List>
       </Box>
-    </Box>
-  );
 
-  const appBar = (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      color="inherit"
-      sx={{
-        top: 0,
-        borderBottom: 1,
-        borderColor: "divider",
-        bgcolor: alpha(theme.palette.background.paper, 0.92),
-        backdropFilter: "blur(12px)",
-      }}
-    >
-      <Toolbar
+      {/* Conta + tema no rodapé da sidebar — elimina a barra branca superior no desktop */}
+      <Box
         sx={{
-          minHeight: { xs: 56, md: 64 },
+          flexShrink: 0,
+          borderTop: 1,
+          borderColor: "divider",
+          px: 1,
+          py: 1,
+          display: "flex",
           alignItems: "center",
+          gap: 0.5,
+          bgcolor: isDark ? alpha(landing.ink, 0.55) : alpha("#fff", 0.72),
+          backdropFilter: "blur(8px)",
         }}
       >
-        <IconButton
-          color="inherit"
-          edge="start"
-          onClick={() => setMobileOpen(true)}
-          sx={{ mr: 1, display: { md: "none" } }}
-          aria-label="Abrir menu"
-        >
-          <MenuIcon />
-        </IconButton>
         {!isMobile && (
-          <Tooltip title={sidebarHidden ? "Mostrar menu lateral" : "Ocultar menu lateral"}>
+          <Tooltip title={sidebarHidden ? "Mostrar menu" : "Ocultar menu"}>
             <IconButton
-              color="inherit"
-              edge="start"
+              size="small"
               onClick={() => setSidebarHidden((h) => !h)}
-              sx={{ mr: 1 }}
               aria-label={sidebarHidden ? "Mostrar menu" : "Ocultar menu"}
+              sx={{ color: "text.secondary" }}
             >
-              {sidebarHidden ? <MenuOpenIcon /> : <ChevronLeftIcon />}
+              {sidebarHidden ? <MenuOpenIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
         )}
-        <Box
-          sx={{
-            flexGrow: 1,
-            minWidth: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          }}
-        >
-          {programaContextLabel ? (
-            <Box
-              component={Link}
-              href={programaBase}
-              aria-label="Programa ativo — ir para visão geral"
-              onClick={() => setMobileOpen(false)}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.75,
-                minWidth: 0,
-                textDecoration: "none",
-                color: "inherit",
-                "&:hover .programa-ativo-label": { color: "primary.main" },
-              }}
-            >
-              <Avatar
-                variant="rounded"
-                src={activePrograma ? getProgramaLogoDisplayUrl(activePrograma) ?? undefined : undefined}
-                alt=""
-                sx={{
-                  width: 26,
-                  height: 26,
-                  flexShrink: 0,
-                  fontSize: 12,
-                  bgcolor: alpha(theme.palette.primary.main, 0.14),
-                  color: "primary.main",
-                }}
-              >
-                <FolderIcon sx={{ fontSize: 16 }} />
+        <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"}>
+          <IconButton size="small" onClick={() => setMode()} sx={{ color: "text.secondary" }}>
+            {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+        <Box sx={{ flex: 1 }} />
+        {user && (
+          <Tooltip title={user.name || user.email || "Conta"}>
+            <IconButton size="small" onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
+              <Avatar src={user.avatar} sx={{ width: 30, height: 30, fontSize: 13, bgcolor: alpha(landing.blue, 0.2), color: "primary.main" }}>
+                {(user.name || user.email || "").charAt(0).toUpperCase()}
               </Avatar>
-              <Typography
-                className="programa-ativo-label"
-                variant="subtitle2"
-                component="span"
-                noWrap
-                sx={{
-                  fontWeight: 700,
-                  letterSpacing: 0.15,
-                  color: "text.primary",
-                  minWidth: 0,
-                }}
-              >
-                {programaContextLabel}
-              </Typography>
-            </Box>
-          ) : null}
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            flexShrink: 0,
-          }}
-        >
-          <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"}>
-            <IconButton color="inherit" onClick={() => setMode()}>
-              {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
             </IconButton>
           </Tooltip>
-          {user && (
-            <>
-              <Tooltip title="Conta">
-                <IconButton color="inherit" onClick={(e) => setUserMenuAnchor(e.currentTarget)}>
-                  <Avatar src={user.avatar} sx={{ width: 34, height: 34 }}>
-                    {(user.name || user.email || "").charAt(0).toUpperCase()}
-                  </Avatar>
-                </IconButton>
-              </Tooltip>
-              <Menu
-                anchorEl={userMenuAnchor}
-                open={Boolean(userMenuAnchor)}
-                onClose={() => {
-                  setUserMenuAnchor(null);
-                  setProgramasMenuAnchor(null);
-                  setEmpresasMenuAnchor(null);
-                }}
-                anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-              >
-                <Box sx={{ px: 2, py: 1, maxWidth: 280 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Logado como
-                  </Typography>
-                  <Typography variant="body1" fontWeight={700}>
-                    {user.name || user.email}
-                  </Typography>
-                </Box>
-                <Divider />
-                <MenuItem onClick={() => handleNavigate("/dashboard")}>
-                  <ListItemIcon>
-                    <HomeIcon fontSize="small" />
-                  </ListItemIcon>
-                  Início
-                </MenuItem>
-                <MenuItem onClick={() => handleNavigate("/perfil")}>
-                  <ListItemIcon>
-                    <PersonIcon fontSize="small" />
-                  </ListItemIcon>
-                  Perfil
-                </MenuItem>
-                <MenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setProgramasMenuAnchor(programasMenuAnchor ? null : e.currentTarget);
-                    setEmpresasMenuAnchor(null);
-                  }}
-                >
-                  <ListItemIcon>
-                    <FolderIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText primary="Programas" />
-                  <ExpandMoreIcon sx={{ fontSize: 18, transform: programasMenuAnchor ? "rotate(180deg)" : undefined }} />
-                </MenuItem>
-                <MenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEmpresasMenuAnchor(empresasMenuAnchor ? null : e.currentTarget);
-                    setProgramasMenuAnchor(null);
-                  }}
-                >
-                  <ListItemIcon>
-                    <BusinessIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText primary="Empresas" />
-                  <ExpandMoreIcon sx={{ fontSize: 18, transform: empresasMenuAnchor ? "rotate(180deg)" : undefined }} />
-                </MenuItem>
-                {isSystemAdmin && (
-                  <MenuItem onClick={() => handleNavigate("/admin")}>
-                    <ListItemIcon>
-                      <AdminPanelSettingsIcon fontSize="small" />
-                    </ListItemIcon>
-                    Administração
-                  </MenuItem>
-                )}
-                <MenuItem
-                  onClick={() => {
-                    setCookiePrefsOpen(true);
-                    setUserMenuAnchor(null);
-                  }}
-                >
-                  <ListItemIcon>
-                    <PrivacyTipIcon fontSize="small" />
-                  </ListItemIcon>
-                  Privacidade e cookies
-                </MenuItem>
-                <Divider />
-                <MenuItem
-                  onClick={() => {
-                    logout();
-                    setUserMenuAnchor(null);
-                  }}
-                >
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" />
-                  </ListItemIcon>
-                  Sair
-                </MenuItem>
-              </Menu>
-              <Menu
-                anchorEl={programasMenuAnchor}
-                open={Boolean(programasMenuAnchor)}
-                onClose={() => setProgramasMenuAnchor(null)}
-                anchorOrigin={{ horizontal: "right", vertical: "top" }}
-                transformOrigin={{ horizontal: "left", vertical: "top" }}
-                PaperProps={{ sx: { maxHeight: 400, minWidth: 260 } }}
-              >
-                {programas.map((p) => (
-                  <MenuItem key={p.id} onClick={() => { handleProgramaClick(p); setUserMenuAnchor(null); }}>
-                    <ListItemText
-                      primary={getProgramaTituloPrincipal(p)}
-                      secondary={getProgramaTituloOrganizacao(p) || undefined}
-                    />
-                  </MenuItem>
-                ))}
-              </Menu>
-              <Menu
-                anchorEl={empresasMenuAnchor}
-                open={Boolean(empresasMenuAnchor)}
-                onClose={() => setEmpresasMenuAnchor(null)}
-                anchorOrigin={{ horizontal: "right", vertical: "top" }}
-                transformOrigin={{ horizontal: "left", vertical: "top" }}
-              >
-                {empresas.map((e) => (
-                  <MenuItem key={e.id} onClick={() => { handleNavigate("/dashboard"); setUserMenuAnchor(null); }}>
-                    <ListItemText primary={e.razao_social || e.nome_fantasia || `Empresa ${e.id}`} />
-                  </MenuItem>
-                ))}
-              </Menu>
-              <CookiePreferencesDialog open={cookiePrefsOpen} onClose={() => setCookiePrefsOpen(false)} />
-            </>
-          )}
-        </Box>
-        </Toolbar>
-      </AppBar>
+        )}
+      </Box>
+    </Box>
+  );
+
+  const userMenus = (
+    <>
+      <Menu
+        anchorEl={userMenuAnchor}
+        open={Boolean(userMenuAnchor)}
+        onClose={() => {
+          setUserMenuAnchor(null);
+          setProgramasMenuAnchor(null);
+          setEmpresasMenuAnchor(null);
+        }}
+        anchorOrigin={{ horizontal: "right", vertical: "top" }}
+        transformOrigin={{ horizontal: "left", vertical: "bottom" }}
+      >
+        {user && (
+          <Box sx={{ px: 2, py: 1, maxWidth: 280 }}>
+            <Typography variant="caption" color="text.secondary">
+              Logado como
+            </Typography>
+            <Typography variant="body1" fontWeight={700}>
+              {user.name || user.email}
+            </Typography>
+          </Box>
+        )}
+        <Divider />
+        <MenuItem onClick={() => handleNavigate("/dashboard")}>
+          <ListItemIcon>
+            <HomeIcon fontSize="small" />
+          </ListItemIcon>
+          Início
+        </MenuItem>
+        <MenuItem onClick={() => handleNavigate("/perfil")}>
+          <ListItemIcon>
+            <PersonIcon fontSize="small" />
+          </ListItemIcon>
+          Perfil
+        </MenuItem>
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            setProgramasMenuAnchor(programasMenuAnchor ? null : e.currentTarget);
+            setEmpresasMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon>
+            <FolderIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Programas" />
+          <ExpandMoreIcon sx={{ fontSize: 18, transform: programasMenuAnchor ? "rotate(180deg)" : undefined }} />
+        </MenuItem>
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            setEmpresasMenuAnchor(empresasMenuAnchor ? null : e.currentTarget);
+            setProgramasMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon>
+            <BusinessIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Empresas" />
+          <ExpandMoreIcon sx={{ fontSize: 18, transform: empresasMenuAnchor ? "rotate(180deg)" : undefined }} />
+        </MenuItem>
+        {isSystemAdmin && (
+          <MenuItem onClick={() => handleNavigate("/admin")}>
+            <ListItemIcon>
+              <AdminPanelSettingsIcon fontSize="small" />
+            </ListItemIcon>
+            Administração
+          </MenuItem>
+        )}
+        <MenuItem
+          onClick={() => {
+            setCookiePrefsOpen(true);
+            setUserMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon>
+            <PrivacyTipIcon fontSize="small" />
+          </ListItemIcon>
+          Privacidade e cookies
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            logout();
+            setUserMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" />
+          </ListItemIcon>
+          Sair
+        </MenuItem>
+      </Menu>
+      <Menu
+        anchorEl={programasMenuAnchor}
+        open={Boolean(programasMenuAnchor)}
+        onClose={() => setProgramasMenuAnchor(null)}
+        anchorOrigin={{ horizontal: "right", vertical: "top" }}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
+        PaperProps={{ sx: { maxHeight: 400, minWidth: 260 } }}
+      >
+        {programas.map((p) => (
+          <MenuItem
+            key={p.id}
+            onClick={() => {
+              handleProgramaClick(p);
+              setUserMenuAnchor(null);
+            }}
+          >
+            <ListItemText
+              primary={getProgramaTituloPrincipal(p)}
+              secondary={getProgramaTituloOrganizacao(p) || undefined}
+            />
+          </MenuItem>
+        ))}
+      </Menu>
+      <Menu
+        anchorEl={empresasMenuAnchor}
+        open={Boolean(empresasMenuAnchor)}
+        onClose={() => setEmpresasMenuAnchor(null)}
+        anchorOrigin={{ horizontal: "right", vertical: "top" }}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
+      >
+        {empresas.map((e) => (
+          <MenuItem
+            key={e.id}
+            onClick={() => {
+              handleNavigate("/dashboard");
+              setUserMenuAnchor(null);
+            }}
+          >
+            <ListItemText primary={e.razao_social || e.nome_fantasia || `Empresa ${e.id}`} />
+          </MenuItem>
+        ))}
+      </Menu>
+      <CookiePreferencesDialog open={cookiePrefsOpen} onClose={() => setCookiePrefsOpen(false)} />
+    </>
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
-      {/* Mobile: drawer cobre o conteúdo; desktop: coluna só do menu (altura total, não fica sob a barra) */}
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "transparent" }}>
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -1089,7 +1050,6 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           position: "relative",
           borderRight: sidebarHidden ? 0 : 1,
           borderColor: "divider",
-          bgcolor: "background.paper",
         }}
       >
         <Box
@@ -1135,10 +1095,90 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           flexDirection: "column",
         }}
       >
-        {appBar}
-        <Box component="main" sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {/* Mobile only: barra compacta (não branca) */}
+        <AppBar
+          position="sticky"
+          elevation={0}
+          sx={{
+            display: { xs: "flex", md: "none" },
+            top: 0,
+            bgcolor: isDark ? alpha(landing.navy, 0.94) : alpha(landing.navy, 0.96),
+            color: landing.heroText,
+            borderBottom: `1px solid ${alpha("#fff", 0.08)}`,
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <Toolbar sx={{ minHeight: 44, px: 1, gap: 0.5 }}>
+            <IconButton color="inherit" edge="start" onClick={() => setMobileOpen(true)} aria-label="Abrir menu" size="small">
+              <MenuIcon fontSize="small" />
+            </IconButton>
+            <Box
+              component={Link}
+              href="/dashboard"
+              sx={{ display: "flex", alignItems: "center", gap: 0.75, textDecoration: "none", color: "inherit", minWidth: 0, flex: 1 }}
+            >
+              <Image src="/logo_p.png" alt="FPSI" width={22} height={22} />
+              <Typography variant="subtitle2" fontWeight={800} noWrap letterSpacing="-0.02em">
+                {programaContextLabel || "FPSI"}
+              </Typography>
+            </Box>
+            <IconButton color="inherit" size="small" onClick={() => setMode()} aria-label="Alternar tema">
+              {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
+            </IconButton>
+            {user && (
+              <IconButton color="inherit" size="small" onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
+                <Avatar src={user.avatar} sx={{ width: 28, height: 28, fontSize: 12 }}>
+                  {(user.name || user.email || "").charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+            )}
+          </Toolbar>
+        </AppBar>
+
+        {/* Desktop: chrome flutuante quando sidebar oculto */}
+        {!isMobile && sidebarHidden && (
+          <Box
+            sx={{
+              position: "fixed",
+              left: 10,
+              top: 10,
+              zIndex: theme.zIndex.appBar,
+              display: "flex",
+              alignItems: "center",
+              gap: 0.35,
+              p: 0.35,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette.background.paper, 0.92),
+              border: 1,
+              borderColor: "divider",
+              boxShadow: 2,
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <Tooltip title="Mostrar menu">
+              <IconButton onClick={() => setSidebarHidden(false)} aria-label="Mostrar menu" size="small">
+                <MenuOpenIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"}>
+              <IconButton size="small" onClick={() => setMode()}>
+                {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+            {user && (
+              <IconButton size="small" onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
+                <Avatar src={user.avatar} sx={{ width: 28, height: 28, fontSize: 12 }}>
+                  {(user.name || user.email || "").charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+            )}
+          </Box>
+        )}
+
+        <Box component="main" sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
           {children}
         </Box>
+        {userMenus}
       </Box>
     </Box>
   );

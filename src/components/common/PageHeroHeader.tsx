@@ -1,36 +1,41 @@
 import React from "react";
 import { Box, Typography, type SxProps, type Theme } from "@mui/material";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import { landing } from "@/components/landing/landingTokens";
 
 const iconBoxSx: SxProps<Theme> = {
-  width: 56,
-  height: 56,
+  width: 44,
+  height: 44,
   flexShrink: 0,
-  borderRadius: 2,
+  borderRadius: 1.5,
   bgcolor: "primary.main",
   color: "primary.contrastText",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  background: (t) =>
+    t.palette.mode === "dark"
+      ? `linear-gradient(145deg, ${landing.navy} 0%, ${landing.blue} 100%)`
+      : `linear-gradient(145deg, ${landing.blue} 0%, ${landing.blueBright} 100%)`,
   boxShadow: (t) =>
-    `0 2px 8px ${t.palette.mode === "dark" ? "rgba(0,0,0,0.35)" : "rgba(25, 118, 210, 0.28)"}`,
+    `0 2px 10px ${t.palette.mode === "dark" ? "rgba(0,0,0,0.35)" : "rgba(21, 101, 192, 0.28)"}`,
 };
 
 const titleSx: SxProps<Theme> = {
   fontWeight: 800,
-  mb: 0.5,
+  mb: 0.25,
   color: "text.primary",
-  lineHeight: 1.25,
-  letterSpacing: "-0.02em",
+  lineHeight: 1.2,
+  letterSpacing: "-0.025em",
 };
 
 export type PageHeroHeaderProps = {
   title: React.ReactNode;
   /** Texto simples ou bloco (links, várias linhas). */
   description?: React.ReactNode;
-  /** Ícone dentro do quadrado 56×56 (tamanho ~30). Ignorado se `iconSlot` for definido. */
+  /** Ícone dentro do quadrado (tamanho ~26). Ignorado se `iconSlot` for definido. */
   icon?: React.ReactNode;
-  /** Substitui o quadrado padrão (ex.: logo do programa maior). */
+  /** Substitui o quadrado padrão (ex.: logo do programa). */
   iconSlot?: React.ReactNode;
   titleComponent?: "h1" | "h2";
   /** Conteúdo à direita no desktop (ex.: botões de ação). */
@@ -40,7 +45,7 @@ export type PageHeroHeaderProps = {
 };
 
 /**
- * Cabeçalho de página alinhado à referência LGPD: quadrado primário + título h4 forte + descrição opcional.
+ * Cabeçalho compacto alinhado à tipografia da landing FPSI.
  */
 export function PageHeroHeader({
   title,
@@ -53,47 +58,51 @@ export function PageHeroHeader({
   className,
 }: PageHeroHeaderProps) {
   const hasDesc = description != null && description !== false;
-  const defaultIcon = icon ?? <ArticleOutlinedIcon sx={{ fontSize: 30 }} aria-hidden />;
+  const defaultIcon = icon ?? <ArticleOutlinedIcon sx={{ fontSize: 24 }} aria-hidden />;
 
   return (
     <Box
       className={className}
       sx={{
-        mb: 3,
+        mb: 2,
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "space-between",
         flexWrap: "wrap",
-        gap: 2,
+        gap: 1.25,
         ...sx,
       }}
     >
       <Box
         sx={{
           display: "flex",
-          alignItems: "flex-start",
-          gap: 2.5,
+          alignItems: "center",
+          gap: 1.5,
           flexWrap: "wrap",
-          flex: "1 1 320px",
+          flex: "1 1 280px",
           minWidth: 0,
         }}
       >
         {iconSlot ?? <Box sx={iconBoxSx}>{defaultIcon}</Box>}
-        <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
-          <Typography variant="h4" component={titleComponent} sx={{ ...titleSx, mb: hasDesc ? 0.5 : 0 }}>
+        <Box sx={{ flex: "1 1 180px", minWidth: 0 }}>
+          <Typography
+            variant="h5"
+            component={titleComponent}
+            sx={{ ...titleSx, fontSize: { xs: "1.15rem", md: "1.35rem" }, mb: hasDesc ? 0.2 : 0 }}
+          >
             {title}
           </Typography>
           {hasDesc ? (
             <Box
               sx={{
                 color: "text.secondary",
-                fontSize: "0.875rem",
-                lineHeight: 1.5,
+                fontSize: "0.8rem",
+                lineHeight: 1.4,
                 "& .MuiTypography-root": { color: "inherit" },
               }}
             >
               {typeof description === "string" ? (
-                <Typography variant="body2" component="span" color="inherit">
+                <Typography variant="body2" component="span" color="inherit" sx={{ fontSize: "inherit" }}>
                   {description}
                 </Typography>
               ) : (
@@ -104,7 +113,14 @@ export function PageHeroHeader({
         </Box>
       </Box>
       {trailing ? (
-        <Box sx={{ flexShrink: 0, width: { xs: "100%", sm: "auto" }, display: "flex", justifyContent: { xs: "stretch", sm: "flex-end" } }}>
+        <Box
+          sx={{
+            flexShrink: 0,
+            width: { xs: "100%", sm: "auto" },
+            display: "flex",
+            justifyContent: { xs: "stretch", sm: "flex-end" },
+          }}
+        >
           {trailing}
         </Box>
       ) : null}

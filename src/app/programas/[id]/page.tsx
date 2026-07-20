@@ -14,7 +14,6 @@ import {
   Alert,
   Skeleton,
   useTheme,
-  useMediaQuery,
   alpha,
   Avatar,
   Button,
@@ -25,7 +24,6 @@ import {
   Popover,
   Switch,
   CircularProgress,
-  Tooltip,
 } from "@mui/material";
 import {
   Group,
@@ -52,10 +50,7 @@ import {
   Event as EventIcon,
   MeetingRoom as MeetingRoomIcon,
   WarningAmber as WarningAmberIcon,
-  DashboardCustomize as DashboardCustomizeIcon,
-  ViewModule as ViewModuleIcon,
 } from "@mui/icons-material";
-import { PapelLgpdDiagramWithEdit } from "@/components/programa/PapelLgpdDiagramWithEdit";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -69,13 +64,7 @@ import { getProgramaLogoDisplayUrl, isProgramaDemonstracao } from "@/lib/utils/p
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import NextLink from "next/link";
-import { ModuloSistemaFlipCard, MODULO_FLIP_STRIP_WIDTH_PX } from "@/components/programa/ModuloSistemaFlipCard";
 import { ProgramaOperacionalDashboard } from "@/components/programa/ProgramaOperacionalDashboard";
-import {
-  getProgramaHomeViewMode,
-  setProgramaHomeViewMode,
-  type ProgramaHomeViewMode,
-} from "@/components/programa/programaHomeViewMode";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
 
 /** Ordem: escritório (camada visual opcional) → estrutura de governança → … → auditoria */
@@ -87,13 +76,14 @@ const sections: Array<{
   path: string;
   color: string;
   gradient: string;
+  featured?: boolean;
+  badge?: string;
 }> = [
   {
     key: "escritorio-governanca",
     title: "Escritório de governança",
     icon: <MeetingRoomIcon fontSize="large" />,
-    description:
-      "Navegação em formato de sala: mesas, papéis e atalhos aos setores (mesmos módulos do painel, visão gamificada em evolução)",
+    description: "Sala visual com atalhos aos módulos",
     path: "escritorio",
     color: "#5d4037",
     gradient: "linear-gradient(135deg, #5d4037 0%, #8d6e63 100%)",
@@ -102,85 +92,87 @@ const sections: Array<{
     key: "responsabilidades",
     title: "Estrutura de Governança",
     icon: <Group fontSize="large" />,
-    description:
-      "Instruções e campos para responsáveis institucionais (SI, privacidade, TIC, integridade), referência normativa PPSI 2.0 e diagrama de papéis LGPD",
+    description: "Responsáveis, papéis LGPD e PPSI",
     path: "responsabilidades",
     color: "#607d8b",
     gradient: "linear-gradient(135deg, #607d8b 0%, #78909c 100%)",
   },
   {
-    key: "conformidade-tratamento",
-    title: "Tratamento de dados e riscos",
-    icon: <GavelIcon fontSize="large" />,
-    description: "ROPA, RIPD e incidentes — registro de operações e gestão de riscos",
-    path: "conformidade",
-    color: "#1976d2",
-    gradient: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
-  },
-  {
     key: "riscos",
     title: "Gestão de Riscos",
     icon: <WarningAmberIcon fontSize="large" />,
-    description: "Registro de riscos, matriz 5×5 e acompanhamento de mitigação",
+    description: "Matriz 5×5 e mitigação",
     path: "riscos",
-    color: "#d32f2f",
-    gradient: "linear-gradient(135deg, #c62828 0%, #ef5350 100%)",
+    color: "#c62828",
+    gradient: "linear-gradient(135deg, #b71c1c 0%, #e53935 100%)",
+    featured: true,
+    badge: "Matriz 5×5",
+  },
+  {
+    key: "conformidade-tratamento",
+    title: "Tratamento de dados",
+    icon: <GavelIcon fontSize="large" />,
+    description: "ROPA, RIPD e incidentes",
+    path: "conformidade",
+    color: "#1565C0",
+    gradient: "linear-gradient(135deg, #0A2744 0%, #1565C0 100%)",
   },
   {
     key: "diagnostico",
     title: "Diagnóstico",
     icon: <CheckCircleOutline fontSize="large" />,
-    description: "Avalie a maturidade e realize diagnósticos completos",
+    description: "PPSI + Governança de IA (AIGP)",
     path: "diagnostico",
-    color: "#4caf50",
-    gradient: "linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)"
+    color: "#43A047",
+    gradient: "linear-gradient(135deg, #2E7D32 0%, #43A047 100%)",
+    featured: true,
+    badge: "AIGP",
   },
   {
     key: "planos-acao",
     title: "Plano de Trabalho",
     icon: <AssignmentIcon fontSize="large" />,
-    description: "Gerencie o plano de trabalho e acompanhe o progresso",
+    description: "Ações e acompanhamento",
     path: "planos-acao",
-    color: "#2196f3",
-    gradient: "linear-gradient(135deg, #2196f3 0%, #42a5f5 100%)"
+    color: "#2196F3",
+    gradient: "linear-gradient(135deg, #1565C0 0%, #2196F3 100%)",
   },
   {
     key: "politicas",
     title: "Políticas e documentos",
     icon: <Policy fontSize="large" />,
-    description:
-      "Políticas institucionais, aviso de privacidade e outros textos que você publica ou cita no portal de privacidade",
+    description: "Políticas e textos do portal",
     path: "politicas",
-    color: "#9c27b0",
-    gradient: "linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%)",
+    color: "#00897B",
+    gradient: "linear-gradient(135deg, #004D40 0%, #00897B 100%)",
   },
   {
     key: "portal-privacidade",
     title: "Titulares e canais públicos",
     icon: <PublicIcon fontSize="large" />,
-    description: "Pedidos dos titulares, reportes e contato, e acesso ao site público (portal de privacidade) do programa",
+    description: "Pedidos, reportes e portal",
     path: "conformidade/portal",
     color: "#0288d1",
-    gradient: "linear-gradient(135deg, #0288d1 0%, #03a9f4 100%)",
+    gradient: "linear-gradient(135deg, #01579B 0%, #0288D1 100%)",
   },
   {
     key: "usuarios",
     title: "Usuários e Permissões",
     icon: <PeopleIcon fontSize="large" />,
-    description: "Controle acesso e permissões dos usuários",
+    description: "Acesso e permissões",
     path: "usuarios",
-    color: "#ff9800",
-    gradient: "linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)"
+    color: "#F9A825",
+    gradient: "linear-gradient(135deg, #F9A825 0%, #FFB300 100%)",
   },
   {
     key: "auditoria",
     title: "Histórico de Atividades",
     icon: <SecurityIcon fontSize="large" />,
-    description: "Trilha de auditoria: quem fez o quê, quando (LGPD art. 37, Framework FPSI Controle 8)",
+    description: "Trilha de auditoria",
     path: "auditoria",
     color: "#455a64",
-    gradient: "linear-gradient(135deg, #455a64 0%, #78909c 100%)"
-  }
+    gradient: "linear-gradient(135deg, #263238 0%, #455A64 100%)",
+  },
 ];
 
 /** Campos de identificação e contato (tabela programa) — edição na página inicial do programa */
@@ -220,6 +212,46 @@ type ProgramaFieldDef = {
   /** Linha inteira no grid (ex.: texto longo) */
   fullRow?: boolean;
 };
+
+/** URLs externas opcionais dos docs do portal (vazio = página interna /{slug}/…). */
+const portalLinkFields: ProgramaFieldDef[] = [
+  {
+    key: "link_termo_uso",
+    label: "URL externa — Termo de uso",
+    icon: <DescriptionIcon />,
+    fullRow: true,
+  },
+  {
+    key: "link_politica_privacidade",
+    label: "URL externa — Política de privacidade",
+    icon: <PublicIcon />,
+    fullRow: true,
+  },
+  {
+    key: "link_aviso_titular",
+    label: "URL externa — Aviso do portal do titular",
+    icon: <PublicIcon />,
+    fullRow: true,
+  },
+  {
+    key: "link_cookies",
+    label: "URL externa — Política de cookies",
+    icon: <PublicIcon />,
+    fullRow: true,
+  },
+  {
+    key: "link_declaracao_seguranca",
+    label: "URL externa — Declaração de segurança",
+    icon: <PublicIcon />,
+    fullRow: true,
+  },
+  {
+    key: "link_reportar_vulnerabilidade",
+    label: "URL externa — Reportar vulnerabilidade",
+    icon: <SecurityIcon />,
+    fullRow: true,
+  },
+];
 
 const programaEscopoField: ProgramaFieldDef = {
   key: "descricao_escopo",
@@ -299,14 +331,11 @@ export default function ProgramaMainPage() {
   const router = useRouter();
   const params = useParams();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const idOrSlug = params.id as string;
   const [programa, setPrograma] = useState<any>(null);
   const [editField, setEditField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  /** Destaca o card Estrutura de Governança quando o cursor está sobre o diagrama Estrutura de Tratamento */
-  const [diagramHover, setDiagramHover] = useState(false);
   const [setorSaving, setSetorSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState<string | null>(null);
   const [orgaosCatalogo, setOrgaosCatalogo] = useState<
@@ -344,38 +373,22 @@ export default function ProgramaMainPage() {
 
   const [modulosResumo, setModulosResumo] = useState<ModulosResumoApi | null>(null);
   const [modulosResumoLoading, setModulosResumoLoading] = useState(false);
-  const [modulosResumoError, setModulosResumoError] = useState(false);
-  const [homeViewMode, setHomeViewMode] = useState<ProgramaHomeViewMode>("dashboard");
-  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
-  const canHover = useMediaQuery("(hover: hover)", { noSsr: true });
-
-  useEffect(() => {
-    setHomeViewMode(getProgramaHomeViewMode());
-  }, []);
 
   useEffect(() => {
     if (!programaId) {
       setModulosResumo(null);
       setModulosResumoLoading(false);
-      setModulosResumoError(false);
       return;
     }
     let cancelled = false;
     setModulosResumoLoading(true);
-    setModulosResumoError(false);
     dataService
       .fetchModulosResumo(programaId)
       .then((d) => {
-        if (!cancelled) {
-          setModulosResumo(d);
-          setModulosResumoError(false);
-        }
+        if (!cancelled) setModulosResumo(d);
       })
       .catch(() => {
-        if (!cancelled) {
-          setModulosResumo(null);
-          setModulosResumoError(true);
-        }
+        if (!cancelled) setModulosResumo(null);
       })
       .finally(() => {
         if (!cancelled) setModulosResumoLoading(false);
@@ -753,8 +766,8 @@ export default function ProgramaMainPage() {
       sx={{
         position: "relative",
         flexShrink: 0,
-        width: 96,
-        height: 96,
+        width: 48,
+        height: 48,
       }}
     >
       {logoDisplayUrl ? (
@@ -763,25 +776,25 @@ export default function ProgramaMainPage() {
           src={logoDisplayUrl}
           alt="Logo"
           sx={{
-            width: 96,
-            height: 96,
-            borderRadius: 2,
+            width: 48,
+            height: 48,
+            borderRadius: 1.25,
             objectFit: "contain",
             bgcolor: alpha(theme.palette.primary.main, 0.06),
-            p: 0.75,
+            p: 0.4,
             display: "block",
           }}
         />
       ) : (
         <Avatar
           sx={{
-            width: 96,
-            height: 96,
-            borderRadius: 2,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+            width: 48,
+            height: 48,
+            borderRadius: 1.25,
+            background: `linear-gradient(145deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
           }}
         >
-          <SecurityIcon sx={{ fontSize: 48 }} />
+          <SecurityIcon sx={{ fontSize: 24 }} />
         </Avatar>
       )}
       {!isDemoMode && !isProgramaDemoInstitucional && (
@@ -794,8 +807,8 @@ export default function ProgramaMainPage() {
             position: "absolute",
             bottom: -2,
             right: -2,
-            width: 30,
-            height: 30,
+            width: 22,
+            height: 22,
             p: 0,
             bgcolor: "background.paper",
             border: `1px solid ${theme.palette.divider}`,
@@ -804,9 +817,9 @@ export default function ProgramaMainPage() {
           }}
         >
           {logoUploading === "programa" ? (
-            <CircularProgress size={16} thickness={5} />
+            <CircularProgress size={12} thickness={5} />
           ) : (
-            <CloudUploadIcon sx={{ fontSize: 16 }} />
+            <CloudUploadIcon sx={{ fontSize: 12 }} />
           )}
           <input
             type="file"
@@ -825,152 +838,85 @@ export default function ProgramaMainPage() {
 
   const dadosButtons = (
     <Stack
-      direction={{ xs: "column", sm: "row" }}
-      spacing={2}
+      direction="row"
+      spacing={0.75}
       flexWrap="wrap"
       useFlexGap
-      alignItems="stretch"
+      alignItems="center"
       sx={{
         flexShrink: 0,
         width: { xs: "100%", sm: "auto" },
-        justifyContent: { xs: "stretch", sm: "flex-end" },
+        justifyContent: { xs: "flex-start", sm: "flex-end" },
       }}
     >
-            <Button
-              variant="contained"
-              aria-expanded={Boolean(dadosProgramaPopoverAnchor)}
-              aria-haspopup="true"
-              onClick={(e) => {
-                setDadosOrgPopoverAnchor(null);
-                setDadosProgramaPopoverAnchor((a) => (a ? null : e.currentTarget));
-              }}
-              sx={{
-                textTransform: "none",
-                borderRadius: 2.5,
-                py: 2.25,
-                px: 2.5,
-                minHeight: 128,
-                width: { xs: "100%", sm: 176 },
-                maxWidth: { xs: 420, sm: 176 },
-                mx: { xs: "auto", sm: 0 },
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                gap: 1,
-                fontWeight: 700,
-                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.38)}`,
-                background: `linear-gradient(145deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                color: theme.palette.primary.contrastText,
-                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                "&:hover": {
-                  boxShadow: `0 10px 28px ${alpha(theme.palette.primary.main, 0.48)}`,
-                  transform: "translateY(-3px)",
-                  background: `linear-gradient(145deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
-                },
-              }}
-            >
-              <DashboardIcon sx={{ fontSize: 36, opacity: 0.95 }} />
-              <Box sx={{ textAlign: "left" }}>
-                <Typography component="span" variant="subtitle1" sx={{ fontWeight: 800, display: "block", lineHeight: 1.25 }}>
-                  Dados do programa
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.92, fontWeight: 500, display: "block", mt: 0.35 }}>
-                  Escopo e identificação
-                </Typography>
-              </Box>
-            </Button>
-            <Button
-              variant="contained"
-              aria-expanded={Boolean(dadosOrgPopoverAnchor)}
-              aria-haspopup="true"
-              onClick={(e) => {
-                setDadosProgramaPopoverAnchor(null);
-                setDadosOrgPopoverAnchor((a) => (a ? null : e.currentTarget));
-              }}
-              sx={{
-                textTransform: "none",
-                borderRadius: 2.5,
-                py: 2.25,
-                px: 2.5,
-                minHeight: 128,
-                width: { xs: "100%", sm: 176 },
-                maxWidth: { xs: 420, sm: 176 },
-                mx: { xs: "auto", sm: 0 },
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                gap: 1,
-                fontWeight: 700,
-                boxShadow: `0 6px 20px ${alpha(theme.palette.secondary.main, 0.35)}`,
-                background: `linear-gradient(145deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
-                color: theme.palette.secondary.contrastText,
-                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                "&:hover": {
-                  boxShadow: `0 10px 28px ${alpha(theme.palette.secondary.main, 0.45)}`,
-                  transform: "translateY(-3px)",
-                  background: `linear-gradient(145deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
-                },
-              }}
-            >
-              <BusinessIcon sx={{ fontSize: 36, opacity: 0.95 }} />
-              <Box sx={{ textAlign: "left" }}>
-                <Typography component="span" variant="subtitle1" sx={{ fontWeight: 800, display: "block", lineHeight: 1.25 }}>
-                  Dados da organização
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.92, fontWeight: 500, display: "block", mt: 0.35 }}>
-                  Contato, CNPJ e endereço
-                </Typography>
-              </Box>
-            </Button>
-          </Stack>
+      <Button
+        variant="outlined"
+        size="small"
+        aria-expanded={Boolean(dadosProgramaPopoverAnchor)}
+        aria-haspopup="true"
+        onClick={(e) => {
+          setDadosOrgPopoverAnchor(null);
+          setDadosProgramaPopoverAnchor((a) => (a ? null : e.currentTarget));
+        }}
+        startIcon={<DashboardIcon sx={{ fontSize: "16px !important" }} />}
+        sx={{
+          borderRadius: 1.5,
+          py: 0.45,
+          px: 1.25,
+          fontWeight: 700,
+          fontSize: "0.78rem",
+        }}
+      >
+        Programa
+      </Button>
+      <Button
+        variant="outlined"
+        size="small"
+        color="secondary"
+        aria-expanded={Boolean(dadosOrgPopoverAnchor)}
+        aria-haspopup="true"
+        onClick={(e) => {
+          setDadosProgramaPopoverAnchor(null);
+          setDadosOrgPopoverAnchor((a) => (a ? null : e.currentTarget));
+        }}
+        startIcon={<BusinessIcon sx={{ fontSize: "16px !important" }} />}
+        sx={{
+          borderRadius: 1.5,
+          py: 0.45,
+          px: 1.25,
+          fontWeight: 700,
+          fontSize: "0.78rem",
+        }}
+      >
+        Organização
+      </Button>
+    </Stack>
   );
 
+  const subtitleLine = isOrgaoPublico
+    ? orgaoNome || programa.sigla || programa.unidade || null
+    : programa.nome_fantasia || programa.razao_social || null;
+
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 1.5, md: 2 }, px: { xs: 1.5, sm: 2.5 } }}>
       <PageHeroHeader
+        sx={{
+          mb: 1.25,
+          gap: 1.25,
+          "& h2": { fontSize: { xs: "1.2rem", md: "1.35rem" }, mb: 0.15, letterSpacing: "-0.025em" },
+        }}
         iconSlot={logoSlot}
         title={programaName}
         description={
           hasSubtitle || !isDemoMode ? (
-            <>
-              {hasSubtitle && (
-                <Stack spacing={0.35} sx={{ mb: !isDemoMode ? 1 : 0 }}>
-                  {isOrgaoPublico ? (
-                    <>
-                      {orgaoNome && (
-                        <Typography variant="body1" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
-                          {orgaoNome}
-                        </Typography>
-                      )}
-                      {!orgaoNome && programa.sigla && (
-                        <Typography variant="body1" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
-                          {programa.sigla}
-                        </Typography>
-                      )}
-                      {!orgaoNome && programa.unidade && (
-                        <Typography variant="body1" sx={{ fontSize: "0.9375rem", letterSpacing: "0.01em" }}>
-                          {programa.unidade}
-                        </Typography>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {programa.nome_fantasia && (
-                        <Typography variant="body1" sx={{ fontSize: "1rem", fontWeight: 500, letterSpacing: "0.01em" }}>
-                          {programa.nome_fantasia}
-                        </Typography>
-                      )}
-                      {programa.razao_social && (
-                        <Typography variant="body1" sx={{ fontSize: "0.9375rem", letterSpacing: "0.01em" }}>
-                          {programa.razao_social}
-                        </Typography>
-                      )}
-                    </>
-                  )}
-                </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              {subtitleLine && (
+                <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
+                  {subtitleLine}
+                </Typography>
               )}
               {!isDemoMode && (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+                <>
                   <LastUpdateInfo
                     updatedAt={programa.updated_at ?? lastActivity?.created_at}
                     userName={lastActivity?.user_name}
@@ -983,11 +929,11 @@ export default function ProgramaMainPage() {
                     underline="hover"
                     color="primary"
                   >
-                    Histórico completo
+                    Histórico
                   </Link>
-                </Box>
+                </>
               )}
-            </>
+            </Stack>
           ) : undefined
         }
         trailing={dadosButtons}
@@ -1113,6 +1059,19 @@ export default function ProgramaMainPage() {
                   {renderEditableField(field, programa[field.key] ?? "", canEditProgramaFieldsUi)}
                 </Grid>
               ))}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1 }}>
+                Links do portal (opcional)
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                Se vazio, o portal usa a página interna e, quando houver, o texto publicado em Políticas e documentos.
+              </Typography>
+            </Grid>
+            {portalLinkFields.map((field) => (
+              <Grid item xs={12} key={field.key}>
+                {renderEditableField(field, programa[field.key] ?? "", canEditProgramaFieldsUi)}
+              </Grid>
+            ))}
             {isOrgaoPublico && (
               <Grid item xs={12} md={6}>
                 <FormControl
@@ -1182,132 +1141,14 @@ export default function ProgramaMainPage() {
         </LocalizationProvider>
       </Popover>
 
-      {/* Modo Demo Alert */}
-      {isDemoMode && (
-        <Alert severity="info" sx={{ mb: 4, borderRadius: 2 }}>
-          <Typography variant="body2">
-            <strong>Modo Demonstração:</strong> Dados de exemplo.
-          </Typography>
-        </Alert>
-      )}
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={homeViewMode === "dashboard" ? <ViewModuleIcon /> : <DashboardCustomizeIcon />}
-          onClick={() => {
-            const next = homeViewMode === "dashboard" ? "modulos" : "dashboard";
-            setHomeViewMode(next);
-            setProgramaHomeViewMode(next);
-          }}
-        >
-          {homeViewMode === "dashboard" ? "Ver módulos (cards)" : "Ver painel operacional"}
-        </Button>
-      </Box>
-
-      {homeViewMode === "dashboard" ? (
-        <ProgramaOperacionalDashboard
-          idOrSlug={idOrSlug}
-          programaId={programa.id}
-          isDemoMode={isDemoMode}
-          modulosResumo={modulosResumo}
-          modulosResumoLoading={modulosResumoLoading}
-          sections={sections}
-          onSwitchToModulos={() => {
-            setHomeViewMode("modulos");
-            setProgramaHomeViewMode("modulos");
-          }}
-        />
-      ) : (
-      <Grid container spacing={{ xs: 3, lg: 3 }} alignItems="stretch">
-        {/* Seções principais: 8/12 em desktop para caber 3 cards em xl */}
-        <Grid item xs={12} lg={8}>
-          <Grid container spacing={2.5}>
-            {sections.map((section) => {
-              const highlightRespCard = diagramHover && section.key === "responsabilidades";
-              return (
-                <Grid item xs={12} sm={6} xl={4} key={section.key}>
-                  <Box sx={{ position: "relative" }}>
-                    {section.key === "portal-privacidade" &&
-                      modulosResumo?.publicPortalPath && (
-                        <Tooltip title="Abrir portal público (nova aba)" placement="left">
-                          <Box
-                            component="span"
-                            sx={{
-                              position: "absolute",
-                              top: -10,
-                              /* À esquerda da faixa do flip + margem — não sobrepõe o ícone Reply */
-                              right: MODULO_FLIP_STRIP_WIDTH_PX + 8,
-                              zIndex: 2,
-                              lineHeight: 0,
-                            }}
-                          >
-                            <IconButton
-                              component={NextLink}
-                              href={modulosResumo.publicPortalPath}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              size="small"
-                              aria-label="Abrir portal público em nova aba"
-                              sx={{
-                                width: 36,
-                                minHeight: 52,
-                                px: 0.5,
-                                py: 0.75,
-                                flexDirection: "column",
-                                borderRadius: "4px 4px 10px 10px",
-                                border: `1px solid ${alpha(section.color, 0.42)}`,
-                                borderTop: `4px solid ${section.color}`,
-                                bgcolor: alpha(section.color, 0.12),
-                                color: section.color,
-                                boxShadow: "0 3px 10px rgba(0,0,0,0.14)",
-                                "&:hover": {
-                                  bgcolor: alpha(section.color, 0.22),
-                                  borderColor: alpha(section.color, 0.65),
-                                  boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
-                                },
-                              }}
-                            >
-                              <PublicIcon sx={{ fontSize: 22 }} />
-                            </IconButton>
-                          </Box>
-                        </Tooltip>
-                      )}
-                    <ModuloSistemaFlipCard
-                      section={section}
-                      idOrSlug={idOrSlug}
-                      highlight={highlightRespCard}
-                      resumo={modulosResumo}
-                      resumoLoading={modulosResumoLoading}
-                      resumoError={modulosResumoError}
-                      prefersReducedMotion={prefersReducedMotion}
-                      canHover={canHover}
-                    />
-                  </Box>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Grid>
-
-        {/* Estrutura de Tratamento (diagrama) — sem botão Gerenciar; edição indicada pelo destaque no card Estrutura de Governança ao passar o mouse */}
-        <Grid item xs={12} lg={4}>
-          <Box
-            onMouseEnter={() => setDiagramHover(true)}
-            onMouseLeave={() => setDiagramHover(false)}
-            sx={{ height: "100%", minHeight: { xs: 400, lg: 480 } }}
-          >
-            <PapelLgpdDiagramWithEdit
-              programaId={programa.id}
-              idOrSlug={idOrSlug}
-              isDemoMode={isDemoMode}
-              showManageButton={false}
-            />
-          </Box>
-        </Grid>
-      </Grid>
-      )}
+      <ProgramaOperacionalDashboard
+        idOrSlug={idOrSlug}
+        programaId={programa.id}
+        isDemoMode={isDemoMode}
+        modulosResumo={modulosResumo}
+        modulosResumoLoading={modulosResumoLoading}
+        sections={sections}
+      />
 
     </Container>
   );

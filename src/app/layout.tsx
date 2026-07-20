@@ -4,6 +4,7 @@ import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import { useNotificationProvider, RefineSnackbarProvider } from "@refinedev/mui";
 import routerProvider from "@refinedev/nextjs-router";
 import { Metadata, Viewport } from "next";
+import { Montserrat } from "next/font/google";
 import Script from "next/script";
 import React, { Suspense } from "react";
 import GppGoodTwoToneIcon from '@mui/icons-material/GppGoodTwoTone';
@@ -14,6 +15,14 @@ import { dataProvider } from "@providers/data-provider";
 import { BetaRibbon } from "@/components/BetaRibbon";
 import { AppPrivacyChrome } from "@/components/privacy/AppPrivacyChrome";
 import { ConditionalAnalytics } from "@/components/privacy/ConditionalAnalytics";
+
+/** Mesma família da landing / wordmark FPSI. */
+const brandFont = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  variable: "--font-brand",
+});
 
 export const metadata: Metadata = {
   title: "FPSI - Framework de Privacidade e Segurança da Informação",
@@ -35,7 +44,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#667eea",
+  themeColor: "#1565C0",
 }; 
 
 export default function RootLayout({
@@ -46,8 +55,8 @@ export default function RootLayout({
   const defaultMode = "light";
 
   return (
-    <html lang="pt-BR">
-      <body>
+    <html lang="pt-BR" className={brandFont.variable}>
+      <body className={brandFont.className}>
         {process.env.NODE_ENV === "development" && (
           <Script id="fpsi-dev-clear-sw-cache" strategy="beforeInteractive">
             {`(function(){var p=Promise.resolve();if(typeof navigator!=="undefined"&&"serviceWorker"in navigator){p=navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));});}p.then(function(){if(typeof caches!=="undefined"){return caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));});}}).catch(function(){});})();`}

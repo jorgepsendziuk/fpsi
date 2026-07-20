@@ -19,7 +19,6 @@ import {
   MenuItem,
   Skeleton,
   Stack,
-  Divider,
   Chip,
   Dialog,
   DialogTitle,
@@ -32,9 +31,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import {
-  Person as PersonIcon,
   Settings as SettingsIcon,
-  Business as BusinessIcon,
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -45,7 +42,6 @@ import {
   DarkMode as MoonIcon,
   Star as StarIcon,
   Close as CloseIcon,
-  Phone as PhoneIcon,
   Email as EmailIcon,
   CloudUpload as CloudUploadIcon,
   MenuBook as MenuBookIcon,
@@ -155,29 +151,46 @@ export default function DashboardPage() {
   const greetingIcon = useMemo(() => {
     switch (greeting.kind) {
       case "manha":
-        return <SunriseIcon sx={{ fontSize: "clamp(180px, 28vw, 320px)" }} />;
+        return <SunriseIcon sx={{ fontSize: "clamp(72px, 12vw, 120px)" }} />;
       case "tarde":
-        return <SunIcon sx={{ fontSize: "clamp(180px, 28vw, 320px)" }} />;
+        return <SunIcon sx={{ fontSize: "clamp(72px, 12vw, 120px)" }} />;
       case "noite":
         return (
-          <Box sx={{ position: "relative", display: "inline-flex", fontSize: "clamp(180px, 28vw, 320px)" }}>
+          <Box sx={{ position: "relative", display: "inline-flex", fontSize: "clamp(72px, 12vw, 120px)" }}>
             <MoonIcon sx={{ fontSize: "1em" }} />
             <StarIcon sx={{ position: "absolute", top: "8%", right: "12%", fontSize: "0.22em", opacity: 0.9 }} />
-            <StarIcon sx={{ position: "absolute", bottom: "15%", left: "8%", fontSize: "0.14em", opacity: 0.7 }} />
           </Box>
         );
     }
   }, [greeting.kind]);
 
   const greetingBg = useMemo(() => {
-    const soft = theme.palette.mode === "dark" ? 0.08 : 0.12;
+    const dark = theme.palette.mode === "dark";
     switch (greeting.kind) {
       case "manha":
-        return { bgcolor: alpha("#E65100", soft), borderColor: alpha("#FF9800", 0.15) };
+        return {
+          bgcolor: dark ? alpha("#0A2744", 0.55) : alpha("#E8F1F8", 0.95),
+          borderColor: alpha("#1565C0", dark ? 0.28 : 0.14),
+          backgroundImage: dark
+            ? "linear-gradient(125deg, rgba(33,150,243,0.14) 0%, transparent 60%)"
+            : "linear-gradient(125deg, #E8F1F8 0%, rgba(255,255,255,0.75) 60%)",
+        };
       case "tarde":
-        return { bgcolor: alpha("#F9A825", soft), borderColor: alpha("#FFC107", 0.2) };
+        return {
+          bgcolor: dark ? alpha("#0A2744", 0.55) : alpha("#FFF8E1", 0.9),
+          borderColor: alpha("#F9A825", dark ? 0.28 : 0.2),
+          backgroundImage: dark
+            ? "linear-gradient(125deg, rgba(249,168,37,0.12) 0%, transparent 60%)"
+            : "linear-gradient(125deg, #FFF8E1 0%, rgba(255,255,255,0.8) 60%)",
+        };
       case "noite":
-        return { bgcolor: alpha("#283593", soft), borderColor: alpha("#5C6BC0", 0.2) };
+        return {
+          bgcolor: dark ? alpha("#061525", 0.75) : alpha("#0A2744", 0.06),
+          borderColor: alpha("#1565C0", dark ? 0.32 : 0.14),
+          backgroundImage: dark
+            ? "linear-gradient(125deg, rgba(10,39,68,0.95) 0%, rgba(6,21,37,0.45) 70%)"
+            : "linear-gradient(125deg, rgba(10,39,68,0.07) 0%, #E8F1F8 65%)",
+        };
     }
   }, [greeting.kind, theme.palette.mode]);
   const [empresaMenuAnchor, setEmpresaMenuAnchor] = useState<null | HTMLElement>(null);
@@ -349,34 +362,33 @@ export default function DashboardPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 2.5 } }}>
       <Box
         sx={{
-          mb: 5,
+          mb: 2,
           position: "relative",
           overflow: "hidden",
-          minHeight: 120,
           display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          alignItems: { xs: "stretch", md: "center" },
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
           justifyContent: "space-between",
-          gap: 2,
-          borderRadius: 3,
-          px: 3,
-          py: 2.5,
+          gap: 1.5,
+          borderRadius: 2,
+          px: 2,
+          py: 1.25,
           border: "1px solid",
           ...greetingBg,
         }}
       >
-        <Box sx={{ position: "relative", zIndex: 1, flex: 1 }}>
+        <Box sx={{ position: "relative", zIndex: 1, flex: 1, minWidth: 0 }}>
           <Box
             sx={{
               position: "absolute",
-              right: -40,
+              right: -8,
               top: "50%",
               transform: "translateY(-50%)",
               color: theme.palette.text.primary,
-              opacity: theme.palette.mode === "dark" ? 0.06 : 0.09,
+              opacity: theme.palette.mode === "dark" ? 0.08 : 0.1,
               pointerEvents: "none",
               lineHeight: 0,
             }}
@@ -385,32 +397,42 @@ export default function DashboardPage() {
             {greetingIcon}
           </Box>
           <Typography
-            variant="subtitle1"
-            component="h2"
+            variant="h6"
+            component="h1"
             sx={{
-              fontWeight: 600,
-              letterSpacing: "0.02em",
+              fontWeight: 800,
+              letterSpacing: "-0.02em",
               color: "text.primary",
-              mb: 0.5,
+              lineHeight: 1.2,
             }}
           >
             {greeting.label}
             {userName ? `, ${userName}` : ""}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Gerencie seu perfil, empresas e programas de diagnóstico.
-          </Typography>
+          <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 0.35 }}>
+            {(profile?.email || user?.email) && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+                <EmailIcon sx={{ fontSize: 13 }} />
+                {profile?.email || user?.email}
+              </Typography>
+            )}
+            {profile?.cargo?.nome && (
+              <Chip label={profile.cargo.nome} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.68rem" }} />
+            )}
+            {profile?.departamento?.nome && (
+              <Chip label={profile.departamento.nome} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.68rem" }} />
+            )}
+          </Stack>
         </Box>
 
-        {/* Cabeçalho de perfil - dados de contato */}
         <Box
           sx={{
             position: "relative",
             zIndex: 1,
             display: "flex",
             alignItems: "center",
-            gap: 2,
-            flexWrap: "wrap",
+            gap: 1,
+            flexShrink: 0,
           }}
         >
           <Box
@@ -424,10 +446,10 @@ export default function DashboardPage() {
             <Avatar
               src={profile?.avatar_url ?? undefined}
               sx={{
-                width: 64,
-                height: 64,
+                width: 44,
+                height: 44,
                 bgcolor: alpha(theme.palette.primary.main, 0.2),
-                border: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                border: `2px solid ${alpha(theme.palette.primary.main, 0.28)}`,
               }}
             >
               {userName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "?"}
@@ -437,18 +459,20 @@ export default function DashboardPage() {
               size="small"
               sx={{
                 position: "absolute",
-                bottom: -4,
-                right: -4,
+                bottom: -3,
+                right: -3,
+                width: 22,
+                height: 22,
                 bgcolor: theme.palette.background.paper,
-                boxShadow: 2,
+                boxShadow: 1,
                 "&:hover": { bgcolor: theme.palette.background.paper },
               }}
               disabled={avatarUploading}
             >
               {avatarUploading ? (
-                <CircularProgress size={18} color="inherit" />
+                <CircularProgress size={12} color="inherit" />
               ) : (
-                <CloudUploadIcon fontSize="small" />
+                <CloudUploadIcon sx={{ fontSize: 12 }} />
               )}
             </IconButton>
             <input
@@ -459,194 +483,51 @@ export default function DashboardPage() {
               disabled={avatarUploading}
             />
           </Box>
-          <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-            {(profile?.telefone || profile?.email || user?.email) && (
-              <>
-                {profile?.telefone && (
-                  <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <PhoneIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                    {profile.telefone}
-                  </Typography>
-                )}
-                {(profile?.email || user?.email) && (
-                  <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <EmailIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                    {profile?.email || user?.email}
-                  </Typography>
-                )}
-              </>
-            )}
-            {(profile?.cargo || profile?.departamento) && (
-              <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
-                {profile?.cargo?.nome && (
-                  <Chip label={profile.cargo.nome} size="small" variant="outlined" sx={{ height: 22, fontSize: "0.75rem" }} />
-                )}
-                {profile?.departamento?.nome && (
-                  <Chip label={profile.departamento.nome} size="small" variant="outlined" sx={{ height: 22, fontSize: "0.75rem" }} />
-                )}
-              </Stack>
-            )}
-            {(!profile?.telefone && !profile?.email && !user?.email) && (!profile?.cargo && !profile?.departamento) && (
-              <Typography variant="caption" color="text.secondary">
-                Complete seu perfil
-              </Typography>
-            )}
-          </Stack>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<SettingsIcon />}
+            onClick={() => setOpenPerfilDialog(true)}
+            sx={{ borderRadius: 1.5, fontWeight: 600 }}
+          >
+            Perfil
+          </Button>
+          <Button
+            component={NextLink}
+            href="/referencias/lgpd"
+            size="small"
+            variant="text"
+            startIcon={<MenuBookIcon />}
+            sx={{ borderRadius: 1.5, fontWeight: 600, display: { xs: "none", sm: "inline-flex" } }}
+          >
+            LGPD
+          </Button>
         </Box>
       </Box>
 
       <DashboardOperacionalSection />
 
-      {/* Perfil e LGPD — metade da largura cada, lado a lado (empilham no xs) */}
-      <Grid container spacing={2} sx={{ mb: 5 }}>
-        <Grid item xs={12} sm={6}>
-          <Card
-            sx={{
-              height: "100%",
-              borderRadius: 2,
-              border: `1px solid ${theme.palette.divider}`,
-              overflow: "hidden",
-              background: `linear-gradient(125deg, ${alpha(theme.palette.info.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
-            }}
-          >
-            <CardContent
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "stretch",
-                gap: 2,
-                "&:last-child": { pb: 2 },
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, minWidth: 0 }}>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    flexShrink: 0,
-                    borderRadius: 2,
-                    bgcolor: alpha(theme.palette.info.main, 0.15),
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <MenuBookIcon sx={{ fontSize: 28, color: "info.main" }} />
-                </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
-                    LGPD
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    Acesse todos os artigos da Lei Geral de Proteção de Dados (LGPD), organizados para consulta fácil e aprendizado direto no sistema.
-                  </Typography>
-                </Box>
-              </Box>
-              <CardActions sx={{ p: 0, pt: 0, justifyContent: "flex-start" }}>
-                <Button
-                  component={NextLink}
-                  href="/referencias/lgpd"
-                  variant="contained"
-                  color="info"
-                  size="small"
-                  startIcon={<MenuBookIcon />}
-                  sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
-                >
-                  Abrir referência
-                </Button>
-              </CardActions>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Card
-            sx={{
-              height: "100%",
-              borderRadius: 2,
-              border: `1px solid ${theme.palette.divider}`,
-              overflow: "hidden",
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.04)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
-            }}
-          >
-            <CardContent
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "stretch",
-                gap: 2,
-                "&:last-child": { pb: 2 },
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, minWidth: 0 }}>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    flexShrink: 0,
-                    borderRadius: 2,
-                    bgcolor: alpha(theme.palette.primary.main, 0.12),
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <PersonIcon sx={{ fontSize: 28, color: "primary.main" }} />
-                </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
-                    Perfil e Configurações
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    Nome, telefone, cargo, departamento e senha.
-                  </Typography>
-                </Box>
-              </Box>
-              <CardActions sx={{ p: 0, pt: 0, justifyContent: "flex-start" }}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<SettingsIcon />}
-                  onClick={() => setOpenPerfilDialog(true)}
-                  sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
-                >
-                  Abrir Perfil
-                </Button>
-              </CardActions>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
       {/* Programas — Suspense: useSearchParams em ProgramasSection (abrir criação via ?novoPrograma=1) */}
-      <Suspense fallback={<Box sx={{ minHeight: 240 }} />}>
+      <Suspense fallback={<Box sx={{ minHeight: 160 }} />}>
         <ProgramasSection />
       </Suspense>
       {/* Empresas */}
-      <Box sx={{ mb: 5 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 2 }}>
-          <Box>
-          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600, letterSpacing: "0.02em", color: "text.primary" }}>
-              Empresas
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Crie e edite empresas para vincular aos programas.
-            </Typography>
-            
-          </Box>
-          
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreateEmpresa} sx={{ borderRadius: 2, textTransform: "none" }}>
-            Criar empresa
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1.25 }}>
+          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 800, letterSpacing: "-0.015em" }}>
+            Empresas
+          </Typography>
+          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={handleOpenCreateEmpresa} sx={{ borderRadius: 1.5 }}>
+            Nova empresa
           </Button>
         </Box>
-        <Divider sx={{ mb: 3 }} />
         {loading ? (
-          <Grid container spacing={2}>
+          <Grid container spacing={1.5}>
             {[1, 2, 3].map((i) => (
               <Grid item xs={12} sm={6} md={4} key={i}>
-                <Card sx={{ p: 2 }}>
-                  <Skeleton variant="text" width="70%" height={28} />
-                  <Skeleton variant="text" width="50%" height={20} sx={{ mt: 1 }} />
-                  <Skeleton variant="rectangular" height={36} sx={{ mt: 2, borderRadius: 1 }} />
+                <Card sx={{ p: 1.5 }}>
+                  <Skeleton variant="text" width="70%" height={24} />
+                  <Skeleton variant="text" width="50%" height={18} sx={{ mt: 0.5 }} />
                 </Card>
               </Grid>
             ))}
@@ -654,23 +535,22 @@ export default function DashboardPage() {
         ) : empresas.length === 0 ? (
           <Card
             sx={{
-              p: 4,
+              p: 2.5,
               textAlign: "center",
-              border: "2px dashed",
-              borderColor: alpha(theme.palette.primary.main, 0.3),
+              border: "1px dashed",
+              borderColor: alpha(theme.palette.primary.main, 0.35),
               bgcolor: alpha(theme.palette.primary.main, 0.02),
             }}
           >
-            <BusinessIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              Nenhuma empresa cadastrada. Crie uma empresa para vincular a um programa ou use &quot;empresa existente&quot; ao criar um programa.
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.25 }}>
+              Nenhuma empresa ainda.
             </Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreateEmpresa} sx={{ borderRadius: 2, textTransform: "none" }}>
-              Criar primeira empresa
+            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={handleOpenCreateEmpresa} sx={{ borderRadius: 1.5 }}>
+              Criar empresa
             </Button>
           </Card>
         ) : (
-          <Grid container spacing={2}>
+          <Grid container spacing={1.5}>
             {empresas.map((empresa) => {
               const programasVinculados = programasPorEmpresa[empresa.id] || [];
               return (
@@ -682,58 +562,30 @@ export default function DashboardPage() {
                       flexDirection: "column",
                       borderRadius: 2,
                       border: `1px solid ${theme.palette.divider}`,
-                      "&:hover": { boxShadow: 2 },
+                      "&:hover": { boxShadow: 1 },
                     }}
                   >
-                    <CardContent sx={{ flex: 1, pb: 0 }}>
-                      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 1 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
+                    <CardContent sx={{ flex: 1, py: 1.25, px: 1.5, "&:last-child": { pb: 1.25 } }}>
+                      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 0.5, mb: 0.5 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1, lineHeight: 1.25 }}>
                           {empresa.nome_fantasia || empresa.razao_social || `Empresa #${empresa.id}`}
                         </Typography>
                         <IconButton size="small" aria-label="Menu empresa" onClick={(e) => handleEmpresaMenuOpen(e, empresa)}>
                           <MoreVertIcon fontSize="small" />
                         </IconButton>
                       </Box>
-                      {empresa.razao_social && empresa.razao_social !== (empresa.nome_fantasia || "") && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          {empresa.razao_social}
-                        </Typography>
-                      )}
                       <Typography variant="caption" color="text.secondary" display="block">
-                        CNPJ: {formatCnpj(empresa.cnpj)}
+                        {formatCnpj(empresa.cnpj)}
                       </Typography>
-                      {empresa.email && (
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          {empresa.email}
-                        </Typography>
-                      )}
-                      <Box sx={{ mt: 1.5 }}>
-                        <Chip
-                          icon={<AssignmentIcon sx={{ fontSize: 16 }} />}
-                          label={`${programasVinculados.length} programa(s) vinculado(s)`}
-                          size="small"
-                          variant="outlined"
-                          sx={{ mt: 0.5 }}
-                        />
-                        {programasVinculados.length > 0 && (
-                          <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mt: 1 }}>
-                            {programasVinculados.slice(0, 3).map((p: Programa) => (
-                              <Chip
-                                key={p.id}
-                                label={p.nome || p.nome_fantasia || `Programa #${p.id}`}
-                                size="small"
-                                onClick={() => p.slug && router.push(`/programas/${p.slug}`)}
-                                sx={{ cursor: "pointer", maxWidth: "100%" }}
-                              />
-                            ))}
-                            {programasVinculados.length > 3 && (
-                              <Chip label={`+${programasVinculados.length - 3}`} size="small" variant="outlined" />
-                            )}
-                          </Stack>
-                        )}
-                      </Box>
+                      <Chip
+                        icon={<AssignmentIcon sx={{ fontSize: 14 }} />}
+                        label={`${programasVinculados.length} prog.`}
+                        size="small"
+                        variant="outlined"
+                        sx={{ mt: 0.75, height: 22, fontSize: "0.68rem" }}
+                      />
                     </CardContent>
-                    <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
+                    <CardActions sx={{ px: 1.25, pb: 1, pt: 0 }}>
                       <Button size="small" startIcon={<EditIcon />} onClick={() => openEditEmpresaDialog(empresa)}>
                         Editar
                       </Button>

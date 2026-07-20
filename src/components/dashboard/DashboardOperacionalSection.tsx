@@ -4,10 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Box,
-  Card,
-  CardContent,
   Chip,
-  Divider,
   Grid,
   Typography,
   alpha,
@@ -17,9 +14,11 @@ import * as dataService from "@/lib/services/dataService";
 import type { DashboardResumoApi } from "@/lib/types/pendencias";
 import { DashboardKpiStrip } from "@/components/dashboard/ProgramaKpiStrip";
 import { PendenciasPanel } from "@/components/dashboard/PendenciasPanel";
+import { landing } from "@/components/landing/landingTokens";
 
 export function DashboardOperacionalSection() {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const [resumo, setResumo] = useState<DashboardResumoApi | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -50,89 +49,117 @@ export function DashboardOperacionalSection() {
   }, []);
 
   return (
-    <Box sx={{ mb: 5 }}>
-      <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 700, mb: 0.5 }}>
-        Central operacional do DPO
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Pendências, prazos e indicadores consolidados de todos os seus programas.
-      </Typography>
+    <Box sx={{ mb: 2 }}>
+      <DashboardKpiStrip kpis={resumo?.kpis} loading={loading} compact />
 
-      <DashboardKpiStrip kpis={resumo?.kpis} loading={loading} />
-
-      <Grid container spacing={2.5}>
-        <Grid item xs={12} lg={7}>
+      <Grid container spacing={1.5} sx={{ mt: 0.25 }}>
+        <Grid item xs={12} md={7}>
           <PendenciasPanel
             pendencias={resumo?.pendencias}
             loading={loading}
-            title="Pendências prioritárias"
+            title="Pendências"
             emptyMessage={
               error
                 ? "Não foi possível carregar pendências."
                 : "Nenhuma pendência entre seus programas."
             }
+            dense
+            maxItems={5}
+            maxHeight={210}
           />
         </Grid>
-        <Grid item xs={12} lg={5}>
-          <Card sx={{ height: "100%", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-                Programas
+        <Grid item xs={12} md={5}>
+          <Box
+            sx={{
+              height: "100%",
+              maxHeight: 210,
+              overflow: "auto",
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: 2,
+              p: 1.25,
+              bgcolor: alpha(theme.palette.primary.main, isDark ? 0.08 : 0.03),
+              backgroundImage: isDark
+                ? `linear-gradient(145deg, ${alpha(landing.navy, 0.65)} 0%, transparent 75%)`
+                : `linear-gradient(145deg, ${alpha(landing.mist, 0.95)} 0%, transparent 75%)`,
+            }}
+          >
+            <Typography
+              variant="overline"
+              sx={{
+                letterSpacing: "0.08em",
+                display: "block",
+                mb: 0.75,
+                color: "text.secondary",
+                fontSize: "0.65rem",
+              }}
+            >
+              Por programa
+            </Typography>
+            {loading && (
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
+                Carregando…
               </Typography>
-              {loading && (
-                <Typography variant="body2" color="text.secondary">
-                  Carregando…
-                </Typography>
-              )}
-              {!loading && (!resumo?.programas || resumo.programas.length === 0) && (
-                <Typography variant="body2" color="text.secondary">
-                  Nenhum programa vinculado.
-                </Typography>
-              )}
-              {!loading &&
-                resumo?.programas.map((p) => (
-                  <Box
-                    key={p.programaId}
-                    component={Link}
-                    href={p.slug ? `/programas/${p.slug}` : `/programas/${p.programaId}`}
-                    sx={{
-                      display: "block",
-                      textDecoration: "none",
-                      color: "inherit",
-                      p: 1.5,
-                      mb: 1,
-                      borderRadius: 1.5,
-                      border: `1px solid ${theme.palette.divider}`,
-                      "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.04) },
-                    }}
-                  >
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
-                      <Typography variant="body2" fontWeight={700}>
-                        {p.nome}
-                      </Typography>
-                      {p.maturidadeMedia != null && (
-                        <Chip size="small" label={`${p.maturidadeMedia}%`} color="primary" variant="outlined" />
-                      )}
-                    </Box>
-                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.75 }}>
+            )}
+            {!loading && (!resumo?.programas || resumo.programas.length === 0) && (
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
+                Nenhum programa vinculado.
+              </Typography>
+            )}
+            {!loading &&
+              resumo?.programas.map((p) => (
+                <Box
+                  key={p.programaId}
+                  component={Link}
+                  href={p.slug ? `/programas/${p.slug}` : `/programas/${p.programaId}`}
+                  sx={{
+                    display: "block",
+                    textDecoration: "none",
+                    color: "inherit",
+                    px: 1,
+                    py: 0.65,
+                    mb: 0.4,
+                    borderRadius: 1.25,
+                    border: `1px solid ${theme.palette.divider}`,
+                    bgcolor: alpha(theme.palette.background.paper, isDark ? 0.35 : 0.8),
+                    transition: "border-color 0.15s ease, background 0.15s ease",
+                    "&:hover": {
+                      borderColor: alpha(theme.palette.primary.main, 0.45),
+                      bgcolor: alpha(theme.palette.primary.main, isDark ? 0.12 : 0.06),
+                    },
+                  }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
+                    <Typography variant="body2" fontWeight={700} noWrap sx={{ fontSize: "0.8rem" }}>
+                      {p.nome}
+                    </Typography>
+                    {p.maturidadeMedia != null && (
+                      <Chip
+                        size="small"
+                        label={`${Math.round(Number(p.maturidadeMedia) * 10) / 10}%`}
+                        color="primary"
+                        variant="outlined"
+                        sx={{ height: 20, fontSize: "0.65rem" }}
+                      />
+                    )}
+                  </Box>
+                  {(p.pendenciasAtrasadas > 0 || p.dsarAbertos > 0 || p.riscosCriticos > 0) && (
+                    <Box sx={{ display: "flex", gap: 0.4, flexWrap: "wrap", mt: 0.4 }}>
                       {p.pendenciasAtrasadas > 0 && (
-                        <Chip size="small" color="error" label={`${p.pendenciasAtrasadas} atrasada(s)`} />
+                        <Chip size="small" color="error" label={`${p.pendenciasAtrasadas} atras.`} sx={{ height: 18, fontSize: "0.62rem" }} />
                       )}
                       {p.dsarAbertos > 0 && (
-                        <Chip size="small" color="info" label={`${p.dsarAbertos} DSAR`} />
+                        <Chip size="small" color="info" label={`${p.dsarAbertos} DSAR`} sx={{ height: 18, fontSize: "0.62rem" }} />
                       )}
                       {p.riscosCriticos > 0 && (
-                        <Chip size="small" color="warning" label={`${p.riscosCriticos} risco(s)`} />
+                        <Chip size="small" color="warning" label={`${p.riscosCriticos} risco`} sx={{ height: 18, fontSize: "0.62rem" }} />
                       )}
                     </Box>
-                  </Box>
-                ))}
-            </CardContent>
-          </Card>
+                  )}
+                </Box>
+              ))}
+          </Box>
         </Grid>
       </Grid>
-
-      <Divider sx={{ mt: 4 }} />
     </Box>
   );
 }

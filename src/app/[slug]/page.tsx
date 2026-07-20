@@ -473,6 +473,19 @@ export default function PortalPrivacidadePage() {
                 </ListItemIcon>
                 <ListItemText
                   primary={
+                    <PortalDocLink slug={slug} doc="termo" external={data.link_termo_uso}>
+                      Termo de Uso
+                    </PortalDocLink>
+                  }
+                  secondary="Condições de uso do serviço e do portal."
+                />
+              </ListItem>
+              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+                <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
+                  <LinkIcon fontSize="small" color="action" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
                     <PortalDocLink slug={slug} doc="politica" external={data.link_politica_privacidade}>
                       Política de Privacidade
                     </PortalDocLink>

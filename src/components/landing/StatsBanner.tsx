@@ -12,9 +12,12 @@ import {
 import controlesJson from "@/lib/services/controles.json";
 import medidasMeta from "@/lib/services/medidas.json";
 
-const DIAGNOSTICOS = ["ESTRUTURA", "SEGURANÇA", "PRIVACIDADE"];
+const DIAGNOSTICOS = ["ESTRUTURA", "SEGURANÇA", "PRIVACIDADE", "GOVERNANÇA DE IA"];
 const NUM_CONTROLES = (controlesJson as { controles: unknown[] }).controles.length;
-const NUM_MEDIDAS = (medidasMeta as { total_medidas_catalogo_ppsi_20: number }).total_medidas_catalogo_ppsi_20;
+const NUM_MEDIDAS =
+  (medidasMeta as { total_medidas_catalogo?: number; total_medidas_catalogo_ppsi_20: number })
+    .total_medidas_catalogo ??
+  (medidasMeta as { total_medidas_catalogo_ppsi_20: number }).total_medidas_catalogo_ppsi_20;
 
 const LGPD_FERRAMENTAS = [
   "ROPA",

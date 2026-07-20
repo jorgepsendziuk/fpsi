@@ -1,15 +1,11 @@
 "use client";
 
 import React from "react";
-import { Box, Button, Grid, Paper, Typography, alpha, useTheme } from "@mui/material";
-import ViewModuleIcon from "@mui/icons-material/ViewModule";
-import PublicIcon from "@mui/icons-material/Public";
-import NextLink from "next/link";
+import { Box, Grid, Typography, alpha, useTheme } from "@mui/material";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
 import { PendenciasPanel } from "@/components/dashboard/PendenciasPanel";
 import { ProgramaKpiStrip } from "@/components/dashboard/ProgramaKpiStrip";
 import { ModuloNavGrid, type ModuloNavSection } from "@/components/programa/ModuloNavGrid";
-import { PapelLgpdDiagramWithEdit } from "@/components/programa/PapelLgpdDiagramWithEdit";
 
 type Props = {
   idOrSlug: string;
@@ -18,87 +14,69 @@ type Props = {
   modulosResumo: ModulosResumoApi | null;
   modulosResumoLoading: boolean;
   sections: ModuloNavSection[];
-  onSwitchToModulos: () => void;
 };
 
+/** Painel operacional denso: KPIs + pendências + módulos — primeira viewport sem chrome extra. */
 export function ProgramaOperacionalDashboard({
   idOrSlug,
-  programaId,
-  isDemoMode,
   modulosResumo,
   modulosResumoLoading,
   sections,
-  onSwitchToModulos,
 }: Props) {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 2 }}>
-        <Typography variant="h6" fontWeight={700}>
-          Painel operacional
-        </Typography>
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-          {modulosResumo?.publicPortalPath && (
-            <Button
-              component={NextLink}
-              href={modulosResumo.publicPortalPath}
-              target="_blank"
-              rel="noopener noreferrer"
-              size="small"
-              variant="outlined"
-              startIcon={<PublicIcon />}
-            >
-              Portal público
-            </Button>
-          )}
-          <Button size="small" variant="outlined" startIcon={<ViewModuleIcon />} onClick={onSwitchToModulos}>
-            Ver módulos (cards)
-          </Button>
-        </Box>
-      </Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+      <ProgramaKpiStrip
+        postura={modulosResumo?.postura}
+        loading={modulosResumoLoading}
+        compact
+        idOrSlug={idOrSlug}
+      />
 
-      <Box sx={{ mb: 3 }}>
-        <ProgramaKpiStrip postura={modulosResumo?.postura} loading={modulosResumoLoading} />
-      </Box>
-
-      <Grid container spacing={2.5} alignItems="stretch">
-        <Grid item xs={12} lg={7}>
+      <Grid container spacing={1.5} alignItems="stretch">
+        <Grid item xs={12}>
           <PendenciasPanel
             pendencias={modulosResumo?.pendencias}
             loading={modulosResumoLoading}
-            title="Pendências do programa"
-            emptyMessage="Nenhuma pendência operacional neste programa."
+            title="Pendências"
+            emptyMessage="Nenhuma pendência operacional."
+            dense
+            maxItems={6}
+            maxHeight={220}
           />
         </Grid>
-        <Grid item xs={12} lg={5}>
-          <Paper
+
+        <Grid item xs={12}>
+          <Box
             sx={{
-              p: 2,
-              height: "100%",
-              minHeight: 280,
-              border: `1px solid ${theme.palette.divider}`,
+              p: 1.25,
               borderRadius: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              bgcolor: alpha(
+                theme.palette.primary.main,
+                isDark ? 0.08 : 0.03
+              ),
+              backgroundImage: isDark
+                ? `linear-gradient(135deg, ${alpha("#0A2744", 0.55)} 0%, transparent 70%)`
+                : `linear-gradient(135deg, ${alpha("#E8F1F8", 0.9)} 0%, transparent 70%)`,
             }}
           >
-            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-              Estrutura de tratamento
+            <Typography
+              variant="overline"
+              sx={{
+                display: "block",
+                mb: 1,
+                px: 0.25,
+                color: "text.secondary",
+                fontSize: "0.68rem",
+              }}
+            >
+              Módulos
             </Typography>
-            <Box sx={{ minHeight: 240 }}>
-              <PapelLgpdDiagramWithEdit
-                programaId={programaId}
-                idOrSlug={idOrSlug}
-                isDemoMode={isDemoMode}
-                showManageButton={false}
-              />
-            </Box>
-          </Paper>
-        </Grid>
-        <Grid item xs={12}>
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-            Acesso rápido aos módulos
-          </Typography>
-          <ModuloNavGrid sections={sections} idOrSlug={idOrSlug} compact />
+            <ModuloNavGrid sections={sections} idOrSlug={idOrSlug} dense />
+          </Box>
         </Grid>
       </Grid>
     </Box>
