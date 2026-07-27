@@ -1,16 +1,31 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import React, { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  Grid,
+  alpha,
+  useTheme,
+} from "@mui/material";
+import DashboardCustomizeOutlinedIcon from "@mui/icons-material/DashboardCustomizeOutlined";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
-import type { DashboardResumoApi, PendenciasResumo } from "@/lib/types/pendencias";
+import type { DashboardProgramaResumo, DashboardResumoApi, PendenciasResumo } from "@/lib/types/pendencias";
 import { DashboardKpiStrip } from "@/components/dashboard/ProgramaKpiStrip";
 import { PendenciasPanel } from "@/components/dashboard/PendenciasPanel";
 import { PendenciasCalendar } from "@/components/dashboard/PendenciasCalendar";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { landing } from "@/components/landing/landingTokens";
-import { alpha } from "@mui/material/styles";
+
+const PENDENCIAS_PAGE = 1;
+/** Calendário um pouco menor para sobrar espaço à lista sem estourar a viewport. */
+const EMBEDDED_MATRIX_FRAME_PX = 220;
+/** Coluna direita limitada à viewport (não cresce além). */
+const RIGHT_COL_MAX_H = "calc(100dvh - 200px)";
 
 function filterPendenciasByDay(
   pendencias: PendenciasResumo | null | undefined,
@@ -29,7 +44,21 @@ function filterPendenciasByDay(
   };
 }
 
-export function DashboardOperacionalSection() {
+type LeftContext = {
+  programasOps: DashboardProgramaResumo[];
+};
+
+type Props = {
+  /** Coluna esquerda (programas e empresas). */
+  left: ReactNode | ((ctx: LeftContext) => ReactNode);
+};
+
+/**
+ * Central operacional: tipografia alinhada à dashboard do programa,
+ * KPIs compactos + split 50/50 (board | calendário + pendências 1+fade).
+ */
+export function DashboardOperacionalSection({ left }: Props) {
+  const theme = useTheme();
   const [resumo, setResumo] = useState<DashboardResumoApi | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -69,59 +98,119 @@ export function DashboardOperacionalSection() {
     ? `Pendências · ${selectedDate.format("DD/MM")}`
     : "Pendências prioritárias";
 
+  const cardShellSx = {
+    height: "100%",
+    borderRadius: 1,
+    overflow: "hidden" as const,
+    "&::before": {
+      content: '""',
+      display: "block",
+      height: 2,
+    },
+  };
+
   return (
-    <Box sx={{ mb: 2.5 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
       <Box
         sx={{
-          mb: 1.75,
-          px: 2,
-          py: 1.35,
+          mb: 0.25,
+          px: { xs: 1.25, md: 1.5 },
+          py: 1,
           borderRadius: 1,
-          border: `1px solid ${alpha(landing.navy, 0.1)}`,
-          background: `
-            radial-gradient(ellipse 70% 140% at 100% 0%, ${alpha(landing.blueBright, 0.22)} 0%, transparent 55%),
-            linear-gradient(120deg, ${landing.ink} 0%, ${landing.navy} 48%, #0C3A66 100%)
-          `,
-          color: landing.heroText,
+          border: `1px solid ${theme.palette.divider}`,
+          bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === "dark" ? 0.55 : 0.65),
+          backdropFilter: "blur(10px)",
+          backgroundImage:
+            theme.palette.mode === "dark"
+              ? `linear-gradient(135deg, ${alpha("#0A2744", 0.5)} 0%, transparent 70%)`
+              : `linear-gradient(135deg, ${alpha("#E8F1F8", 0.85)} 0%, transparent 70%)`,
         }}
       >
-        <Typography variant="overline" sx={{ color: landing.heroMuted, letterSpacing: "0.1em" }}>
-          Central operacional
-        </Typography>
-        <Typography variant="h6" fontWeight={800} letterSpacing="-0.025em" sx={{ lineHeight: 1.2, mt: 0.15 }}>
-          Indicadores e pendências
-        </Typography>
+        <PageHeroHeader
+          sx={{
+            mb: 0,
+            gap: 1.25,
+            "& h2": { fontSize: { xs: "1.2rem", md: "1.4rem" }, mb: 0.15, letterSpacing: "-0.025em" },
+          }}
+          icon={<DashboardCustomizeOutlinedIcon sx={{ fontSize: 26 }} aria-hidden />}
+          title="Central operacional"
+          description="Programas, empresas e pendências entre todas as contas"
+        />
       </Box>
+
       <DashboardKpiStrip
         kpis={resumo?.kpis}
         atrasados={resumo?.pendencias?.atrasados}
         vencendo7d={resumo?.pendencias?.vencendo7d}
         loading={loading}
+        compact
       />
 
-      <Grid container spacing={{ xs: 1.25, lg: 1.5 }} sx={{ mt: 0.25 }} alignItems="stretch">
-        <Grid item xs={12} md={7} lg={8}>
-          <PendenciasPanel
-            pendencias={filteredPendencias}
-            loading={loading}
-            title={listTitle}
-            emptyMessage={
-              error
-                ? "Não foi possível carregar pendências."
-                : selectedDate
-                  ? "Nenhuma pendência neste dia."
-                  : "Nenhuma pendência entre seus programas."
-            }
-            maxItems={selectedDate ? 8 : 5}
-          />
+      <Grid container spacing={1} alignItems="flex-start">
+        <Grid item xs={12} lg={6} sx={{ display: "flex" }}>
+          {typeof left === "function" ? left({ programasOps: resumo?.programas ?? [] }) : left}
         </Grid>
-        <Grid item xs={12} md={5} lg={4}>
-          <PendenciasCalendar
-            itens={resumo?.pendencias?.itens ?? []}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            loading={loading}
-          />
+
+        <Grid item xs={12} lg={6} sx={{ display: "flex", alignSelf: { lg: "stretch" }, maxHeight: { lg: RIGHT_COL_MAX_H } }}>
+          <Card
+            elevation={0}
+            sx={{
+              ...cardShellSx,
+              flex: 1,
+              width: "100%",
+              maxHeight: { lg: RIGHT_COL_MAX_H },
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              "&::before": {
+                ...cardShellSx["&::before"],
+                background: `linear-gradient(90deg, ${landing.blue} 0%, ${landing.shield} 55%, ${landing.lock} 100%)`,
+              },
+            }}
+          >
+            <CardContent
+              sx={{
+                py: 1,
+                px: 1.25,
+                "&:last-child": { pb: 1 },
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                minHeight: 0,
+                overflow: "hidden",
+              }}
+            >
+              <Box sx={{ flexShrink: 0 }}>
+                <PendenciasCalendar
+                  bare
+                  compact
+                  matrixHeight={EMBEDDED_MATRIX_FRAME_PX}
+                  itens={resumo?.pendencias?.itens ?? []}
+                  selectedDate={selectedDate}
+                  onSelectDate={setSelectedDate}
+                  loading={loading}
+                />
+              </Box>
+              <Divider sx={{ my: 0.5, flexShrink: 0 }} />
+              <PendenciasPanel
+                bare
+                dense
+                fillAvailable
+                pendencias={filteredPendencias}
+                loading={loading}
+                title={listTitle}
+                emptyMessage={
+                  error
+                    ? "Não foi possível carregar pendências."
+                    : selectedDate
+                      ? "Nenhuma pendência neste dia."
+                      : "Nenhuma pendência entre seus programas."
+                }
+                maxItems={PENDENCIAS_PAGE}
+                peekNext
+              />
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
     </Box>

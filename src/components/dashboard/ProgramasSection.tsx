@@ -54,6 +54,7 @@ import { getMaturityLabel } from "@/lib/utils/maturity";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import type { BoardItemSize } from "@/lib/dashboard/smartBoardGrid";
+import type { DashboardProgramaResumo } from "@/lib/types/pendencias";
 
 export type ProgramasSectionProps = {
   /** Integra cards no board compartilhado com empresas. */
@@ -64,6 +65,8 @@ export type ProgramasSectionProps = {
   createOpenRequest?: number;
   viewExcluidos?: boolean;
   onViewExcluidosChange?: (value: boolean) => void;
+  /** Alertas/KPIs operacionais por programa (central operacional). */
+  opsByPrograma?: DashboardProgramaResumo[];
 };
 
 const TIPOS_PROGRAMA = [
@@ -99,6 +102,7 @@ export function ProgramasSection({
   createOpenRequest = 0,
   viewExcluidos: viewExcluidosControlled,
   onViewExcluidosChange,
+  opsByPrograma,
 }: ProgramasSectionProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -400,8 +404,14 @@ export function ProgramasSection({
     return maturityMap;
   }, [programas, dataLoaded, maturityRows]);
 
-  const diagnosticos = (state.diagnosticos || []).slice(0, 3);
+  const diagnosticos = state.diagnosticos || [];
+  const diagnosticosBoard = diagnosticos.slice(0, 4);
   const itemSize = boardMode ? boardItemSize : { xs: 12, sm: 6, md: 4 };
+  const opsMap = useMemo(() => {
+    const m = new Map<number, DashboardProgramaResumo>();
+    for (const o of opsByPrograma ?? []) m.set(o.programaId, o);
+    return m;
+  }, [opsByPrograma]);
 
   const programaCards = programas.map((programa) => {
     const maturityData = programaMaturityData.get(programa.id) || { score: 0, label: "Inicial", byDiagnostico: [] };
@@ -410,6 +420,241 @@ export function ProgramasSection({
     const logoUrl = getProgramaLogoDisplayUrl(programa);
     const avgPct = Math.round(maturityData.score * 100);
     const avgColor = getMaturityColor(maturityData.score);
+    const title = programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`;
+    const subtitle =
+      programa.nome_fantasia && programa.nome && programa.nome_fantasia !== programa.nome
+        ? programa.nome_fantasia
+        : programa.razao_social && programa.razao_social !== title
+          ? programa.razao_social
+          : null;
+    const ops = opsMap.get(programa.id);
+
+    /** Board empilhado (central operacional): card amplo com maturidade por diagnóstico + alertas. */
+    if (boardMode) {
+      return (
+        <Grid item {...itemSize} key={`prog-${programa.id}`}>
+          <Card
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              position: "relative",
+              borderRadius: 1,
+              overflow: "hidden",
+              border: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+              boxShadow: hoveredCard === programa.id ? `0 10px 28px ${alpha(theme.palette.primary.main, 0.12)}` : "none",
+              transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+              "&:hover": {
+                borderColor: alpha(theme.palette.primary.main, 0.35),
+              },
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: 3,
+                background: `linear-gradient(180deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+              },
+            }}
+            onMouseEnter={() => setHoveredCard(programa.id)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            <CardContent sx={{ py: 1.5, px: 1.75, pl: 2.1, "&:last-child": { pb: 1.25 } }}>
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25, mb: 1.25 }}>
+                {logoUrl ? (
+                  <Box
+                    component="img"
+                    src={logoUrl}
+                    alt=""
+                    sx={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 1,
+                      objectFit: "contain",
+                      flexShrink: 0,
+                      bgcolor: alpha(theme.palette.primary.main, 0.05),
+                      border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+                    }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 1,
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: "primary.main",
+                      fontWeight: 800,
+                      fontSize: "0.95rem",
+                    }}
+                  >
+                    {(title.slice(0, 2) || "PR").toUpperCase()}
+                  </Box>
+                )}
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 0.25 }}>
+                    <Chip
+                      label="Programa"
+                      size="small"
+                      sx={{
+                        height: 22,
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                        bgcolor: alpha(theme.palette.primary.main, 0.12),
+                        color: "primary.main",
+                      }}
+                    />
+                    {viewExcluidos && programa.deleted_at && (
+                      <Chip
+                        size="small"
+                        label={`Excluído ${new Date(programa.deleted_at).toLocaleDateString("pt-BR")}`}
+                        variant="outlined"
+                        sx={{ height: 22, fontSize: "0.7rem" }}
+                      />
+                    )}
+                  </Stack>
+                  <Typography
+                    variant="subtitle1"
+                    component="h2"
+                    sx={{ fontWeight: 800, lineHeight: 1.25, letterSpacing: "-0.02em", fontSize: "1.05rem" }}
+                  >
+                    {title}
+                  </Typography>
+                  {subtitle && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.15 }}>
+                      {subtitle}
+                    </Typography>
+                  )}
+                </Box>
+                <IconButton
+                  size="small"
+                  aria-label="Menu"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenMenu(e, programa);
+                  }}
+                >
+                  <MoreVertIcon fontSize="small" />
+                </IconButton>
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  py: 1,
+                  px: 1.35,
+                  mb: 1.1,
+                  borderRadius: 1,
+                  bgcolor: alpha(avgColor, 0.08),
+                  borderLeft: `3px solid ${avgColor}`,
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    Maturidade média
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
+                    Índice consolidado dos diagnósticos
+                  </Typography>
+                </Box>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: avgColor, lineHeight: 1, letterSpacing: "-0.03em" }}>
+                    {avgPct}%
+                  </Typography>
+                  <Chip size="small" label={maturityData.label} sx={{ height: 24, fontWeight: 700, bgcolor: alpha(avgColor, 0.18), color: avgColor }} />
+                </Stack>
+              </Box>
+
+              {diagnosticosBoard.length > 0 && (
+                <Box sx={{ mb: 1.1 }}>
+                  <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 0.65, letterSpacing: "0.03em" }}>
+                    Scores por diagnóstico
+                  </Typography>
+                  <Grid container spacing={0.75}>
+                    {diagnosticosBoard.map((diag) => {
+                      const entry = getMaturityEntry(diag.id);
+                      const scorePct = Math.round(entry.score * 100);
+                      const color = getMaturityColor(entry.score);
+                      return (
+                        <Grid item xs={12} sm={6} key={diag.id}>
+                          <Box
+                            sx={{
+                              py: 0.75,
+                              px: 1,
+                              borderRadius: 1,
+                              border: `1px solid ${alpha(theme.palette.divider, 0.85)}`,
+                              borderLeft: `3px solid ${color}`,
+                              bgcolor: alpha(color, 0.04),
+                              height: "100%",
+                            }}
+                          >
+                            <Typography variant="body2" fontWeight={600} noWrap title={diag.descricao ?? undefined} sx={{ fontSize: "0.78rem", mb: 0.25 }}>
+                              {diag.descricao ?? `Diagnóstico ${diag.id}`}
+                            </Typography>
+                            <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
+                              <Typography variant="subtitle1" sx={{ fontWeight: 800, color, lineHeight: 1, fontSize: "1.05rem" }}>
+                                {scorePct}%
+                              </Typography>
+                              <Chip size="small" label={entry.label} sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600, bgcolor: alpha(color, 0.14), color }} />
+                            </Stack>
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              )}
+
+              <Stack direction="row" spacing={0.6} flexWrap="wrap" useFlexGap sx={{ mb: 0.25 }}>
+                  {ops && ops.pendenciasAtrasadas > 0 && (
+                    <Chip size="small" color="error" label={`${ops.pendenciasAtrasadas} atrasada(s)`} sx={{ fontWeight: 700, height: 24 }} />
+                  )}
+                  {ops && ops.pendenciasTotal > 0 && (
+                    <Chip size="small" color="warning" variant="outlined" label={`${ops.pendenciasTotal} pendência(s)`} sx={{ fontWeight: 600, height: 24 }} />
+                  )}
+                  {ops && ops.dsarAbertos > 0 && (
+                    <Chip size="small" color="info" variant="outlined" label={`${ops.dsarAbertos} DSAR aberto(s)`} sx={{ fontWeight: 600, height: 24 }} />
+                  )}
+                  {ops && ops.incidentesAbertos > 0 && (
+                    <Chip size="small" color="error" variant="outlined" label={`${ops.incidentesAbertos} incidente(s)`} sx={{ fontWeight: 600, height: 24 }} />
+                  )}
+                  {ops && ops.riscosCriticos > 0 && (
+                    <Chip size="small" color="warning" label={`${ops.riscosCriticos} risco(s) crítico(s)`} sx={{ fontWeight: 700, height: 24 }} />
+                  )}
+                  {ops &&
+                    ops.pendenciasAtrasadas === 0 &&
+                    ops.pendenciasTotal === 0 &&
+                    ops.dsarAbertos === 0 &&
+                    ops.incidentesAbertos === 0 &&
+                    ops.riscosCriticos === 0 && (
+                      <Chip size="small" color="success" variant="outlined" label="Sem alertas operacionais" sx={{ fontWeight: 600, height: 24 }} />
+                    )}
+                </Stack>
+            </CardContent>
+            <CardActions sx={{ px: 1.75, pb: 1.35, pt: 0, gap: 1 }}>
+              {!viewExcluidos && (
+                <Button
+                  variant="contained"
+                  size="medium"
+                  startIcon={<AssessmentIcon />}
+                  onClick={() => handleAccessDiagnostico(programa)}
+                  sx={{ fontWeight: 700, borderRadius: 1 }}
+                >
+                  Abrir programa
+                </Button>
+              )}
+            </CardActions>
+          </Card>
+        </Grid>
+      );
+    }
 
     return (
       <Grid item {...itemSize} key={`prog-${programa.id}`}>
@@ -469,11 +714,11 @@ export function ProgramasSection({
                     }}
                   />
                   <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 700, lineHeight: 1.25 }} noWrap>
-                    {programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`}
+                    {title}
                   </Typography>
-                  {(programa.nome_fantasia || programa.razao_social) && (
+                  {subtitle && (
                     <Typography variant="body2" color="text.secondary" noWrap>
-                      {programa.nome_fantasia || programa.razao_social}
+                      {subtitle}
                     </Typography>
                   )}
                 </Box>
@@ -520,9 +765,9 @@ export function ProgramasSection({
               </Typography>
               <Chip size="small" label={maturityData.label} sx={{ height: 22, fontWeight: 600, backgroundColor: alpha(avgColor, 0.18), color: avgColor }} />
             </Box>
-            {diagnosticos.length > 0 && (
+            {diagnosticosBoard.length > 0 && (
               <Stack spacing={0.5}>
-                {diagnosticos.slice(0, 2).map((diag) => {
+                {diagnosticosBoard.slice(0, 2).map((diag) => {
                   const entry = getMaturityEntry(diag.id);
                   const scorePct = Math.round(entry.score * 100);
                   return (
