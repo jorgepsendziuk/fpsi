@@ -22,16 +22,22 @@ import {
   Dashboard as DashboardIcon,
   PlayArrow as PlayArrowIcon,
   ArrowForward as ArrowForwardIcon,
-  Apps as AppsIcon,
+  MeetingRoom as MeetingRoomIcon,
+  WarningAmber as WarningAmberIcon,
+  Public as PublicIcon,
+  People as PeopleIcon,
 } from "@mui/icons-material";
+import Image from "next/image";
 import { Montserrat } from "next/font/google";
 import { ColorModeContext } from "@contexts/color-mode";
 import { LgpdReferenciaDrawer } from "@/components/normas/LgpdReferenciaDrawer";
+import { AigpReferenciaDrawer } from "@/components/normas/AigpReferenciaDrawer";
 import { HeroAtmosphere } from "./HeroAtmosphere";
 import { LandingDeckHero } from "./LandingDeckHero";
 import { LandingNav } from "./LandingNav";
 import { FeaturesExplorer } from "./FeaturesExplorer";
 import { landing, featureAccents } from "./landingTokens";
+import { resolveDemoCta } from "@/lib/marketing/demoCtaOptions";
 
 /** Mesma família geométrica do wordmark FPSI no logo — pesos 400–900. */
 const brandFont = Montserrat({
@@ -42,12 +48,31 @@ const brandFont = Montserrat({
 
 const ff = brandFont.style.fontFamily;
 
+/** Catálogo alinhado aos módulos da home do programa (`sections` em programas/[id]). */
 const features = [
+  {
+    key: "escritorio-governanca",
+    icon: <MeetingRoomIcon />,
+    title: "Escritório de governança",
+    description: "Sala visual com atalhos aos módulos do programa",
+  },
   {
     key: "responsabilidades",
     icon: <GroupIcon />,
     title: "Estrutura de Governança",
-    description: "Responsáveis, papéis LGPD, instituições e atribuições (governança PPSI)",
+    description: "Responsáveis, papéis LGPD, instituições e atribuições (PPSI)",
+  },
+  {
+    key: "riscos",
+    icon: <WarningAmberIcon />,
+    title: "Gestão de Riscos",
+    description: "Matriz 5×5, riscos residuais e planos de mitigação",
+  },
+  {
+    key: "conformidade-tratamento",
+    icon: <GavelIcon />,
+    title: "Tratamento de dados",
+    description: "Mapeamento, ROPA, RIPD/AIPD e incidentes",
   },
   {
     key: "diagnostico",
@@ -59,25 +84,31 @@ const features = [
     key: "planos-acao",
     icon: <AssignmentIcon />,
     title: "Plano de Trabalho",
-    description: "Gerencie o plano de trabalho e acompanhe o progresso",
-  },
-  {
-    key: "conformidade",
-    icon: <GavelIcon />,
-    title: "Conformidade LGPD",
-    description: "ROPA, direitos dos titulares, RIPD e incidentes",
+    description: "Ações, prazos, responsáveis e acompanhamento",
   },
   {
     key: "politicas",
     icon: <PolicyIcon />,
     title: "Políticas e documentos",
-    description: "Políticas, aviso de privacidade e textos do portal",
+    description: "Políticas institucionais e textos do portal",
+  },
+  {
+    key: "portal-privacidade",
+    icon: <PublicIcon />,
+    title: "Titulares e canais públicos",
+    description: "Pedidos, reportes, contato e portal público",
+  },
+  {
+    key: "usuarios",
+    icon: <PeopleIcon />,
+    title: "Usuários e Permissões",
+    description: "Acesso multi-usuário e papéis no programa",
   },
   {
     key: "auditoria",
     icon: <SecurityIcon />,
     title: "Histórico de Atividades",
-    description: "Trilha de auditoria (LGPD art. 37, Framework FPSI Controle 8)",
+    description: "Trilha de auditoria (LGPD art. 37 · Controle 8)",
   },
 ];
 
@@ -85,6 +116,58 @@ const BANNER_DATA: Record<
   string,
   { title: string; tagline: string; points: string[]; gradient: string; icon: React.ReactNode }
 > = {
+  "escritorio-governanca": {
+    title: "Escritório de governança",
+    tagline:
+      "Ambiente visual do programa — navegue pelos módulos como em uma sala de governança, com atalhos rápidos ao que importa.",
+    points: [
+      "Visão espacial dos módulos do programa",
+      "Atalhos para governança, diagnóstico, riscos e conformidade",
+      "Útil para onboarding da equipe e apresentação executiva",
+      "Complementa a visão geral operacional da home",
+    ],
+    gradient: featureAccents["escritorio-governanca"],
+    icon: <MeetingRoomIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  responsabilidades: {
+    title: "Estrutura de Governança",
+    tagline:
+      "Formalize responsáveis, papéis LGPD e a cadeia de tratamento — base da governança em privacidade e segurança da informação (PPSI).",
+    points: [
+      "Responsáveis do programa e equipe (SI, privacidade, TI)",
+      "Diagrama de papéis: controlador, contratante, operador (LGPD art. 5º)",
+      "Instituições, vínculos e fluxo de dados",
+      "Alinhamento a RACI e estrutura de governança do Framework",
+    ],
+    gradient: featureAccents.responsabilidades,
+    icon: <GroupIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  riscos: {
+    title: "Gestão de Riscos",
+    tagline:
+      "Identifique, classifique e mitigue riscos de privacidade e segurança com matriz probabilidade × impacto.",
+    points: [
+      "Matriz 5×5 com visão visual do portfólio de riscos",
+      "Score residual e status (identificado, em tratamento, etc.)",
+      "Vínculo com medidas e planos de ação do programa",
+      "Priorização de riscos críticos para a postura do programa",
+    ],
+    gradient: featureAccents.riscos,
+    icon: <WarningAmberIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  "conformidade-tratamento": {
+    title: "Tratamento de dados",
+    tagline:
+      "Hub LGPD do ciclo de tratamento: do mapeamento à resposta a incidentes, com ROPA e RIPD/AIPD.",
+    points: [
+      "Mapeamento de dados e processos de tratamento",
+      "ROPA – Registro das Operações de Tratamento",
+      "RIPD / AIPD – Relatório de Impacto à Proteção de Dados",
+      "Registro e tratamento de incidentes de segurança",
+    ],
+    gradient: featureAccents["conformidade-tratamento"],
+    icon: <GavelIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
   diagnostico: {
     title: "Diagnóstico",
     tagline:
@@ -93,34 +176,22 @@ const BANNER_DATA: Record<
       "Domínios PPSI: Estrutura, Segurança e Privacidade",
       "Governança de IA (AIGP): inventário, risco, LGPD×IA, viés e fornecedores",
       "Referências: NIST AI RMF, ISO/IEC 42001, OECD e interseção com a LGPD",
-      "Dashboard consolidado com índice iAIGP e planos de ação",
+      "Dashboard consolidado, relatório e planos de ação",
     ],
     gradient: featureAccents.diagnostico,
     icon: <CheckCircleOutlineIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
   },
   "planos-acao": {
     title: "Plano de Trabalho",
-    tagline: "Transforme lacunas identificadas no diagnóstico em ações concretas com prazos e responsáveis.",
+    tagline: "Transforme lacunas do diagnóstico e riscos em ações concretas com prazos e responsáveis.",
     points: [
-      "Plano de ação vinculado a cada medida",
+      "Plano de ação vinculado a medidas e lacunas",
       "Status: Concluído, Em andamento, Não iniciado",
       "Datas de início e fim, responsáveis e descrição",
-      "Acompanhamento visual do progresso",
+      "Acompanhamento visual do progresso do programa",
     ],
     gradient: featureAccents["planos-acao"],
     icon: <AssignmentIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
-  },
-  conformidade: {
-    title: "Conformidade LGPD",
-    tagline: "Atenda aos requisitos da LGPD com ROPA, RIPD, direitos dos titulares e gestão de incidentes.",
-    points: [
-      "ROPA – Registro das Operações de Tratamento",
-      "RIPD – Relatório de Impacto à Proteção de Dados",
-      "Direitos dos titulares e pedidos de acesso",
-      "Registro e tratamento de incidentes de segurança",
-    ],
-    gradient: featureAccents.conformidade,
-    icon: <GavelIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
   },
   politicas: {
     title: "Políticas e documentos",
@@ -128,25 +199,37 @@ const BANNER_DATA: Record<
       "Centralize políticas de SI e privacidade, avisos ao titular e demais textos que o portal de privacidade exibe ou cita.",
     points: [
       "Catálogo de políticas institucionais (SI, proteção de dados, etc.)",
-      "Espaço para aviso de privacidade e documentos ligados ao portal",
+      "Avisos, cookies e documentos ligados ao portal público",
       "Editor rico e exportação em PDF",
       "Vigência, revisão e última gravação por documento",
     ],
     gradient: featureAccents.politicas,
     icon: <PolicyIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
   },
-  responsabilidades: {
-    title: "Estrutura de Governança",
+  "portal-privacidade": {
+    title: "Titulares e canais públicos",
     tagline:
-      "Formalize responsáveis, papéis LGPD e a cadeia de tratamento — base da governança em privacidade e segurança da informação (PPSI).",
+      "Canais externos do programa: pedidos dos titulares, reportes e contato — com portal público configurável.",
     points: [
-      "Responsáveis do programa e equipe (controles SI, privacidade, TI)",
-      "Diagrama de papéis: controlador, contratante, operador (LGPD art. 5º)",
-      "Instituições, vínculos e fluxo de dados",
-      "Alinhamento a RACI e estrutura de governança do Framework",
+      "Pedidos dos titulares (acesso, correção, eliminação, etc.)",
+      "Reportes do portal (vulnerabilidades e comunicações)",
+      "Contato público e páginas do portal (slug da organização)",
+      "Separado do hub de tratamento (ROPA/RIPD/incidentes)",
     ],
-    gradient: featureAccents.responsabilidades,
-    icon: <GroupIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+    gradient: featureAccents["portal-privacidade"],
+    icon: <PublicIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
+  },
+  usuarios: {
+    title: "Usuários e Permissões",
+    tagline: "Trabalho colaborativo no programa — convide a equipe e controle o que cada perfil pode fazer.",
+    points: [
+      "Multi-usuário com dados centralizados no programa",
+      "Convites e gestão de acesso",
+      "Permissões alinhadas às funções do programa",
+      "Adequado a DPOs, TI, SI e consultores",
+    ],
+    gradient: featureAccents.usuarios,
+    icon: <PeopleIcon sx={{ fontSize: 32, opacity: 0.9 }} />,
   },
   auditoria: {
     title: "Histórico de Atividades",
@@ -175,8 +258,10 @@ export function LandingPage() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [navMenuEl, setNavMenuEl] = useState<null | HTMLElement>(null);
   const [lgpdDrawerOpen, setLgpdDrawerOpen] = useState(false);
+  const [aigpDrawerOpen, setAigpDrawerOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [heroReady, setHeroReady] = useState(false);
+  const [demoCta, setDemoCta] = useState(() => resolveDemoCta(null));
   const { mode, setMode } = useContext(ColorModeContext);
 
   const { data: user, isLoading: userLoading } = useGetIdentity<IUser>();
@@ -185,6 +270,11 @@ export function LandingPage() {
   useEffect(() => {
     const t = requestAnimationFrame(() => setHeroReady(true));
     return () => cancelAnimationFrame(t);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setDemoCta(resolveDemoCta(params.get("cta")));
   }, []);
 
   useEffect(() => {
@@ -279,10 +369,13 @@ export function LandingPage() {
         onCloseUserMenu={handleMenuClose}
         onNavigate={(href) => router.push(href)}
         onOpenLgpd={() => setLgpdDrawerOpen(true)}
+        onOpenAigp={() => setAigpDrawerOpen(true)}
         onOpenFeatures={() => setFeaturesOpen(true)}
         onLogin={handleLogin}
         onDashboard={handleGoToDashboard}
         onLogout={handleLogout}
+        demoCtaLabel={demoCta.label}
+        demoCtaShort={demoCta.short}
       />
 
       <Container
@@ -305,30 +398,56 @@ export function LandingPage() {
           alignItems="center"
           sx={{ width: "100%", overflow: "visible" }}
         >
-          {/* Mobile: texto/CTAs primeiro; cards (bloco da direita no desktop) abaixo */}
+          {/* Mobile: texto/CTAs primeiro; baralho de features à direita no desktop */}
           <Grid item xs={12} md={6}>
             <Box
               sx={{
                 animation: heroReady ? "lpRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both" : "none",
               }}
             >
-              <Typography
-                component="h1"
+              <Box
                 sx={{
-                  fontFamily: ff,
-                  fontWeight: 900,
-                  fontSize: {
-                    xs: "clamp(2.8rem, 12vw, 4rem)",
-                    md: "clamp(4.2rem, 7vw, 6.4rem)",
-                  },
-                  lineHeight: 0.92,
-                  letterSpacing: "-0.045em",
-                  mb: 0.75,
-                  textShadow: "0 2px 40px rgba(0,0,0,0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: { xs: 1.5, md: 2.25 },
+                  mb: 0.85,
                 }}
               >
-                FPSI
-              </Typography>
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: { xs: 56, md: 78 },
+                    height: { xs: 56, md: 78 },
+                    flexShrink: 0,
+                    filter: "drop-shadow(0 10px 28px rgba(0,0,0,0.35))",
+                  }}
+                >
+                  <Image
+                    src="/logo_p.png"
+                    alt=""
+                    fill
+                    priority
+                    sizes="78px"
+                    style={{ objectFit: "contain" }}
+                  />
+                </Box>
+                <Typography
+                  component="h1"
+                  sx={{
+                    fontFamily: ff,
+                    fontWeight: 900,
+                    fontSize: {
+                      xs: "clamp(2.8rem, 12vw, 4rem)",
+                      md: "clamp(4.2rem, 7vw, 6.4rem)",
+                    },
+                    lineHeight: 0.92,
+                    letterSpacing: "-0.045em",
+                    textShadow: "0 2px 40px rgba(0,0,0,0.25)",
+                  }}
+                >
+                  FPSI
+                </Typography>
+              </Box>
 
               <Typography
                 component="p"
@@ -350,33 +469,33 @@ export function LandingPage() {
                 component="p"
                 sx={{
                   fontFamily: ff,
-                  fontWeight: 700,
-                  fontSize: { xs: "1.15rem", md: "1.45rem" },
-                  lineHeight: 1.25,
-                  letterSpacing: "-0.02em",
-                  mb: 1.25,
-                  maxWidth: 460,
+                  fontWeight: 800,
+                  fontSize: { xs: "1.2rem", md: "1.55rem" },
+                  lineHeight: 1.22,
+                  letterSpacing: "-0.025em",
+                  mb: 1.35,
+                  maxWidth: 540,
                 }}
               >
                 {user
-                  ? "Bem-vindo de volta ao seu programa de maturidade."
-                  : "Privacidade e segurança com maturidade mensurável."}
+                  ? "Bem-vindo de volta ao seu programa."
+                  : "Quem lida com dados pessoais precisa de um programa de privacidade e segurança."}
               </Typography>
 
               <Typography
                 sx={{
                   fontFamily: ff,
                   fontWeight: 500,
-                  fontSize: { xs: "0.95rem", md: "1.05rem" },
+                  fontSize: { xs: "0.95rem", md: "1.08rem" },
                   color: landing.heroMuted,
                   lineHeight: 1.5,
                   mb: { xs: 2.5, md: 3 },
-                  maxWidth: 420,
+                  maxWidth: 500,
                 }}
               >
                 {user
-                  ? "Continue avaliando e monitorando a maturidade da sua organização."
-                  : "Diagnóstico, governança e conformidade LGPD — open source, multi-usuário, sem planilha."}
+                  ? "Continue o diagnóstico, as evidências e o dia a dia do seu programa."
+                  : "O FPSI ajuda a montar e acompanhar esse programa — diagnóstico, evidências e conformidade LGPD — com base no PPSI 2.0, a metodologia pública de maturidade em privacidade e segurança da informação usada no setor público e útil para qualquer organização."}
               </Typography>
 
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1.25 }}>
@@ -394,14 +513,14 @@ export function LandingPage() {
                         fontSize: "0.98rem",
                         px: 2.5,
                         py: 1.25,
-                        borderRadius: 999,
-                        bgcolor: landing.lock,
-                        color: landing.ink,
-                        boxShadow: "0 6px 20px rgba(249,168,37,0.35)",
-                        "&:hover": { bgcolor: "#FFB300", boxShadow: "0 8px 24px rgba(249,168,37,0.45)" },
+                        borderRadius: 1.5,
+                        bgcolor: landing.blue,
+                        color: "#fff",
+                        boxShadow: "0 6px 20px rgba(21,101,192,0.4)",
+                        "&:hover": { bgcolor: "#0D47A1", boxShadow: "0 8px 24px rgba(21,101,192,0.5)" },
                       }}
                     >
-                      Ir para Dashboard
+                      Ir para o painel
                     </Button>
                   ) : (
                     <Button
@@ -413,42 +532,42 @@ export function LandingPage() {
                         fontFamily: ff,
                         textTransform: "none",
                         fontWeight: 800,
-                        fontSize: "1.05rem",
-                        px: 3,
-                        py: 1.35,
-                        borderRadius: 999,
-                        bgcolor: landing.lock,
-                        color: landing.ink,
-                        boxShadow: "0 8px 28px rgba(249,168,37,0.45)",
+                        fontSize: "1.08rem",
+                        px: 3.25,
+                        py: 1.45,
+                        borderRadius: 1.5,
+                        bgcolor: landing.blue,
+                        color: "#fff",
+                        boxShadow: "0 8px 28px rgba(21,101,192,0.45)",
                         "@keyframes demoPulse": {
-                          "0%, 100%": { boxShadow: "0 8px 28px rgba(249,168,37,0.45)" },
-                          "50%": { boxShadow: "0 8px 36px rgba(249,168,37,0.7)" },
+                          "0%, 100%": { boxShadow: "0 8px 28px rgba(21,101,192,0.45)" },
+                          "50%": { boxShadow: "0 8px 36px rgba(33,150,243,0.65)" },
                         },
                         animation: "demoPulse 2.8s ease-in-out infinite",
                         "&:hover": {
-                          bgcolor: "#FFB300",
-                          boxShadow: "0 10px 32px rgba(249,168,37,0.55)",
+                          bgcolor: "#0D47A1",
+                          boxShadow: "0 10px 32px rgba(21,101,192,0.55)",
                           animation: "none",
                         },
                       }}
                     >
-                      Ver demonstração
+                      {demoCta.label}
                     </Button>
                   )}
                   {!user && (
                     <Button
                       variant="outlined"
                       size="large"
-                      onClick={handleLogin}
+                      onClick={() => router.push("/register")}
                       endIcon={<ArrowForwardIcon />}
                       sx={{
                         fontFamily: ff,
                         textTransform: "none",
                         fontWeight: 700,
-                        fontSize: "0.98rem",
-                        px: 2.25,
-                        py: 1.25,
-                        borderRadius: 999,
+                        fontSize: "1rem",
+                        px: 2.5,
+                        py: 1.35,
+                        borderRadius: 1.5,
                         color: landing.heroText,
                         borderColor: "rgba(255,255,255,0.45)",
                         borderWidth: 1.5,
@@ -459,28 +578,9 @@ export function LandingPage() {
                         },
                       }}
                     >
-                      Começar diagnóstico
+                      Montar meu programa
                     </Button>
                   )}
-                  <Button
-                    variant="text"
-                    size="large"
-                    onClick={() => setFeaturesOpen(true)}
-                    startIcon={<AppsIcon />}
-                    sx={{
-                      fontFamily: ff,
-                      textTransform: "none",
-                      fontWeight: 700,
-                      fontSize: "0.95rem",
-                      px: 1.5,
-                      py: 1.2,
-                      borderRadius: 999,
-                      color: landing.heroMuted,
-                      "&:hover": { color: landing.heroText, bgcolor: "rgba(255,255,255,0.06)" },
-                    }}
-                  >
-                    Ver módulos
-                  </Button>
                 </Box>
                 {!user && (
                   <Typography
@@ -492,7 +592,7 @@ export function LandingPage() {
                       letterSpacing: "0.01em",
                     }}
                   >
-                    Demo sem cadastro · explore com dados de exemplo
+                    Demo sem cadastro · veja um programa completo em minutos
                   </Typography>
                 )}
               </Box>
@@ -610,6 +710,7 @@ export function LandingPage() {
       />
 
       <LgpdReferenciaDrawer open={lgpdDrawerOpen} onClose={() => setLgpdDrawerOpen(false)} />
+      <AigpReferenciaDrawer open={aigpDrawerOpen} onClose={() => setAigpDrawerOpen(false)} />
     </Box>
   );
 }

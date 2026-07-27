@@ -96,7 +96,7 @@ export function PageHeroHeader({
             <Box
               sx={{
                 color: "text.secondary",
-                fontSize: "0.8rem",
+                fontSize: "0.8125rem",
                 lineHeight: 1.4,
                 "& .MuiTypography-root": { color: "inherit" },
               }}

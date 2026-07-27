@@ -14,8 +14,11 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Policy as PrivacyIcon } from "@mui/icons-material";
+import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
+import { portalPanelSx } from "@/lib/portal/portalPublicUi";
+import { PortalPublicHeaderSync } from "@/components/portal/PortalPublicHeaderContext";
 
 type Props = {
   documentTitle: string;
@@ -57,16 +60,16 @@ export function PortalLegalDocShell({ documentTitle, children }: Props) {
 
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3.5 } }}>
         <Skeleton variant="text" width="50%" height={40} />
-        <Skeleton variant="rectangular" height={400} sx={{ mt: 2 }} />
+        <Skeleton variant="rectangular" height={400} sx={{ mt: 2, borderRadius: 1.5 }} />
       </Container>
     );
   }
 
   if (error || !data) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3.5 } }}>
         <Typography color="error" variant="h6" gutterBottom>
           {error ?? "Não encontrado"}
         </Typography>
@@ -77,65 +80,69 @@ export function PortalLegalDocShell({ documentTitle, children }: Props) {
     );
   }
 
+  const logoSlot = logoUrl ? (
+    <Box
+      component="img"
+      src={logoUrl}
+      alt=""
+      sx={{
+        width: 44,
+        height: 44,
+        borderRadius: 1.5,
+        objectFit: "contain",
+        bgcolor: alpha(theme.palette.primary.main, 0.08),
+        p: 0.5,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+      }}
+    />
+  ) : (
+    <Box
+      sx={{
+        width: 44,
+        height: 44,
+        borderRadius: 1.5,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: (t) =>
+          t.palette.mode === "dark"
+            ? `linear-gradient(145deg, ${alpha("#fff", 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.2)} 100%)`
+            : `linear-gradient(145deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+        color: logoUrl ? "primary.main" : "primary.contrastText",
+        boxShadow: `0 2px 10px ${alpha(theme.palette.primary.main, 0.25)}`,
+      }}
+    >
+      <PrivacyIcon sx={{ fontSize: 24 }} />
+    </Box>
+  );
+
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3.5 } }}>
+      <PortalPublicHeaderSync slug={slug} orgName={nomeExibicao} logoUrl={logoUrl} />
       <Button
         size="small"
         startIcon={<ArrowBackIcon />}
         onClick={() => router.push(`/${encodeURIComponent(slug)}`)}
-        sx={{ mb: 2 }}
+        sx={{ mb: 1.5, fontWeight: 700, textTransform: "none" }}
       >
         Voltar ao portal
       </Button>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        {logoUrl ? (
-          <Box
-            component="img"
-            src={logoUrl}
-            alt=""
-            sx={{
-              width: 56,
-              height: 56,
-              borderRadius: 2,
-              objectFit: "contain",
-              bgcolor: alpha(theme.palette.primary.main, 0.06),
-              p: 0.5,
-            }}
-          />
-        ) : (
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              bgcolor: alpha(theme.palette.primary.main, 0.12),
-              color: "primary.main",
-            }}
-          >
-            <PrivacyIcon />
-          </Box>
-        )}
-        <Box>
-          <Typography variant="body2" color="text.secondary">
-            {nomeExibicao}
-          </Typography>
-          <Typography variant="h4" component="h1" fontWeight="bold">
-            {documentTitle}
-          </Typography>
-        </Box>
-      </Box>
+      <PageHeroHeader
+        titleComponent="h1"
+        title={documentTitle}
+        description={nomeExibicao}
+        iconSlot={logoSlot}
+        sx={{ mb: 2 }}
+      />
 
-      <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+      <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }), p: { xs: 2, sm: 3 } }}>
         {typeof children === "function" ? children(data) : children}
       </Paper>
 
-      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 3 }}>
-        Texto-padrão para transparência no portal. A organização deve revisar e adequar aos seus tratamentos de dados e
-        políticas internas. Não substitui assessoria jurídica.
+      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 2.5 }}>
+        Conteúdo do portal: texto publicado no módulo Políticas e documentos do programa, ou modelo padrão quando ainda
+        não houver publicação. Adeque aos tratamentos reais. Não substitui assessoria jurídica.
       </Typography>
     </Container>
   );

@@ -92,7 +92,7 @@ export function FeaturesExplorer({
                 color: landing.text,
               }}
             >
-              Do diagnóstico à auditoria
+              Módulos do programa
             </Typography>
             <Typography
               sx={{
@@ -103,7 +103,7 @@ export function FeaturesExplorer({
                 display: { xs: "none", sm: "block" },
               }}
             >
-              Selecione um módulo e veja o que ele resolve no dia a dia.
+              Os mesmos 10 módulos da home — selecione um e veja o que ele resolve no dia a dia.
             </Typography>
           </Box>
           <Button
@@ -135,7 +135,7 @@ export function FeaturesExplorer({
             <Grid item xs={12} md={5}>
               <Box
                 component="ul"
-                sx={{ listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column", gap: 1 }}
+                sx={{ listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column", gap: 0.5 }}
               >
                 {features.map((feature, index) => {
                   const active = activeFeature === index;
@@ -149,9 +149,10 @@ export function FeaturesExplorer({
                       tabIndex={0}
                       sx={{
                         display: "flex",
-                        gap: 2,
-                        alignItems: "flex-start",
-                        p: 2,
+                        gap: 1.5,
+                        alignItems: "center",
+                        px: 1.5,
+                        py: 1.1,
                         borderRadius: 2,
                         cursor: "pointer",
                         border: "1px solid",
@@ -165,27 +166,27 @@ export function FeaturesExplorer({
                     >
                       <Box
                         sx={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 1.5,
+                          width: 36,
+                          height: 36,
+                          borderRadius: 1.25,
                           display: "grid",
                           placeItems: "center",
                           flexShrink: 0,
                           bgcolor: active ? landing.blue : landing.mist,
                           color: active ? "#fff" : landing.blue,
                           transition: "background 0.2s ease, color 0.2s ease",
-                          "& .MuiSvgIcon-root": { fontSize: 24 },
+                          "& .MuiSvgIcon-root": { fontSize: 20 },
                         }}
                       >
                         {feature.icon}
                       </Box>
-                      <Box>
+                      <Box sx={{ minWidth: 0 }}>
                         <Typography
                           sx={{
                             fontFamily,
                             fontWeight: 700,
-                            fontSize: "1.05rem",
-                            mb: 0.35,
+                            fontSize: "0.95rem",
+                            mb: 0.15,
                             color: landing.text,
                           }}
                         >
@@ -196,8 +197,8 @@ export function FeaturesExplorer({
                             fontFamily,
                             fontWeight: 500,
                             color: landing.muted,
-                            fontSize: "0.95rem",
-                            lineHeight: 1.45,
+                            fontSize: "0.82rem",
+                            lineHeight: 1.35,
                           }}
                         >
                           {feature.description}

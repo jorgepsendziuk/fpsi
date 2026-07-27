@@ -17,7 +17,12 @@ import { useOfficeExperience } from "./OfficeExperienceContext";
 const MODAL_Z = 2000;
 
 export function OfficeIframeModal() {
-  const { modal, closeModal } = useOfficeExperience();
+  const { modal, closeModal, restorePreviousView, canRestoreView } = useOfficeExperience();
+
+  const handleClose = () => {
+    closeModal();
+    if (canRestoreView) restorePreviousView();
+  };
 
   const open = modal?.kind === "iframe";
   const href = open ? modal.href : "";
@@ -26,7 +31,7 @@ export function OfficeIframeModal() {
   return (
     <Dialog
       open={open}
-      onClose={closeModal}
+      onClose={handleClose}
       fullScreen={false}
       maxWidth={false}
       scroll="paper"
@@ -53,7 +58,7 @@ export function OfficeIframeModal() {
     >
       <AppBar position="static" color="default" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar variant="dense" sx={{ gap: 1, minHeight: 46 }}>
-          <IconButton edge="start" onClick={closeModal} aria-label="Fechar">
+          <IconButton edge="start" onClick={handleClose} aria-label="Fechar">
             <CloseIcon />
           </IconButton>
           <Typography variant="subtitle1" sx={{ flex: 1, minWidth: 0 }} noWrap fontWeight={700}>

@@ -1,11 +1,12 @@
 /** Segmentos de documentos legais hospedados no próprio portal (fallback quando não há URL externa no cadastro). */
-export type PortalLegalDoc = "politica" | "aviso" | "cookies" | "declaracao";
+export type PortalLegalDoc = "politica" | "aviso" | "cookies" | "declaracao" | "termo";
 
 const PATH: Record<PortalLegalDoc, string> = {
   politica: "politica-privacidade",
   aviso: "aviso-portal-titular",
   cookies: "cookies",
   declaracao: "declaracao-seguranca",
+  termo: "termo-uso",
 };
 
 export function portalInternalDocHref(slug: string, doc: PortalLegalDoc): string {

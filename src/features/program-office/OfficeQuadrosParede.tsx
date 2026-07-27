@@ -39,7 +39,7 @@ export function OfficeQuadrosParede({ idOrSlug, resumo, resumoLoading }: Props) 
     },
     {
       key: "risk",
-      titulo: "Tratamento de dados e riscos",
+      titulo: "Tratamento de dados",
       subtitulo: "ROPA · RIPD · Incidentes",
       href: `${base}/conformidade`,
       icon: <ShieldOutlinedIcon sx={{ fontSize: 36 }} />,

@@ -1,9 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Box, CircularProgress } from "@mui/material";
-import type { OfficeCameraControlsApi } from "./officeCameraApi";
+import type { OfficeCameraApiRef, OfficeCameraControlsApi } from "./officeCameraApi";
+import { OfficeFocusPanelOverlay } from "./OfficeFocusPanelOverlay";
+import { useOfficeExperience } from "./OfficeExperienceContext";
 import { OfficeViewHud } from "./OfficeViewHud";
 import { GAME_RPG_FRAME } from "./gameTheme";
 import { rpgPixelFont } from "./rpgGameFont";
@@ -30,7 +32,12 @@ const Office3DCanvas = dynamic(
 
 /** Vista imersiva WebGL — requer `OfficeExperienceProvider` acima na árvore. */
 export function OfficeRpgWorld() {
-  const cameraApiRef = useRef<OfficeCameraControlsApi | null>(null);
+  const cameraApiRef = useRef<OfficeCameraControlsApi | null>(null) as OfficeCameraApiRef;
+  const { registerCameraApiRef } = useOfficeExperience();
+
+  useEffect(() => {
+    registerCameraApiRef(cameraApiRef);
+  }, [registerCameraApiRef]);
 
   return (
     <Box
@@ -48,6 +55,7 @@ export function OfficeRpgWorld() {
       }}
     >
       <Office3DCanvas cameraApiRef={cameraApiRef} />
+      <OfficeFocusPanelOverlay />
       <OfficeViewHud cameraApiRef={cameraApiRef} />
     </Box>
   );

@@ -1,6 +1,6 @@
 import React from "react";
-import { Stack, Typography, Link as MuiLink } from "@mui/material";
-import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
+import { Box, Stack, Typography, Link as MuiLink } from "@mui/material";
+import type { PortalDocSecaoPublica, PortalPublicData } from "@/lib/portal/portalPublicTypes";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -21,7 +21,40 @@ function P({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Renderiza seções publicadas no módulo Políticas; retorna null se não houver conteúdo. */
+function PublishedSecoes({ secoes }: { secoes: PortalDocSecaoPublica[] | null | undefined }) {
+  if (!secoes?.length) return null;
+  return (
+    <Stack spacing={3}>
+      {secoes.map((s) => (
+        <Box key={s.id}>
+          {(s.secao || s.titulo) && (
+            <Typography variant="h6" component="h2" fontWeight="bold" gutterBottom>
+              {s.titulo || s.secao}
+            </Typography>
+          )}
+          {s.texto ? (
+            <Box
+              sx={{
+                typography: "body2",
+                color: "text.secondary",
+                lineHeight: 1.7,
+                "& p": { mb: 1.5 },
+              }}
+              dangerouslySetInnerHTML={{ __html: s.texto }}
+            />
+          ) : null}
+        </Box>
+      ))}
+    </Stack>
+  );
+}
+
 export function PoliticaPrivacidadeContent({ data }: { data: PortalPublicData }) {
+  if (data.documentos_publicados?.politica?.length) {
+    return <PublishedSecoes secoes={data.documentos_publicados.politica} />;
+  }
+
   const org = data.nome_fantasia || data.razao_social || data.nome || "esta organização";
   const dpo = [data.dpo_nome, data.dpo_email].filter(Boolean).join(" — ");
   return (
@@ -113,6 +146,9 @@ export function PoliticaPrivacidadeContent({ data }: { data: PortalPublicData })
 }
 
 export function AvisoPortalTitularContent({ data }: { data: PortalPublicData }) {
+  if (data.documentos_publicados?.aviso?.length) {
+    return <PublishedSecoes secoes={data.documentos_publicados.aviso} />;
+  }
   const org = data.nome_fantasia || data.razao_social || data.nome || "esta organização";
   return (
     <>
@@ -152,6 +188,9 @@ export function AvisoPortalTitularContent({ data }: { data: PortalPublicData }) 
 }
 
 export function CookiesContent({ data }: { data: PortalPublicData }) {
+  if (data.documentos_publicados?.cookies?.length) {
+    return <PublishedSecoes secoes={data.documentos_publicados.cookies} />;
+  }
   const org = data.nome_fantasia || data.razao_social || data.nome || "esta organização";
   return (
     <>
@@ -193,6 +232,9 @@ export function CookiesContent({ data }: { data: PortalPublicData }) {
 }
 
 export function DeclaracaoSegurancaContent({ data }: { data: PortalPublicData }) {
+  if (data.documentos_publicados?.declaracao?.length) {
+    return <PublishedSecoes secoes={data.documentos_publicados.declaracao} />;
+  }
   const org = data.nome_fantasia || data.razao_social || data.nome || "esta organização";
   return (
     <>
@@ -212,6 +254,61 @@ export function DeclaracaoSegurancaContent({ data }: { data: PortalPublicData })
         <P>
           Se você identificar possível vulnerabilidade ou incidente relacionado a estes serviços, utilize o canal de
           reporte disponível no portal principal, com o máximo de detalhes possível para análise.
+        </P>
+      </Section>
+    </>
+  );
+}
+
+export function TermoUsoContent({ data }: { data: PortalPublicData }) {
+  if (data.documentos_publicados?.termo?.length) {
+    return <PublishedSecoes secoes={data.documentos_publicados.termo} />;
+  }
+  const org = data.nome_fantasia || data.razao_social || data.nome || "esta organização";
+  const servico = data.nome || org;
+  return (
+    <>
+      <P>
+        Este Termo de Uso regula a utilização do serviço <strong>{servico}</strong>, disponibilizado por{" "}
+        <strong>{org}</strong>, em linha com o modelo do PPSI (Guia de Elaboração de Termo de Uso e Política de
+        Privacidade).
+      </P>
+      <Section title="1. Aceitação">
+        <P>
+          Ao utilizar o serviço, o usuário manifesta ciência / concordância com este Termo e com a Política de
+          Privacidade. O uso está condicionado à leitura e compreensão destas condições.
+        </P>
+      </Section>
+      <Section title="2. Descrição do serviço">
+        <P>
+          O serviço oferece canais digitais relacionados ao programa de privacidade e segurança da informação de{" "}
+          <strong>{org}</strong>, incluindo, quando disponíveis, exercício de direitos do titular, acompanhamento de
+          pedidos e canais de contato.
+        </P>
+      </Section>
+      <Section title="3. Responsabilidades do usuário">
+        <P>
+          O usuário deve informar dados verdadeiros, preservar o sigilo de credenciais quando houver cadastro, e utilizar
+          o serviço de forma lícita, sem comprometer a segurança ou os direitos de terceiros.
+        </P>
+      </Section>
+      <Section title="4. Privacidade">
+        <P>
+          O tratamento de dados pessoais observa a Política de Privacidade deste portal. Direitos do titular podem ser
+          exercidos pelos canais indicados no Aviso do Portal do Titular e junto ao encarregado (DPO), quando indicado
+          {data.dpo_email ? (
+            <>
+              {" "}
+              (<MuiLink href={`mailto:${data.dpo_email}`}>{data.dpo_nome || data.dpo_email}</MuiLink>)
+            </>
+          ) : null}
+          .
+        </P>
+      </Section>
+      <Section title="5. Alterações">
+        <P>
+          Este Termo pode ser atualizado. A versão vigente é a publicada neste portal. Para o texto institucional
+          completo (modelo PPSI editável), a organização deve publicar o documento no módulo Políticas e documentos.
         </P>
       </Section>
     </>

@@ -10,6 +10,7 @@ import {
   Map as MapIcon,
   ReportProblem as ReportProblemIcon,
   ContactMail as ContactMailIcon,
+  WarningAmber as WarningAmberIcon,
 } from "@mui/icons-material";
 
 export type HubCardDef = {
@@ -21,6 +22,8 @@ export type HubCardDef = {
   path: string;
   color: string;
   gradient: string;
+  /** Se definido, abre módulo do programa (`/programas/:id/:programaModule`) em vez de conformidade. */
+  programaModule?: string;
 };
 
 /** Mapeamento de dados, ROPA, RIPD, incidentes */
@@ -67,6 +70,18 @@ export const TRATAMENTO_SECTIONS: HubCardDef[] = [
     color: "#d32f2f",
     gradient: "linear-gradient(135deg, #d32f2f 0%, #f44336 100%)",
   },
+  {
+    key: "riscos",
+    title: "Gestão de riscos",
+    icon: <WarningAmberIcon fontSize="large" />,
+    subtitle: "Priorização e mapa de calor P×I",
+    description:
+      "Registre riscos, posicione no mapa probabilidade × impacto e acompanhe tratamento e mitigação.",
+    path: "riscos",
+    programaModule: "riscos",
+    color: "#c62828",
+    gradient: "linear-gradient(135deg, #b71c1c 0%, #e53935 100%)",
+  },
 ];
 
 /** Pedidos, reportes e contato — portal público */
@@ -108,13 +123,20 @@ export function ConformidadeHubCard({
   section,
   idOrSlug,
   router,
+  dense = false,
 }: {
   section: HubCardDef;
   idOrSlug: string;
   router: { push: (href: string) => void };
+  /** Cards mais baixos — hub em uma altura de tela. */
+  dense?: boolean;
 }) {
+  const href = section.programaModule
+    ? `/programas/${idOrSlug}/${section.programaModule}`
+    : `/programas/${idOrSlug}/conformidade/${section.path}`;
+
   return (
-    <Grid item xs={12} sm={6} md={4}>
+    <Grid item xs={12} sm={6}>
       <Card
         sx={{
           height: "100%",
@@ -122,9 +144,9 @@ export function ConformidadeHubCard({
           flexDirection: "column",
           position: "relative",
           overflow: "hidden",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "transform 0.2s ease, box-shadow 0.2s ease",
           "&:hover": {
-            transform: "translateY(-6px)",
+            transform: dense ? "translateY(-2px)" : "translateY(-6px)",
             boxShadow: `0 12px 24px ${alpha(section.color, 0.25)}`,
           },
           "&::before": {
@@ -133,36 +155,65 @@ export function ConformidadeHubCard({
             top: 0,
             left: 0,
             right: 0,
-            height: 4,
+            height: dense ? 3 : 4,
             background: section.gradient,
           },
         }}
       >
         <CardActionArea
-          onClick={() => router.push(`/programas/${idOrSlug}/conformidade/${section.path}`)}
-          sx={{ flex: 1, p: 2, height: "100%", alignItems: "flex-start", display: "block" }}
+          onClick={() => router.push(href)}
+          sx={{
+            flex: 1,
+            p: dense ? 1.25 : 2,
+            height: "100%",
+            alignItems: "flex-start",
+            display: "block",
+          }}
         >
-          <CardContent sx={{ width: "100%", height: "100%", "&:last-child": { pb: 2 } }}>
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, height: "100%" }}>
+          <CardContent
+            sx={{
+              width: "100%",
+              height: "100%",
+              p: 0,
+              "&:last-child": { pb: 0 },
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: dense ? 1.25 : 2 }}>
               <Box
                 sx={{
                   color: section.color,
-                  p: 1,
-                  borderRadius: 2,
+                  p: dense ? 0.75 : 1,
+                  borderRadius: 1.5,
                   bgcolor: alpha(section.color, 0.1),
                   flexShrink: 0,
+                  "& .MuiSvgIcon-root": { fontSize: dense ? 28 : undefined },
                 }}
               >
                 {section.icon}
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="h6" fontWeight={700} gutterBottom>
+                <Typography variant={dense ? "subtitle1" : "h6"} fontWeight={700} sx={{ lineHeight: 1.25 }}>
                   {section.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block", mt: 0.25, mb: dense ? 0.5 : 1, fontWeight: 600 }}
+                >
                   {section.subtitle}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: dense ? "0.8rem" : undefined,
+                    lineHeight: 1.4,
+                    display: "-webkit-box",
+                    WebkitLineClamp: dense ? 2 : 4,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
                   {section.description}
                 </Typography>
               </Box>

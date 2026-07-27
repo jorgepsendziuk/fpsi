@@ -55,6 +55,8 @@ type Props = {
   /** Só vão (sem folhas nem batente volumoso); placa continua acima da abertura. */
   doorwayOnly?: boolean;
   label?: string;
+  /** Faixa superior (ex.: MESA DE COMITÊ / SALA DE SETOR). */
+  badge?: string;
   /**
    * Inclinação suave da placa (pitch). Não use rotação em Y aqui: o `rotationY` do grupo já orienta a fachada.
    */
@@ -76,6 +78,7 @@ export function DoubleDoorPortal({
   frameDepth = 0.17,
   doorwayOnly = true,
   label,
+  badge,
   labelRotation = [0.12, 0, 0],
   labelOffset = [0, openingHeight + 0.14, 0.06],
   interact,
@@ -128,36 +131,69 @@ export function DoubleDoorPortal({
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {label ? (
+      {label || badge ? (
         <group position={labelOffset} rotation={labelRotation}>
           <mesh
-            position={[0, 0, 0.01]}
+            position={[0, badge ? 0.08 : 0, 0.01]}
             onClick={(e) => {
               e.stopPropagation();
               onActivate(e);
             }}
             {...interact}
           >
-            <planeGeometry args={[Math.min(openingWidth + 0.55, 1.65), 0.38]} />
-            <meshStandardMaterial color="#fffdf7" roughness={0.75} metalness={0.02} />
+            <planeGeometry args={[Math.min(openingWidth + 0.72, 1.95), badge ? 0.52 : 0.42]} />
+            <meshStandardMaterial
+              color="#fffdf7"
+              emissive="#fff8e8"
+              emissiveIntensity={0.14}
+              roughness={0.72}
+              metalness={0.02}
+            />
           </mesh>
-          <Text
-            position={[0, 0, 0.024]}
-            fontSize={0.086}
-            maxWidth={1.45}
-            anchorX="center"
-            anchorY="middle"
-            color="#120d0a"
-            outlineWidth={0.022}
-            outlineColor="#fffef8"
-            onClick={(e) => {
-              e.stopPropagation();
-              onActivate(e);
-            }}
-            {...interact}
-          >
-            {label}
-          </Text>
+          {badge ? (
+            <>
+              <mesh position={[0, 0.2, 0.014]}>
+                <planeGeometry args={[Math.min(openingWidth + 0.72, 1.95), 0.16]} />
+                <meshStandardMaterial color="#4e342e" emissive="#3e2723" emissiveIntensity={0.18} roughness={0.9} />
+              </mesh>
+              <Text
+                position={[0, 0.2, 0.028]}
+                fontSize={0.052}
+                maxWidth={1.75}
+                anchorX="center"
+                anchorY="middle"
+                color="#fffef8"
+                outlineWidth={0.016}
+                outlineColor="#1a120c"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onActivate(e);
+                }}
+                {...interact}
+              >
+                {badge}
+              </Text>
+            </>
+          ) : null}
+          {label ? (
+            <Text
+              position={[0, badge ? -0.02 : 0, 0.028]}
+              fontSize={0.098}
+              maxWidth={1.75}
+              anchorX="center"
+              anchorY="middle"
+              color="#0a0705"
+              outlineWidth={0.032}
+              outlineColor="#fffef8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActivate(e);
+              }}
+              {...interact}
+            >
+              {label}
+            </Text>
+          ) : null}
         </group>
       ) : null}
     </group>

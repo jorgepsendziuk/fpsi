@@ -254,6 +254,9 @@ export const useMaturityCache = (programaId: number, programaMedidas?: { [key: s
       if (controlesComDados > 0) {
         averageScore = ((iMC0 * 4) + somaControles) / (4 + controlesComDados);
       }
+    } else if (diagnostico.id === 4) {
+      // Diagnóstico 4: Governança de IA / AIGP — média simples (iAIGP)
+      averageScore = controlesComDados > 0 ? somaControles / controlesComDados : 0;
     } else {
       // Fallback: média simples
       averageScore = controlesComDados > 0 ? somaControles / controlesComDados : 0;

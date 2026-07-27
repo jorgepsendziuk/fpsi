@@ -243,11 +243,45 @@ function tryInternacionais(s: string): NormaExternaResolve | null {
   if (/\bcis\s+controls?\b/i.test(s) || /\bcis\s+benchmark/i.test(s)) {
     return { url: "https://www.cisecurity.org/controls", siteLabel: "CIS" };
   }
+  // IA / AIGP — links específicos (antes dos fallbacks genéricos NIST/ISO)
+  if (/42001/.test(s) || (/\biso\b/i.test(s) && /\baims\b/i.test(s))) {
+    return { url: "https://www.iso.org/standard/81230.html", siteLabel: "ISO/IEC 42001" };
+  }
+  if (/\bnist\s+ai\s+rmf\b/i.test(s) || /\bai\s+rmf\b/i.test(s) || (/\bnist\b/i.test(s) && /\bai\b/i.test(s))) {
+    return { url: "https://www.nist.gov/itl/ai-risk-management-framework", siteLabel: "NIST AI RMF" };
+  }
+  if (/\baigp\b/i.test(s) || /\biapp\b/i.test(s)) {
+    return { url: "https://iapp.org/certify/aigp/", siteLabel: "IAPP AIGP" };
+  }
+  if (/\boecd\b/i.test(s) && /\bai\b/i.test(s)) {
+    return { url: "https://oecd.ai/en/ai-principles", siteLabel: "OECD AI Principles" };
+  }
+  if (/\beu\s+ai\s+act\b/i.test(s) || /\bai\s+act\b/i.test(s)) {
+    return {
+      url: "https://eur-lex.europa.eu/legal-content/PT/TXT/?uri=CELEX:32024R1689",
+      siteLabel: "EU AI Act (EUR-Lex)",
+    };
+  }
+  if (/\bowasp\b/i.test(s) && /\bllm\b/i.test(s)) {
+    return {
+      url: "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
+      siteLabel: "OWASP LLM Top 10",
+    };
+  }
+  if (/\bppsi\b/i.test(s)) {
+    return {
+      url: "https://www.gov.br/governodigital/pt-br/privacidade-e-seguranca/ppsi-2.0/",
+      siteLabel: "PPSI 2.0",
+    };
+  }
   if (/\bnist\b/i.test(s)) {
     return { url: "https://www.nist.gov/cyberframework", siteLabel: "NIST" };
   }
-  if (/\biso\s*\/\s*iec\b/i.test(s) || /\biso\s+27001\b/i.test(s)) {
-    return { url: "https://www.iso.org/standard/27001", siteLabel: "ISO" };
+  if (/\biso\s+27001\b/i.test(s) || (/\biso\s*\/\s*iec\b/i.test(s) && /27001/.test(s))) {
+    return { url: "https://www.iso.org/standard/27001", siteLabel: "ISO/IEC 27001" };
+  }
+  if (/\biso\s*\/\s*iec\b/i.test(s)) {
+    return { url: "https://www.iso.org/standards.html", siteLabel: "ISO" };
   }
   return null;
 }

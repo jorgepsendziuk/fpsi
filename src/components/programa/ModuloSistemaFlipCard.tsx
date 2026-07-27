@@ -18,20 +18,17 @@ import {
 } from "@mui/material";
 import ReplyIcon from "@mui/icons-material/Reply";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
+import { formatMaturityIndex, getMaturityColorHex, normalizeMaturityScore } from "@/lib/utils/maturity";
 
 function maturityColor(score: number): string {
-  if (score >= 0.9) return "#2E7D32";
-  if (score >= 0.7) return "#388E3C";
-  if (score >= 0.5) return "#F9A825";
-  if (score >= 0.3) return "#EF6C00";
-  return "#C62828";
+  return getMaturityColorHex(score);
 }
 
 /** Largura da faixa lateral (ícone flip). Exportado para alinhar marcadores externos (ex.: portal). */
 export const MODULO_FLIP_STRIP_WIDTH_PX = 44;
 
 /** Altura mínima do conteúdo (frente/verso); evita cortar título e descrição nos breakpoints estreitos */
-const CARD_CONTENT_MIN_HEIGHT_PX = 280;
+const CARD_CONTENT_MIN_HEIGHT_PX = 220;
 
 /** Texto do verso (resumo) — um pouco maior que body2 padrão para leitura confortável */
 const backBodySx = { fontSize: "0.9375rem", lineHeight: 1.45, m: 0 } as const;
@@ -59,6 +56,8 @@ export type ModuloSection = {
   path: string;
   color: string;
   gradient: string;
+  featured?: boolean;
+  badge?: string;
 };
 
 type Props = {
@@ -127,7 +126,7 @@ export function ModuloSistemaFlipCard({
       return null;
     }
 
-    const { planoAcao, conformidade, responsabilidades, maturidade, politicas, portal, auditoria } = resumo;
+    const { planoAcao, conformidade, responsabilidades, maturidade, politicas, portal, auditoria, postura } = resumo;
 
     switch (section.key) {
       case "escritorio-governanca":
@@ -139,6 +138,23 @@ export function ModuloSistemaFlipCard({
             <Typography component="div" sx={backBodySx}>
               A mesma aplicação em outro desenho: sala, corredor e (em breve) personagens dos papéis
               PPSI 2.0. Sem dados extra — só navegação.
+            </Typography>
+          </Stack>
+        );
+      case "riscos":
+        return (
+          <Stack spacing={0.75}>
+            <Typography component="div" sx={backHeadingSx}>
+              Postura de risco
+            </Typography>
+            <Typography component="div" sx={backBodySx}>
+              Riscos registrados: {postura?.riscosTotal ?? 0}
+            </Typography>
+            <Typography component="div" sx={backBodySx}>
+              Críticos / altos: {postura?.riscosCriticos ?? 0}
+            </Typography>
+            <Typography component="div" sx={{ ...backBodySx, color: "text.secondary", mt: 0.25 }}>
+              Matriz probabilidade × impacto (5×5) e status de mitigação.
             </Typography>
           </Stack>
         );
@@ -182,8 +198,8 @@ export function ModuloSistemaFlipCard({
                 </Typography>
               ) : (
                 maturidade.map((m) => {
-                  const pct = Math.round(Number(m.score) * 100);
-                  const col = maturityColor(Number(m.score));
+                  const fmt = formatMaturityIndex(m.score);
+                  const col = fmt?.color ?? maturityColor(normalizeMaturityScore(Number(m.score)));
                   return (
                     <Box
                       key={m.diagnostico_id}
@@ -203,9 +219,13 @@ export function ModuloSistemaFlipCard({
                         {m.nome}
                       </Typography>
                       <Typography fontWeight={800} sx={{ color: col, fontSize: "0.9rem", flexShrink: 0 }}>
-                        {pct}%
+                        {fmt?.indexText ?? "—"}
                       </Typography>
-                      <Chip size="small" label={m.label} sx={{ height: 26, fontSize: "0.75rem", fontWeight: 600 }} />
+                      <Chip
+                        size="small"
+                        label={fmt ? `Nív. ${fmt.levelId}` : m.label}
+                        sx={{ height: 26, fontSize: "0.75rem", fontWeight: 600 }}
+                      />
                     </Box>
                   );
                 })
@@ -299,6 +319,42 @@ export function ModuloSistemaFlipCard({
     ? { opacity: showBack ? 0 : 1, transition: "opacity 0.2s ease" }
     : { transform: flipTransform, transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)" };
 
+  const featured = Boolean(section.featured);
+
+  const titleBlock = (
+    <Box sx={{ minWidth: 0 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1.25, color: section.color }}>
+        {section.icon}
+        <Typography variant="h6" fontWeight="bold" sx={{ lineHeight: 1.25 }}>
+          {section.title}
+        </Typography>
+      </Box>
+      {section.badge && (
+        <Chip
+          size="small"
+          label={section.badge}
+          sx={{
+            mb: 1.25,
+            height: 24,
+            fontWeight: 700,
+            fontSize: "0.7rem",
+            letterSpacing: "0.02em",
+            bgcolor: alpha(section.color, 0.12),
+            color: section.color,
+            border: `1px solid ${alpha(section.color, 0.35)}`,
+          }}
+        />
+      )}
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ lineHeight: 1.6, wordBreak: "break-word" }}
+      >
+        {section.description}
+      </Typography>
+    </Box>
+  );
+
   return (
     <Card
       sx={{
@@ -308,6 +364,11 @@ export function ModuloSistemaFlipCard({
         display: "flex",
         flexDirection: "row",
         transition: "box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s",
+        ...(featured && {
+          border: `1px solid ${alpha(section.color, 0.38)}`,
+          boxShadow: `0 8px 22px ${alpha(section.color, 0.16)}`,
+          bgcolor: alpha(section.color, theme.palette.mode === "dark" ? 0.1 : 0.04),
+        }),
         ...(highlight && {
           transform: "translateY(-8px)",
           boxShadow: `0 14px 32px ${alpha(section.color, 0.45)}`,
@@ -328,7 +389,7 @@ export function ModuloSistemaFlipCard({
           top: 0,
           left: 0,
           right: 0,
-          height: 4,
+          height: featured ? 5 : 4,
           background: section.gradient,
           zIndex: 2,
         },
@@ -375,21 +436,7 @@ export function ModuloSistemaFlipCard({
                     "&:last-child": { pb: 3 },
                   }}
                 >
-                  <Box sx={{ minWidth: 0 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2, color: section.color }}>
-                      {section.icon}
-                      <Typography variant="h6" fontWeight="bold" sx={{ lineHeight: 1.25 }}>
-                        {section.title}
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ lineHeight: 1.6, wordBreak: "break-word" }}
-                    >
-                      {section.description}
-                    </Typography>
-                  </Box>
+                  {titleBlock}
                   <Box sx={{ display: "flex", alignItems: "center", color: section.color, fontWeight: "bold", mt: 2 }}>
                     <Typography variant="button" sx={{ fontWeight: "bold" }}>
                       Acessar
@@ -427,21 +474,7 @@ export function ModuloSistemaFlipCard({
               }}
             >
               <Box sx={{ ...faceSx, transform: "rotateY(0deg)" }}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2, color: section.color }}>
-                    {section.icon}
-                    <Typography variant="h6" fontWeight="bold" sx={{ lineHeight: 1.25 }}>
-                      {section.title}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ lineHeight: 1.6, wordBreak: "break-word" }}
-                  >
-                    {section.description}
-                  </Typography>
-                </Box>
+                {titleBlock}
                 <Box sx={{ display: "flex", alignItems: "center", color: section.color, fontWeight: "bold", mt: 2 }}>
                   <Typography variant="button" sx={{ fontWeight: "bold" }}>
                     Acessar

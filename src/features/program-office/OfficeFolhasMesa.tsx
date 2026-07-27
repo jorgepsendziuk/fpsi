@@ -41,7 +41,7 @@ export function OfficeFolhasMesa({ idOrSlug, resumo, resumoLoading }: Props) {
       href: `${base}/planos-acao`,
     },
     {
-      titulo: "Tratamento de dados e riscos",
+      titulo: "Tratamento de dados",
       detalhe: resumoLoading
         ? "…"
         : resumo && resumo.conformidade

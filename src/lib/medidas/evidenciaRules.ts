@@ -5,11 +5,19 @@
 
 import type { GovernancaAbaQuery } from "@/lib/governanca/abaGovernanca";
 
-/** Política de Segurança da Informação (POSIN) no FPSI. */
-export const TIPO_POLITICA_POSIN = "politica_seguranca_informacao";
+import {
+  TIPO_POLITICA_PGP,
+  TIPO_POLITICA_PGSI,
+  TIPO_POLITICA_POSIN,
+  TIPO_POLITICA_PROTECAO_DADOS,
+} from "@/lib/politicas/politicasCatalog";
 
-/** Política de Proteção de Dados Pessoais (medida 0.12 e documento correlato). */
-export const TIPO_POLITICA_PROTECAO_DADOS = "politica_protecao_dados_pessoais";
+export {
+  TIPO_POLITICA_PGP,
+  TIPO_POLITICA_PGSI,
+  TIPO_POLITICA_POSIN,
+  TIPO_POLITICA_PROTECAO_DADOS,
+};
 
 export type EvidenciaConfianca = "alta" | "media" | "baixa";
 
@@ -60,6 +68,8 @@ export type EvidenciaContext = {
   grupos: EvidenciaGruposGovernanca;
   posinComConteudo: boolean;
   protecaoDadosComConteudo: boolean;
+  pgsiComConteudo: boolean;
+  pgpComConteudo: boolean;
   conformidade?: EvidenciaConformidadeSnapshot;
 };
 
@@ -80,7 +90,9 @@ export function buildEvidenciaContext(
   politicaPosin: EvidenciaPoliticaPosin,
   politicaProtecaoDados: EvidenciaPoliticaPosin = null,
   gruposGovernanca: EvidenciaGruposGovernanca | null | undefined = null,
-  conformidade?: EvidenciaConformidadeSnapshot
+  conformidade?: EvidenciaConformidadeSnapshot,
+  politicaPgsi: EvidenciaPoliticaPosin = null,
+  politicaPgp: EvidenciaPoliticaPosin = null
 ): EvidenciaContext {
   const p = programa as Partial<EvidenciaProgramaSnapshot> | null | undefined;
   const grupos: EvidenciaGruposGovernanca = gruposGovernanca ?? {
@@ -101,6 +113,8 @@ export function buildEvidenciaContext(
     protecaoDadosComConteudo:
       politicaProtecaoDados != null &&
       politicaPosinTemConteudoRelevante(politicaProtecaoDados.secoes),
+    pgsiComConteudo: politicaPgsi != null && politicaPosinTemConteudoRelevante(politicaPgsi.secoes),
+    pgpComConteudo: politicaPgp != null && politicaPosinTemConteudoRelevante(politicaPgp.secoes),
     conformidade,
   };
 }
@@ -137,7 +151,15 @@ export function getEvidenciaSugestao(
   ctx: EvidenciaContext
 ): EvidenciaSugestao {
   const id = (idMedida || "").trim();
-  const { programa, grupos, posinComConteudo, protecaoDadosComConteudo, conformidade } = ctx;
+  const {
+    programa,
+    grupos,
+    posinComConteudo,
+    protecaoDadosComConteudo,
+    pgsiComConteudo,
+    pgpComConteudo,
+    conformidade,
+  } = ctx;
 
   const semRegra: EvidenciaSugestao = {
     regraDefinida: false,
@@ -231,15 +253,19 @@ export function getEvidenciaSugestao(
           governancaContexto: { aba: "etir", detalhe: "Membros da ETIR." },
         };
       case "0.9":
-        return {
-          ...semRegra,
-          motivo: "PGSI: não há modelo equivalente no FPSI; avalie conforme documentação do órgão.",
-        };
+        return binario(
+          pgsiComConteudo,
+          "Existe PGSI salvo no programa com ao menos uma seção com texto.",
+          "Não há PGSI com conteúdo preenchido (politica_pgsi).",
+          [`politica_programa.${TIPO_POLITICA_PGSI}`]
+        );
       case "0.10":
-        return {
-          ...semRegra,
-          motivo: "PGP: não há modelo equivalente no FPSI; avalie conforme documentação do órgão.",
-        };
+        return binario(
+          pgpComConteudo,
+          "Existe PGP salvo no programa com ao menos uma seção com texto.",
+          "Não há PGP com conteúdo preenchido (politica_pgp).",
+          [`politica_programa.${TIPO_POLITICA_PGP}`]
+        );
       case "0.11":
         return binario(
           posinComConteudo,

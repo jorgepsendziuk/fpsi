@@ -1188,7 +1188,7 @@ export default function ROPAPage() {
 
       <Box sx={{ mt: 2 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => router.push(`/programas/${idOrSlug}/conformidade`)}>
-          Voltar ao tratamento e riscos
+          Voltar ao tratamento de dados
         </Button>
       </Box>
     </Container>

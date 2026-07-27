@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -34,11 +34,14 @@ import {
   MoreVert as MoreVertIcon,
   Assignment as AssignmentIcon,
   Business as BusinessIcon,
+  DeleteSweep as DeleteSweepIcon,
+  RestoreFromTrash as RestoreFromTrashIcon,
 } from "@mui/icons-material";
 import * as dataService from "@/lib/services/dataService";
 import { Programa } from "@/lib/types/types";
 import { ProgramasSection } from "@/components/dashboard/ProgramasSection";
 import { DashboardOperacionalSection } from "@/components/dashboard/DashboardOperacionalSection";
+import { smartBoardItemSize } from "@/lib/dashboard/smartBoardGrid";
 
 const EMPRESA_FORM_INITIAL = {
   cnpj: "",
@@ -63,6 +66,7 @@ export default function DashboardPage() {
   const theme = useTheme();
   const [empresas, setEmpresas] = useState<dataService.EmpresaRow[]>([]);
   const [programas, setProgramas] = useState<Programa[]>([]);
+  const [programasBoardCount, setProgramasBoardCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [empresaMenuAnchor, setEmpresaMenuAnchor] = useState<null | HTMLElement>(null);
   const [selectedEmpresa, setSelectedEmpresa] = useState<dataService.EmpresaRow | null>(null);
@@ -76,6 +80,8 @@ export default function DashboardPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [empresaToDelete, setEmpresaToDelete] = useState<dataService.EmpresaRow | null>(null);
   const [deletingEmpresa, setDeletingEmpresa] = useState(false);
+  const [createProgramaRequest, setCreateProgramaRequest] = useState(0);
+  const [viewExcluidos, setViewExcluidos] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -96,6 +102,21 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
+
+  const handleProgramasCount = useCallback((n: number) => {
+    setProgramasBoardCount(n);
+  }, []);
+
+  const boardTotal = useMemo(() => {
+    if (viewExcluidos) return Math.max(programasBoardCount, 1);
+    const prog = programasBoardCount;
+    const emp = empresas.length;
+    // Sem programas: slot vazio de programa conta 1 (fica lado a lado com empresa se houver)
+    const progSlots = prog > 0 ? prog : 1;
+    return progSlots + emp;
+  }, [programasBoardCount, empresas.length, viewExcluidos]);
+
+  const itemSize = smartBoardItemSize(Math.max(boardTotal, 1));
 
   const programasPorEmpresa = programas.reduce(
     (acc, p) => {
@@ -230,12 +251,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2 }, px: { xs: 1.5, sm: 2.5 } }}>
+    <Container
+      maxWidth={false}
+      disableGutters
+      sx={{
+        width: "100%",
+        maxWidth: "100%",
+        py: { xs: 1.5, md: 1.75 },
+        px: { xs: 1.25, sm: 1.5, md: 2, lg: 2.5, xl: 3 },
+      }}
+    >
       <DashboardOperacionalSection />
-
-      <Suspense fallback={<Box sx={{ minHeight: 140 }} />}>
-        <ProgramasSection />
-      </Suspense>
 
       <Box sx={{ mb: 2 }}>
         <Box
@@ -244,137 +270,172 @@ export default function DashboardPage() {
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 1,
-            mb: 1.25,
+            gap: 1.25,
+            mb: 1.5,
           }}
         >
-          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 800, letterSpacing: "-0.015em" }}>
-            Empresas
-          </Typography>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<AddIcon />}
-            onClick={handleOpenCreateEmpresa}
-            sx={{ borderRadius: 1.5 }}
-          >
-            Nova empresa
-          </Button>
+          <Box>
+            <Typography variant="h6" component="h2" sx={{ fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+              {viewExcluidos ? "Lixeira de programas" : "Programas e empresas"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {viewExcluidos
+                ? "Restaure ou exclua definitivamente."
+                : `${programasBoardCount} programa(s) · ${empresas.length} empresa(s)`}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {!viewExcluidos && (
+              <>
+                <Button
+                  variant="contained"
+                  size="medium"
+                  startIcon={<AddIcon />}
+                  onClick={() => setCreateProgramaRequest((n) => n + 1)}
+                >
+                  Programa
+                </Button>
+                <Button variant="outlined" size="medium" startIcon={<BusinessIcon />} onClick={handleOpenCreateEmpresa}>
+                  Empresa
+                </Button>
+              </>
+            )}
+            <Button
+              variant={viewExcluidos ? "contained" : "text"}
+              size="medium"
+              startIcon={viewExcluidos ? <RestoreFromTrashIcon /> : <DeleteSweepIcon />}
+              onClick={() => setViewExcluidos((v) => !v)}
+            >
+              {viewExcluidos ? "Ativos" : "Lixeira"}
+            </Button>
+          </Stack>
         </Box>
 
-        {loading ? (
-          <Grid container spacing={1.5}>
-            {[1, 2, 3].map((i) => (
-              <Grid item xs={12} sm={6} md={4} key={i}>
-                <Card elevation={0} sx={{ p: 1.5, border: `1px solid ${theme.palette.divider}` }}>
-                  <Skeleton variant="text" width="70%" height={24} />
-                  <Skeleton variant="text" width="50%" height={18} sx={{ mt: 0.5 }} />
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        ) : empresas.length === 0 ? (
-          <Card
-            elevation={0}
-            sx={{
-              p: 2.5,
-              textAlign: "center",
-              border: `1px dashed ${alpha(theme.palette.primary.main, 0.35)}`,
-              bgcolor: alpha(theme.palette.primary.main, 0.03),
-            }}
+        <Grid container spacing={1.5}>
+          <Suspense
+            fallback={
+              <>
+                {[1, 2].map((i) => (
+                  <Grid item {...itemSize} key={i}>
+                    <Card sx={{ height: 180, borderRadius: 1 }}>
+                      <CardContent>
+                        <Skeleton variant="text" width="70%" height={28} />
+                        <Skeleton variant="text" width="50%" />
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </>
+            }
           >
-            <BusinessIcon sx={{ fontSize: 36, color: "text.disabled", mb: 0.75 }} />
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-              Nenhuma empresa cadastrada. Crie uma para vincular aos programas.
-            </Typography>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={handleOpenCreateEmpresa}
-              sx={{ borderRadius: 1.5 }}
-            >
-              Criar empresa
-            </Button>
-          </Card>
-        ) : (
-          <Grid container spacing={1.5}>
-            {empresas.map((empresa) => {
-              const programasVinculados = programasPorEmpresa[empresa.id] || [];
-              return (
-                <Grid item xs={12} sm={6} md={4} key={empresa.id}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 2,
-                      border: `1px solid ${theme.palette.divider}`,
-                      "&:hover": { borderColor: alpha(theme.palette.primary.main, 0.35) },
-                    }}
-                  >
-                    <CardContent sx={{ flex: 1, pb: 0.5, pt: 1.5, px: 1.5 }}>
-                      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1, lineHeight: 1.3 }}>
-                          {empresa.nome_fantasia || empresa.razao_social || `Empresa #${empresa.id}`}
-                        </Typography>
-                        <IconButton size="small" aria-label="Menu empresa" onClick={(e) => handleEmpresaMenuOpen(e, empresa)}>
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                      {empresa.razao_social && empresa.razao_social !== (empresa.nome_fantasia || "") && (
-                        <Typography variant="caption" color="text.secondary" display="block" noWrap>
-                          {empresa.razao_social}
-                        </Typography>
-                      )}
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        CNPJ: {formatCnpj(empresa.cnpj)}
-                      </Typography>
-                      <Chip
-                        icon={<AssignmentIcon sx={{ fontSize: "14px !important" }} />}
-                        label={`${programasVinculados.length} programa(s)`}
-                        size="small"
-                        variant="outlined"
-                        sx={{ mt: 1, height: 22, fontSize: "0.7rem" }}
-                      />
-                      {programasVinculados.length > 0 && (
-                        <Stack direction="row" flexWrap="wrap" gap={0.4} sx={{ mt: 0.75 }}>
-                          {programasVinculados.slice(0, 2).map((p: Programa) => (
-                            <Chip
-                              key={p.id}
-                              label={p.nome || p.nome_fantasia || `Programa #${p.id}`}
-                              size="small"
-                              onClick={() => p.slug && router.push(`/programas/${p.slug}`)}
-                              sx={{ cursor: "pointer", maxWidth: "100%", height: 22, fontSize: "0.68rem" }}
-                            />
-                          ))}
-                          {programasVinculados.length > 2 && (
-                            <Chip label={`+${programasVinculados.length - 2}`} size="small" variant="outlined" sx={{ height: 22 }} />
-                          )}
-                        </Stack>
-                      )}
+            <ProgramasSection
+              boardMode
+              boardItemSize={itemSize}
+              onCountChange={handleProgramasCount}
+              createOpenRequest={createProgramaRequest}
+              viewExcluidos={viewExcluidos}
+              onViewExcluidosChange={setViewExcluidos}
+            />
+          </Suspense>
+
+          {!viewExcluidos &&
+            (loading ? (
+              [1, 2].map((i) => (
+                <Grid item {...itemSize} key={`emp-sk-${i}`}>
+                  <Card sx={{ height: 160, borderRadius: 1 }}>
+                    <CardContent>
+                      <Skeleton variant="text" width="70%" height={28} />
+                      <Skeleton variant="text" width="45%" />
                     </CardContent>
-                    <CardActions sx={{ px: 1.25, pb: 1, pt: 0 }}>
-                      <Button size="small" startIcon={<EditIcon />} onClick={() => openEditEmpresaDialog(empresa)}>
-                        Editar
-                      </Button>
-                      <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => openDeleteEmpresaConfirm(empresa)}>
-                        Excluir
-                      </Button>
-                    </CardActions>
                   </Card>
                 </Grid>
-              );
-            })}
-          </Grid>
-        )}
+              ))
+            ) : (
+              empresas.map((empresa) => {
+                const programasVinculados = programasPorEmpresa[empresa.id] || [];
+                return (
+                  <Grid item {...itemSize} key={`emp-${empresa.id}`}>
+                    <Card
+                      sx={{
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: 1,
+                        border: `1px solid ${theme.palette.divider}`,
+                        position: "relative",
+                        overflow: "hidden",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          bottom: 0,
+                          width: 3,
+                          bgcolor: "secondary.main",
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ flex: 1, py: 2, px: 2, pl: 2.25, "&:last-child": { pb: 1.5 } }}>
+                        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 0.5, mb: 1 }}>
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Chip
+                              icon={<BusinessIcon sx={{ fontSize: "14px !important" }} />}
+                              label="Empresa"
+                              size="small"
+                              sx={{
+                                height: 22,
+                                mb: 0.5,
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                bgcolor: alpha(theme.palette.secondary.main, 0.12),
+                                color: "secondary.main",
+                                "& .MuiChip-icon": { color: "secondary.main" },
+                              }}
+                            />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
+                              {empresa.nome_fantasia || empresa.razao_social || `Empresa #${empresa.id}`}
+                            </Typography>
+                            {empresa.razao_social && empresa.razao_social !== (empresa.nome_fantasia || "") && (
+                              <Typography variant="body2" color="text.secondary" noWrap>
+                                {empresa.razao_social}
+                              </Typography>
+                            )}
+                          </Box>
+                          <IconButton size="small" aria-label="Menu empresa" onClick={(e) => handleEmpresaMenuOpen(e, empresa)}>
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                          CNPJ {formatCnpj(empresa.cnpj)}
+                        </Typography>
+                        <Chip
+                          icon={<AssignmentIcon sx={{ fontSize: 16 }} />}
+                          label={`${programasVinculados.length} programa(s)`}
+                          size="small"
+                          variant="outlined"
+                          sx={{ height: 24 }}
+                        />
+                      </CardContent>
+                      <CardActions sx={{ px: 2, pb: 1.5, pt: 0 }}>
+                        <Button size="medium" startIcon={<EditIcon />} onClick={() => openEditEmpresaDialog(empresa)}>
+                          Editar
+                        </Button>
+                        <Button size="medium" color="error" startIcon={<DeleteIcon />} onClick={() => openDeleteEmpresaConfirm(empresa)}>
+                          Excluir
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                );
+              })
+            ))}
+        </Grid>
 
         <Menu
           anchorEl={empresaMenuAnchor}
           open={Boolean(empresaMenuAnchor)}
           onClose={handleEmpresaMenuClose}
-          PaperProps={{ sx: { borderRadius: 2, minWidth: 180 } }}
+          PaperProps={{ sx: { borderRadius: 1, minWidth: 180 } }}
         >
           <MenuItem onClick={handleOpenEditEmpresa}>
             <EditIcon sx={{ mr: 1.5 }} fontSize="small" />
@@ -387,13 +448,7 @@ export default function DashboardPage() {
         </Menu>
       </Box>
 
-      <Dialog
-        open={openCreateEmpresa}
-        onClose={() => !savingEmpresa && setOpenCreateEmpresa(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
-      >
+      <Dialog open={openCreateEmpresa} onClose={() => !savingEmpresa && setOpenCreateEmpresa(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Criar empresa</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
@@ -417,13 +472,7 @@ export default function DashboardPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={openEditEmpresa}
-        onClose={() => !savingEmpresa && setOpenEditEmpresa(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
-      >
+      <Dialog open={openEditEmpresa} onClose={() => !savingEmpresa && setOpenEditEmpresa(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Editar empresa</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
@@ -447,13 +496,7 @@ export default function DashboardPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={deleteConfirmOpen}
-        onClose={() => !deletingEmpresa && setDeleteConfirmOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
-      >
+      <Dialog open={deleteConfirmOpen} onClose={() => !deletingEmpresa && setDeleteConfirmOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Excluir empresa?</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
@@ -478,7 +521,7 @@ export default function DashboardPage() {
         onClose={() => setToastMessage(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setToastMessage(null)} severity={toastSeverity} sx={{ borderRadius: 2 }}>
+        <Alert onClose={() => setToastMessage(null)} severity={toastSeverity} sx={{ borderRadius: 1 }}>
           {toastMessage}
         </Alert>
       </Snackbar>

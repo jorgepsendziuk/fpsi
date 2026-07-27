@@ -39,6 +39,12 @@ export function AccountPrivacyConsentGate() {
       setOpen(false);
       return;
     }
+    // Conta de demonstração: não bloquear o fluxo com o gate de privacidade.
+    if (user.email === "demo@fpsi.com.br") {
+      setLoading(false);
+      setOpen(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -68,7 +74,7 @@ export function AccountPrivacyConsentGate() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, user?.email]);
 
   useEffect(() => {
     evaluate();

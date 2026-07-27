@@ -7,12 +7,14 @@ export const MESA_PAPéis_ORDER: {
   rotulo: string;
   /** Indica cadeira “cabeceira” (destaque visual). */
   chefe: boolean;
+  /** Etiqueta curta no escritório 3D. */
+  siglaMesa: string;
 }[] = [
-  { campo: "representante_alta_administracao", rotulo: "Representante da alta administração", chefe: true },
-  { campo: "responsavel_gestao_integridade", rotulo: "Gestão da integridade", chefe: false },
-  { campo: "gestor_seguranca_informacao", rotulo: "Gestor de SI", chefe: false },
-  { campo: "encarregado_dados_pessoais", rotulo: "Encarregado (dados pessoais)", chefe: false },
-  { campo: "gestor_tic", rotulo: "Gestor de TIC", chefe: false },
+  { campo: "representante_alta_administracao", rotulo: "Representante da alta administração", chefe: true, siglaMesa: "Alta Adm." },
+  { campo: "responsavel_gestao_integridade", rotulo: "Gestão da integridade", chefe: false, siglaMesa: "Integridade" },
+  { campo: "gestor_seguranca_informacao", rotulo: "Gestor de SI", chefe: false, siglaMesa: "GSI" },
+  { campo: "encarregado_dados_pessoais", rotulo: "Encarregado (dados pessoais)", chefe: false, siglaMesa: "DPO" },
+  { campo: "gestor_tic", rotulo: "Gestor de TIC", chefe: false, siglaMesa: "TIC" },
 ];
 
 export function idResponsavelPapel(programa: Programa, campo: CampoResponsavelProgramaId): number | null {

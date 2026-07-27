@@ -3,9 +3,15 @@
 import { Text } from "@react-three/drei";
 import type { OfficeCameraApiRef } from "../officeCameraApi";
 import { useOfficeExperience } from "../OfficeExperienceContext";
+import { buildSectorFocusPanel } from "../officeFocusHelpers";
+import { sheetForSectorPerson } from "../officePersonSheets";
 import { CameraZoomRig } from "./CameraZoomRig";
 import { DoubleDoorPortal } from "./DoorPortal";
 import { useOfficePointerHandlers } from "./OfficePointerContext";
+import { doorLabelForSector } from "./ZoneSign";
+import { firstNameHeadTag } from "./HeadTagLabel";
+import { PlumbobIndicator } from "./PlumbobIndicator";
+import { SeatedPerson } from "./SeatedPerson";
 
 const LEN = 20;
 const W = 3.4;
@@ -21,8 +27,8 @@ export function CorridorScene({ cameraApiRef }: { cameraApiRef?: OfficeCameraApi
 
   return (
     <>
-      <color attach="background" args={["#c9c0b4"]} />
-      <fog attach="fog" args={["#c9c0b4", 8, 48]} />
+      <color attach="background" args={["#e8eef5"]} />
+      <fog attach="fog" args={["#e8eef5", 8, 48]} />
       <ambientLight intensity={0.52} />
       <directionalLight castShadow position={[4, 14, 10]} intensity={1.02} shadow-mapSize={[768, 768]} />
       <CameraZoomRig
@@ -38,7 +44,7 @@ export function CorridorScene({ cameraApiRef }: { cameraApiRef?: OfficeCameraApi
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, LEN / 2]} receiveShadow>
         <planeGeometry args={[W, LEN]} />
-        <meshStandardMaterial color="#b8a995" {...matProps} />
+        <meshStandardMaterial color="#cfd8dc" {...matProps} />
       </mesh>
 
       <mesh position={[-W / 2, WALL_H / 2, LEN / 2]} castShadow receiveShadow>
@@ -79,36 +85,67 @@ export function CorridorScene({ cameraApiRef }: { cameraApiRef?: OfficeCameraApi
       <Text
         position={[0, 1.95, LEN * 0.35]}
         rotation={[0, 0, 0]}
-        fontSize={0.11}
+        fontSize={0.125}
         anchorX="center"
-        color="#2e2218"
-        outlineWidth={0.012}
+        color="#0a0705"
+        outlineWidth={0.028}
         outlineColor="#f5f0e8"
       >
-        Corredor — departamentos
+        Corredor — salas de setor (arraste para explorar)
       </Text>
 
       {grupos.map(([nome, pessoas], i) => {
         const z = grupos.length <= 1 ? LEN * 0.45 : zStart + spacing * i;
         const label = nome.length > 22 ? `${nome.slice(0, 20)}…` : nome;
+        const lead = pessoas[0];
         return (
-          <group key={nome} position={[W / 2 - 0.12, 0, z]} rotation={[0, -Math.PI / 2, 0]}>
-            <DoubleDoorPortal
-              position={[0, 0, 0]}
-              rotationY={0}
-              openingWidth={0.82}
-              openingHeight={1}
-              leafDepth={0.09}
-              frameDepth={0.16}
-              label={`${label}\n${pessoas.length} pessoa(s)`}
-              labelRotation={[0, 0, 0]}
-              labelOffset={[0, 1.12, 0.14]}
-              interact={interact}
-              onActivate={(e) => {
-                e.stopPropagation();
-                ctx.enterSectorRoom(nome, pessoas);
-              }}
-            />
+          <group key={nome}>
+            <group position={[W / 2 - 0.12, 0, z]} rotation={[0, -Math.PI / 2, 0]}>
+              <DoubleDoorPortal
+                position={[0, 0, 0]}
+                rotationY={0}
+                openingWidth={0.82}
+                openingHeight={1}
+                leafDepth={0.09}
+                frameDepth={0.16}
+                badge="SALA DE SETOR"
+                label={doorLabelForSector(label)}
+                labelRotation={[0, 0, 0]}
+                labelOffset={[0, 1.28, 0.14]}
+                interact={interact}
+                onActivate={(e) => {
+                  e.stopPropagation();
+                  ctx.openFocusPanel(
+                    buildSectorFocusPanel(ctx, nome, pessoas, [W / 2 - 0.55, 0.42, z]),
+                  );
+                }}
+              />
+            </group>
+            {lead ? (
+              <group position={[W / 2 - 0.62, 0, z]} scale={0.92}>
+                <SeatedPerson
+                  facingY={Math.PI / 2}
+                  colorSeed={`corr-${lead.id}`}
+                  headTag={firstNameHeadTag(lead.nome ?? `#${lead.id}`)}
+                  sheet={sheetForSectorPerson(lead, nome)}
+                />
+              </group>
+            ) : (
+              <group position={[W / 2 - 0.62, 0, z]}>
+                <PlumbobIndicator
+                  position={[0, 0.88, 0]}
+                  color="#bdbdbd"
+                  emissive="#757575"
+                  emissiveIntensity={0.2}
+                  opacity={0.42}
+                  hoverSheet={{
+                    title: nome,
+                    subtitle: "Setor vazio",
+                    rows: [{ label: "Estado", value: "Nenhum responsável neste departamento." }],
+                  }}
+                />
+              </group>
+            )}
           </group>
         );
       })}

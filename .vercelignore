@@ -1,0 +1,30 @@
+.node_modules
+.next
+.next *
+.next 2
+.next 3
+.next 4
+.next 5
+.git
+coverage
+*.tsbuildinfo
+.DS_Store
+agent-transcripts
+.cursor
+docs/ppsi
+docs/improvements
+docs/aigp
+docs/archive
+docs/**/*.pdf
+docs/**/*.doc
+docs/**/*.docx
+docs/**/*.xls
+docs/**/*.xlsx
+docs/**/*.ppt
+docs/**/*.pptx
+docs/**/*.mht
+database
+*.sql
+public/sw.js
+public/swe-worker*
+var

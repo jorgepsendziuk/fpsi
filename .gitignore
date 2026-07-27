@@ -38,3 +38,15 @@ public/swe-worker*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Documentação binária local (PDF, Office) — não versionar nem enviar no deploy
+docs/**/*.pdf
+docs/**/*.doc
+docs/**/*.docx
+docs/**/*.xls
+docs/**/*.xlsx
+docs/**/*.ppt
+docs/**/*.pptx
+docs/**/*.mht
+# Lote bruto de modelos/guias (PDF/DOCX/XLSX/JPG)
+docs/ppsi/ppsi docs/

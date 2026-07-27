@@ -9,11 +9,21 @@ import { SECTOR_HALF } from "./worldConfig";
 import { CameraZoomRig } from "./CameraZoomRig";
 import { DoubleDoorPortal } from "./DoorPortal";
 import { useOfficePointerHandlers } from "./OfficePointerContext";
+import { sheetForSectorPerson } from "../officePersonSheets";
+import { firstNameHeadTag } from "./HeadTagLabel";
+import { buildSectorFocusPanel } from "../officeFocusHelpers";
+import { ZoneSign } from "./ZoneSign";
 import { SeatedPerson } from "./SeatedPerson";
 
 const matProps = { roughness: 0.92, metalness: 0.05, flatShading: true as const };
 
-function SectorRoomMeshes() {
+function SectorRoomMeshes({
+  onTableClick,
+  interact,
+}: {
+  onTableClick: (e: { stopPropagation: () => void }) => void;
+  interact: ReturnType<typeof useOfficePointerHandlers>;
+}) {
   const hw = SECTOR_HALF;
   const wallT = 0.18;
   const wallH = 2.1;
@@ -40,7 +50,7 @@ function SectorRoomMeshes() {
         <boxGeometry args={[wallT, wallH, hw * 2]} />
         <meshStandardMaterial color="#bcaaa4" {...matProps} />
       </mesh>
-      <mesh position={[0, 0.12, 0]} castShadow receiveShadow>
+      <mesh position={[0, 0.12, 0]} castShadow receiveShadow onClick={onTableClick} {...interact}>
         <cylinderGeometry args={[1.05, 1.15, 0.24, 20]} />
         <meshStandardMaterial color="#5d4037" {...matProps} />
       </mesh>
@@ -65,6 +75,11 @@ export function SectorOfficeScene({
 
   const title = useMemo(() => (deptName.length > 36 ? `${deptName.slice(0, 34)}…` : deptName), [deptName]);
 
+  const openSectorFocus = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation();
+    ctx.openFocusPanel(buildSectorFocusPanel(ctx, deptName, people, [0, 0.38, 0]));
+  };
+
   return (
     <>
       <color attach="background" args={["#e0d8ce"]} />
@@ -81,21 +96,17 @@ export function SectorOfficeScene({
         overviewDistance={17}
         cameraApiRef={cameraApiRef}
       />
-      <SectorRoomMeshes />
+      <SectorRoomMeshes onTableClick={openSectorFocus} interact={interact} />
 
-      <group position={[0, 1.15, -SECTOR_HALF + 0.14]} rotation={[0.06, 0, 0]}>
-        <mesh position={[0, 0, 0.02]} castShadow>
-          <planeGeometry args={[2.4, 0.55]} />
-          <meshStandardMaterial color="#3e2f26" roughness={0.9} flatShading />
-        </mesh>
-        <mesh position={[0, 0, 0.05]} castShadow>
-          <planeGeometry args={[2.2, 0.48]} />
-          <meshStandardMaterial color="#faf6ef" roughness={0.85} flatShading />
-        </mesh>
-        <Text position={[0, 0.02, 0.065]} fontSize={0.11} maxWidth={2.05} anchorX="center" anchorY="middle" color="#1e1410">
-          {title}
-        </Text>
-      </group>
+      <ZoneSign
+        kind="sector"
+        title={title}
+        subtitle={`${show.length} pessoa(s) nesta sala`}
+        position={[0, 1.55, -SECTOR_HALF + 0.22]}
+        rotation={[0.08, 0, 0]}
+        width={2.65}
+        height={0.8}
+      />
 
       <DoubleDoorPortal
         position={[0, 0, SECTOR_HALF - 0.15]}
@@ -147,25 +158,14 @@ export function SectorOfficeScene({
         const x = Math.cos(ang) * ringR;
         const z = Math.sin(ang) * ringR;
         const nome = (p.nome && p.nome.trim()) || `#${p.id}`;
-        const short = nome.length > 18 ? `${nome.slice(0, 16)}…` : nome;
-        const cargo = p.cargo?.trim();
-        const setorLinha = p.departamento?.trim() || deptName;
-        const linhaCargoSetor = [cargo, setorLinha].filter(Boolean).join(" · ");
         const facingY = Math.atan2(-x, -z);
         return (
           <group key={p.id} position={[x, 0, z]}>
             <SeatedPerson
               facingY={facingY}
               colorSeed={`p-${p.id}`}
-              sheet={{
-                title: short,
-                subtitle: deptName,
-                rows: [
-                  { label: "Nome", value: nome },
-                  { label: "Cargo", value: cargo || "—" },
-                  { label: "Departamento", value: setorLinha || "—" },
-                ],
-              }}
+              headTag={firstNameHeadTag(nome)}
+              sheet={sheetForSectorPerson(p, deptName)}
             />
           </group>
         );

@@ -4,6 +4,7 @@ import { sortMedidasByIdMedida } from "@/lib/utils/medidaSort";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
 import { logActivityFromClient } from "./auditClient";
 import type { EvidenciaConformidadeSnapshot } from "@/lib/medidas/evidenciaRules";
+import { formatResponsavelNome } from "@/lib/utils/responsavelDisplay";
 
 
 
@@ -55,6 +56,29 @@ export const fetchPoliticaModelosAtivos = async (): Promise<{ id: string }[]> =>
   return (data || []) as { id: string }[];
 };
 
+export type PoliticaModeloRow = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  cor: string | null;
+  ordem: number | null;
+  ativo: boolean;
+};
+
+/** Catálogo completo de modelos ativos (para lista do programa). */
+export const fetchPoliticaModelosCatalogo = async (): Promise<PoliticaModeloRow[]> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_modelo")
+    .select("id, nome, descricao, cor, ordem, ativo")
+    .eq("ativo", true)
+    .order("ordem", { ascending: true });
+  if (error) {
+    console.warn("fetchPoliticaModelosCatalogo:", error.message);
+    return [];
+  }
+  return (data || []) as PoliticaModeloRow[];
+};
+
 /** Tipos de política já salvos para o programa (politica_programa). */
 export const fetchPoliticaProgramaTipos = async (programaId: number): Promise<string[]> => {
   const { data, error } = await supabaseBrowserClient
@@ -74,6 +98,8 @@ export type PoliticaProgramaResumo = {
   updated_at: string | null;
   inicio_vigencia: string | null;
   prazo_revisao: string | null;
+  status: string | null;
+  publicado_em: string | null;
 };
 
 export const fetchPoliticaProgramaResumo = async (
@@ -81,7 +107,7 @@ export const fetchPoliticaProgramaResumo = async (
 ): Promise<PoliticaProgramaResumo[]> => {
   const { data, error } = await supabaseBrowserClient
     .from("politica_programa")
-    .select("tipo_politica, updated_at, inicio_vigencia, prazo_revisao")
+    .select("tipo_politica, updated_at, inicio_vigencia, prazo_revisao, status, publicado_em")
     .eq("programa_id", programaId);
   if (error) {
     console.warn("fetchPoliticaProgramaResumo:", error.message);
@@ -96,6 +122,9 @@ export type PoliticaProgramaRow = {
   updated_at: string | null;
   inicio_vigencia: string | null;
   prazo_revisao: string | null;
+  status: string | null;
+  publicado_em: string | null;
+  publicado_por: string | null;
 };
 
 export const fetchPoliticaProgramaByTipo = async (
@@ -104,7 +133,7 @@ export const fetchPoliticaProgramaByTipo = async (
 ): Promise<PoliticaProgramaRow | null> => {
   const { data, error } = await supabaseBrowserClient
     .from("politica_programa")
-    .select("id, secoes, updated_at, inicio_vigencia, prazo_revisao")
+    .select("id, secoes, updated_at, inicio_vigencia, prazo_revisao, status, publicado_em, publicado_por")
     .eq("programa_id", programaId)
     .eq("tipo_politica", tipoPolitica)
     .maybeSingle();
@@ -142,6 +171,7 @@ export const fetchPoliticaModeloSecoes = async (tipoPolitica: string): Promise<P
 export type PoliticaProgramaMeta = {
   inicio_vigencia?: string | null;
   prazo_revisao?: string | null;
+  status?: "rascunho" | "publicado" | null;
 };
 
 /** Cria ou atualiza a instância da política no programa. */
@@ -157,13 +187,115 @@ export const upsertPoliticaPrograma = async (
     secoes: secoes as unknown as Record<string, unknown>[],
   };
   if (meta) {
-    payload.inicio_vigencia = meta.inicio_vigencia?.trim() ?? null;
-    payload.prazo_revisao = meta.prazo_revisao?.trim() ?? null;
+    if (meta.inicio_vigencia !== undefined) {
+      payload.inicio_vigencia = meta.inicio_vigencia?.trim() ?? null;
+    }
+    if (meta.prazo_revisao !== undefined) {
+      payload.prazo_revisao = meta.prazo_revisao?.trim() ?? null;
+    }
+    if (meta.status) {
+      payload.status = meta.status;
+    }
   }
   const { error } = await supabaseBrowserClient.from("politica_programa").upsert(payload, {
     onConflict: "programa_id,tipo_politica",
   });
   if (error) throw new Error(error.message || "Erro ao salvar política");
+};
+
+export type PoliticaProgramaVersaoRow = {
+  id: number;
+  programa_id: number;
+  tipo_politica: string;
+  numero: number;
+  nota: string | null;
+  secoes_snapshot: unknown[];
+  inicio_vigencia: string | null;
+  prazo_revisao: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export const fetchPoliticaProgramaVersoes = async (
+  programaId: number,
+  tipoPolitica: string
+): Promise<PoliticaProgramaVersaoRow[]> => {
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_programa_versao")
+    .select("*")
+    .eq("programa_id", programaId)
+    .eq("tipo_politica", tipoPolitica)
+    .order("numero", { ascending: false });
+  if (error) {
+    console.warn("fetchPoliticaProgramaVersoes:", error.message);
+    return [];
+  }
+  return (data || []) as PoliticaProgramaVersaoRow[];
+};
+
+/**
+ * Publica a política: salva conteúdo, marca status=publicado e cria versão imutável.
+ */
+export const publicarPoliticaPrograma = async (
+  programaId: number,
+  tipoPolitica: string,
+  secoes: PoliticaSecao[],
+  meta?: PoliticaProgramaMeta,
+  nota?: string | null
+): Promise<PoliticaProgramaVersaoRow> => {
+  const { data: auth } = await supabaseBrowserClient.auth.getUser();
+  const createdBy = auth?.user?.id ?? null;
+
+  await upsertPoliticaPrograma(programaId, tipoPolitica, secoes, {
+    ...meta,
+    status: "publicado",
+  });
+
+  const { error: pubErr } = await supabaseBrowserClient
+    .from("politica_programa")
+    .update({
+      status: "publicado",
+      publicado_em: new Date().toISOString(),
+      publicado_por: createdBy,
+    })
+    .eq("programa_id", programaId)
+    .eq("tipo_politica", tipoPolitica);
+  if (pubErr) throw new Error(pubErr.message || "Erro ao publicar política");
+
+  const { data: maxRows, error: maxErr } = await supabaseBrowserClient
+    .from("politica_programa_versao")
+    .select("numero")
+    .eq("programa_id", programaId)
+    .eq("tipo_politica", tipoPolitica)
+    .order("numero", { ascending: false })
+    .limit(1);
+  if (maxErr) throw maxErr;
+  const nextNum = (maxRows?.[0]?.numero ?? 0) + 1;
+
+  const { data, error } = await supabaseBrowserClient
+    .from("politica_programa_versao")
+    .insert({
+      programa_id: programaId,
+      tipo_politica: tipoPolitica,
+      numero: nextNum,
+      nota: nota?.trim() || null,
+      secoes_snapshot: secoes as unknown as Record<string, unknown>[],
+      inicio_vigencia: meta?.inicio_vigencia?.trim() || null,
+      prazo_revisao: meta?.prazo_revisao?.trim() || null,
+      created_by: createdBy,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message || "Erro ao registrar versão");
+
+  logActivityFromClient({
+    action: "create",
+    resourceType: "politica_programa_versao",
+    resourceId: data.id,
+    programaId,
+    details: { tipo_politica: tipoPolitica, numero: nextNum },
+  });
+  return data as PoliticaProgramaVersaoRow;
 };
 
 /** Resumo agregado do Plano de Trabalho (contagens sem carregar medidas). Usado para lazy load. */
@@ -353,7 +485,10 @@ export const fetchResponsaveis = async (programaId: number, retries = 3): Promis
       .order("nome", { ascending: true });
     
     if (error) throw error;
-    return data || [];
+    return (data || []).map((row) => ({
+      ...row,
+      nome: formatResponsavelNome(row.nome) || row.nome,
+    }));
   } catch (error: any) {
     console.error(error);
     return [];
@@ -1224,50 +1359,50 @@ export const createProgramaControlesForProgram = async (programaId: number) => {
 export const ensureProgramaControleRecords = async (programaId: number) => {
 
   console.log(`ensureProgramaControleRecords: Checking programa ${programaId}`);
-  
-  // Check if programa_controle records already exist for this program
+
   const { data: existingRecords } = await supabaseBrowserClient
     .from("programa_controle")
     .select("controle")
     .eq("programa", programaId);
-  
-  console.log(`ensureProgramaControleRecords: Found ${existingRecords?.length || 0} existing records for programa ${programaId}`);
-  
-  if (existingRecords && existingRecords.length > 0) {
-    console.log(`ensureProgramaControleRecords: Records already exist, skipping creation`);
-    return { data: existingRecords, error: null };
-  }
-  
-  // Get all controles to create programa_controle records
+
+  const existingControleIds = new Set(existingRecords?.map((r) => r.controle) || []);
+
   const { data: allControles } = await supabaseBrowserClient
     .from("controle")
     .select("id");
-  
+
   if (!allControles || allControles.length === 0) {
     console.log(`ensureProgramaControleRecords: No controles found in system`);
-    return { data: null, error: null };
+    return { data: existingRecords, error: null };
   }
-  
-  console.log(`ensureProgramaControleRecords: Creating programa_controle records for ${allControles.length} controles`);
-  
-  // Create programa_controle records for all controles
-  const programaControles = allControles.map(controle => ({
+
+  const missing = allControles.filter((c) => !existingControleIds.has(c.id));
+  if (missing.length === 0) {
+    console.log(`ensureProgramaControleRecords: All programa_controle records already exist`);
+    return { data: existingRecords, error: null };
+  }
+
+  console.log(
+    `ensureProgramaControleRecords: Creating ${missing.length} missing programa_controle records`
+  );
+
+  const programaControles = missing.map((controle) => ({
     programa: programaId,
     controle: controle.id,
-    nivel: 1 // Default INCC level
+    nivel: 1,
   }));
-  
+
   const { data, error } = await supabaseBrowserClient
     .from("programa_controle")
     .insert(programaControles)
     .select();
-  
+
   if (error) {
     console.error(`ensureProgramaControleRecords: Error creating records:`, error);
   } else {
     console.log(`ensureProgramaControleRecords: Successfully created ${data?.length || 0} records`);
   }
-  
+
   return { data, error };
 };
 

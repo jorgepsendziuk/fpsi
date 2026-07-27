@@ -1,27 +1,39 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import {
-  Box,
-  Chip,
-  Grid,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
+import React, { useEffect, useMemo, useState } from "react";
+import { Box, Grid, Typography } from "@mui/material";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
-import type { DashboardResumoApi } from "@/lib/types/pendencias";
+import type { DashboardResumoApi, PendenciasResumo } from "@/lib/types/pendencias";
 import { DashboardKpiStrip } from "@/components/dashboard/ProgramaKpiStrip";
 import { PendenciasPanel } from "@/components/dashboard/PendenciasPanel";
+import { PendenciasCalendar } from "@/components/dashboard/PendenciasCalendar";
 import { landing } from "@/components/landing/landingTokens";
+import { alpha } from "@mui/material/styles";
+
+function filterPendenciasByDay(
+  pendencias: PendenciasResumo | null | undefined,
+  day: Dayjs | null
+): PendenciasResumo | null | undefined {
+  if (!pendencias || !day) return pendencias;
+  const key = day.format("YYYY-MM-DD");
+  const itens = pendencias.itens.filter((item) => {
+    const raw = item.dataLimite || item.dataReferencia;
+    return raw ? dayjs(raw).format("YYYY-MM-DD") === key : false;
+  });
+  return {
+    ...pendencias,
+    itens,
+    total: itens.length,
+  };
+}
 
 export function DashboardOperacionalSection() {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
   const [resumo, setResumo] = useState<DashboardResumoApi | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,128 +60,68 @@ export function DashboardOperacionalSection() {
     };
   }, []);
 
+  const filteredPendencias = useMemo(
+    () => filterPendenciasByDay(resumo?.pendencias, selectedDate),
+    [resumo?.pendencias, selectedDate]
+  );
+
+  const listTitle = selectedDate
+    ? `Pendências · ${selectedDate.format("DD/MM")}`
+    : "Pendências prioritárias";
+
   return (
-    <Box sx={{ mb: 2 }}>
-      <Typography
-        variant="overline"
+    <Box sx={{ mb: 2.5 }}>
+      <Box
         sx={{
-          display: "block",
-          mb: 1,
-          color: "text.secondary",
-          letterSpacing: "0.08em",
-          fontSize: "0.68rem",
+          mb: 1.75,
+          px: 2,
+          py: 1.35,
+          borderRadius: 1,
+          border: `1px solid ${alpha(landing.navy, 0.1)}`,
+          background: `
+            radial-gradient(ellipse 70% 140% at 100% 0%, ${alpha(landing.blueBright, 0.22)} 0%, transparent 55%),
+            linear-gradient(120deg, ${landing.ink} 0%, ${landing.navy} 48%, #0C3A66 100%)
+          `,
+          color: landing.heroText,
         }}
       >
-        Operação
-      </Typography>
-      <DashboardKpiStrip kpis={resumo?.kpis} loading={loading} compact />
+        <Typography variant="overline" sx={{ color: landing.heroMuted, letterSpacing: "0.1em" }}>
+          Central operacional
+        </Typography>
+        <Typography variant="h6" fontWeight={800} letterSpacing="-0.025em" sx={{ lineHeight: 1.2, mt: 0.15 }}>
+          Indicadores e pendências
+        </Typography>
+      </Box>
+      <DashboardKpiStrip
+        kpis={resumo?.kpis}
+        atrasados={resumo?.pendencias?.atrasados}
+        vencendo7d={resumo?.pendencias?.vencendo7d}
+        loading={loading}
+      />
 
-      <Grid container spacing={1.5} sx={{ mt: 0.25 }}>
-        <Grid item xs={12} md={7}>
+      <Grid container spacing={{ xs: 1.25, lg: 1.5 }} sx={{ mt: 0.25 }} alignItems="stretch">
+        <Grid item xs={12} md={7} lg={8}>
           <PendenciasPanel
-            pendencias={resumo?.pendencias}
+            pendencias={filteredPendencias}
             loading={loading}
-            title="Pendências prioritárias"
+            title={listTitle}
             emptyMessage={
               error
                 ? "Não foi possível carregar pendências."
-                : "Nenhuma pendência entre seus programas."
+                : selectedDate
+                  ? "Nenhuma pendência neste dia."
+                  : "Nenhuma pendência entre seus programas."
             }
-            dense
-            maxItems={6}
-            maxHeight={240}
+            maxItems={selectedDate ? 8 : 5}
           />
         </Grid>
-        <Grid item xs={12} md={5}>
-          <Box
-            sx={{
-              height: "100%",
-              maxHeight: 240,
-              overflow: "auto",
-              border: `1px solid ${theme.palette.divider}`,
-              borderRadius: 2,
-              p: 1.25,
-              bgcolor: alpha(theme.palette.primary.main, isDark ? 0.08 : 0.03),
-              backgroundImage: isDark
-                ? `linear-gradient(145deg, ${alpha(landing.navy, 0.65)} 0%, transparent 75%)`
-                : `linear-gradient(145deg, ${alpha(landing.mist, 0.95)} 0%, transparent 75%)`,
-            }}
-          >
-            <Typography
-              variant="overline"
-              sx={{
-                letterSpacing: "0.08em",
-                display: "block",
-                mb: 0.75,
-                color: "text.secondary",
-                fontSize: "0.65rem",
-              }}
-            >
-              Programas
-            </Typography>
-            {loading && (
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
-                Carregando…
-              </Typography>
-            )}
-            {!loading && (!resumo?.programas || resumo.programas.length === 0) && (
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
-                Nenhum programa vinculado.
-              </Typography>
-            )}
-            {!loading &&
-              resumo?.programas.map((p) => (
-                <Box
-                  key={p.programaId}
-                  component={Link}
-                  href={p.slug ? `/programas/${p.slug}` : `/programas/${p.programaId}`}
-                  sx={{
-                    display: "block",
-                    textDecoration: "none",
-                    color: "inherit",
-                    px: 1,
-                    py: 0.65,
-                    mb: 0.4,
-                    borderRadius: 1.25,
-                    border: `1px solid ${theme.palette.divider}`,
-                    bgcolor: alpha(theme.palette.background.paper, isDark ? 0.35 : 0.8),
-                    transition: "border-color 0.15s ease, background 0.15s ease",
-                    "&:hover": {
-                      borderColor: alpha(theme.palette.primary.main, 0.45),
-                      bgcolor: alpha(theme.palette.primary.main, isDark ? 0.12 : 0.06),
-                    },
-                  }}
-                >
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
-                    <Typography variant="body2" fontWeight={700} noWrap sx={{ fontSize: "0.8rem" }}>
-                      {p.nome}
-                    </Typography>
-                    {p.maturidadeMedia != null && (
-                      <Chip
-                        size="small"
-                        label={`${Math.round(Number(p.maturidadeMedia) * 10) / 10}%`}
-                        color="primary"
-                        variant="outlined"
-                        sx={{ height: 20, fontSize: "0.65rem" }}
-                      />
-                    )}
-                  </Box>
-                  {(p.pendenciasAtrasadas > 0 || p.dsarAbertos > 0 || p.riscosCriticos > 0) && (
-                    <Box sx={{ display: "flex", gap: 0.4, flexWrap: "wrap", mt: 0.4 }}>
-                      {p.pendenciasAtrasadas > 0 && (
-                        <Chip size="small" color="error" label={`${p.pendenciasAtrasadas} atras.`} sx={{ height: 18, fontSize: "0.62rem" }} />
-                      )}
-                      {p.dsarAbertos > 0 && (
-                        <Chip size="small" color="info" label={`${p.dsarAbertos} DSAR`} sx={{ height: 18, fontSize: "0.62rem" }} />
-                      )}
-                      {p.riscosCriticos > 0 && (
-                        <Chip size="small" color="warning" label={`${p.riscosCriticos} risco`} sx={{ height: 18, fontSize: "0.62rem" }} />
-                      )}
-                    </Box>
-                  )}
-                </Box>
-              ))}
-          </Box>
+        <Grid item xs={12} md={5} lg={4}>
+          <PendenciasCalendar
+            itens={resumo?.pendencias?.itens ?? []}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            loading={loading}
+          />
         </Grid>
       </Grid>
     </Box>

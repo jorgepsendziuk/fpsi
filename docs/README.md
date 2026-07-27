@@ -1,6 +1,8 @@
-# 📚 Documentação FPSI
+# Documentação FPSI
 
-Documentação técnica completa do Framework de Privacidade e Segurança da Informação.
+Documentação técnica do **Framework de Privacidade e Segurança da Informação** — ambiente para implantar e gerenciar o Programa de Privacidade e Segurança da Informação (diagnóstico PPSI/AIGP, políticas, ROPA, portal do titular, riscos, plano de trabalho e mais).
+
+Visão pública do produto: [README do repositório](../README.md) · PRD: [essentials/requirements/PRD.md](essentials/requirements/PRD.md).
 
 ## 🗂️ Estrutura Organizada
 

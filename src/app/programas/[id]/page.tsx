@@ -101,12 +101,11 @@ const sections: Array<{
     key: "riscos",
     title: "Gestão de Riscos",
     icon: <WarningAmberIcon fontSize="large" />,
-    description: "Matriz 5×5 e mitigação",
+    description: "Registre, priorize no mapa e acompanhe o tratamento",
     path: "riscos",
     color: "#c62828",
     gradient: "linear-gradient(135deg, #b71c1c 0%, #e53935 100%)",
     featured: true,
-    badge: "Matriz 5×5",
   },
   {
     key: "conformidade-tratamento",
@@ -126,7 +125,6 @@ const sections: Array<{
     color: "#43A047",
     gradient: "linear-gradient(135deg, #2E7D32 0%, #43A047 100%)",
     featured: true,
-    badge: "AIGP",
   },
   {
     key: "planos-acao",
@@ -264,7 +262,7 @@ const programaEscopoField: ProgramaFieldDef = {
 const dpoFormalizacaoFields: ProgramaFieldDef[] = [
   {
     key: "dpo_notificacao_email",
-    label: "E-mail para alertas operacionais (DSAR, reportes)",
+    label: "E-mail para alertas operacionais (pedidos de titulares, reportes)",
     icon: <EmailIcon />,
   },
   {
@@ -890,6 +888,26 @@ export default function ProgramaMainPage() {
       >
         Organização
       </Button>
+      {modulosResumo?.publicPortalPath && (
+        <Button
+          component={Link}
+          href={modulosResumo.publicPortalPath}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="outlined"
+          size="small"
+          startIcon={<PublicIcon sx={{ fontSize: "16px !important" }} />}
+          sx={{
+            borderRadius: 1.5,
+            py: 0.45,
+            px: 1.25,
+            fontWeight: 700,
+            fontSize: "0.78rem",
+          }}
+        >
+          Portal público
+        </Button>
+      )}
     </Stack>
   );
 
@@ -898,46 +916,71 @@ export default function ProgramaMainPage() {
     : programa.nome_fantasia || programa.razao_social || null;
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 1.5, md: 2 }, px: { xs: 1.5, sm: 2.5 } }}>
-      <PageHeroHeader
+    <Container
+      maxWidth={false}
+      disableGutters
+      sx={{
+        width: "100%",
+        maxWidth: "100%",
+        py: { xs: 1.25, md: 1.5 },
+        px: { xs: 1.25, sm: 1.5, md: 2, lg: 2.5, xl: 3 },
+      }}
+    >
+      <Box
         sx={{
-          mb: 1.25,
-          gap: 1.25,
-          "& h2": { fontSize: { xs: "1.2rem", md: "1.35rem" }, mb: 0.15, letterSpacing: "-0.025em" },
+          mb: 1,
+          px: { xs: 1.25, md: 1.5 },
+          py: 1,
+          borderRadius: 1,
+          border: `1px solid ${theme.palette.divider}`,
+          bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === "dark" ? 0.55 : 0.65),
+          backdropFilter: "blur(10px)",
+          backgroundImage:
+            theme.palette.mode === "dark"
+              ? `linear-gradient(135deg, ${alpha("#0A2744", 0.5)} 0%, transparent 70%)`
+              : `linear-gradient(135deg, ${alpha("#E8F1F8", 0.85)} 0%, transparent 70%)`,
         }}
-        iconSlot={logoSlot}
-        title={programaName}
-        description={
-          hasSubtitle || !isDemoMode ? (
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              {subtitleLine && (
-                <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
-                  {subtitleLine}
-                </Typography>
-              )}
-              {!isDemoMode && (
-                <>
-                  <LastUpdateInfo
-                    updatedAt={programa.updated_at ?? lastActivity?.created_at}
-                    userName={lastActivity?.user_name}
-                    compact
-                  />
-                  <Link
-                    component={NextLink}
-                    href={`/programas/${idOrSlug}/auditoria`}
-                    variant="caption"
-                    underline="hover"
-                    color="primary"
-                  >
-                    Histórico
-                  </Link>
-                </>
-              )}
-            </Stack>
-          ) : undefined
-        }
-        trailing={dadosButtons}
-      />
+      >
+        <PageHeroHeader
+          sx={{
+            mb: 0,
+            gap: 1.25,
+            "& h2": { fontSize: { xs: "1.2rem", md: "1.4rem" }, mb: 0.15, letterSpacing: "-0.025em" },
+          }}
+          iconSlot={logoSlot}
+          title={programaName}
+          description={
+            hasSubtitle || !isDemoMode ? (
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                {subtitleLine && (
+                  <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
+                    {subtitleLine}
+                  </Typography>
+                )}
+                {!isDemoMode && (
+                  <>
+                    <LastUpdateInfo
+                      updatedAt={programa.updated_at ?? lastActivity?.created_at}
+                      userName={lastActivity?.user_name}
+                      compact
+                    />
+                    <Link
+                      component={NextLink}
+                      href={`/programas/${idOrSlug}/auditoria`}
+                      variant="caption"
+                      underline="hover"
+                      color="primary"
+                    >
+                      Histórico
+                    </Link>
+                  </>
+                )}
+              </Stack>
+            ) : undefined
+          }
+          trailing={dadosButtons}
+        />
+      </Box>
 
       <Popover
         open={Boolean(dadosProgramaPopoverAnchor)}
@@ -1148,6 +1191,7 @@ export default function ProgramaMainPage() {
         modulosResumo={modulosResumo}
         modulosResumoLoading={modulosResumoLoading}
         sections={sections}
+        programaNome={programaName}
       />
 
     </Container>

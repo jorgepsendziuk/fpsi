@@ -24,7 +24,6 @@ import {
   MenuItem,
   Skeleton,
   Stack,
-  Divider,
   useTheme,
   alpha,
   FormControl,
@@ -54,6 +53,18 @@ import { initialState, reducer } from "@/lib/state/state";
 import { getMaturityLabel } from "@/lib/utils/maturity";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import { supabaseBrowserClient } from "@utils/supabase/client";
+import type { BoardItemSize } from "@/lib/dashboard/smartBoardGrid";
+
+export type ProgramasSectionProps = {
+  /** Integra cards no board compartilhado com empresas. */
+  boardMode?: boolean;
+  boardItemSize?: BoardItemSize;
+  onCountChange?: (count: number) => void;
+  /** Incrementar para abrir o diálogo de criação (board compartilhado). */
+  createOpenRequest?: number;
+  viewExcluidos?: boolean;
+  onViewExcluidosChange?: (value: boolean) => void;
+};
 
 const TIPOS_PROGRAMA = [
   { value: "empresa_organizacao", label: "Empresa/Organização" },
@@ -81,7 +92,14 @@ const DEFAULT_CREATE_FORM = {
   empresa_telefone: "",
 };
 
-export function ProgramasSection() {
+export function ProgramasSection({
+  boardMode = false,
+  boardItemSize = { xs: 12, sm: 6, md: 4 },
+  onCountChange,
+  createOpenRequest = 0,
+  viewExcluidos: viewExcluidosControlled,
+  onViewExcluidosChange,
+}: ProgramasSectionProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const theme = useTheme();
@@ -100,17 +118,30 @@ export function ProgramasSection() {
   const [empresas, setEmpresas] = useState<dataService.EmpresaRow[]>([]);
   const [creating, setCreating] = useState(false);
   const [maturityRows, setMaturityRows] = useState<dataService.ProgramDiagnosticoMaturityRow[]>([]);
-  const [viewExcluidos, setViewExcluidos] = useState(false);
+  const [viewExcluidosInternal, setViewExcluidosInternal] = useState(false);
+  const viewExcluidos = viewExcluidosControlled ?? viewExcluidosInternal;
+  const setViewExcluidos = (v: boolean) => {
+    onViewExcluidosChange?.(v);
+    if (viewExcluidosControlled === undefined) setViewExcluidosInternal(v);
+  };
 
   useEffect(() => {
     loadAllData();
   }, [viewExcluidos]);
 
   useEffect(() => {
+    onCountChange?.(viewExcluidos ? 0 : programas.length);
+  }, [programas.length, viewExcluidos, onCountChange]);
+
+  useEffect(() => {
     if (searchParams.get("novoPrograma") !== "1") return;
     setOpenDialog(true);
     router.replace("/dashboard", { scroll: false });
   }, [searchParams, router]);
+
+  useEffect(() => {
+    if (createOpenRequest > 0) setOpenDialog(true);
+  }, [createOpenRequest]);
 
   useEffect(() => {
     if (openDialog) {
@@ -369,257 +400,259 @@ export function ProgramasSection() {
     return maturityMap;
   }, [programas, dataLoaded, maturityRows]);
 
-  if (loading) {
+  const diagnosticos = (state.diagnosticos || []).slice(0, 3);
+  const itemSize = boardMode ? boardItemSize : { xs: 12, sm: 6, md: 4 };
+
+  const programaCards = programas.map((programa) => {
+    const maturityData = programaMaturityData.get(programa.id) || { score: 0, label: "Inicial", byDiagnostico: [] };
+    const getMaturityEntry = (diagId: number) =>
+      maturityData.byDiagnostico.find((d) => d.diagnostico_id === diagId) ?? { score: 0, label: "Inicial" };
+    const logoUrl = getProgramaLogoDisplayUrl(programa);
+    const avgPct = Math.round(maturityData.score * 100);
+    const avgColor = getMaturityColor(maturityData.score);
+
     return (
-      <Box sx={{ mb: 4 }}>
-        <Skeleton variant="text" width={300} height={48} sx={{ mb: 2 }} />
-        <Grid container spacing={3}>
-          {[1, 2, 3, 4, 5, 6].map((index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card sx={{ height: 280 }}>
-                <CardContent>
-                  <Skeleton variant="text" width="80%" height={30} />
-                  <Skeleton variant="text" width="60%" />
-                  <Skeleton variant="rectangular" height={60} sx={{ mt: 2 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+      <Grid item {...itemSize} key={`prog-${programa.id}`}>
+        <Card
+          sx={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+            borderRadius: 1,
+            overflow: "hidden",
+            boxShadow: hoveredCard === programa.id ? `0 10px 28px ${alpha(theme.palette.primary.main, 0.14)}` : undefined,
+            transition: "box-shadow 0.2s ease, transform 0.2s ease",
+            transform: hoveredCard === programa.id ? "translateY(-1px)" : "none",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              bottom: 0,
+              width: 3,
+              background: `linear-gradient(180deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+            },
+          }}
+          onMouseEnter={() => setHoveredCard(programa.id)}
+          onMouseLeave={() => setHoveredCard(null)}
+        >
+          <CardContent sx={{ flex: 1, p: 2, pl: 2.25, "&:last-child": { pb: 1.5 } }}>
+            <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 0.75, mb: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flex: 1, minWidth: 0 }}>
+                {logoUrl ? (
+                  <Box
+                    component="img"
+                    src={logoUrl}
+                    alt=""
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 1,
+                      objectFit: "contain",
+                      flexShrink: 0,
+                      bgcolor: alpha(theme.palette.primary.main, 0.04),
+                    }}
+                  />
+                ) : null}
+                <Box sx={{ minWidth: 0 }}>
+                  <Chip
+                    label="Programa"
+                    size="small"
+                    sx={{
+                      height: 22,
+                      mb: 0.5,
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      bgcolor: alpha(theme.palette.primary.main, 0.12),
+                      color: "primary.main",
+                    }}
+                  />
+                  <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 700, lineHeight: 1.25 }} noWrap>
+                    {programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`}
+                  </Typography>
+                  {(programa.nome_fantasia || programa.razao_social) && (
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {programa.nome_fantasia || programa.razao_social}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <IconButton
+                size="small"
+                aria-label="Menu"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenMenu(e, programa);
+                }}
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            {viewExcluidos && programa.deleted_at && (
+              <Chip
+                size="small"
+                label={`Excluído ${new Date(programa.deleted_at).toLocaleDateString("pt-BR")}`}
+                color="default"
+                variant="outlined"
+                sx={{ mb: 1, height: 22 }}
+              />
+            )}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+                py: 0.85,
+                px: 1.25,
+                borderRadius: 1,
+                backgroundColor: alpha(avgColor, 0.08),
+                borderLeft: `3px solid ${avgColor}`,
+                mb: 0.75,
+              }}
+            >
+              <Typography variant="body2" fontWeight={600} color="text.secondary">
+                Maturidade
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: avgColor, lineHeight: 1 }}>
+                {avgPct}%
+              </Typography>
+              <Chip size="small" label={maturityData.label} sx={{ height: 22, fontWeight: 600, backgroundColor: alpha(avgColor, 0.18), color: avgColor }} />
+            </Box>
+            {diagnosticos.length > 0 && (
+              <Stack spacing={0.5}>
+                {diagnosticos.slice(0, 2).map((diag) => {
+                  const entry = getMaturityEntry(diag.id);
+                  const scorePct = Math.round(entry.score * 100);
+                  return (
+                    <Box key={diag.id} sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                      <Typography variant="body2" color="text.secondary" noWrap sx={{ flex: 1 }}>
+                        {diag.descricao ?? `Diag. ${diag.id}`}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={700}>
+                        {scorePct}%
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </CardContent>
+          <CardActions sx={{ px: 2, pb: 1.5, pt: 0 }}>
+            {!viewExcluidos && (
+              <Button variant="contained" fullWidth size="medium" startIcon={<AssessmentIcon />} onClick={() => handleAccessDiagnostico(programa)}>
+                Abrir
+              </Button>
+            )}
+          </CardActions>
+        </Card>
+      </Grid>
+    );
+  });
+
+  if (loading) {
+    const skeletons = [1, 2, 3].map((index) => (
+      <Grid item {...itemSize} key={index}>
+        <Card sx={{ height: 180, borderRadius: 1 }}>
+          <CardContent>
+            <Skeleton variant="text" width="80%" height={28} />
+            <Skeleton variant="text" width="60%" />
+            <Skeleton variant="rectangular" height={48} sx={{ mt: 1.5 }} />
+          </CardContent>
+        </Card>
+      </Grid>
+    ));
+    if (boardMode) return <>{skeletons}</>;
+    return (
+      <Box sx={{ mb: 2.5 }}>
+        <Skeleton variant="text" width={180} height={36} sx={{ mb: 1.25 }} />
+        <Grid container spacing={1.5}>
+          {skeletons}
         </Grid>
       </Box>
     );
   }
 
-  const diagnosticos = (state.diagnosticos || []).slice(0, 3);
-
-  return (
-    <Box sx={{ mb: 4 }}>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600, letterSpacing: "0.02em", color: "text.primary" }}>
-            {viewExcluidos ? "Lixeira de programas" : "Programas"}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {viewExcluidos ? "Restaurar ou excluir definitivamente." : "Programas de diagnóstico ativos."}
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          {!viewExcluidos && (
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenDialog(true)}
-              sx={{ borderRadius: 2, textTransform: "none" }}
-            >
-              Novo programa
+  const emptyProgramas = programas.length === 0 && (
+    <Grid item {...(boardMode && !viewExcluidos ? itemSize : { xs: 12 })} key="prog-empty">
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 3,
+          px: 2,
+          height: "100%",
+          minHeight: boardMode ? 160 : undefined,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 1,
+          border: "1px dashed",
+          borderColor: alpha(theme.palette.primary.main, 0.35),
+          bgcolor: alpha(theme.palette.primary.main, 0.03),
+        }}
+      >
+        {viewExcluidos ? (
+          <>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 1.25 }}>
+              Lixeira vazia
+            </Typography>
+            <Button variant="outlined" startIcon={<RestoreFromTrashIcon />} onClick={() => setViewExcluidos(false)}>
+              Voltar aos ativos
             </Button>
-          )}
-          <Button
-            variant={viewExcluidos ? "contained" : "outlined"}
-            size="small"
-            startIcon={viewExcluidos ? <RestoreFromTrashIcon /> : <DeleteSweepIcon />}
-            onClick={() => setViewExcluidos(!viewExcluidos)}
-          >
-            {viewExcluidos ? "Voltar aos ativos" : "Ver excluídos"}
-          </Button>
-        </Stack>
+          </>
+        ) : (
+          <>
+            <Chip
+              label="Programa"
+              size="small"
+              sx={{
+                mb: 1,
+                height: 22,
+                fontWeight: 700,
+                bgcolor: alpha(theme.palette.primary.main, 0.12),
+                color: "primary.main",
+              }}
+            />
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 1.25 }}>
+              Nenhum programa ainda
+            </Typography>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenDialog(true)}>
+              Criar programa
+            </Button>
+          </>
+        )}
       </Box>
-      <Divider sx={{ mb: 3 }} />
+    </Grid>
+  );
 
-      {programas.length === 0 ? (
-        <Box
-          sx={{
-            textAlign: "center",
-            py: 8,
-            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
-            borderRadius: 4,
-            border: "2px dashed",
-            borderColor: alpha(theme.palette.primary.main, 0.3),
-          }}
-        >
-          {viewExcluidos ? (
-            <>
-              <DeleteSweepIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-                Nenhum programa na lixeira
-              </Typography>
-              <Button variant="outlined" startIcon={<RestoreFromTrashIcon />} onClick={() => setViewExcluidos(false)}>
-                Voltar aos ativos
-              </Button>
-            </>
-          ) : (
-            <>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-                Nenhum programa ainda
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Crie seu primeiro programa para começar o diagnóstico.
-              </Typography>
-              <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenDialog(true)}>
-                Criar programa
-              </Button>
-            </>
-          )}
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          {programas.map((programa) => {
-            const maturityData = programaMaturityData.get(programa.id) || { score: 0, label: "Inicial", byDiagnostico: [] };
-            const getMaturityEntry = (diagId: number) =>
-              maturityData.byDiagnostico.find((d) => d.diagnostico_id === diagId) ?? { score: 0, label: "Inicial" };
-            const logoUrl = getProgramaLogoDisplayUrl(programa);
-
-            return (
-              <Grid item xs={12} sm={6} lg={4} key={programa.id}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    position: "relative",
-                    backgroundColor: theme.palette.background.paper,
-                    border: `1px solid ${theme.palette.divider}`,
-                    borderRadius: 2,
-                    overflow: "hidden",
-                    boxShadow: hoveredCard === programa.id ? 4 : 1,
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 4,
-                      backgroundColor: programa.setor === 1 ? theme.palette.primary.main : theme.palette.secondary.main,
-                    },
-                  }}
-                  onMouseEnter={() => setHoveredCard(programa.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
-                  <CardContent sx={{ flex: 1, p: 2.5, "&:last-child": { pb: 2.5 } }}>
-                    <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1, minWidth: 0 }}>
-                        {logoUrl ? (
-                          <Box
-                            component="img"
-                            src={logoUrl}
-                            alt=""
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 1,
-                              objectFit: "contain",
-                              flexShrink: 0,
-                              bgcolor: alpha(theme.palette.primary.main, 0.04),
-                            }}
-                          />
-                        ) : null}
-                        <Typography variant="h6" component="h2" color="primary" sx={{ fontWeight: 600, flex: 1 }}>
-                          {programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`}
-                        </Typography>
-                      </Box>
-                      <IconButton
-                        size="small"
-                        aria-label="Menu"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenMenu(e, programa);
-                        }}
-                        sx={{ mt: -0.5, mr: -0.5 }}
-                      >
-                        <MoreVertIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                    {viewExcluidos && programa.deleted_at && (
-                      <Chip
-                        size="small"
-                        label={`Excluído em ${new Date(programa.deleted_at).toLocaleDateString("pt-BR")}`}
-                        color="default"
-                        variant="outlined"
-                        sx={{ mb: 1 }}
-                      />
-                    )}
-                    <Stack spacing={0.25} sx={{ mb: 1.5 }}>
-                      {programa.nome_fantasia && programa.nome_fantasia !== (programa.nome || "") && (
-                        <Typography variant="subtitle2" color="text.secondary">
-                          {programa.nome_fantasia}
-                        </Typography>
-                      )}
-                      {programa.razao_social && programa.razao_social !== (programa.nome || programa.nome_fantasia || "") && (
-                        <Typography variant="subtitle2" color="text.secondary">
-                          {programa.razao_social}
-                        </Typography>
-                      )}
-                    </Stack>
-                    <Typography variant="overline" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                      Maturidade
-                    </Typography>
-                    <Stack spacing={1}>
-                      {diagnosticos.map((diag) => {
-                        const entry = getMaturityEntry(diag.id);
-                        const scorePct = Math.round(entry.score * 100);
-                        const color = getMaturityColor(entry.score);
-                        return (
-                          <Box
-                            key={diag.id}
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              py: 0.75,
-                              px: 1.25,
-                              borderRadius: 1,
-                              backgroundColor: alpha(color, 0.08),
-                              borderLeft: `3px solid ${color}`,
-                            }}
-                          >
-                            <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }} color="text.primary">
-                              {diag.descricao ?? `Diagnóstico ${diag.id}`}
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, minWidth: "2.5rem", textAlign: "right", color }}>
-                              {scorePct}%
-                            </Typography>
-                            <Chip size="small" label={entry.label} sx={{ height: 22, fontSize: "0.7rem", fontWeight: 600, backgroundColor: alpha(color, 0.2), color, border: `1px solid ${alpha(color, 0.5)}` }} />
-                          </Box>
-                        );
-                      })}
-                    </Stack>
-                  </CardContent>
-                  <CardActions sx={{ px: 2.5, pb: 2, pt: 0 }}>
-                    {!viewExcluidos && (
-                      <Button variant="contained" fullWidth size="medium" startIcon={<AssessmentIcon />} onClick={() => handleAccessDiagnostico(programa)} sx={{ py: 1.25 }}>
-                        Acessar Programa
-                      </Button>
-                    )}
-                  </CardActions>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
-      )}
-
-      {programas.length > 0 && !viewExcluidos && (
+  const overlays = (
+    <>
+      {programas.length > 0 && !viewExcluidos && !boardMode && (
         <Fab
           color="primary"
           aria-label="add"
+          size="medium"
           sx={{
             position: "fixed",
-            bottom: 32,
-            right: 32,
-            width: 56,
-            height: 56,
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            boxShadow: 4,
-            "&:hover": { boxShadow: 8 },
+            bottom: 24,
+            right: 24,
+            borderRadius: 1.5,
+            background: `linear-gradient(145deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+            boxShadow: 3,
           }}
           onClick={() => setOpenDialog(true)}
         >
           <AddIcon />
         </Fab>
       )}
+    </>
+  );
 
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu} PaperProps={{ sx: { borderRadius: 2, minWidth: 200 } }}>
+  const modals = (
+    <>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu} PaperProps={{ sx: { borderRadius: 1, minWidth: 200 } }}>
         {!viewExcluidos && [
           <MenuItem
             key="edit"
@@ -785,10 +818,52 @@ export function ProgramasSection() {
       </Dialog>
 
       <Snackbar open={!!toastMessage} autoHideDuration={6000} onClose={() => setToastMessage(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert onClose={() => setToastMessage(null)} severity={toastSeverity} sx={{ borderRadius: 2 }}>
+        <Alert onClose={() => setToastMessage(null)} severity={toastSeverity} sx={{ borderRadius: 1 }}>
           {toastMessage}
         </Alert>
       </Snackbar>
+    </>
+  );
+
+  if (boardMode) {
+    return (
+      <>
+        {programas.length === 0 ? emptyProgramas : programaCards}
+        {overlays}
+        {modals}
+      </>
+    );
+  }
+
+  return (
+    <Box sx={{ mb: 2.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.25, flexWrap: "wrap", gap: 1 }}>
+        <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 800, letterSpacing: "-0.015em" }}>
+          {viewExcluidos ? "Lixeira" : "Programas"}
+        </Typography>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          {!viewExcluidos && (
+            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => setOpenDialog(true)}>
+              Novo
+            </Button>
+          )}
+          <Button
+            variant={viewExcluidos ? "contained" : "outlined"}
+            size="small"
+            startIcon={viewExcluidos ? <RestoreFromTrashIcon /> : <DeleteSweepIcon />}
+            onClick={() => setViewExcluidos(!viewExcluidos)}
+          >
+            {viewExcluidos ? "Ativos" : "Lixeira"}
+          </Button>
+        </Stack>
+      </Box>
+
+      <Grid container spacing={1.5}>
+        {programas.length === 0 ? emptyProgramas : programaCards}
+      </Grid>
+
+      {overlays}
+      {modals}
     </Box>
   );
 }

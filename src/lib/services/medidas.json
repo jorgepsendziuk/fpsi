@@ -1,4 +1,6 @@
 {
   "total_medidas_catalogo_ppsi_20": 210,
-  "nota": "A listagem completa das medidas está na tabela public.medida (Supabase); este ficheiro mantém apenas o total para a landing."
+  "total_medidas_catalogo_aigp_v1": 54,
+  "total_medidas_catalogo": 264,
+  "nota": "Medidas PPSI na tabela public.medida (ids 1–210); AIGP ids 211–264. Este ficheiro mantém totais para a landing."
 }

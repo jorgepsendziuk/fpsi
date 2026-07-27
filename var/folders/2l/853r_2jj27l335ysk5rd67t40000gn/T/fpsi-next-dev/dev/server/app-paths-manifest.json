@@ -1,1 +1,14 @@
-{}
+{
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/api/dashboard/resumo/route": "app/api/dashboard/resumo/route.js",
+  "/api/programas/route": "app/api/programas/route.js",
+  "/api/empresas/route": "app/api/empresas/route.js",
+  "/api/admin/check/route": "app/api/admin/check/route.js",
+  "/api/programas/[id]/route": "app/api/programas/[id]/route.js",
+  "/api/users/route": "app/api/users/route.js",
+  "/api/audit/last-activity/route": "app/api/audit/last-activity/route.js",
+  "/[slug]/page": "app/[slug]/page.js",
+  "/programas/[id]/page": "app/programas/[id]/page.js",
+  "/programas/[id]/conformidade/ropa/page": "app/programas/[id]/conformidade/ropa/page.js",
+  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
+}

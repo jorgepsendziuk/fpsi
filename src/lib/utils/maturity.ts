@@ -26,6 +26,49 @@ export const getMaturityLabel = (score: number): string => {
   return maturity ? maturity.label : "Inicial";
 };
 
+/** Normaliza valor vindo da API (0–1 ou legado 0–100). */
+export function normalizeMaturityScore(raw: number): number {
+  const n = Number(raw);
+  if (Number.isNaN(n)) return 0;
+  if (n > 1 && n <= 100) return n / 100;
+  return Math.max(0, Math.min(1, n));
+}
+
+export function getMaturityLevelId(score: number): number {
+  const s = normalizeMaturityScore(score);
+  const maturity = MATURITY_LEVELS.find((m) => s >= m.min && s <= m.max);
+  return maturity?.id ?? 1;
+}
+
+/** Cor única para UI (KPI, listas). */
+export function getMaturityColorHex(score: number): string {
+  const s = normalizeMaturityScore(score);
+  if (s >= 0.9) return "#2E7D32";
+  if (s >= 0.7) return "#388E3C";
+  if (s >= 0.5) return "#F9A825";
+  if (s >= 0.3) return "#EF6C00";
+  return "#C62828";
+}
+
+/** Índice iMC (0–1), nível 1–5 e rótulo — sem percentual. */
+export function formatMaturityIndex(raw: number | null | undefined): {
+  score: number;
+  indexText: string;
+  levelId: number;
+  label: string;
+  color: string;
+} | null {
+  if (raw == null || Number.isNaN(Number(raw))) return null;
+  const score = normalizeMaturityScore(Number(raw));
+  return {
+    score,
+    indexText: score.toFixed(2),
+    levelId: getMaturityLevelId(score),
+    label: getMaturityLabel(score),
+    color: getMaturityColorHex(score),
+  };
+}
+
 /**
  * Calcula a maturidade de uma medida individual
  * @param resposta Resposta da medida (0-100)

@@ -13,6 +13,7 @@ import MapIcon from "@mui/icons-material/Map";
 import StorageIcon from "@mui/icons-material/Storage";
 import DescriptionIcon from "@mui/icons-material/Description";
 import WarningIcon from "@mui/icons-material/Warning";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
@@ -75,7 +76,7 @@ export type AppNavSection = {
   items: AppNavItem[];
 };
 
-const iconSx = { fontSize: 22 };
+const iconSx = { fontSize: 18 };
 
 export function getGlobalNavSections(): AppNavSection[] {
   return [
@@ -89,6 +90,12 @@ export function getGlobalNavSections(): AppNavSection[] {
           label: "LGPD",
           path: "/referencias/lgpd",
           icon: <MenuBookIcon sx={iconSx} />,
+        },
+        {
+          id: "aigp",
+          label: "Governança de IA",
+          path: "/referencias/aigp",
+          icon: <AssessmentIcon sx={iconSx} />,
         },
         { id: "perfil", label: "Perfil", path: "/perfil", icon: <PersonIcon sx={iconSx} /> },
         {
@@ -127,7 +134,7 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
 
         {
           id: "conf-hub",
-          label: "Tratamento de dados e riscos",
+          label: "Tratamento de dados",
           path: `${base}/conformidade`,
           icon: <GavelIcon sx={iconSx} />,
           hasNestedNav: true,
@@ -164,6 +171,13 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
           icon: <WarningIcon sx={subIcon} />,
           isSubItem: true,
           collapseGroup: "tratamento",
+        },
+
+        {
+          id: "riscos",
+          label: "Gestão de Riscos",
+          path: `${base}/riscos`,
+          icon: <WarningAmberIcon sx={iconSx} />,
         },
 
         {

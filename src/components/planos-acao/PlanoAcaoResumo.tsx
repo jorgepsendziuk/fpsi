@@ -41,8 +41,8 @@ import {
   Print as PrintIcon
 } from '@mui/icons-material';
 import * as dataService from '../../lib/services/dataService';
-import { shouldUseDemoData } from '../../lib/services/demoDataService';
 import { status_medida, status_plano_acao, respostas, respostasimnao } from '../../lib/utils/utils';
+import { formatResponsavelOptionLabel, formatResponsavelNome } from '@/lib/utils/responsavelDisplay';
 
 interface PlanoAcaoResumoProps {
   programaId: number;
@@ -124,7 +124,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
 
   const loadMedidasForControle = useCallback(
     async (controleId: number, controleNome: string, diagnosticoId: number, diagnosticoNome: string) => {
-      if (medidasByControle[controleId]?.length !== undefined) return;
+      if (medidasByControle[controleId] !== undefined) return;
       setLoadingControles((prev) => new Set(prev).add(controleId));
       try {
         const medidasData = await dataService.fetchMedidas(controleId, programaId);
@@ -182,42 +182,22 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
         ]);
         setResponsaveis(responsaveisData);
 
-        if (shouldUseDemoData(programaId)) {
-          const diagnosticosDemo = await loadDemoData();
-          setDiagnosticos(diagnosticosDemo);
-          setResumo({
-            total: diagnosticosDemo.reduce((s, d) => s + d.controles.reduce((t, c) => t + c.medidas.length, 0), 0),
-            comResposta: diagnosticosDemo.reduce((s, d) => s + d.controles.reduce((t, c) => t + c.medidas.filter((m) => m.resposta).length, 0), 0),
-            concluidas: diagnosticosDemo.reduce((s, d) => s + d.controles.reduce((t, c) => t + c.medidas.filter((m) => m.status_plano_acao === 2).length, 0), 0),
-            emAndamento: diagnosticosDemo.reduce((s, d) => s + d.controles.reduce((t, c) => t + c.medidas.filter((m) => m.status_plano_acao === 4).length, 0), 0),
-            atrasadas: diagnosticosDemo.reduce((s, d) => s + d.controles.reduce((t, c) => t + c.medidas.filter((m) => m.status_plano_acao === 5).length, 0), 0),
-            comPrioridade: diagnosticosDemo.reduce((s, d) => s + d.controles.reduce((t, c) => t + c.medidas.filter((m) => m.prioridade).length, 0), 0),
-            diagnosticos: diagnosticosDemo.map((d) => ({
-              id: d.id,
-              nome: d.nome,
-              qtdControles: d.controles.length,
-              qtdMedidas: d.controles.reduce((t, c) => t + c.medidas.length, 0),
-              controles: d.controles.map((c) => ({ id: c.id, nome: c.nome, qtdMedidas: c.medidas.length }))
-            }))
-          });
-        } else {
-          await dataService.ensureProgramaMedidaRecords(programaId);
-          const resumoData = await dataService.fetchPlanoAcaoResumo(programaId);
-          setResumo(resumoData);
-          setDiagnosticos(
-            resumoData.diagnosticos.map((d) => ({
-              id: d.id,
-              nome: d.nome,
-              qtdMedidas: d.qtdMedidas,
-              controles: d.controles.map((c) => ({
-                id: c.id,
-                nome: c.nome,
-                qtdMedidas: c.qtdMedidas,
-                medidas: [] as MedidaPlanoAcao[]
-              }))
-            }))
-          );
-        }
+        await dataService.ensureProgramaMedidaRecords(programaId);
+        const resumoData = await dataService.fetchPlanoAcaoResumo(programaId);
+        setResumo(resumoData);
+        setDiagnosticos(
+          resumoData.diagnosticos.map((d) => ({
+            id: d.id,
+            nome: d.nome,
+            qtdMedidas: d.qtdMedidas,
+            controles: d.controles.map((c) => ({
+              id: c.id,
+              nome: c.nome,
+              qtdMedidas: c.qtdMedidas,
+              medidas: [] as MedidaPlanoAcao[],
+            })),
+          }))
+        );
       } catch (err) {
         console.error('Erro ao carregar plano de trabalho:', err);
         setError('Erro ao carregar dados do plano de trabalho');
@@ -228,42 +208,15 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
     load();
   }, [programaId]);
 
-  const loadDemoData = async (): Promise<DiagnosticoGroup[]> => {
-    return [
-      {
-        id: 1,
-        nome: 'Diagnóstico de Segurança Básica',
-        qtdMedidas: 1,
-        controles: [
-          {
-            id: 1,
-            nome: 'Controle de Acesso',
-            qtdMedidas: 1,
-            medidas: [
-              {
-                id: 1,
-                id_medida: '1.1',
-                medida: 'Implementar política de senhas seguras',
-                controle_id: 1,
-                controle_nome: 'Controle de Acesso',
-                diagnostico_id: 1,
-                diagnostico_nome: 'Diagnóstico de Segurança Básica',
-                resposta: 4,
-                responsavel: 1,
-                responsavel_nome: 'João Silva (TI)',
-                previsao_inicio: '2024-01-15',
-                previsao_fim: '2024-03-15',
-                status_medida: 2,
-                status_plano_acao: 4,
-                prioridade: true,
-                justificativa: 'Implementação necessária para melhorar a segurança de acesso'
-              }
-            ]
-          }
-        ]
+  /** Carrega medidas de todos os controles em segundo plano (evita lista vazia até expandir). */
+  useEffect(() => {
+    if (!resumo?.diagnosticos?.length) return;
+    for (const d of resumo.diagnosticos) {
+      for (const c of d.controles) {
+        void loadMedidasForControle(c.id, c.nome, d.id, d.nome);
       }
-    ];
-  };
+    }
+  }, [resumo, loadMedidasForControle]);
 
   const getRespostaLabel = (resposta: number, diagnosticoId: number = 2) => {
     if (!resposta) return 'Não respondida';
@@ -318,11 +271,11 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
   };
 
   const getResponsavelDisplay = (responsavelId?: number, responsavelNome?: string) => {
-    if (responsavelNome) return responsavelNome;
+    if (responsavelNome) return formatResponsavelNome(responsavelNome);
     if (!responsavelId) return 'Não definido';
     const responsavel = responsaveis.find(r => r.id === responsavelId);
     if (responsavel) {
-      return `${responsavel.nome} (${responsavel.departamento || 'Sem setor'})`;
+      return formatResponsavelOptionLabel(responsavel.nome, responsavel.departamento);
     }
     return 'Não definido';
   };
@@ -380,24 +333,6 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
 
   const handleUpdateMedida = useCallback(
     async (medidaId: number, controleId: number, field: 'prioridade' | 'status_medida', value: boolean | number) => {
-      if (shouldUseDemoData(programaId)) {
-        setDiagnosticos((prev) =>
-          prev.map((d) => ({
-            ...d,
-            controles: d.controles.map((c) =>
-              c.id === controleId
-                ? {
-                    ...c,
-                    medidas: c.medidas.map((m) =>
-                      m.id === medidaId ? { ...m, [field]: value } : m
-                    )
-                  }
-                : c
-            )
-          }))
-        );
-        return;
-      }
       try {
         await dataService.updateProgramaMedida(medidaId, controleId, programaId, { [field]: value });
         setMedidasByControle((prev) => {
@@ -639,7 +574,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
                 <MenuItem value="sem">Sem responsável</MenuItem>
                 {responsaveisOrdenados.map((r) => (
                   <MenuItem key={r.id} value={String(r.id)}>
-                    {r.nome}
+                    {formatResponsavelNome(r.nome)}
                     {r.departamento ? ` (${r.departamento})` : ''}
                   </MenuItem>
                 ))}
@@ -782,12 +717,9 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
           </AccordionSummary>
           <AccordionDetails sx={{ p: 1 }}>
             {diagnostico.controles.map((controle) => {
-              const medidasRaw = shouldUseDemoData(programaId)
-                ? controle.medidas
-                : (medidasByControle[controle.id] ?? []);
+              const medidasRaw = medidasByControle[controle.id] ?? [];
               const medidas = aplicarFiltrosMedidas(medidasRaw);
-              const medidasCarregadas =
-                shouldUseDemoData(programaId) || medidasByControle[controle.id] !== undefined;
+              const medidasCarregadas = medidasByControle[controle.id] !== undefined;
               const isLoading = loadingControles.has(controle.id);
               const chipMedidasLabel =
                 filtrosAtivos && medidasCarregadas && medidasRaw.length > 0
@@ -799,7 +731,7 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
                   key={controle.id}
                   sx={{ mb: 0.5 }}
                   onChange={(_e, expanded) => {
-                    if (expanded && !shouldUseDemoData(programaId)) {
+                    if (expanded) {
                       handleControleExpand(controle.id, controle.nome, diagnostico.id, diagnostico.nome);
                     }
                   }}
@@ -827,8 +759,8 @@ const PlanoAcaoResumo: React.FC<PlanoAcaoResumoProps> = ({
                     ) : medidas.length === 0 ? (
                       <Box sx={{ py: 2, textAlign: 'center' }}>
                         <Typography variant="body2" color="text.secondary">
-                          {!medidasCarregadas && !shouldUseDemoData(programaId)
-                            ? 'Abra o controle para carregar as medidas'
+                          {!medidasCarregadas
+                            ? 'Carregando medidas…'
                             : medidasRaw.length === 0
                               ? 'Nenhuma medida neste controle'
                               : filtrosAtivos

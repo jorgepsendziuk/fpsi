@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { Responsavel } from "@/lib/types/types";
+import { formatResponsavelNome } from "@/lib/utils/responsavelDisplay";
 
 type Props = {
   responsaveis: Responsavel[];
@@ -91,7 +92,7 @@ export function GovernancaGrupoMembrosPicklist({ responsaveis, selectedIds, onCh
                 label={
                   <Box>
                     <Typography variant="body2" fontWeight={checked ? 600 : 400}>
-                      {r.nome}
+                      {formatResponsavelNome(r.nome)}
                     </Typography>
                     {r.email ? (
                       <Typography variant="caption" color="text.secondary" display="block">

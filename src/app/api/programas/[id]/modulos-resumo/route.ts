@@ -81,7 +81,7 @@ export async function GET(
         .select("diagnostico_id, score, label")
         .eq("programa_id", programaId),
       supabase.from("diagnostico").select("id, descricao"),
-      supabase.from("politica_modelo").select("tipo_politica").eq("ativo", true),
+      supabase.from("politica_modelo").select("id").eq("ativo", true),
       supabase.from("politica_programa").select("tipo_politica, secoes").eq("programa_id", programaId),
       supabase.from("programa").select("slug, nome").eq("id", programaId).maybeSingle(),
       supabase.from("pedido_titular").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
@@ -130,7 +130,7 @@ export async function GET(
       );
     }
 
-    const tiposCatalogo = new Set((catalogoPoliticas || []).map((r: { tipo_politica: string }) => r.tipo_politica));
+    const tiposCatalogo = new Set((catalogoPoliticas || []).map((r: { id: string }) => r.id));
     const tiposImplementados = new Set<string>();
     (politicasPrograma || []).forEach((r: { tipo_politica: string; secoes: unknown }) => {
       if (politicaTemConteudoMinimo(r.secoes) && tiposCatalogo.has(r.tipo_politica)) {

@@ -1,19 +1,27 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import DashboardCustomizeIcon from "@mui/icons-material/DashboardCustomize";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import GavelIcon from "@mui/icons-material/Gavel";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import {
+  WhatsappScene,
+  WHATSAPP_SCENE_META,
+  type WhatsappVisualKind,
+} from "@/components/marketing/WhatsappProductScenes";
+import { PRODUCT_SHOWCASE } from "@/lib/marketing/productShowcase";
 import styles from "./LandingDeckHero.module.css";
 
 const INTERVAL_MS = 5400;
 const SWAP_MS = 720;
-const SLOT_COUNT = 4;
 
-type Slot = 0 | 1 | 2 | 3;
+/** Slots dos 4 módulos clássicos (preview em slides / deckSlot no catálogo). */
+export type LandingDeckSlot = 0 | 1 | 2 | 3;
+type Slot = LandingDeckSlot;
 
-const CARDS: {
+const LEGACY_CARDS: {
   slot: Slot;
   label: string;
   caption: string;
@@ -22,8 +30,8 @@ const CARDS: {
 }[] = [
   {
     slot: 0,
-    label: "Dashboard",
-    caption: "Painel operacional — KPIs e pendências do programa",
+    label: "Painel",
+    caption: "Indicadores e pendências — o que pede atenção hoje",
     captionClass: styles.captionDash,
     toneClass: styles.toneDash,
   },
@@ -36,30 +44,91 @@ const CARDS: {
   },
   {
     slot: 2,
-    label: "Riscos",
-    caption: "Matriz de risco — probabilidade × impacto",
+    label: "Gestão de Riscos",
+    caption: "Priorize o crítico e acompanhe a mitigação",
     captionClass: styles.captionRisk,
     toneClass: styles.toneRisk,
   },
   {
     slot: 3,
     label: "Conformidade",
-    caption: "LGPD — ROPA, RIPD e canais do titular",
+    caption: "Tratamentos, portal do titular e evidências para auditoria",
     captionClass: styles.captionConf,
     toneClass: styles.toneConf,
   },
 ];
 
+const LEGACY_TONE: Record<Slot, { toneClass: string; captionClass: string }> = {
+  0: { toneClass: styles.toneDash, captionClass: styles.captionDash },
+  1: { toneClass: styles.toneDiag, captionClass: styles.captionDiag },
+  2: { toneClass: styles.toneRisk, captionClass: styles.captionRisk },
+  3: { toneClass: styles.toneConf, captionClass: styles.captionConf },
+};
+
+type DeckCard = {
+  index: number;
+  id: string;
+  label: string;
+  caption: string;
+  captionClass: string;
+  toneClass: string;
+  visual?: WhatsappVisualKind;
+  deckSlot?: Slot;
+};
+
+/** Baralho da landing = catálogo de divulgação (IA, Gov. IA, Portal, Políticas + clássicos). */
+const DECK_CARDS: DeckCard[] = PRODUCT_SHOWCASE.map((step, index) => {
+  if (step.visual) {
+    const meta = WHATSAPP_SCENE_META[step.visual];
+    return {
+      index,
+      id: step.id,
+      label: step.label,
+      caption: step.title,
+      captionClass: meta.captionClass,
+      toneClass: meta.tone,
+      visual: step.visual,
+    };
+  }
+  const deckSlot = (step.deckSlot ?? 0) as Slot;
+  const tone = LEGACY_TONE[deckSlot];
+  return {
+    index,
+    id: step.id,
+    label: step.label,
+    caption: step.title,
+    captionClass: tone.captionClass,
+    toneClass: tone.toneClass,
+    deckSlot,
+  };
+});
+
+const SLOT_COUNT = DECK_CARDS.length;
+
+/** Cores oficiais de maturidade (escala 0–1), alinhadas ao MaturityChip. */
+function maturityColor01(score01: number): string {
+  if (score01 >= 0.9) return "#2E7D32";
+  if (score01 >= 0.7) return "#4CAF50";
+  if (score01 >= 0.5) return "#F9A825";
+  if (score01 >= 0.3) return "#FF9800";
+  return "#FF5252";
+}
+
+/** Domínios do card usam escala 1–5 (como na UI de diagnóstico). */
+function maturityColorLevel(level: number): string {
+  return maturityColor01(level / 5);
+}
+
 function DashboardScene({ live, fontFamily }: { live: boolean; fontFamily: string }) {
   const kpis = [
     { label: "Maturidade", value: "68%", color: "#1565C0" },
-    { label: "DSAR", value: "2", color: "#0288D1" },
+    { label: "Pedidos", value: "2", color: "#0288D1" },
     { label: "Reportes", value: "1", color: "#F9A825" },
     { label: "Riscos", value: "2", color: "#C62828" },
   ];
   const pends = [
     { text: "Reporte: vulnerabilidade", sev: "#C62828" },
-    { text: "Pedido DSAR em análise", sev: "#F9A825" },
+    { text: "Pedido de titular em análise", sev: "#F9A825" },
     { text: "Política aguardando revisão", sev: "#0288D1" },
   ];
 
@@ -70,8 +139,8 @@ function DashboardScene({ live, fontFamily }: { live: boolean; fontFamily: strin
           <DashboardCustomizeIcon sx={{ fontSize: 18 }} />
         </div>
         <div>
-          <div className={styles.stageTitle}>Dashboard</div>
-          <div className={styles.stageSub}>Postura do programa · visão do dia</div>
+          <div className={styles.stageTitle}>Painel</div>
+          <div className={styles.stageSub}>Indicadores · pendências · alertas</div>
         </div>
       </div>
 
@@ -104,11 +173,13 @@ function DashboardScene({ live, fontFamily }: { live: boolean; fontFamily: strin
 }
 
 function DiagnosticoScene({ live, fontFamily }: { live: boolean; fontFamily: string }) {
+  const indexPct = 72;
+  const indexColor = maturityColor01(indexPct / 100);
   const domains = [
-    { name: "Governança", score: "3.6", pips: 4 },
-    { name: "Segurança", score: "2.9", pips: 3 },
-    { name: "Privacidade", score: "4.1", pips: 4 },
-    { name: "IA / AIGP", score: "2.4", pips: 2 },
+    { name: "Governança", score: 3.6, pips: 4 },
+    { name: "Segurança", score: 2.9, pips: 3 },
+    { name: "Privacidade", score: 4.1, pips: 4 },
+    { name: "Gov. de IA", score: 2.4, pips: 2 },
   ];
 
   return (
@@ -127,35 +198,64 @@ function DiagnosticoScene({ live, fontFamily }: { live: boolean; fontFamily: str
         <div className={styles.scanLine} />
         <div className={styles.shine} />
         <div className={styles.diagTop}>
-          <div className={styles.scoreRing} style={{ ["--p" as string]: 72 }}>
+          <div
+            className={styles.scoreRing}
+            style={{
+              ["--p" as string]: indexPct,
+              ["--ring" as string]: indexColor,
+            }}
+          >
             <div className={styles.scoreInner}>
-              <div className={styles.scoreNum}>72</div>
-              <div className={styles.scoreUnit}>índice</div>
+              <div className={styles.scoreNum} style={{ color: indexColor }}>
+                {indexPct}
+              </div>
+              <div className={styles.scoreUnit} style={{ color: `${indexColor}99` }}>
+                índice
+              </div>
             </div>
           </div>
           <div className={styles.diagMeta}>
             <div className={styles.diagMetaTitle}>Visão consolidada</div>
-            <div className={styles.diagMetaLine}>4 domínios · PPSI + AIGP</div>
+            <div className={styles.diagMetaLine}>4 domínios · PPSI + Gov. de IA</div>
             <div className={styles.diagMetaLine}>Última avaliação · há 2 dias</div>
           </div>
         </div>
         <div className={styles.domainGrid}>
-          {domains.map((d) => (
-            <div key={d.name} className={styles.domainCard}>
-              <div className={styles.domainName}>{d.name}</div>
-              <div className={styles.domainScore}>{d.score}</div>
-              <div className={styles.domainLvl}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <span key={i} className={`${styles.lvlPip} ${i <= d.pips ? styles.lvlPipOn : ""}`} />
-                ))}
+          {domains.map((d) => {
+            const color = maturityColorLevel(d.score);
+            return (
+              <div
+                key={d.name}
+                className={styles.domainCard}
+                style={{
+                  ["--accent" as string]: color,
+                  background: `linear-gradient(180deg, ${color}14, #fff)`,
+                  borderColor: `${color}33`,
+                }}
+              >
+                <div className={styles.domainName}>{d.name}</div>
+                <div className={styles.domainScore} style={{ color }}>
+                  {d.score.toFixed(1)}
+                </div>
+                <div className={styles.domainLvl}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <span
+                      key={i}
+                      className={styles.lvlPip}
+                      style={{
+                        background: i <= d.pips ? color : `${color}28`,
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       <span className={`${styles.badge} ${styles.badgePos1} ${styles.badgeToneG}`}>Domínios</span>
-      <span className={`${styles.badge} ${styles.badgePos2} ${styles.badgeToneA}`}>AIGP</span>
+      <span className={`${styles.badge} ${styles.badgePos2} ${styles.badgeToneA}`}>Gov. IA</span>
       <span className={`${styles.badge} ${styles.badgePos3} ${styles.badgeToneG}`}>PPSI</span>
     </div>
   );
@@ -190,8 +290,8 @@ function RiscosScene({ live, fontFamily }: { live: boolean; fontFamily: string }
           <WarningAmberIcon sx={{ fontSize: 18 }} />
         </div>
         <div>
-          <div className={styles.stageTitle}>Gestão de riscos</div>
-          <div className={styles.stageSub}>Matriz probabilidade × impacto</div>
+          <div className={styles.stageTitle}>Gestão de Riscos</div>
+          <div className={styles.stageSub}>Críticos primeiro · mitigação</div>
         </div>
       </div>
 
@@ -236,6 +336,16 @@ function RiscosScene({ live, fontFamily }: { live: boolean; fontFamily: string }
 }
 
 function ConformidadeScene({ live, fontFamily }: { live: boolean; fontFamily: string }) {
+  const treatments = [
+    { nome: "Cadastro de famílias", base: "Consentimento", cats: "Identificação · contato" },
+    { nome: "Folha de pagamento", base: "Obrigação legal", cats: "Financeiro · RH" },
+  ];
+  const evidences = [
+    { file: "termo_consentimento.pdf", medida: "Medida 12" },
+    { file: "print_controle_acesso.png", medida: "Medida 41" },
+    { file: "ata_comissao.docx", medida: "Medida 3" },
+  ];
+
   return (
     <div className={`${styles.stage} ${styles.stageConf} ${live ? styles.live : ""}`} style={{ fontFamily }}>
       <div className={styles.stageHead}>
@@ -243,8 +353,8 @@ function ConformidadeScene({ live, fontFamily }: { live: boolean; fontFamily: st
           <GavelIcon sx={{ fontSize: 18 }} />
         </div>
         <div>
-          <div className={styles.stageTitle}>Conformidade LGPD</div>
-          <div className={styles.stageSub}>ROPA · RIPD · titulares</div>
+          <div className={styles.stageTitle}>Conformidade</div>
+          <div className={styles.stageSub}>ROPA · pedidos · provas anexadas</div>
         </div>
       </div>
 
@@ -254,7 +364,7 @@ function ConformidadeScene({ live, fontFamily }: { live: boolean; fontFamily: st
         <div className={styles.confStats}>
           <div className={styles.confStat}>
             <div className={styles.confStatN}>12</div>
-            <div className={styles.confStatL}>ROPA</div>
+            <div className={styles.confStatL}>Tratamentos</div>
           </div>
           <div className={styles.confStat}>
             <div className={styles.confStatN}>3</div>
@@ -265,23 +375,39 @@ function ConformidadeScene({ live, fontFamily }: { live: boolean; fontFamily: st
             <div className={styles.confStatL}>Pedidos</div>
           </div>
         </div>
-        <div className={styles.docHead}>Operação · Cadastro de famílias</div>
-        <div className={styles.docLines}>
-          <div className={styles.docLine} style={{ width: "92%" }} />
-          <div className={styles.docLine} style={{ width: "78%" }} />
-          <div className={styles.docLine} style={{ width: "64%" }} />
-          <div className={styles.docLine} style={{ width: "85%" }} />
+        <div className={styles.confBlockTitle}>Registro de tratamentos</div>
+        <div className={styles.confTreatList}>
+          {treatments.map((t) => (
+            <div key={t.nome} className={styles.confTreat}>
+              <div className={styles.confTreatName}>{t.nome}</div>
+              <div className={styles.confTreatMeta}>
+                <span>{t.base}</span>
+                <span>·</span>
+                <span>{t.cats}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className={styles.confBlockTitle}>Evidências recentes</div>
+        <div className={styles.confEvidList}>
+          {evidences.map((e) => (
+            <div key={e.file} className={styles.confEvid}>
+              <AttachFileIcon className={styles.confEvidIcon} sx={{ fontSize: 14 }} />
+              <span className={styles.confEvidFile}>{e.file}</span>
+              <span className={styles.confEvidMed}>{e.medida}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       <span className={`${styles.badge} ${styles.badgePos1} ${styles.badgeToneB}`}>ROPA</span>
-      <span className={`${styles.badge} ${styles.badgePos2} ${styles.badgeToneB}`}>RIPD</span>
-      <span className={`${styles.badge} ${styles.badgePos3} ${styles.badgeToneA}`}>Titulares</span>
+      <span className={`${styles.badge} ${styles.badgePos2} ${styles.badgeToneB}`}>Portal</span>
+      <span className={`${styles.badge} ${styles.badgePos3} ${styles.badgeToneA}`}>Evidências</span>
     </div>
   );
 }
 
-function Scene({ slot, live, fontFamily }: { slot: Slot; live: boolean; fontFamily: string }) {
+function LegacyScene({ slot, live, fontFamily }: { slot: Slot; live: boolean; fontFamily: string }) {
   switch (slot) {
     case 0:
       return <DashboardScene live={live} fontFamily={fontFamily} />;
@@ -294,11 +420,88 @@ function Scene({ slot, live, fontFamily }: { slot: Slot; live: boolean; fontFami
   }
 }
 
-/** Baralho: Dashboard → Diagnóstico → Riscos → Conformidade. */
-export function LandingDeckHero({ fontFamily }: { fontFamily: string }) {
-  const [frontSlot, setFrontSlot] = useState<Slot>(0);
+function DeckCardScene({
+  card,
+  live,
+  fontFamily,
+}: {
+  card: DeckCard;
+  live: boolean;
+  fontFamily: string;
+}) {
+  if (card.visual) {
+    return <WhatsappScene kind={card.visual} live={live} fontFamily={fontFamily} />;
+  }
+  return <LegacyScene slot={card.deckSlot ?? 0} live={live} fontFamily={fontFamily} />;
+}
+
+export type DeckTilt = "pos" | "neg" | "none";
+
+/** Preview estático de um módulo do baralho — uso em marketing / slides verticais. */
+export function LandingDeckScenePreview({
+  slot,
+  fontFamily,
+  tilt = "pos",
+  compact = false,
+}: {
+  slot: Slot;
+  fontFamily: string;
+  tilt?: DeckTilt;
+  /** Menor altura — evita cobrir título/corpo nos slides. */
+  compact?: boolean;
+}) {
+  const meta = LEGACY_CARDS[slot];
+  const tiltClass =
+    tilt === "neg" ? styles.wrapTiltNeg : tilt === "none" ? styles.wrapTiltNone : styles.wrapTiltPos;
+  return (
+    <div
+      className={`${styles.wrap} ${tiltClass} ${compact ? styles.wrapCompact : ""}`}
+      aria-hidden
+      style={compact ? undefined : { minHeight: 280 }}
+    >
+      <div className={styles.blob} />
+      <div className={styles.deck}>
+        <div className={`${styles.card} ${styles.cardFront}`}>
+          <div className={`${styles.cardFrame} ${meta.toneClass}`}>
+            <LegacyScene slot={slot} live fontFamily={fontFamily} />
+          </div>
+        </div>
+      </div>
+      <div className={`${styles.caption} ${meta.captionClass}`} style={{ fontFamily }}>
+        {meta.caption}
+      </div>
+    </div>
+  );
+}
+
+type LandingDeckHeroProps = {
+  fontFamily: string;
+  /** Índice controlado no catálogo PRODUCT_SHOWCASE (0…n-1). */
+  slot?: number;
+  onSlotChange?: (slot: number) => void;
+  /** Autoplay só no modo não controlado (default true). */
+  autoPlay?: boolean;
+  hideDots?: boolean;
+  hideCaption?: boolean;
+  captionOverride?: string;
+};
+
+/** Baralho: mesmos cards de /divulgacao (IA, Gov. IA, diagnóstico, portal…). */
+export function LandingDeckHero({
+  fontFamily,
+  slot: controlledSlot,
+  onSlotChange,
+  autoPlay = true,
+  hideDots = false,
+  hideCaption = false,
+  captionOverride,
+}: LandingDeckHeroProps) {
+  const controlled = controlledSlot !== undefined;
+  const [internalSlot, setInternalSlot] = useState(0);
+  const frontSlot = controlled ? controlledSlot : internalSlot;
   const [animating, setAnimating] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const prevSlotRef = useRef<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -308,7 +511,38 @@ export function LandingDeckHero({ fontFamily }: { fontFamily: string }) {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  const nextOf = useCallback((s: Slot): Slot => ((s + 1) % SLOT_COUNT) as Slot, []);
+  const setFrontSlot = useCallback(
+    (next: number | ((prev: number) => number)) => {
+      const resolve = (prev: number) => (typeof next === "function" ? next(prev) : next);
+      if (controlled) {
+        const value = resolve(controlledSlot);
+        onSlotChange?.(value);
+        return;
+      }
+      setInternalSlot((prev) => {
+        const value = resolve(prev);
+        onSlotChange?.(value);
+        return value;
+      });
+    },
+    [controlled, controlledSlot, onSlotChange],
+  );
+
+  useEffect(() => {
+    if (!controlled) return;
+    if (prevSlotRef.current === null) {
+      prevSlotRef.current = controlledSlot;
+      return;
+    }
+    if (prevSlotRef.current === controlledSlot) return;
+    prevSlotRef.current = controlledSlot;
+    if (reducedMotion) return;
+    setAnimating(true);
+    const t = window.setTimeout(() => setAnimating(false), SWAP_MS);
+    return () => window.clearTimeout(t);
+  }, [controlled, controlledSlot, reducedMotion]);
+
+  const nextOf = useCallback((s: number) => (s + 1) % SLOT_COUNT, []);
 
   const swap = useCallback(() => {
     if (reducedMotion) {
@@ -320,37 +554,36 @@ export function LandingDeckHero({ fontFamily }: { fontFamily: string }) {
       setFrontSlot((s) => nextOf(s));
     });
     window.setTimeout(() => setAnimating(false), SWAP_MS);
-  }, [reducedMotion, nextOf]);
+  }, [reducedMotion, nextOf, setFrontSlot]);
 
   useEffect(() => {
+    if (controlled || !autoPlay) return;
     const id = window.setInterval(swap, INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [swap]);
+  }, [swap, controlled, autoPlay]);
 
-  const goTo = (slot: Slot) => {
-    if (slot === frontSlot || animating) return;
-    // Avança até o alvo (no máximo 3 swaps) sem reiniciar conteúdo
-    const steps = (slot - frontSlot + SLOT_COUNT) % SLOT_COUNT;
+  const goTo = (target: number) => {
+    if (target === frontSlot || animating) return;
+    const steps = (target - frontSlot + SLOT_COUNT) % SLOT_COUNT;
     if (steps === 1) {
       swap();
       return;
     }
-    // Salto direto: liga animação e seta front (carta intermediária some no parked)
     if (reducedMotion) {
-      setFrontSlot(slot);
+      setFrontSlot(target);
       return;
     }
     setAnimating(true);
-    requestAnimationFrame(() => setFrontSlot(slot));
+    requestAnimationFrame(() => setFrontSlot(target));
     window.setTimeout(() => setAnimating(false), SWAP_MS);
   };
 
   const backSlot = useMemo(() => nextOf(frontSlot), [frontSlot, nextOf]);
-  const meta = CARDS[frontSlot];
+  const meta = DECK_CARDS[frontSlot] ?? DECK_CARDS[0];
 
-  const posClass = (slot: Slot) => {
-    if (slot === frontSlot) return styles.cardFront;
-    if (slot === backSlot) return styles.cardBack;
+  const posClass = (i: number) => {
+    if (i === frontSlot) return styles.cardFront;
+    if (i === backSlot) return styles.cardBack;
     return styles.cardParked;
   };
 
@@ -359,13 +592,13 @@ export function LandingDeckHero({ fontFamily }: { fontFamily: string }) {
       <div className={styles.blob} />
 
       <div className={`${styles.deck} ${animating ? styles.deckAnimating : ""}`}>
-        {CARDS.map((card) => {
-          const isFront = card.slot === frontSlot;
-          const isBack = card.slot === backSlot;
+        {DECK_CARDS.map((card) => {
+          const isFront = card.index === frontSlot;
+          const isBack = card.index === backSlot;
           return (
-            <div key={card.slot} className={`${styles.card} ${posClass(card.slot)}`}>
+            <div key={card.id} className={`${styles.card} ${posClass(card.index)}`}>
               <div className={`${styles.cardFrame} ${card.toneClass}`}>
-                <Scene slot={card.slot} live={isFront} fontFamily={fontFamily} />
+                <DeckCardScene card={card} live={isFront} fontFamily={fontFamily} />
               </div>
               {isBack && !animating && <span className={styles.backLabel}>{card.label}</span>}
             </div>
@@ -373,30 +606,34 @@ export function LandingDeckHero({ fontFamily }: { fontFamily: string }) {
         })}
       </div>
 
-      <div
-        className={`${styles.caption} ${meta.captionClass} ${animating ? styles.captionDim : ""}`}
-        style={{ fontFamily }}
-      >
-        {meta.caption}
-      </div>
+      {!hideCaption ? (
+        <div
+          className={`${styles.caption} ${meta.captionClass} ${animating ? styles.captionDim : ""}`}
+          style={{ fontFamily }}
+        >
+          {captionOverride ?? meta.caption}
+        </div>
+      ) : null}
 
-      <div className={styles.dots}>
-        {CARDS.map((card) => (
-          <button
-            key={card.slot}
-            type="button"
-            aria-label={`Mostrar ${card.label}`}
-            className={`${styles.dot} ${
-              frontSlot === card.slot
-                ? styles.dotActive
-                : animating && backSlot === card.slot
-                  ? styles.dotNext
-                  : ""
-            }`}
-            onClick={() => goTo(card.slot)}
-          />
-        ))}
-      </div>
+      {!hideDots ? (
+        <div className={styles.dots}>
+          {DECK_CARDS.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              aria-label={`Mostrar ${card.label}`}
+              className={`${styles.dot} ${
+                frontSlot === card.index
+                  ? styles.dotActive
+                  : animating && backSlot === card.index
+                    ? styles.dotNext
+                    : ""
+              }`}
+              onClick={() => goTo(card.index)}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -82,7 +82,7 @@ export async function fetchPendenciasPrograma(
       programaId,
       programaNome: meta.nome,
       programaSlug: slug,
-      titulo: `DSAR ${p.protocolo || `#${p.id}`}`,
+      titulo: `Pedido ${p.protocolo || `#${p.id}`}`,
       subtitulo: `${p.nome_titular} · ${p.tipo}`,
       dataReferencia: p.created_at as string,
       dataLimite: (p.data_prazo_resposta as string) || null,

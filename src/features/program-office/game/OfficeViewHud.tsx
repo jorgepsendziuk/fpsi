@@ -1,26 +1,22 @@
 "use client";
 
 import type { ReactNode } from "react";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
+import UndoIcon from "@mui/icons-material/Undo";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import { Box, Divider, IconButton, Paper, Stack, Tooltip } from "@mui/material";
+import { Box, IconButton, Paper, Stack, Tooltip } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import type { OfficeCameraApiRef } from "./officeCameraApi";
 import { useOfficeExperience } from "./OfficeExperienceContext";
 
-const ROT_STEP = 0.32;
-const PAN_STEP = 1.35;
+const PAN_STEP = 1.55;
 
 type Props = { cameraApiRef: OfficeCameraApiRef };
 
@@ -28,13 +24,11 @@ function HudIconBtn({
   title,
   onClick,
   disabled,
-  active,
   children,
 }: {
   title: string;
   onClick: () => void;
   disabled?: boolean;
-  active?: boolean;
   children: ReactNode;
 }) {
   const theme = useTheme();
@@ -47,32 +41,19 @@ function HudIconBtn({
           disabled={disabled}
           aria-label={title}
           sx={{
-            width: 42,
-            height: 42,
-            borderRadius: 2.5,
+            width: 36,
+            height: 36,
+            borderRadius: 2,
             border: "1px solid",
-            borderColor: active ? "primary.main" : alpha(theme.palette.divider, 0.35),
-            bgcolor: active
-              ? alpha(theme.palette.primary.main, 0.16)
-              : alpha(theme.palette.common.white, 0.42),
-            color: active ? "primary.dark" : alpha(theme.palette.text.primary, 0.82),
-            transition: "transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease, background-color 0.14s ease",
-            boxShadow: active
-              ? `0 0 0 1px ${alpha(theme.palette.primary.main, 0.28)}, 0 4px 12px ${alpha(theme.palette.common.black, 0.06)}`
-              : `inset 0 1px 0 ${alpha(theme.palette.common.white, 0.65)}`,
-            "& .MuiSvgIcon-root": { fontSize: 22 },
+            borderColor: alpha(theme.palette.divider, 0.4),
+            bgcolor: alpha(theme.palette.common.white, 0.5),
+            color: alpha(theme.palette.text.primary, 0.85),
+            "& .MuiSvgIcon-root": { fontSize: 20 },
             "&:hover": {
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              borderColor: alpha(theme.palette.primary.main, 0.45),
-              transform: "translateY(-2px)",
-              boxShadow: `0 6px 16px ${alpha(theme.palette.common.black, 0.1)}`,
+              bgcolor: alpha(theme.palette.primary.main, 0.12),
+              borderColor: alpha(theme.palette.primary.main, 0.4),
             },
-            "&.Mui-disabled": {
-              borderColor: alpha(theme.palette.divider, 0.2),
-              bgcolor: alpha(theme.palette.grey[200], 0.35),
-              color: alpha(theme.palette.text.disabled, 0.6),
-              boxShadow: "none",
-            },
+            "&.Mui-disabled": { opacity: 0.4 },
           }}
         >
           {children}
@@ -82,111 +63,159 @@ function HudIconBtn({
   );
 }
 
+function EdgeNavBtn({
+  title,
+  onClick,
+  placement,
+  children,
+}: {
+  title: string;
+  onClick: () => void;
+  placement: "left" | "right" | "top" | "bottom";
+  children: ReactNode;
+}) {
+  const theme = useTheme();
+  const pos =
+    placement === "left"
+      ? { left: 10, top: "50%", transform: "translateY(-50%)" }
+      : placement === "right"
+        ? { right: 10, top: "50%", transform: "translateY(-50%)" }
+        : placement === "top"
+          ? { top: 12, left: "50%", transform: "translateX(-50%)" }
+          : { bottom: 64, left: "50%", transform: "translateX(-50%)" };
+
+  return (
+    <Tooltip title={title} arrow>
+      <IconButton
+        onClick={onClick}
+        aria-label={title}
+        sx={{
+          position: "absolute",
+          zIndex: 5,
+          pointerEvents: "auto",
+          ...pos,
+          width: { xs: 44, sm: 52 },
+          height: { xs: 44, sm: 52 },
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: alpha(theme.palette.common.white, 0.55),
+          bgcolor: alpha(theme.palette.grey[900], 0.38),
+          color: theme.palette.common.white,
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          boxShadow: `0 6px 20px ${alpha(theme.palette.common.black, 0.18)}`,
+          "& .MuiSvgIcon-root": { fontSize: { xs: 28, sm: 32 } },
+          "&:hover": {
+            bgcolor: alpha(theme.palette.primary.main, 0.72),
+            borderColor: alpha(theme.palette.common.white, 0.8),
+            transform:
+              placement === "left" || placement === "right"
+                ? "translateY(-50%) scale(1.06)"
+                : "translateX(-50%) scale(1.06)",
+          },
+        }}
+      >
+        {children}
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+/**
+ * Controles de câmera: setas nas bordas (pan) + barra compacta (home / visão / zoom).
+ */
 export function OfficeViewHud({ cameraApiRef }: Props) {
   const theme = useTheme();
   const x = useOfficeExperience();
-  const room = x.room.kind;
+
+  const pan = (dx: number, dz: number) => {
+    cameraApiRef.current?.smoothPanBy(dx, dz, 420);
+  };
 
   return (
     <Box
       sx={{
         position: "absolute",
-        right: 12,
-        bottom: 12,
+        inset: 0,
         zIndex: 4,
         pointerEvents: "none",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-end",
       }}
     >
-      <Paper
-        elevation={0}
+      <EdgeNavBtn title="Mover visão para a esquerda" placement="left" onClick={() => pan(-PAN_STEP, 0)}>
+        <KeyboardArrowLeftIcon />
+      </EdgeNavBtn>
+      <EdgeNavBtn title="Mover visão para a direita" placement="right" onClick={() => pan(PAN_STEP, 0)}>
+        <KeyboardArrowRightIcon />
+      </EdgeNavBtn>
+      <EdgeNavBtn title="Mover visão para cima (corredor)" placement="top" onClick={() => pan(0, PAN_STEP)}>
+        <KeyboardArrowUpIcon />
+      </EdgeNavBtn>
+      <EdgeNavBtn title="Mover visão para baixo (mesa)" placement="bottom" onClick={() => pan(0, -PAN_STEP)}>
+        <KeyboardArrowDownIcon />
+      </EdgeNavBtn>
+
+      <Box
         sx={{
+          position: "absolute",
+          left: "50%",
+          bottom: 12,
+          transform: "translateX(-50%)",
           pointerEvents: "auto",
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 0.75,
-          px: 1.25,
-          py: 1,
-          maxWidth: { xs: "calc(100vw - 24px)", sm: 520 },
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: alpha(theme.palette.divider, 0.9),
-          backgroundColor: alpha(theme.palette.background.paper, 0.88),
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.1), 0 1px 0 rgba(255,255,255,0.6) inset",
         }}
       >
-        <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
-          <HudIconBtn title="Aproximar" onClick={() => cameraApiRef.current?.zoomIn()}>
-            <ZoomInIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Afastar" onClick={() => cameraApiRef.current?.zoomOut()}>
-            <ZoomOutIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Girar à esquerda" onClick={() => cameraApiRef.current?.rotateScene(ROT_STEP)}>
-            <RotateLeftIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Girar à direita" onClick={() => cameraApiRef.current?.rotateScene(-ROT_STEP)}>
-            <RotateRightIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Cena inicial (zoom e ângulo)" onClick={() => cameraApiRef.current?.resetView()}>
-            <RestartAltIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Visão geral (mesa + corredor)" onClick={() => cameraApiRef.current?.overviewView()}>
-            <ViewInArIcon />
-          </HudIconBtn>
-        </Stack>
-
-        <Divider orientation="vertical" flexItem sx={{ mx: 0.25, alignSelf: "stretch", borderColor: alpha(theme.palette.divider, 0.6) }} />
-
-        <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
-          <HudIconBtn title="Deslocar visão para o corredor (+Z)" onClick={() => cameraApiRef.current?.panBy(0, PAN_STEP)}>
-            <KeyboardArrowUpIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Deslocar visão para a mesa (-Z)" onClick={() => cameraApiRef.current?.panBy(0, -PAN_STEP)}>
-            <KeyboardArrowDownIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Deslocar visão para a esquerda (-X)" onClick={() => cameraApiRef.current?.panBy(-PAN_STEP, 0)}>
-            <KeyboardArrowLeftIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Deslocar visão para a direita (+X)" onClick={() => cameraApiRef.current?.panBy(PAN_STEP, 0)}>
-            <KeyboardArrowRightIcon />
-          </HudIconBtn>
-          <HudIconBtn title="Enquadrar corredor e portas" onClick={() => cameraApiRef.current?.focusAnnex()}>
-            <CenterFocusStrongIcon />
-          </HudIconBtn>
-        </Stack>
-
-        <Divider orientation="vertical" flexItem sx={{ mx: 0.25, alignSelf: "stretch", borderColor: alpha(theme.palette.divider, 0.6) }} />
-
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <HudIconBtn
-            title="Escritório principal"
-            active={room === "main"}
-            disabled={room === "main" || room === "sector"}
-            onClick={() => {
-              if (room === "corridor") x.exitCorridorToMain();
-            }}
-          >
-            <AccountBalanceIcon />
-          </HudIconBtn>
-          <HudIconBtn
-            title="Corredor e salas"
-            active={room === "corridor"}
-            disabled={room === "corridor"}
-            onClick={() => {
-              if (room === "main") x.enterCorridor();
-              if (room === "sector") x.backFromSectorToCorridor();
-            }}
-          >
-            <MeetingRoomIcon />
-          </HudIconBtn>
-        </Stack>
-      </Paper>
+        <Paper
+          elevation={0}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            px: 1,
+            py: 0.65,
+            borderRadius: 999,
+            border: "1px solid",
+            borderColor: alpha(theme.palette.divider, 0.85),
+            backgroundColor: alpha(theme.palette.background.paper, 0.9),
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.12)",
+          }}
+        >
+          <Stack direction="row" spacing={0.35} alignItems="center">
+            {x.canRestoreView ? (
+              <HudIconBtn
+                title="Voltar à visão anterior"
+                onClick={() => {
+                  if (x.focusPanel) x.closeFocusPanel();
+                  else x.restorePreviousView();
+                }}
+              >
+                <UndoIcon />
+              </HudIconBtn>
+            ) : null}
+            <HudIconBtn
+              title="Home — escritório principal e visão inicial"
+              onClick={() => {
+                x.goHomeMain();
+                cameraApiRef.current?.resetView();
+              }}
+            >
+              <HomeOutlinedIcon />
+            </HudIconBtn>
+            <HudIconBtn title="Visão inicial (zoom e ângulo)" onClick={() => cameraApiRef.current?.resetView()}>
+              <RestartAltIcon />
+            </HudIconBtn>
+            <HudIconBtn title="Visão geral (mesa + corredor)" onClick={() => cameraApiRef.current?.overviewView()}>
+              <ViewInArIcon />
+            </HudIconBtn>
+            <HudIconBtn title="Aproximar" onClick={() => cameraApiRef.current?.zoomIn()}>
+              <ZoomInIcon />
+            </HudIconBtn>
+            <HudIconBtn title="Afastar" onClick={() => cameraApiRef.current?.zoomOut()}>
+              <ZoomOutIcon />
+            </HudIconBtn>
+          </Stack>
+        </Paper>
+      </Box>
     </Box>
   );
 }

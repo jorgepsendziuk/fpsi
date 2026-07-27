@@ -10,8 +10,9 @@ export function PersonHoverCard({ payload }: { payload: OfficePersonSheetPayload
     <div
       className={rpgPixelFont.className}
       style={{
-        minWidth: 210,
-        maxWidth: 300,
+        width: 280,
+        maxWidth: 280,
+        boxSizing: "border-box",
         padding: "12px 14px",
         background: "linear-gradient(180deg, #ebe4d8 0%, #ded8cf 55%, #d2c9bc 100%)",
         color: "#1a120c",

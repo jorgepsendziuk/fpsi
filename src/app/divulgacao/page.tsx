@@ -169,9 +169,39 @@ export default function DivulgacaoPage() {
         <Typography variant="h5" component="h1" sx={{ fontWeight: 800, mb: 1 }}>
           Projeto pessoal — textos para compartilhar
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
           Rascunhos em tom neutro, sem promessa de produto. Use no WhatsApp (grupos de privacidade, estudantes) ou no LinkedIn com quem você já tem vínculo. Ajuste o link antes de enviar.
         </Typography>
+
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            mb: 4,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1.5,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              Slides verticais (WhatsApp / Status)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Sequência 9:16 com autoplay (UI limpa para print/vídeo). Inclui Governança de IA, assistente, portal, ROPA…
+            </Typography>
+          </Box>
+          <Chip
+            component={LinkNext}
+            href="/divulgacao/slides"
+            clickable
+            color="primary"
+            label="Abrir sequência"
+            sx={{ fontWeight: 700 }}
+          />
+        </Paper>
 
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
           O que o sistema tem hoje

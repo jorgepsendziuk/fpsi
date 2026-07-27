@@ -32,3 +32,14 @@ export function pantsColorFromSeed(seed: string): string {
   }
   return PANTS_PALETTE[Math.abs(h) % PANTS_PALETTE.length]!;
 }
+
+const CHAIR_PALETTE = ["#5c6bc0", "#26a69a", "#42a5f5", "#7e57c2", "#66bb6a", "#29b6f6", "#8d6e63"];
+
+export function chairColorFromSeed(seed: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return CHAIR_PALETTE[Math.abs(h) % CHAIR_PALETTE.length]!;
+}

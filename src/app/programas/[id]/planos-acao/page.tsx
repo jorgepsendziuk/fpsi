@@ -120,7 +120,7 @@ export default function PlanosAcaoPage() {
               </Typography>
             ) : null}
             <Typography variant="body2" component="span" display="block" sx={{ mt: programaOrganizacao ? 0.5 : 0.25 }}>
-              Acompanhamento resumido das medidas por diagnóstico e controle
+              Medidas do diagnóstico agrupadas por controle — expanda os blocos abaixo para ver prazos, responsáveis e status.
             </Typography>
             <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mt: 1.5 }} />
           </>
@@ -131,8 +131,7 @@ export default function PlanosAcaoPage() {
       {isDemoMode && (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            <strong>Modo Demonstração:</strong> Este é um ambiente de demonstração. 
-            O plano de trabalho exibido é fictício e as operações são simuladas.
+            <strong>Modo demonstração:</strong> os números e medidas vêm do programa demo no banco (mesmo fluxo do ambiente real).
           </Typography>
         </Alert>
       )}

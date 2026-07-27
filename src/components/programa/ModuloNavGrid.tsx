@@ -33,17 +33,21 @@ type Props = {
   compact?: boolean;
   /** Grade mais apertada (mais colunas, menos altura) para home single-face. */
   dense?: boolean;
+  /** Largura total: tiles legíveis em 2–4 colunas. */
+  layout?: "default" | "dense" | "wide";
 };
 
 function ModuloTile({
   section,
   idOrSlug,
   dense,
+  wide,
   compact,
 }: {
   section: ModuloNavSection;
   idOrSlug: string;
   dense?: boolean;
+  wide?: boolean;
   compact?: boolean;
 }) {
   const theme = useTheme();
@@ -54,16 +58,16 @@ function ModuloTile({
     <Card
       sx={{
         height: "100%",
-        border: `1px solid ${alpha(section.color, featured ? 0.42 : dense ? 0.2 : 0.25)}`,
-        borderRadius: dense ? 1.5 : 2,
+        border: `1px solid ${alpha(section.color, featured ? 0.42 : dense ? 0.2 : 0.22)}`,
+        borderRadius: wide ? 1 : dense ? 1.5 : 2,
         transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease",
         bgcolor: featured
           ? alpha(section.color, theme.palette.mode === "dark" ? 0.12 : 0.06)
           : theme.palette.background.paper,
         boxShadow: featured ? `0 4px 14px ${alpha(section.color, 0.14)}` : undefined,
         "&:hover": {
-          transform: dense ? "none" : "translateY(-2px)",
-          boxShadow: dense ? 1 : 3,
+          transform: dense ? "none" : "translateY(-1px)",
+          boxShadow: dense ? 1 : 2,
           borderColor: alpha(section.color, 0.45),
         },
       }}
@@ -75,21 +79,21 @@ function ModuloTile({
       >
         <CardContent
           sx={{
-            p: dense ? 1 : tight ? 1.5 : 2,
-            "&:last-child": { pb: dense ? 1 : tight ? 1.5 : 2 },
+            p: dense ? 1 : wide ? 1.5 : tight ? 1.5 : 2,
+            "&:last-child": { pb: dense ? 1 : wide ? 1.5 : tight ? 1.5 : 2 },
           }}
         >
           <Box
             sx={{
               display: "flex",
-              alignItems: dense ? "center" : "flex-start",
-              gap: dense ? 1 : 1.5,
+              alignItems: wide ? "flex-start" : dense ? "center" : "flex-start",
+              gap: wide ? 1.25 : dense ? 1 : 1.5,
             }}
           >
             <Box
               sx={{
-                width: dense ? 32 : 44,
-                height: dense ? 32 : 44,
+                width: dense ? 32 : wide ? 44 : 44,
+                height: dense ? 32 : wide ? 44 : 44,
                 flexShrink: 0,
                 borderRadius: dense ? 1 : 1.5,
                 background: section.gradient,
@@ -97,7 +101,7 @@ function ModuloTile({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                "& .MuiSvgIcon-root": { fontSize: dense ? 18 : 24 },
+                "& .MuiSvgIcon-root": { fontSize: dense ? 18 : wide ? 22 : 24 },
               }}
             >
               {section.icon}
@@ -107,12 +111,12 @@ function ModuloTile({
                 variant="subtitle2"
                 fontWeight={700}
                 sx={{
-                  lineHeight: 1.25,
-                  fontSize: dense ? "0.78rem" : undefined,
-                  display: "-webkit-box",
-                  WebkitLineClamp: dense ? 2 : 3,
+                  lineHeight: 1.35,
+                  fontSize: dense ? "0.8125rem" : wide ? "0.9375rem" : undefined,
+                  display: dense ? "-webkit-box" : "block",
+                  WebkitLineClamp: dense ? 2 : wide ? 2 : 3,
                   WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
+                  overflow: dense ? "hidden" : "visible",
                 }}
               >
                 {section.title}
@@ -122,24 +126,36 @@ function ModuloTile({
                   size="small"
                   label={section.badge}
                   sx={{
-                    mt: 0.4,
-                    height: dense ? 18 : 22,
-                    fontSize: dense ? "0.62rem" : "0.68rem",
+                    mt: 0.35,
+                    height: dense ? 20 : 24,
+                    fontSize: "0.75rem",
                     fontWeight: 700,
                     bgcolor: alpha(section.color, 0.14),
                     color: section.color,
                   }}
                 />
               )}
-              {!tight && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+              {(wide || !tight) && section.description && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    display: "-webkit-box",
+                    mt: 0.45,
+                    WebkitLineClamp: wide ? 2 : 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    lineHeight: 1.4,
+                    fontSize: wide ? "0.8125rem" : undefined,
+                  }}
+                >
                   {section.description}
                 </Typography>
               )}
             </Box>
             {!dense && (
               <ArrowForwardIcon
-                sx={{ fontSize: 18, color: alpha(theme.palette.text.primary, 0.4), mt: 0.5 }}
+                sx={{ fontSize: 18, color: alpha(theme.palette.text.primary, 0.35), mt: 0.25, flexShrink: 0 }}
               />
             )}
           </Box>
@@ -149,8 +165,10 @@ function ModuloTile({
   );
 }
 
-export function ModuloNavGrid({ sections, idOrSlug, compact, dense }: Props) {
-  if (dense) {
+export function ModuloNavGrid({ sections, idOrSlug, compact, dense, layout }: Props) {
+  const mode = layout ?? (dense ? "dense" : "default");
+
+  if (mode === "dense") {
     return (
       <Box
         sx={{
@@ -165,6 +183,28 @@ export function ModuloNavGrid({ sections, idOrSlug, compact, dense }: Props) {
       >
         {sections.map((section) => (
           <ModuloTile key={section.key} section={section} idOrSlug={idOrSlug} dense />
+        ))}
+      </Box>
+    );
+  }
+
+  if (mode === "wide") {
+    return (
+      <Box
+        sx={{
+          display: "grid",
+          gap: { xs: 1, md: 1.25 },
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(4, 1fr)",
+            xl: "repeat(5, 1fr)",
+          },
+        }}
+      >
+        {sections.map((section) => (
+          <ModuloTile key={section.key} section={section} idOrSlug={idOrSlug} wide />
         ))}
       </Box>
     );

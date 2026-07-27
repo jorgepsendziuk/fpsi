@@ -1,7 +1,8 @@
 "use client";
 
 import type { OfficePersonSheetPayload } from "../OfficeExperienceContext";
-import { pantsColorFromSeed, shirtColorFromSeed } from "./minifigColors";
+import { HeadTagLabel } from "./HeadTagLabel";
+import { pantsColorFromSeed, shirtColorFromSeed, chairColorFromSeed } from "./minifigColors";
 import { PlumbobIndicator } from "./PlumbobIndicator";
 
 type Props = {
@@ -15,6 +16,8 @@ type Props = {
   /** Cor do indicador (futuro: avisos = amarelo/vermelho). */
   indicatorColor?: string;
   indicatorEmissive?: string;
+  /** Etiqueta acima da cabeça (nome curto ou sigla). */
+  headTag?: string;
 };
 
 const SKIN = "#f3c08c";
@@ -32,10 +35,12 @@ export function SeatedPerson({
   colorSeed,
   indicatorColor,
   indicatorEmissive,
+  headTag,
 }: Props) {
   const seed = colorSeed ?? "fig";
   const shirt = shirtColorFromSeed(variant === "officeChefe" ? `chefe:${seed}` : seed);
   const pants = pantsColorFromSeed(`${seed}:p`);
+  const chair = chairColorFromSeed(`${seed}:chair`);
   const plumbob =
     indicatorColor != null
       ? { color: indicatorColor, emissive: indicatorEmissive ?? indicatorColor }
@@ -47,7 +52,7 @@ export function SeatedPerson({
     <group rotation={[0, facingY, 0]}>
       <mesh position={[0, 0.16, -0.14]} castShadow>
         <boxGeometry args={[0.36, 0.2, 0.3]} />
-        <meshStandardMaterial color="#4e3423" flatShading roughness={0.9} />
+        <meshStandardMaterial color={chair} flatShading roughness={0.82} emissive={chair} emissiveIntensity={0.08} />
       </mesh>
 
       <mesh position={[-0.06, 0.22, 0.02]} castShadow>
@@ -111,6 +116,8 @@ export function SeatedPerson({
         <boxGeometry args={[0.028, 0.028, 0.01]} />
         <meshStandardMaterial color="#1a1a1a" flatShading />
       </mesh>
+
+      {headTag ? <HeadTagLabel text={headTag} /> : null}
 
       <PlumbobIndicator
         position={[0, 1.06, 0.06]}

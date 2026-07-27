@@ -24,15 +24,15 @@ As medidas **0.1 a 0.8** estão alinhadas à página **Programa → Estrutura de
 | 0.6 | Comitê de SI | `programa_grupo_governanca` | ≥1 membro em `comite_seguranca_informacao` | média | Aba **Comitê SI**. |
 | 0.7 | Comitê de proteção de dados | `programa_grupo_governanca` | ≥1 membro em `comite_protecao_dados` | média | Aba **Comitê priva**. |
 | 0.8 | ETIR | `programa_grupo_governanca` | ≥1 membro em `etir` | média | Aba **ETIR**. |
-| 0.9 | PGSI | — | — | baixa | **Sem modelo** equivalente no FPSI (manual). |
-| 0.10 | PGP | — | — | baixa | **Sem modelo** equivalente no FPSI (manual). |
+| 0.9 | PGSI | `politica_programa` | `tipo_politica = politica_pgsi` e seções com texto | média | Módulo **Políticas** — Programa de Governança em SI. |
+| 0.10 | PGP | `politica_programa` | `tipo_politica = politica_pgp` e seções com texto | média | Módulo **Políticas** — Programa de Governança em Privacidade. |
 | 0.11 | POSIN | `politica_programa` | `tipo_politica = politica_seguranca_informacao` e seções com texto | média | Módulo **Políticas** do programa. |
 | 0.12 | Política de Proteção de Dados Pessoais | `politica_programa` | `tipo_politica = politica_protecao_dados_pessoais` e seções com texto | média | Idem. |
 
 ## Próximas fases (iteração)
 
 - **Fase B:** incluir medidas cujo atendimento possa ser inferido de **inventário**, **ROPA**, **registro de incidentes**, etc., quando esses módulos estiverem estáveis.
-- **Fase C:** modelos ou integrações para **PGSI/PGP** (0.9–0.10), ou tabela administrável `medida_fonte` se o mapeamento precisar mudar sem deploy.
+- **Fase C (concluída):** modelos **PGSI/PGP** (`politica_pgsi` / `politica_pgp`) com evidência assistida em 0.9–0.10; publicação/versionamento e docs do portal no mesmo módulo.
 
 ## Referências
 

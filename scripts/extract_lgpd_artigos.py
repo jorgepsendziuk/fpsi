@@ -26,6 +26,15 @@ ROMAN_IN_CAP = re.compile(r"CAPÍTULO\s+([IVXLCDM]+)", re.I)
 ROMAN_IN_SEC = re.compile(r"Seção\s+([IVXLCDM]+)", re.I)
 
 
+def _normalize_paragraph_text(raw: str) -> str:
+    """Colapsa <br> e espaços do Planalto numa única linha por <p>."""
+    text = html_module.unescape(raw)
+    text = re.sub(r"\s+", " ", text).strip()
+    if text and not re.fullmatch(r"[.\s\u00a0]+", text):
+        return text
+    return ""
+
+
 def _clean_line(s: str) -> str:
     s = html_module.unescape(s)
     s = re.sub(r"\s+", " ", s).strip()
@@ -109,11 +118,8 @@ class ArtigoParagraphCollector(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "p" and self._in_artigo:
-            raw = "".join(self._buf)
-            text = html_module.unescape(raw)
-            text = re.sub(r"[ \t\r\f\v]+", " ", text)
-            text = re.sub(r"\n+", "\n", text).strip()
-            if text and not re.fullmatch(r"[.\s\u00a0]+", text):
+            text = _normalize_paragraph_text("".join(self._buf))
+            if text:
                 self.blocks.append(text)
             self._in_artigo = False
 
@@ -140,11 +146,8 @@ class AllParagraphsParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "p" and self._in_p:
-            raw = "".join(self._buf)
-            text = html_module.unescape(raw)
-            text = re.sub(r"[ \t\r\f\v]+", " ", text)
-            text = re.sub(r"\n+", "\n", text).strip()
-            if text and not re.fullmatch(r"[.\s\u00a0]+", text):
+            text = _normalize_paragraph_text("".join(self._buf))
+            if text:
                 self.paragraphs.append(text)
             self._in_p = False
 

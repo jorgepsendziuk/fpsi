@@ -1,0 +1,81 @@
+{
+  "secoes": [
+    {
+      "id": 0,
+      "secao": "Termo de Uso",
+      "titulo": "Introdução",
+      "descricao": "Modelo baseado no Guia/Template PPSI de Elaboração de Termo de Uso e Política de Privacidade (SGD/MGI). Adeque ao serviço concreto; remova orientações em vermelho antes da publicação. Não dispensa análise jurídica.",
+      "texto": ""
+    },
+    {
+      "id": 1,
+      "secao": "Aceitação do Termo de Uso",
+      "titulo": "Contrato de adesão",
+      "descricao": "Ciência / aceitação das condições de uso.",
+      "texto": "<p>O presente Termo de Uso constitui contrato de adesão entre o usuário e o fornecedor deste serviço, o(a) <span style=\"background-color: yellow;\">[Órgão ou entidade]</span>, com sede em <span style=\"background-color: yellow;\">[Endereço]</span>.</p><p>O uso do serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span> está condicionado à ciência / aceitação deste Termo e das políticas associadas, em especial a Política de Privacidade.</p><p>Ao utilizar o serviço, o usuário manifesta estar ciente e de acordo com o conteúdo deste Termo e vincula-se às suas condições.</p><p style=\"color: #dc0000;\"><em>[Oriente-se pelo Guia PPSI §1.1 sobre a escolha entre “aceitação”, “concordância” ou “ciência”, conforme o serviço.]</em></p>"
+    },
+    {
+      "id": 2,
+      "secao": "Definições",
+      "titulo": "Glossário",
+      "descricao": "Termos usados neste documento.",
+      "texto": "<p>Para os fins deste Termo de Uso, aplicam-se as seguintes definições:</p><p><strong>Agente público:</strong> todo aquele que exerce, ainda que transitoriamente ou sem remuneração, por eleição, nomeação, designação, contratação ou qualquer outra forma de investidura ou vínculo, mandato, cargo, emprego ou função nos órgãos e entidades da Administração Pública, direta e indireta.</p><p><strong>Agentes de Estado:</strong> órgãos e entidades da Administração pública e seus agentes públicos.</p><p><strong>Códigos maliciosos:</strong> programa de computador, ou parte dele, construído com a intenção de provocar danos, obter informações indevidas ou realizar outras ações ilícitas.</p><p><strong>Sítios e aplicativos:</strong> meios digitais pelos quais o usuário acessa os serviços e conteúdos disponibilizados.</p><p><strong>Terceiro:</strong> pessoa ou entidade que não participa diretamente do vínculo principal entre usuário e fornecedor do serviço.</p><p><strong>Internet:</strong> sistema mundial de protocolos lógicos para uso público e irrestrito, com finalidade de possibilitar a comunicação de dados entre terminais.</p><p><strong>Usuário:</strong> pessoa natural que utiliza o serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span>.</p><p style=\"color: #dc0000;\"><em>[Inclua outros termos específicos do serviço, se necessário. Definições técnicas: glossário do GSI/PR.]</em></p>"
+    },
+    {
+      "id": 3,
+      "secao": "Arcabouço Legal",
+      "titulo": "Normas aplicáveis",
+      "descricao": "Leis e atos que regem o serviço.",
+      "texto": "<p>O arcabouço legal aplicável ao serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span> compreende, entre outros:</p><p><strong>Lei nº 12.965/2014</strong> — Marco Civil da Internet;</p><p><strong>Lei nº 12.527/2011</strong> — Lei de Acesso à Informação;</p><p><strong>Lei nº 13.460/2017</strong> — direitos do usuário de serviços públicos;</p><p><strong>Lei nº 13.709/2018</strong> — Lei Geral de Proteção de Dados Pessoais (LGPD);</p><p><strong>Lei nº 13.444/2017</strong> — Identificação Civil Nacional (quando aplicável);</p><p><strong>Decreto nº 8.777/2016</strong> — Política de Dados Abertos (quando aplicável);</p><p><strong>Decreto nº 7.724/2012</strong> — regulamentação da LAI;</p><p><strong>Decreto nº 10.046/2019</strong> — governança no compartilhamento de dados (quando aplicável);</p><p><strong>Decreto nº 9.637/2018</strong> — Política Nacional de Segurança da Informação;</p><p><strong>Lei nº 12.737/2012</strong> — tipificação de delitos informáticos;</p><p>Normas complementares do GSI/PR relativas à gestão de segurança da informação.</p><p style=\"color: #dc0000;\"><em>[Inclua portarias, resoluções e normativos específicos do órgão e do serviço.]</em></p>"
+    },
+    {
+      "id": 4,
+      "secao": "Descrição do Serviço",
+      "titulo": "O que é oferecido",
+      "descricao": "Objetivo, função e finalidade do serviço.",
+      "texto": "<p>Este Termo regula o uso do serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span>, disponibilizado por <span style=\"background-color: yellow;\">[Órgão ou entidade]</span>.</p><p style=\"color: #dc0000;\"><em>[Descreva objetivo, público-alvo, principais funcionalidades, canais de acesso (web/app) e o que o serviço não cobre.]</em></p><p>Informações de contato do responsável pelo serviço: e-mail <span style=\"background-color: yellow;\">[E-mail de atendimento]</span>, telefone <span style=\"background-color: yellow;\">[Telefone de atendimento]</span>, site <span style=\"background-color: yellow;\">[Site institucional]</span>.</p>"
+    },
+    {
+      "id": 5,
+      "secao": "Direitos do Usuário",
+      "titulo": "Direitos básicos",
+      "descricao": "Conforme Lei nº 13.460/2017 e demais normas.",
+      "texto": "<p>De acordo com a Lei nº 13.460/2017, são direitos básicos do usuário, entre outros:</p><p>I — participação no acompanhamento da prestação e na avaliação dos serviços;</p><p>II — obtenção e utilização dos serviços com liberdade de escolha entre os meios oferecidos e sem discriminação;</p><p>III — acesso e obtenção de informações relativas à sua pessoa constantes de registros ou bancos de dados, observado o disposto na legislação;</p><p>IV — proteção de suas informações pessoais, nos termos da Lei nº 12.527/2011 e da LGPD;</p><p>V — atuação integrada e sistêmica na expedição de atestados, certidões e documentos comprobatórios de regularidade, quando cabível;</p><p>VI — obtenção de informações precisas e de fácil acesso sobre horário de funcionamento, serviços prestados, localização, canais de manifestação, tramitação de processos em que figure como interessado e valores de taxas/tarifas, quando houver.</p><p style=\"color: #dc0000;\"><em>[Acrescente direitos específicos do serviço ou de normativos setoriais.]</em></p>"
+    },
+    {
+      "id": 6,
+      "secao": "Responsabilidades do Usuário",
+      "titulo": "Obrigações e cuidados",
+      "descricao": "Deveres do usuário na utilização do serviço.",
+      "texto": "<p>O usuário é responsável pela precisão e veracidade dos dados informados e reconhece que inconsistências podem impossibilitar o uso do serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span>.</p><p>Durante a utilização, compromete-se a fornecer somente informações próprias ou de terceiros com a devida autorização, quando exigido.</p><p>Credenciais (login e senha) são pessoais e intransferíveis; o usuário deve manter o sigilo e comunicar uso indevido.</p><p>O usuário deve manter seus dados atualizados e responde por omissões ou erros nas informações prestadas.</p><p>O usuário responde por danos decorrentes do uso indevido do serviço ou de violação deste Termo e da legislação aplicável.</p><p>O(a) <span style=\"background-color: yellow;\">[Órgão ou entidade]</span> não se responsabiliza, em especial, por:</p><p>I — equipamento do usuário infectado ou invadido;</p><p>II — equipamento avariado no momento do uso;</p><p>III — falhas de proteção do computador ou das informações no ambiente do usuário;</p><p>IV — abuso de uso, monitoração clandestina ou vulnerabilidades no perímetro do usuário;</p><p>V — instabilidades nos sistemas do usuário.</p><p>Em nenhuma hipótese a organização será responsável pela instalação, no equipamento do usuário ou de terceiros, de códigos maliciosos decorrentes da navegação na Internet pelo próprio usuário.</p>"
+    },
+    {
+      "id": 7,
+      "secao": "Responsabilidade da Administração Pública",
+      "titulo": "Compromissos com os dados e o serviço",
+      "descricao": "Deveres do órgão fornecedor.",
+      "texto": "<p>O(a) <span style=\"background-color: yellow;\">[Órgão ou entidade]</span> compromete-se a tratar dados pessoais em conformidade com a LGPD e demais normas aplicáveis, adotando medidas de segurança compatíveis com o risco.</p><p>Poderá compartilhar informações quando houver obrigação legal ou ordem judicial, nos limites necessários.</p><p>Esforçar-se-á para manter o serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span> disponível, sem garantir disponibilidade ininterrupta, podendo realizar manutenções e melhorias.</p><p style=\"color: #dc0000;\"><em>[Detalhe SLAs, canais de suporte e limites específicos do serviço.]</em></p>"
+    },
+    {
+      "id": 8,
+      "secao": "Privacidade e proteção de dados",
+      "titulo": "Remissão à Política de Privacidade",
+      "descricao": "Tratamento de dados pessoais.",
+      "texto": "<p>O tratamento de dados pessoais no âmbito do serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span> observa a Política de Privacidade publicada no portal / sítio do(a) <span style=\"background-color: yellow;\">[Órgão ou entidade]</span>.</p><p>O usuário pode exercer direitos de titular pelos canais indicados na Política de Privacidade e no Portal do Titular, quando disponível.</p><p>Encarregado (DPO), quando indicado: <span style=\"background-color: yellow;\">[Nome do Encarregado]</span> — <span style=\"background-color: yellow;\">[E-mail do Encarregado]</span>.</p><p style=\"color: #dc0000;\"><em>[Não duplique aqui o texto integral da Política de Privacidade; mantenha a remissão e publique o documento separado no módulo Políticas.]</em></p>"
+    },
+    {
+      "id": 9,
+      "secao": "Alterações do Termo",
+      "titulo": "Atualizações",
+      "descricao": "Como o Termo pode ser modificado.",
+      "texto": "<p>O(a) <span style=\"background-color: yellow;\">[Órgão ou entidade]</span> poderá atualizar este Termo para refletir mudanças legais, técnicas ou do serviço <span style=\"background-color: yellow;\">[Nome do Serviço]</span>.</p><p>A versão vigente será a publicada no portal / sítio oficial, com indicação da data de vigência.</p><p>O uso continuado do serviço após a publicação da nova versão implica ciência das alterações, salvo disposição legal em contrário.</p>"
+    },
+    {
+      "id": 10,
+      "secao": "Disposições finais",
+      "titulo": "Vigência e foro",
+      "descricao": "Entrada em vigor e foro.",
+      "texto": "<p>Este Termo entra em vigor na data de sua publicação.</p><p>Os casos omissos serão resolvidos pela unidade responsável pelo serviço, observadas a legislação e as normas internas.</p><p>Fica eleito o foro da sede do(a) <span style=\"background-color: yellow;\">[Órgão ou entidade]</span> para dirimir controvérsias, com renúncia a qualquer outro, por mais privilegiado que seja, quando aplicável.</p><p style=\"color: #dc0000;\"><em>[Ajuste o foro conforme a natureza jurídica do órgão e orientação jurídica.]</em></p>"
+    }
+  ]
+}

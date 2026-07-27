@@ -20,7 +20,7 @@ type ProviderCtx = {
 
 const Ctx = createContext<ProviderCtx | null>(null);
 
-/** Dentro do Canvas: cursores grab / pointer / grabbing conforme hover e orbit. */
+/** Dentro do Canvas: cursores nativos (mão / arrastar). */
 export function OfficePointerProvider({ children }: { children: ReactNode }) {
   const { gl } = useThree();
   const hoverRef = useRef(0);

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Container,
@@ -14,27 +14,25 @@ import {
   alpha,
   Stack,
   Tooltip,
-  IconButton
+  IconButton,
+  Chip,
 } from "@mui/material";
 import {
   PictureAsPdf as PictureAsPdfIcon,
   ArrowBack as ArrowBackIcon,
-  Backup as BackupIcon,
-  Lock as LockIcon,
-  Shield as ShieldIcon,
-  Group as GroupIcon,
-  BugReport as BugReportIcon,
-  Inventory as InventoryIcon,
-  History as HistoryIcon,
   PrivacyTip as PrivacyTipIcon,
-  Cloud as CloudIcon,
-  Assignment as AssignmentIcon
 } from "@mui/icons-material";
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { loadPoliticaSectionsForPdf } from "../../../../lib/utils/loadPoliticaSectionsForPdf";
+import {
+  POLITICAS_CATALOG,
+  mergePoliticaCatalogWithModelos,
+  type PoliticaCatalogMeta,
+} from "@/lib/politicas/politicasCatalog";
+import { PoliticaTipoIcon } from "@/lib/politicas/PoliticaTipoIcon";
 
 interface PoliticaInfo {
   id: string;
@@ -42,80 +40,15 @@ interface PoliticaInfo {
   descricao: string;
   icon: React.ReactNode;
   cor: string;
+  grupo: PoliticaCatalogMeta["grupo"];
 }
 
-const POLITICAS_DISPONIVEIS: PoliticaInfo[] = [
-  {
-    id: "politica_protecao_dados_pessoais",
-    nome: "Política de Proteção de Dados Pessoais",
-    descricao: "Diretrizes para proteção de dados pessoais conforme LGPD",
-    icon: <PrivacyTipIcon />,
-    cor: "#2196F3"
-  },
-  {
-    id: "politica_backup",
-    nome: "Política de Backup",
-    descricao: "Procedimentos para backup e recuperação de dados",
-    icon: <BackupIcon />,
-    cor: "#4CAF50"
-  },
-  {
-    id: "politica_controle_acesso",
-    nome: "Política de Controle de Acesso", 
-    descricao: "Gestão de credenciais e privilégios de acesso",
-    icon: <LockIcon />,
-    cor: "#FF9800"
-  },
-  {
-    id: "politica_defesas_malware",
-    nome: "Política de Defesas contra Malware",
-    descricao: "Proteção contra softwares maliciosos",
-    icon: <ShieldIcon />,
-    cor: "#F44336"
-  },
-  {
-    id: "politica_desenvolvimento_pessoas",
-    nome: "Política de Desenvolvimento de Pessoas",
-    descricao: "Treinamento e conscientização em segurança",
-    icon: <GroupIcon />,
-    cor: "#9C27B0"
-  },
-  {
-    id: "politica_gerenciamento_vulnerabilidades",
-    nome: "Política de Gerenciamento de Vulnerabilidades",
-    descricao: "Identificação e correção de vulnerabilidades",
-    icon: <BugReportIcon />,
-    cor: "#E91E63"
-  },
-  {
-    id: "politica_gestao_ativos",
-    nome: "Política de Gestão de Ativos",
-    descricao: "Inventário e gestão de ativos de TI",
-    icon: <InventoryIcon />,
-    cor: "#607D8B"
-  },
-  {
-    id: "politica_logs_auditoria",
-    nome: "Política de Logs e Auditoria",
-    descricao: "Registros de eventos e trilhas de auditoria",
-    icon: <HistoryIcon />,
-    cor: "#795548"
-  },
-  {
-    id: "politica_provedor_servicos",
-    nome: "Política de Provedor de Serviços",
-    descricao: "Gestão de fornecedores e prestadores de serviços",
-    icon: <CloudIcon />,
-    cor: "#00BCD4"
-  },
-  {
-    id: "politica_seguranca_informacao",
-    nome: "Política de Segurança da Informação",
-    descricao: "Diretrizes gerais de segurança da informação",
-    icon: <AssignmentIcon />,
-    cor: "#3F51B5"
-  }
-];
+const GRUPO_LABEL: Record<PoliticaCatalogMeta["grupo"], string> = {
+  governanca: "Governança (PGSI/PGP)",
+  institucional: "Institucional",
+  si: "Segurança da Informação",
+  portal: "Documentos do portal",
+};
 
 export default function ProgramaPoliticasPage() {
   const params = useParams();
@@ -127,6 +60,7 @@ export default function ProgramaPoliticasPage() {
   const [loading, setLoading] = useState(true);
   /** Metadados por tipo quando já existe registro em politica_programa */
   const [politicasResumo, setPoliticasResumo] = useState<Map<string, dataService.PoliticaProgramaResumo> | null>(null);
+  const [catalogo, setCatalogo] = useState<PoliticaInfo[]>([]);
   const [pdfLoadingId, setPdfLoadingId] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
@@ -135,15 +69,31 @@ export default function ProgramaPoliticasPage() {
     let cancelled = false;
     const load = async () => {
       try {
-        const [programaData, resumoRows] = await Promise.all([
+        const [programaData, resumoRows, modelos] = await Promise.all([
           dataService.fetchProgramaById(programaId),
           dataService.fetchPoliticaProgramaResumo(programaId),
+          dataService.fetchPoliticaModelosCatalogo(),
         ]);
         if (cancelled) return;
         setPrograma(programaData);
         const m = new Map<string, dataService.PoliticaProgramaResumo>();
         resumoRows.forEach((r) => m.set(r.tipo_politica, r));
         setPoliticasResumo(m);
+
+        const merged =
+          modelos.length > 0
+            ? mergePoliticaCatalogWithModelos(modelos)
+            : POLITICAS_CATALOG.map((p, i) => ({ ...p, ordem: i }));
+        setCatalogo(
+          merged.map((p) => ({
+            id: p.id,
+            nome: p.nome,
+            descricao: p.descricao,
+            cor: p.cor,
+            grupo: p.grupo,
+            icon: <PoliticaTipoIcon iconKey={p.iconKey} />,
+          }))
+        );
       } catch (error) {
         console.error("Erro ao carregar programa:", error);
       } finally {
@@ -159,6 +109,13 @@ export default function ProgramaPoliticasPage() {
   const handlePoliticaClick = (politica: PoliticaInfo) => {
     router.push(`/programas/${idOrSlug}/politicas/${politica.id}`);
   };
+
+  const gruposOrdenados = useMemo(() => {
+    const order: PoliticaCatalogMeta["grupo"][] = ["governanca", "institucional", "si", "portal"];
+    return order
+      .map((g) => ({ grupo: g, itens: catalogo.filter((p) => p.grupo === g) }))
+      .filter((b) => b.itens.length > 0);
+  }, [catalogo]);
 
   const handleVoltar = () => {
     router.push(`/programas/${idOrSlug}`);
@@ -282,201 +239,218 @@ export default function ProgramaPoliticasPage() {
           </Typography>
         )}
 
-        {/* Grid de políticas e documentos (mesmo catálogo / editor) */}
-        <Grid container spacing={3}>
-          {POLITICAS_DISPONIVEIS.map((politica) => {
-            const row = politicasResumo?.get(politica.id);
-            const implementada = !!row;
-            const dataImpl = row?.updated_at ? formatDataPt(row.updated_at) : null;
-            const vig = row?.inicio_vigencia ? formatDataPt(row.inicio_vigencia) : null;
-            const prazo = row?.prazo_revisao ? formatDataPt(row.prazo_revisao) : null;
-            const revisaoAtrasada = (() => {
-              const s = row?.prazo_revisao ? String(row.prazo_revisao).slice(0, 10) : "";
-              if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-              const [yy, mm, dd] = s.split("-").map(Number);
-              const prazoD = new Date(yy, mm - 1, dd);
-              const t = new Date();
-              const hoje = new Date(t.getFullYear(), t.getMonth(), t.getDate());
-              return prazoD < hoje;
-            })();
+        {gruposOrdenados.map(({ grupo, itens }) => (
+          <Box key={grupo} sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>
+              {GRUPO_LABEL[grupo]}
+            </Typography>
+            <Grid container spacing={3}>
+              {itens.map((politica) => {
+                const row = politicasResumo?.get(politica.id);
+                const implementada = !!row;
+                const publicada = row?.status === "publicado";
+                const dataImpl = row?.updated_at ? formatDataPt(row.updated_at) : null;
+                const vig = row?.inicio_vigencia ? formatDataPt(row.inicio_vigencia) : null;
+                const prazo = row?.prazo_revisao ? formatDataPt(row.prazo_revisao) : null;
+                const revisaoAtrasada = (() => {
+                  const s = row?.prazo_revisao ? String(row.prazo_revisao).slice(0, 10) : "";
+                  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+                  const [yy, mm, dd] = s.split("-").map(Number);
+                  const prazoD = new Date(yy, mm - 1, dd);
+                  const t = new Date();
+                  const hoje = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+                  return prazoD < hoje;
+                })();
 
-            return (
-              <Grid item xs={12} md={6} lg={4} key={politica.id}>
-                <Box
-                  sx={{
-                    position: "relative",
-                    height: "100%",
-                    overflow: "visible",
-                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                    borderRadius: 2,
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      "& .politica-card-surface": {
-                        boxShadow: theme.shadows[8],
-                      },
-                    },
-                  }}
-                >
-                  <Card
-                    className="politica-card-surface"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Abrir editor: ${politica.nome}`}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handlePoliticaClick(politica);
-                      }
-                    }}
-                    sx={{
-                      minWidth: 0,
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      transition: "box-shadow 0.3s ease",
-                      cursor: "pointer",
-                      outlineOffset: 2,
-                      overflow: "visible",
-                      "&:focus-visible": {
-                        outline: `2px solid ${politica.cor}`,
-                      },
-                      border: `2px solid ${alpha(politica.cor, 0.1)}`,
-                      borderRadius: 2,
-                    }}
-                    onClick={() => handlePoliticaClick(politica)}
-                  >
-                    <CardContent sx={{ flexGrow: 1, p: 3, pr: { xs: 3, sm: 4 } }}>
-                      <Stack spacing={1.5}>
-                        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-                          <Box
-                            sx={{
-                              width: 56,
-                              height: 56,
-                              borderRadius: 2,
-                              bgcolor: alpha(politica.cor, 0.1),
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: politica.cor,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {politica.icon}
-                          </Box>
-
-                          <Box sx={{ minWidth: 0, flex: 1 }}>
-                            <Typography variant="h6" component="h3" fontWeight="bold" gutterBottom>
-                              {politica.nome}
-                            </Typography>
-                            {implementada && (
-                              <Stack spacing={0.25} sx={{ mt: 0.5 }}>
-                                {dataImpl ? (
-                                  <Typography variant="caption" color="text.secondary" display="block">
-                                    Última gravação: <strong>{dataImpl}</strong>
-                                  </Typography>
-                                ) : null}
-                                {vig ? (
-                                  <Typography variant="caption" color="text.secondary" display="block">
-                                    Início da vigência: <strong>{vig}</strong>
-                                  </Typography>
-                                ) : null}
-                                {prazo ? (
-                                  <Typography
-                                    variant="caption"
-                                    display="block"
-                                    color={revisaoAtrasada ? "error" : "text.secondary"}
-                                  >
-                                    Prazo de revisão: <strong>{prazo}</strong>
-                                    {revisaoAtrasada ? " (atrasado)" : ""}
-                                  </Typography>
-                                ) : null}
-                              </Stack>
-                            )}
-                          </Box>
-                        </Box>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                          {politica.descricao}
-                        </Typography>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-
-                  {/* Marcador de PDF (tipo fita de caderno), colado ao canto superior direito */}
-                  <Tooltip title="Baixar PDF (sem abrir o editor)" placement="left">
+                return (
+                  <Grid item xs={12} md={6} lg={4} key={politica.id}>
                     <Box
-                      component="span"
                       sx={{
-                        position: "absolute",
-                        top: -10,
-                        right: 10,
-                        zIndex: 2,
-                        lineHeight: 0,
+                        position: "relative",
+                        height: "100%",
+                        overflow: "visible",
+                        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                        borderRadius: 2,
+                        "&:hover": {
+                          transform: "translateY(-4px)",
+                          "& .politica-card-surface": {
+                            boxShadow: theme.shadows[8],
+                          },
+                        },
                       }}
                     >
-                      <IconButton
-                        type="button"
-                        size="small"
-                        aria-label={`Exportar PDF: ${politica.nome}`}
-                        disabled={pdfLoadingId === politica.id}
-                        onClick={(e) => handlePdfEtiqueta(e, politica)}
-                        sx={{
-                          width: 36,
-                          minHeight: 52,
-                          px: 0.5,
-                          py: 0.75,
-                          flexDirection: "column",
-                          borderRadius: "4px 4px 10px 10px",
-                          border: `1px solid ${alpha(politica.cor, 0.42)}`,
-                          borderTop: `4px solid ${politica.cor}`,
-                          bgcolor: alpha(politica.cor, 0.12),
-                          color: politica.cor,
-                          boxShadow: "0 3px 10px rgba(0,0,0,0.14)",
-                          "&:hover": {
-                            bgcolor: alpha(politica.cor, 0.22),
-                            borderColor: alpha(politica.cor, 0.65),
-                            boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
-                          },
-                          "&.Mui-disabled": {
-                            borderColor: alpha(politica.cor, 0.2),
-                          },
+                      <Card
+                        className="politica-card-surface"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Abrir editor: ${politica.nome}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handlePoliticaClick(politica);
+                          }
                         }}
+                        sx={{
+                          minWidth: 0,
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                          transition: "box-shadow 0.3s ease",
+                          cursor: "pointer",
+                          outlineOffset: 2,
+                          overflow: "visible",
+                          "&:focus-visible": {
+                            outline: `2px solid ${politica.cor}`,
+                          },
+                          border: `2px solid ${alpha(politica.cor, 0.1)}`,
+                          borderRadius: 2,
+                        }}
+                        onClick={() => handlePoliticaClick(politica)}
                       >
-                        <PictureAsPdfIcon sx={{ fontSize: 22 }} />
-                      </IconButton>
-                    </Box>
-                  </Tooltip>
-                </Box>
-              </Grid>
-            );
-          })}
-        </Grid>
+                        <CardContent sx={{ flexGrow: 1, p: 3, pr: { xs: 3, sm: 4 } }}>
+                          <Stack spacing={1.5}>
+                            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                              <Box
+                                sx={{
+                                  width: 56,
+                                  height: 56,
+                                  borderRadius: 2,
+                                  bgcolor: alpha(politica.cor, 0.1),
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: politica.cor,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {politica.icon}
+                              </Box>
 
-        {/* Informações Adicionais */}
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography variant="h6" component="h3" fontWeight="bold" gutterBottom>
+                                  {politica.nome}
+                                </Typography>
+                                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mb: 0.5 }}>
+                                  {implementada ? (
+                                    <Chip
+                                      size="small"
+                                      label={publicada ? "Publicado" : "Rascunho"}
+                                      color={publicada ? "success" : "default"}
+                                      variant={publicada ? "filled" : "outlined"}
+                                    />
+                                  ) : (
+                                    <Chip size="small" label="Não iniciado" variant="outlined" />
+                                  )}
+                                </Stack>
+                                {implementada && (
+                                  <Stack spacing={0.25} sx={{ mt: 0.5 }}>
+                                    {dataImpl ? (
+                                      <Typography variant="caption" color="text.secondary" display="block">
+                                        Última gravação: <strong>{dataImpl}</strong>
+                                      </Typography>
+                                    ) : null}
+                                    {vig ? (
+                                      <Typography variant="caption" color="text.secondary" display="block">
+                                        Início da vigência: <strong>{vig}</strong>
+                                      </Typography>
+                                    ) : null}
+                                    {prazo ? (
+                                      <Typography
+                                        variant="caption"
+                                        display="block"
+                                        color={revisaoAtrasada ? "error" : "text.secondary"}
+                                      >
+                                        Prazo de revisão: <strong>{prazo}</strong>
+                                        {revisaoAtrasada ? " (atrasado)" : ""}
+                                      </Typography>
+                                    ) : null}
+                                  </Stack>
+                                )}
+                              </Box>
+                            </Box>
+
+                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                              {politica.descricao}
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+
+                      <Tooltip title="Baixar PDF (sem abrir o editor)" placement="left">
+                        <Box
+                          component="span"
+                          sx={{
+                            position: "absolute",
+                            top: -10,
+                            right: 10,
+                            zIndex: 2,
+                            lineHeight: 0,
+                          }}
+                        >
+                          <IconButton
+                            type="button"
+                            size="small"
+                            aria-label={`Exportar PDF: ${politica.nome}`}
+                            disabled={pdfLoadingId === politica.id}
+                            onClick={(e) => handlePdfEtiqueta(e, politica)}
+                            sx={{
+                              width: 36,
+                              minHeight: 52,
+                              px: 0.5,
+                              py: 0.75,
+                              flexDirection: "column",
+                              borderRadius: "4px 4px 10px 10px",
+                              border: `1px solid ${alpha(politica.cor, 0.42)}`,
+                              borderTop: `4px solid ${politica.cor}`,
+                              bgcolor: alpha(politica.cor, 0.12),
+                              color: politica.cor,
+                              boxShadow: "0 3px 10px rgba(0,0,0,0.14)",
+                              "&:hover": {
+                                bgcolor: alpha(politica.cor, 0.22),
+                                borderColor: alpha(politica.cor, 0.65),
+                                boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                              },
+                              "&.Mui-disabled": {
+                                borderColor: alpha(politica.cor, 0.2),
+                              },
+                            }}
+                          >
+                            <PictureAsPdfIcon sx={{ fontSize: 22 }} />
+                          </IconButton>
+                        </Box>
+                      </Tooltip>
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Box>
+        ))}
+
         <Paper
           elevation={1}
           sx={{
-            mt: 4,
+            mt: 2,
             p: 3,
             borderRadius: 2,
             bgcolor: alpha(theme.palette.primary.main, 0.02),
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
           }}
         >
           <Typography variant="h6" color="primary" gutterBottom>
-            💡 Sobre políticas e documentos
+            Sobre políticas e documentos
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Aqui você mantém políticas de SI e privacidade e pode alojar textos que o titular encontra no início da jornada
-            (por exemplo, aviso de privacidade) e outros documentos referenciados no portal de privacidade do programa.
+            Inclui PGSI/PGP (PPSI 0.9–0.10), políticas de SI/privacidade e textos do portal do titular. Publique no editor
+            para versionar e exibir no portal (quando não houver URL externa no cadastro do programa).
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-            <strong>Última gravação</strong> é a data do último salvamento no conteúdo. <strong>Início da vigência</strong> e{" "}
-            <strong>prazo de revisão</strong> são editados no editor de cada documento (metadados por item).
+            <strong>Última gravação</strong> é o último salvamento. <strong>Publicado</strong> gera versão imutável e
+            libera o texto no portal interno.
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            O <strong>marcador PDF</strong> no canto do card baixa o documento sem abrir o editor. No editor, use{" "}
-            <strong>Salvar no programa</strong> para registrar conteúdo e datas.
+            O <strong>marcador PDF</strong> baixa sem abrir o editor. No editor: <strong>Salvar</strong> (rascunho) e{" "}
+            <strong>Publicar versão</strong> (requer permissão de publicação).
           </Typography>
         </Paper>
       </Container>

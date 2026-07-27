@@ -37,7 +37,6 @@ export function OfficeGameScene({
 }: OfficeGameSceneProps) {
   const base = `/programas/${idOrSlug}`;
   const equipeHref = hrefEstruturaGovernanca(idOrSlug, "equipe");
-  const c = resumo?.conformidade;
   const matCount = resumo?.maturidade?.length ?? 0;
 
   const gruposDept = useMemo(() => {
@@ -70,21 +69,21 @@ export function OfficeGameScene({
       },
       {
         key: "risk",
-        title: "Dados e riscos",
+        title: "Gestão de riscos",
         line: resumoLoading
           ? "…"
-          : c
-            ? `${c.ropaOperacoes} ROPA · ${c.ripd} RIPD · ${c.incidentes} inc.`
+          : resumo?.postura
+            ? `${resumo.postura.riscosTotal} reg. · ${resumo.postura.riscosCriticos} críticos`
             : "—",
-        href: `${base}/conformidade`,
+        href: `${base}/riscos`,
       },
     ],
-    [base, resumo, resumoLoading, matCount, c],
+    [base, resumo, resumoLoading, matCount],
   );
 
   const mesaSlots = useMemo(() => {
     const byId = new Map(responsaveis.map((r) => [r.id, r]));
-    return MESA_PAPéis_ORDER.map(({ campo, rotulo, chefe }) => {
+    return MESA_PAPéis_ORDER.map(({ campo, rotulo, chefe, siglaMesa }) => {
       const rid = idResponsavelPapel(programa, campo as CampoResponsavelProgramaId);
       const nome = rid != null ? nomePorResponsavelId.get(rid) : null;
       const definido = Boolean(nome?.trim());
@@ -98,6 +97,7 @@ export function OfficeGameScene({
         empty: !definido,
         responsavelId: rid ?? null,
         cargoSetorLine,
+        siglaMesa,
       };
     });
   }, [programa, nomePorResponsavelId, responsaveis]);
@@ -120,8 +120,12 @@ export function OfficeGameScene({
       {
         key: "risk",
         label: "Riscos",
-        detail: resumoLoading ? "…" : c ? `${c.ropaOperacoes}/${c.ripd}/${c.incidentes}` : "—",
-        href: `${base}/conformidade`,
+        detail: resumoLoading
+          ? "…"
+          : resumo?.postura
+            ? `${resumo.postura.riscosCriticos} críticos`
+            : "—",
+        href: `${base}/riscos`,
       },
       {
         key: "pol",
@@ -130,8 +134,20 @@ export function OfficeGameScene({
           resumoLoading ? "…" : resumo ? `${resumo.politicas.implementadas} impl.` : "—",
         href: `${base}/politicas`,
       },
+      {
+        key: "conf",
+        label: "Conformidade",
+        detail: resumoLoading ? "…" : "LGPD · ROPA · incidentes",
+        href: `${base}/conformidade`,
+      },
+      {
+        key: "gov",
+        label: "Equipa",
+        detail: "5 papéis na mesa",
+        href: equipeHref,
+      },
     ],
-    [base, resumo, resumoLoading, matCount, c],
+    [base, equipeHref, resumo, resumoLoading, matCount],
   );
 
   const committeeTypesOrdered = useMemo(

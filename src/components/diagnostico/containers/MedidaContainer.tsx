@@ -11,6 +11,8 @@ import MedidaComponent from '../Medida';
 import dayjs from 'dayjs';
 import * as dataService from '../../../lib/services/dataService';
 import {
+  TIPO_POLITICA_PGP,
+  TIPO_POLITICA_PGSI,
   TIPO_POLITICA_POSIN,
   TIPO_POLITICA_PROTECAO_DADOS,
   buildEvidenciaContext,
@@ -76,10 +78,12 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
     (async () => {
       setEvidenciaLoading(true);
       try {
-        const [programa, posin, protecaoDados, gruposRaw, conformidade] = await Promise.all([
+        const [programa, posin, protecaoDados, pgsi, pgp, gruposRaw, conformidade] = await Promise.all([
           dataService.fetchProgramaById(programaId),
           dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_POSIN),
           dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_PROTECAO_DADOS),
+          dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_PGSI),
+          dataService.fetchPoliticaProgramaByTipo(programaId, TIPO_POLITICA_PGP),
           dataService.fetchGovernancaGruposMembros(programaId),
           controle.diagnostico !== 1
             ? dataService.fetchEvidenciaConformidadeSnapshot(programaId)
@@ -96,7 +100,9 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
           posin,
           protecaoDados,
           gruposGovernanca,
-          conformidade
+          conformidade,
+          pgsi,
+          pgp
         );
         setEvidenciaSugestao(getEvidenciaSugestao(medida.id_medida, ctx));
       } catch {

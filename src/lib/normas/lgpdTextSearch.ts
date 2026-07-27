@@ -22,6 +22,21 @@ export function normalizeLgpdQuery(query: string): string {
   return foldLgpdDiacritics(collapsed);
 }
 
+/**
+ * Junta quebras de linha de layout do Planalto dentro de um bloco (separador de bloco: linha em branco).
+ * Cada bloco vira um parágrafo contínuo para exibição.
+ */
+export function normalizeLgpdDisplayParagraph(block: string): string {
+  return block
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(" ")
+    .replace(NBSP, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Corpo do artigo: sem HTML, minúsculas, espaços colapsados, sem acentos. */
 export function normalizeLgpdBodyForSearch(raw: string): string {
   let s = String(raw ?? "");

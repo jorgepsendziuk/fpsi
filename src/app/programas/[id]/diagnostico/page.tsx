@@ -57,6 +57,7 @@ import {
   AccountBalance as AccountBalanceIcon, // Estrutura/Governança
   Lock as LockIcon, // Segurança
   Person as PersonIcon, // Privacidade
+  Psychology as PsychologyIcon, // Governança de IA / AIGP
   HourglassEmpty as HourglassEmptyIcon,
   FilterList as FilterListIcon,
   InfoOutlined as InfoOutlinedIcon,
@@ -282,10 +283,8 @@ export default function DiagnosticoPage() {
       if (selectedNode?.type === 'dashboard' && !loading) {
         console.log("🎯 Dashboard selecionado: iniciando carregamento otimizado de dados");
         
-        // Carregar controles apenas para os primeiros 3 diagnósticos inicialmente
-        const diagnosticosParaCarregar = diagnosticos.slice(0, 3);
-        
-        for (const diagnostico of diagnosticosParaCarregar) {
+        // Carregar controles de todos os diagnósticos (incl. Governança de IA / AIGP)
+        for (const diagnostico of diagnosticos) {
           if (!controles[diagnostico.id] && !loadingControles.has(diagnostico.id)) {
             try {
               await loadControles(diagnostico.id);
@@ -438,6 +437,8 @@ export default function DiagnosticoPage() {
             return <LockIcon sx={{ color: diagnosticoMaturity.color }} />;
           case 3: // Privacidade
             return <PersonIcon sx={{ color: diagnosticoMaturity.color }} />;
+          case 4: // Governança de IA / AIGP
+            return <PsychologyIcon sx={{ color: diagnosticoMaturity.color }} />;
           default:
             return <AssessmentIcon sx={{ color: diagnosticoMaturity.color }} />;
         }
@@ -956,6 +957,7 @@ export default function DiagnosticoPage() {
           programaMedidas={programaMedidas}
           getControleMaturity={getControleMaturity}
           grupoImpleFilter={grupoImpleFilter}
+          dataLoading={isBackgroundLoading}
           getDiagnosticoMaturity={(id) => {
             const diagnostico = diagnosticos.find(d => d.id === id);
             if (!diagnostico) return { score: 0, label: 'Sem dados', color: '#9E9E9E', level: 'inicial' as const };
@@ -1376,7 +1378,7 @@ export default function DiagnosticoPage() {
             <PageHeroHeader
               title="Diagnóstico"
               icon={<AssessmentIcon sx={{ fontSize: 30 }} aria-hidden />}
-              description="Controles e medidas por diagnóstico (CIS · PPSI 2.0). Use o filtro de grupos de implementação abaixo."
+              description="Controles e medidas por diagnóstico (CIS · PPSI 2.0 · Governança de IA). Use o filtro de grupos de implementação abaixo."
             />
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
               <Box sx={{ flex: 1 }} />

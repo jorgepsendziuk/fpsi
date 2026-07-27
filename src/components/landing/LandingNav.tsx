@@ -17,12 +17,10 @@ import {
   Dashboard as DashboardIcon,
   DarkModeOutlined,
   LightModeOutlined,
-  MenuBook as MenuBookIcon,
   Menu as MenuIcon,
   ArrowForward as ArrowForwardIcon,
   PlayArrow as PlayArrowIcon,
 } from "@mui/icons-material";
-import Image from "next/image";
 import { landing } from "./landingTokens";
 
 type User = {
@@ -46,28 +44,47 @@ type LandingNavProps = {
   onCloseUserMenu: () => void;
   onNavigate: (href: string) => void;
   onOpenLgpd: () => void;
+  onOpenAigp?: () => void;
   onOpenFeatures?: () => void;
   onLogin: () => void;
   onDashboard: () => void;
   onLogout: () => void;
+  demoCtaLabel?: string;
+  demoCtaShort?: string;
 };
 
 const linkSx = (fontFamily: string) => ({
   fontFamily,
-  color: "rgba(244,248,252,0.78)",
+  color: "rgba(244,248,252,0.72)",
   textTransform: "none" as const,
   fontWeight: 600,
   fontSize: "0.875rem",
   letterSpacing: "0.01em",
-  px: 1.5,
-  py: 0.85,
+  px: 1.25,
+  py: 0.65,
   minWidth: 0,
-  borderRadius: 999,
+  borderRadius: 1,
   position: "relative" as const,
   transition: "color 0.2s ease, background 0.2s ease",
   "&:hover": {
     color: landing.heroText,
-    bgcolor: "rgba(255,255,255,0.08)",
+    bgcolor: "transparent",
+  },
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    left: 10,
+    right: 10,
+    bottom: 4,
+    height: 1.5,
+    borderRadius: 1,
+    bgcolor: landing.lock,
+    transform: "scaleX(0)",
+    transformOrigin: "left",
+    transition: "transform 0.22s ease",
+  },
+  "&:hover::after": {
+    transform: "scaleX(1)",
   },
 });
 
@@ -86,10 +103,13 @@ export function LandingNav({
   onCloseUserMenu,
   onNavigate,
   onOpenLgpd,
+  onOpenAigp,
   onOpenFeatures,
   onLogin,
   onDashboard,
   onLogout,
+  demoCtaLabel = "Ver na prática",
+  demoCtaShort = "Demo",
 }: LandingNavProps) {
   return (
     <Box
@@ -97,9 +117,12 @@ export function LandingNav({
       sx={{
         position: "relative",
         zIndex: 3,
-        px: { xs: 1.5, md: 3 },
-        pt: { xs: 1.5, md: 2 },
+        px: { xs: 2, md: 3.5 },
+        pt: { xs: 1.25, md: 1.5 },
+        pb: { xs: 0.75, md: 1 },
         animation: ready ? "lpFade 0.8s ease both" : "none",
+        borderBottom: "1px solid rgba(244,248,252,0.08)",
+        background: "linear-gradient(180deg, rgba(6,21,37,0.35) 0%, transparent 100%)",
       }}
     >
       <Box
@@ -108,88 +131,46 @@ export function LandingNav({
           mx: "auto",
           display: "flex",
           alignItems: "center",
-          gap: { xs: 1, md: 1.5 },
-          px: { xs: 1.25, md: 1.75 },
-          py: { xs: 0.85, md: 1 },
-          borderRadius: 999,
-          bgcolor: "rgba(255,255,255,0.07)",
-          border: "1px solid rgba(255,255,255,0.18)",
-          backdropFilter: "blur(22px) saturate(1.45)",
-          WebkitBackdropFilter: "blur(22px) saturate(1.45)",
-          boxShadow: `
-            0 12px 40px rgba(0,0,0,0.28),
-            inset 0 1px 0 rgba(255,255,255,0.16),
-            inset 0 -1px 0 rgba(0,0,0,0.15)
-          `,
+          gap: { xs: 1, md: 2 },
+          minHeight: { xs: 44, md: 48 },
         }}
       >
-        {/* Marca */}
+        {/* Âncora discreta — marca forte fica no hero com a logo */}
         <Box
           component="button"
           type="button"
           onClick={() => onNavigate("/")}
+          aria-label="FPSI — início"
           sx={{
             display: "flex",
-            alignItems: "center",
-            gap: 1.1,
+            alignItems: "baseline",
+            gap: 0.75,
             flexShrink: 0,
             border: 0,
             bgcolor: "transparent",
             color: landing.heroText,
             cursor: "pointer",
-            p: 0.25,
-            pr: 0.75,
-            borderRadius: 999,
-            transition: "opacity 0.2s ease",
-            "&:hover": { opacity: 0.9 },
+            p: 0,
+            mr: { md: 1 },
+            "&:hover .navBrandMark": { color: landing.lock },
           }}
         >
-          <Box
+          <Typography
+            className="navBrandMark"
+            component="span"
             sx={{
-              width: 38,
-              height: 38,
-              borderRadius: "11px",
-              overflow: "hidden",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              flexShrink: 0,
+              fontFamily,
+              fontWeight: 800,
+              fontSize: "0.95rem",
+              letterSpacing: "-0.03em",
+              color: "rgba(244,248,252,0.88)",
+              transition: "color 0.2s ease",
             }}
           >
-            <Image src="/logo_p.png" alt="FPSI" width={38} height={38} style={{ display: "block" }} />
-          </Box>
-          <Box sx={{ textAlign: "left", lineHeight: 1.05 }}>
-            <Typography
-              component="span"
-              sx={{
-                display: "block",
-                fontFamily,
-                fontWeight: 900,
-                fontSize: "1.05rem",
-                letterSpacing: "0.08em",
-                color: landing.heroText,
-              }}
-            >
-              FPSI
-            </Typography>
-            <Typography
-              component="span"
-              sx={{
-                display: { xs: "none", sm: "block" },
-                fontFamily,
-                fontWeight: 500,
-                fontSize: "0.62rem",
-                letterSpacing: "0.04em",
-                color: "rgba(244,248,252,0.55)",
-                textTransform: "uppercase",
-              }}
-              title="Framework de Privacidade e Segurança da Informação"
-            >
-              Privacidade & SI
-            </Typography>
-          </Box>
+            FPSI
+          </Typography>
         </Box>
 
-        {/* Links centrais */}
         {!isMobile && (
           <Box
             sx={{
@@ -197,8 +178,7 @@ export function LandingNav({
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              gap: 0.35,
-              px: 1,
+              gap: 0.15,
             }}
           >
             {onOpenFeatures && (
@@ -209,13 +189,14 @@ export function LandingNav({
             <Button sx={linkSx(fontFamily)} onClick={() => onNavigate("/artigo")}>
               Artigo
             </Button>
-            <Button
-              sx={linkSx(fontFamily)}
-              onClick={onOpenLgpd}
-              startIcon={<MenuBookIcon sx={{ fontSize: "1rem !important" }} />}
-            >
+            <Button sx={linkSx(fontFamily)} onClick={onOpenLgpd}>
               LGPD
             </Button>
+            {onOpenAigp && (
+              <Button sx={linkSx(fontFamily)} onClick={onOpenAigp}>
+                Governança de IA
+              </Button>
+            )}
             <Button sx={linkSx(fontFamily)} onClick={() => onNavigate("/sobre")}>
               Sobre
             </Button>
@@ -224,8 +205,7 @@ export function LandingNav({
 
         {isMobile && <Box sx={{ flex: 1 }} />}
 
-        {/* Ações */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexShrink: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.85, flexShrink: 0 }}>
           {isMobile && (
             <>
               <IconButton
@@ -233,11 +213,12 @@ export function LandingNav({
                 onClick={(e) => onOpenNavMenu(e.currentTarget)}
                 sx={{
                   color: landing.heroText,
-                  width: 40,
-                  height: 40,
-                  bgcolor: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.12)" },
+                  width: 38,
+                  height: 38,
+                  borderRadius: 1.25,
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  bgcolor: "transparent",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.06)" },
                 }}
               >
                 <MenuIcon fontSize="small" />
@@ -251,8 +232,8 @@ export function LandingNav({
                 PaperProps={{
                   sx: {
                     mt: 1,
-                    minWidth: 200,
-                    borderRadius: 2.5,
+                    minWidth: 220,
+                    borderRadius: 1.5,
                     fontFamily,
                     border: "1px solid rgba(15,36,56,0.08)",
                   },
@@ -260,13 +241,14 @@ export function LandingNav({
               >
                 {[
                   {
-                    label: "Ver demonstração",
+                    label: demoCtaLabel,
                     action: () => onNavigate("/demo/login"),
                     highlight: true,
                   },
                   ...(onOpenFeatures ? [{ label: "Módulos", action: onOpenFeatures }] : []),
                   { label: "Artigo", action: () => onNavigate("/artigo") },
                   { label: "Referência LGPD", action: onOpenLgpd },
+                  ...(onOpenAigp ? [{ label: "Governança de IA", action: onOpenAigp }] : []),
                   { label: "Sobre", action: () => onNavigate("/sobre") },
                 ].map((item) => (
                   <MenuItem
@@ -279,6 +261,7 @@ export function LandingNav({
                       fontFamily,
                       fontWeight: "highlight" in item && item.highlight ? 800 : 600,
                       py: 1.25,
+                      borderRadius: 1,
                       color: "highlight" in item && item.highlight ? landing.lock : undefined,
                     }}
                   >
@@ -293,16 +276,13 @@ export function LandingNav({
             <IconButton
               onClick={onToggleMode}
               sx={{
-                color: "rgba(244,248,252,0.85)",
-                width: 40,
-                height: 40,
-                bgcolor: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                transition: "background 0.2s ease, transform 0.2s ease",
-                "&:hover": {
-                  bgcolor: "rgba(255,255,255,0.12)",
-                  transform: "rotate(-12deg)",
-                },
+                color: "rgba(244,248,252,0.8)",
+                width: 38,
+                height: 38,
+                borderRadius: 1.25,
+                border: "1px solid rgba(255,255,255,0.12)",
+                bgcolor: "transparent",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.06)" },
               }}
             >
               {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
@@ -313,25 +293,26 @@ export function LandingNav({
             <Button
               variant="contained"
               onClick={() => onNavigate("/demo/login")}
-              startIcon={<PlayArrowIcon sx={{ fontSize: "1.1rem !important" }} />}
+              startIcon={<PlayArrowIcon sx={{ fontSize: "1.05rem !important" }} />}
               sx={{
                 fontFamily,
                 textTransform: "none",
                 fontWeight: 800,
-                fontSize: { xs: "0.82rem", md: "0.9rem" },
-                px: { xs: 1.5, md: 2 },
-                py: 1,
-                borderRadius: 999,
-                bgcolor: landing.lock,
-                color: landing.ink,
-                boxShadow: "0 6px 20px rgba(249,168,37,0.4)",
+                fontSize: { xs: "0.82rem", md: "0.88rem" },
+                px: { xs: 1.4, md: 1.85 },
+                py: 0.95,
+                borderRadius: 1.25,
+                bgcolor: landing.blue,
+                color: "#fff",
+                boxShadow: "none",
                 "&:hover": {
-                  bgcolor: "#FFB300",
-                  boxShadow: "0 8px 24px rgba(249,168,37,0.5)",
+                  bgcolor: "#0D47A1",
+                  color: "#fff",
+                  boxShadow: "none",
                 },
               }}
             >
-              {isMobile ? "Demo" : "Ver demo"}
+              {isMobile ? demoCtaShort : demoCtaLabel}
             </Button>
           )}
 
@@ -348,9 +329,9 @@ export function LandingNav({
                     borderColor: "rgba(255,255,255,0.28)",
                     textTransform: "none",
                     fontWeight: 700,
-                    borderRadius: 999,
-                    px: 2,
-                    "&:hover": { borderColor: landing.heroText, bgcolor: "rgba(255,255,255,0.08)" },
+                    borderRadius: 1.25,
+                    px: 1.75,
+                    "&:hover": { borderColor: landing.heroText, bgcolor: "rgba(255,255,255,0.06)" },
                   }}
                 >
                   Dashboard
@@ -361,12 +342,13 @@ export function LandingNav({
                   src={user.avatar}
                   alt={user.name || user.email}
                   sx={{
-                    width: 36,
-                    height: 36,
+                    width: 34,
+                    height: 34,
                     fontFamily,
                     fontWeight: 800,
                     bgcolor: landing.blue,
-                    border: "2px solid rgba(255,255,255,0.35)",
+                    border: "1px solid rgba(255,255,255,0.28)",
+                    borderRadius: 1.25,
                   }}
                 >
                   {(user.name || user.email || "").charAt(0).toUpperCase()}
@@ -378,7 +360,7 @@ export function LandingNav({
                 onClose={onCloseUserMenu}
                 transformOrigin={{ horizontal: "right", vertical: "top" }}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-                PaperProps={{ sx: { mt: 1, borderRadius: 2.5, minWidth: 220, fontFamily } }}
+                PaperProps={{ sx: { mt: 1, borderRadius: 1.5, minWidth: 220, fontFamily } }}
               >
                 <Box sx={{ px: 2, py: 1.25 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ fontFamily, fontWeight: 500 }}>
@@ -403,7 +385,7 @@ export function LandingNav({
             </>
           ) : (
             <Button
-              variant="outlined"
+              variant="text"
               onClick={onLogin}
               endIcon={<ArrowForwardIcon sx={{ fontSize: "1rem !important" }} />}
               sx={{
@@ -411,17 +393,14 @@ export function LandingNav({
                 textTransform: "none",
                 fontWeight: 700,
                 fontSize: "0.88rem",
-                px: { xs: 1.25, md: 1.75 },
-                py: 1,
-                borderRadius: 999,
-                color: landing.heroText,
-                borderColor: "rgba(255,255,255,0.35)",
-                borderWidth: 1.5,
+                px: 1.25,
+                py: 0.9,
+                borderRadius: 1.25,
+                color: "rgba(244,248,252,0.85)",
                 display: { xs: "none", sm: "inline-flex" },
                 "&:hover": {
-                  borderWidth: 1.5,
-                  borderColor: landing.heroText,
-                  bgcolor: "rgba(255,255,255,0.08)",
+                  bgcolor: "rgba(255,255,255,0.06)",
+                  color: landing.heroText,
                 },
               }}
             >

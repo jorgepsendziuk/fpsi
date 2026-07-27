@@ -242,6 +242,96 @@
       "procedimentos_e_ferramentas": "Recomenda-se a integração sistemática dos princípios em todos os instrumentos normativos e\noperacionais da organização, incluindo a elaboração de avisos de privacidade, políticas de\nretenção e minimização de dados pessoais, checklists de conformidade aplicados na análise de\nnovos projetos e critérios rigorosos de avaliação em RIPDs. Devem ser instituídos mecanismos\nde monitoramento que auxiliem na validação efetiva da aplicação dos princípios, como\nindicadores de transparência, métricas sobre tempo médio de atendimento às solicitações dos\ntitulares e índices de anonimização. A capacitação contínua dos agentes públicos envolvidos\nnas atividades de conformidade, com conteúdos específicos sobre os princípios e suas\naplicações práticas, é igualmente fundamental para assegurar sua ampla disseminação na\norganização.",
       "fique_atento": null,
       "aplicabilidade_privacidade": "A LGPD é considerada uma norma principiológica, ou seja, alicerçada em princípios que\nestabelecem diretrizes sobre o tratamento de dados pessoais. Além do registro das operações\nde tratamento de dados pessoais, identificação de hipóteses legais, análises específicas de\nconformidade do tratamento, incluindo aspectos de compartilhamento e transferência\ninternacional, o tratamento deve observar os princípios previstos na legislação. Dessa forma, \neste controle consolida a necessidade de observância dos princípios previstos na LGPD como\npilares fundamentais das práticas organizacionais frente ao tratamento de dados pessoais."
+    },
+    {
+      "id": 28,
+      "nome": "Governança e accountability de IA",
+      "texto": "Estabelece a estrutura de accountability para sistemas de inteligência artificial: papéis, comitês, reporte à alta administração e integração com a governança de privacidade e segurança da informação já existente no PPSI.",
+      "por_que_implementar": "Sem accountability clara, riscos de IA ficam órfãos entre TI, negócio, jurídico e privacidade. AIGP e NIST AI RMF tratam governança como função transversal; ISO 42001 exige liderança e papéis definidos no sistema de gestão de IA.",
+      "procedimentos_e_ferramentas": "Formalizar responsável (ou comitê) por governança de IA; matriz RACI; fluxo de aprovação para projetos de IA; reporte periódico de riscos e incidentes à alta administração; integração com CSI/CPDP/ETIR quando houver impacto em SI ou dados pessoais.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 29,
+      "nome": "Inventário e classificação de sistemas de IA",
+      "texto": "Manter inventário atualizado dos sistemas, modelos e usos de IA (internos e de terceiros), com classificação de risco e vínculo a processos de negócio e tratamentos de dados pessoais.",
+      "por_que_implementar": "Não se governa o que não se conhece. Inventário é pré-requisito do NIST AI RMF (Map) e base para obrigações proporcionais ao risco (conceito central do EU AI Act e boas práticas AIGP).",
+      "procedimentos_e_ferramentas": "Registro central (planilha/CMDB/módulo); campos mínimos: nome, finalidade, dono, tipo (próprio/terceiro/SaaS), dados usados, decisão automatizada, nível de risco, status do ciclo de vida; revisão periódica.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 30,
+      "nome": "Política e princípios de IA responsável",
+      "texto": "Instrumentos normativos internos que expressam princípios de IA responsável (transparência, equidade, segurança, privacidade, accountability) e regras de uso aceitável, inclusive de IA generativa.",
+      "por_que_implementar": "Política traduz valores e limites; sem ela, cada área inventa regras. AIGP e OECD AI Principles enfatizam IA confiável; ISO 42001 exige política do AIMS.",
+      "procedimentos_e_ferramentas": "Política de IA / uso aceitável; princípios publicados; guidelines para IA generativa (dados sensíveis, propriedade intelectual, revisão humana); revisão periódica alinhada a mudanças regulatórias.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 31,
+      "nome": "Gestão de riscos de IA",
+      "texto": "Processo para identificar, avaliar, tratar e monitorar riscos específicos de IA (modelo, dados, uso, impacto a pessoas e operações), integrado à gestão de riscos institucional.",
+      "por_que_implementar": "Riscos de IA incluem viés, alucinação, drift, uso indevido, falha de segurança e danos a direitos. NIST AI RMF estrutura Map→Measure→Manage; ISO 42001 exige gestão de riscos do AIMS.",
+      "procedimentos_e_ferramentas": "Avaliação de risco pré-deploy; AIPD/FRIA quando impacto a direitos; registro de riscos residual; planos de mitigação; reassessment periódico e pós-incidente.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 32,
+      "nome": "Dados, privacidade e LGPD em sistemas de IA",
+      "texto": "Garantir que treinamento, fine-tuning, inferência e logs de sistemas de IA observem bases legais, minimização, retenção, segurança e direitos dos titulares — em articulação com o diagnóstico de Privacidade do PPSI.",
+      "por_que_implementar": "IA amplifica riscos de proteção de dados (coleta massiva, reidentificação, decisões automatizadas). AIGP exige domínio da interseção privacy×AI; LGPD arts. 6º e 20 são centrais.",
+      "procedimentos_e_ferramentas": "Checklist LGPD para projetos de IA; bases legais; DPIA/RIPD; controles de minimização e anonimização; política de retenção de prompts/logs; contratos com processadores de IA.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 33,
+      "nome": "Transparência, explicabilidade e direitos",
+      "texto": "Informar pessoas afetadas sobre o uso de IA, fornecer explicações adequadas ao contexto e garantir canais para exercício de direitos e contestação.",
+      "por_que_implementar": "Transparência é princípio OECD/AIGP e reforça confiança. Sem informação clara, titulares e usuários não exercem direitos; reguladores esperam notice significativo.",
+      "procedimentos_e_ferramentas": "Avisos de privacidade/uso; rótulos de conteúdo gerado por IA quando cabível; camadas de explicação (usuário final vs. auditor); canais de contestação integrados ao portal de titulares.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 34,
+      "nome": "Segurança, robustez e monitoramento de modelos",
+      "texto": "Controles de segurança e confiabilidade ao longo do ciclo de vida: proteção do modelo e pipelines, testes de robustez, detecção de drift/degradação e resposta a falhas e abusos (prompt injection, data poisoning etc.).",
+      "por_que_implementar": "Modelos e pipelines são ativos críticos. Falhas de robustez e ataques específicos de IA (OWASP LLM Top 10) podem gerar incidentes de SI e danos a pessoas.",
+      "procedimentos_e_ferramentas": "Secure SDLC para ML; controle de acesso a pesos/datasets; testes adversariais básicos; monitoramento de performance em produção; playbooks de incidente de IA integrados à ETIR.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 35,
+      "nome": "Terceiros, fornecedores e modelos fundacionais",
+      "texto": "Due diligence e gestão contínua de fornecedores de IA, APIs de modelos fundacionais e ferramentas embutidas em produtos — incluindo subprocessamento e uso de dados para treino do fornecedor.",
+      "por_que_implementar": "Grande parte do risco de IA entra via SaaS e APIs. AIGP e ISO 42001 exigem gestão de partes interessadas externas; PPSI já cobre provedores — este controle especializa para IA.",
+      "procedimentos_e_ferramentas": "Questionário de due diligence de IA; revisão de ToS (training opt-out); requisitos contratuais; monitoramento de mudanças do fornecedor; inventário de subprocessadores.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 36,
+      "nome": "Viés, equidade e impacto humano",
+      "texto": "Identificar e mitigar vieses discriminatórios, garantir supervisão humana significativa em usos de alto impacto e considerar efeitos sobre trabalhadores e públicos vulneráveis.",
+      "por_que_implementar": "Sistemas viesados geram discriminação ilícita e dano reputacional. AIGP e OECD enfatizam fairness e human-centered values; LGPD veda discriminação ilícita no tratamento.",
+      "procedimentos_e_ferramentas": "Testes de fairness em atributos relevantes; revisão humana em decisões de alto impacto; consulta a stakeholders quando cabível; monitoramento contínuo de disparidades.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
+    },
+    {
+      "id": 37,
+      "nome": "Ciclo de vida, documentação e auditoria",
+      "texto": "Documentar o ciclo de vida dos sistemas de IA, manter trilhas de auditoria, capacitar equipes e promover melhoria contínua do sistema de governança de IA.",
+      "por_que_implementar": "Sem documentação e auditoria, não há demonstrabilidade (accountability). ISO 42001 exige melhoria contínua; AIGP cobra evidências para conformidade.",
+      "procedimentos_e_ferramentas": "Gates de ciclo de vida (ideação→retire); repositório de evidências; trilhas de mudança de modelo; treinamento por papel; auditorias internas periódicas do AIMS/governança de IA.",
+      "fique_atento": "Referências: IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA); NIST AI Risk Management Framework (Govern, Map, Measure, Manage); ISO/IEC 42001 — Artificial Intelligence Management System (AIMS); OECD AI Principles.",
+      "aplicabilidade_privacidade": "Articular com o diagnóstico de Privacidade (LGPD) quando o sistema de IA tratar dados pessoais ou decisões automatizadas."
     }
   ]
 }

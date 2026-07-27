@@ -167,6 +167,29 @@ export function applyPoliticaPlaceholders(
     if (site) {
       out = out.replace(/\[Site(?: institucional)?\]/gi, wrapPlaceholderValue(site));
     }
+
+    const endereco = String(merged.endereco ?? "").trim();
+    if (endereco) {
+      out = out.replace(/\[Endereço\]/gi, wrapPlaceholderValue(endereco));
+    }
+
+    // Termo de Uso / portal: nome do serviço ≈ nome do programa
+    const nomeServico = String(merged.nome ?? merged.nome_fantasia ?? "").trim();
+    if (nomeServico) {
+      out = out.replace(/\[Nome do [Ss]erviço\]/g, wrapPlaceholderValue(nomeServico));
+    }
+    if (nome) {
+      out = out.replace(/\[Nome da [Ii]nstituição\]/g, wrapPlaceholderValue(nome));
+    }
+
+    const dpoNome = String(merged.dpo_nome ?? "").trim();
+    if (dpoNome) {
+      out = out.replace(/\[Nome do Encarregado\]/gi, wrapPlaceholderValue(dpoNome));
+    }
+    const dpoEmail = String(merged.dpo_email ?? "").trim();
+    if (dpoEmail) {
+      out = out.replace(/\[E-mail do Encarregado\]/gi, wrapPlaceholderValue(dpoEmail));
+    }
   }
 
   return out;

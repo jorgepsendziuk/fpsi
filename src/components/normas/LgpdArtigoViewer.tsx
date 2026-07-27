@@ -3,15 +3,17 @@
 import React, { useMemo } from "react";
 import { Box, Link, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import { LGPD_PLANALTO_COMPILADO_URL } from "@/lib/normas/lgpdRefs";
+import { normalizeLgpdDisplayParagraph } from "@/lib/normas/lgpdTextSearch";
 
 function formatBlocks(text: string): React.ReactNode[] {
   const parts = text.split(/\n\n+/).filter((p) => p.trim());
   return parts.map((block, i) => {
-    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    const paragraph = normalizeLgpdDisplayParagraph(block);
+    if (!paragraph) return null;
     const isHeading =
-      /^Art\.\s*\d+/i.test(lines[0] || "") ||
-      /^CAPÍTULO\s+/i.test(lines[0] || "") ||
-      /^Seção\s+/i.test(lines[0] || "");
+      /^Art\.\s*\d+/i.test(paragraph) ||
+      /^CAPÍTULO\s+/i.test(paragraph) ||
+      /^Seção\s+/i.test(paragraph);
     return (
       <Box
         key={i}
@@ -23,25 +25,22 @@ function formatBlocks(text: string): React.ReactNode[] {
           borderColor: "divider",
         }}
       >
-        {lines.map((line, j) => (
-          <Typography
-            key={j}
-            component="p"
-            variant="body2"
-            sx={{
-              mb: 0.75,
-              fontWeight: /^Art\.|^§|^Parágrafo|^[IVX]+\s*[-–]/.test(line) ? 500 : 400,
-              color: "text.primary",
-              lineHeight: 1.7,
-              "&:last-child": { mb: 0 },
-            }}
-          >
-            {line}
-          </Typography>
-        ))}
+        <Typography
+          component="p"
+          variant="body2"
+          sx={{
+            mb: 0,
+            fontWeight: /^Art\.|^§|^Parágrafo|^[IVX]+\s*[-–]/.test(paragraph) ? 500 : 400,
+            color: "text.primary",
+            lineHeight: 1.7,
+            textAlign: "justify",
+          }}
+        >
+          {paragraph}
+        </Typography>
       </Box>
     );
-  });
+  }).filter(Boolean);
 }
 
 type Props = {

@@ -43,6 +43,7 @@ import { respostas, respostasimnao, status_medida, status_plano_acao } from '../
 import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 import type { EvidenciaSugestao as EvidenciaSugestaoTipo } from '../../../lib/medidas/evidenciaRules';
 import { respostaAtualIgualSugestao, labelRespostaSugerida } from '../../../lib/medidas/evidenciaRules';
+import { formatResponsavelOptionLabel } from "@/lib/utils/responsavelDisplay";
 import { hrefEstruturaGovernanca } from '@/lib/governanca/abaGovernanca';
 import {
   GRUPO_IMPLEMENTACAO_HINT,
@@ -427,7 +428,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       </MenuItem>
                       {responsaveis.map((responsavel) => (
                         <MenuItem key={responsavel.id} value={responsavel.id}>
-                          <ListItemText primary={`${responsavel.nome} (${responsavel.departamento || 'Sem setor'})`} />
+                          <ListItemText primary={formatResponsavelOptionLabel(responsavel.nome, responsavel.departamento)} />
                         </MenuItem>
                       ))}
                     </Select>

@@ -57,12 +57,20 @@ import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import * as dataService from "@/lib/services/dataService";
 import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import type { PedidoTitularRow } from "@/lib/services/dataService";
+import {
+  maskDocument,
+  maskEmail,
+  maskPedidoDescricao,
+  maskPersonName,
+} from "@/lib/privacy/maskPii";
+
 const PDF_MARGIN = 14;
 const PDF_PAGE_HEIGHT = 297;
 const PDF_LINE = 5;
 const PDF_MAX_W = 180;
 
-function addPedidoToPdf(
+/** Extrato operacional: protocolo + status + PII camuflada (sem dados pessoais em claro). */
+function addPedidoExtratoToPdf(
   doc: jsPDF,
   pedido: PedidoTitularRow,
   programaNome: string,
@@ -95,20 +103,25 @@ function addPedidoToPdf(
   if (isFirst) {
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text(`Pedido: ${pedido.protocolo ?? pedido.id}`, PDF_MARGIN, y);
+    doc.text(`Extrato · ${pedido.protocolo ?? `pedido-${pedido.id}`}`, PDF_MARGIN, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("Dados pessoais camuflados — extrato operacional (LGPD).", PDF_MARGIN, y);
     y += 8;
   }
   push("Programa", programaNome);
   push("Protocolo", pedido.protocolo);
   push("Tipo", dataService.PEDIDO_TITULAR_TIPOS.find((t) => t.value === pedido.tipo)?.label ?? pedido.tipo);
-  push("Nome do titular", pedido.nome_titular);
-  push("E-mail", pedido.email_titular);
-  push("Documento", pedido.documento_titular);
-  push("Descrição do pedido", pedido.descricao_pedido);
+  push("Titular (camuflado)", maskPersonName(pedido.nome_titular));
+  push("E-mail (camuflado)", maskEmail(pedido.email_titular));
+  push("Documento (camuflado)", maskDocument(pedido.documento_titular));
+  push("Descrição", maskPedidoDescricao(pedido.descricao_pedido));
   push("Status", dataService.PEDIDO_TITULAR_STATUS.find((s) => s.value === pedido.status)?.label ?? pedido.status);
   push("Data prazo resposta", pedido.data_prazo_resposta ?? null);
   push("Data resposta", pedido.data_resposta ? dayjs(pedido.data_resposta).format("DD/MM/YYYY HH:mm") : null);
   push("Data de registro", pedido.created_at ? dayjs(pedido.created_at).format("DD/MM/YYYY HH:mm") : null);
+  push("Origem", pedido.origem === "formulario_publico" ? "Formulário público" : "Cadastro interno");
   return y;
 }
 
@@ -254,12 +267,12 @@ export default function PedidosTitularesPage() {
     (p: PedidoTitularRow) => {
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       doc.setFontSize(14);
-      doc.text("Pedidos dos Titulares (art. 18 LGPD)", PDF_MARGIN, 18);
+      doc.text("Extrato — Requisição de Direitos (art. 18 LGPD)", PDF_MARGIN, 18);
       doc.setFontSize(9);
-      doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, PDF_MARGIN, 24);
-      addPedidoToPdf(doc, p, programa?.nome ?? "Programa", 30, true);
-      const safe = (p.protocolo || String(p.id)).replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 30);
-      doc.save(`Pedido-Titular-${safe}-${dayjs().format("YYYY-MM-DD")}.pdf`);
+      doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")} · PII camuflada`, PDF_MARGIN, 24);
+      addPedidoExtratoToPdf(doc, p, programa?.nome ?? "Programa", 30, true);
+      const safe = (p.protocolo || String(p.id)).replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 40);
+      doc.save(`Extrato-Pedido-${safe}-${dayjs().format("YYYY-MM-DD")}.pdf`);
     },
     [programa?.nome]
   );
@@ -269,16 +282,20 @@ export default function PedidosTitularesPage() {
       if (list.length === 0) return;
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       doc.setFontSize(14);
-      doc.text("Pedidos dos Titulares (art. 18 LGPD)", PDF_MARGIN, 18);
+      doc.text("Extrato — Requisição de Direitos (art. 18 LGPD)", PDF_MARGIN, 18);
       doc.setFontSize(9);
-      doc.text(`Programa: ${programa?.nome ?? idOrSlug} | ${list.length} pedido(s) | ${new Date().toLocaleDateString("pt-BR")}`, PDF_MARGIN, 24);
+      doc.text(
+        `Programa: ${programa?.nome ?? idOrSlug} | ${list.length} pedido(s) | ${new Date().toLocaleDateString("pt-BR")} · PII camuflada`,
+        PDF_MARGIN,
+        24
+      );
       list.forEach((p, idx) => {
         if (idx > 0) {
           doc.addPage();
         }
-        addPedidoToPdf(doc, p, programa?.nome ?? "Programa", PDF_MARGIN + 5, true);
+        addPedidoExtratoToPdf(doc, p, programa?.nome ?? "Programa", PDF_MARGIN + 5, true);
       });
-      doc.save(`Pedidos-Titulares-${idOrSlug}-${dayjs().format("YYYY-MM-DD")}.pdf`);
+      doc.save(`Extrato-Pedidos-${idOrSlug}-${dayjs().format("YYYY-MM-DD")}.pdf`);
     },
     [programa?.nome, idOrSlug]
   );
@@ -325,16 +342,20 @@ export default function PedidosTitularesPage() {
         description="Registro de pedidos de acesso, correção, exclusão, portabilidade, revogação de consentimento, informação sobre compartilhamento e oposição (art. 18 LGPD)"
         trailing={
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Tooltip title="Gerar PDF dos pedidos selecionados">
+            <Tooltip title="Extrato PDF dos selecionados — dados pessoais camuflados">
               <span>
                 <Button variant="outlined" startIcon={<PdfIcon />} onClick={exportPdfSelected} disabled={selectedIds.size === 0}>
-                  Imprimir selecionados ({selectedIds.size})
+                  Extrato selecionados ({selectedIds.size})
                 </Button>
               </span>
             </Tooltip>
-            <Button variant="outlined" startIcon={<PdfIcon />} onClick={() => exportPdfBatch(filteredPedidos)} disabled={filteredPedidos.length === 0}>
-              Imprimir todos
-            </Button>
+            <Tooltip title="Extrato PDF de todos os filtrados — sem PII em claro">
+              <span>
+                <Button variant="outlined" startIcon={<PdfIcon />} onClick={() => exportPdfBatch(filteredPedidos)} disabled={filteredPedidos.length === 0}>
+                  Extrato todos
+                </Button>
+              </span>
+            </Tooltip>
             <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
               Novo pedido
             </Button>
@@ -473,8 +494,8 @@ export default function PedidosTitularesPage() {
                   <TableCell>{p.data_prazo_resposta ? dayjs(p.data_prazo_resposta).format("DD/MM/YYYY") : "—"}</TableCell>
                   <TableCell>{p.created_at ? dayjs(p.created_at).format("DD/MM/YYYY") : "—"}</TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Imprimir (PDF)">
-                      <IconButton size="small" onClick={() => exportPdfSingle(p)} aria-label="Imprimir">
+                    <Tooltip title="Exportar extrato (dados camuflados)">
+                      <IconButton size="small" onClick={() => exportPdfSingle(p)} aria-label="Exportar extrato">
                         <GetAppIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>

@@ -1,0 +1,510 @@
+{
+  "meta": {
+    "versao": "1.0",
+    "titulo": "Governança de IA / AIGP",
+    "indice": "iAIGP",
+    "diagnostico_id": 4,
+    "descricao_curta": "GOVERNANÇA DE IA",
+    "cor": "#C5CAE9",
+    "referencias": [
+      "IAPP AIGP Body of Knowledge (governança, risco e conformidade de IA)",
+      "NIST AI Risk Management Framework (Govern, Map, Measure, Manage)",
+      "ISO/IEC 42001 — Artificial Intelligence Management System (AIMS)",
+      "OECD AI Principles",
+      "EU AI Act (conceitos de risco e obrigações — referência internacional)",
+      "LGPD — interseção com tratamentos que usam IA / decisões automatizadas (arts. 6º, 20)",
+      "Guia ANPD — boas práticas de proteção de dados e tecnologias emergentes (quando aplicável)"
+    ],
+    "nota": "Catálogo complementar ao PPSI 2.0. Escala de maturidade 1–6 (mesma dos diagnósticos de Segurança e Privacidade). Sujeito a validação do responsável pelo programa."
+  },
+  "controles": [
+    {
+      "id": 28,
+      "numero": 26,
+      "nome": "Governança e accountability de IA",
+      "nist_ai_rmf": "GOVERN",
+      "texto": "Estabelece a estrutura de accountability para sistemas de inteligência artificial: papéis, comitês, reporte à alta administração e integração com a governança de privacidade e segurança da informação já existente no PPSI.",
+      "por_que_implementar": "Sem accountability clara, riscos de IA ficam órfãos entre TI, negócio, jurídico e privacidade. AIGP e NIST AI RMF tratam governança como função transversal; ISO 42001 exige liderança e papéis definidos no sistema de gestão de IA.",
+      "procedimentos_e_ferramentas": "Formalizar responsável (ou comitê) por governança de IA; matriz RACI; fluxo de aprovação para projetos de IA; reporte periódico de riscos e incidentes à alta administração; integração com CSI/CPDP/ETIR quando houver impacto em SI ou dados pessoais.",
+      "medidas": [
+        {
+          "id_medida": "26.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "A alta administração definiu formalmente accountability para sistemas de IA (responsável, substituto e escopo)?",
+          "descricao": "Designar formalmente pessoa ou estrutura com mandato para supervisionar o uso de IA na organização, com reporte à alta administração. Alinhado a AIGP (accountability) e ISO/IEC 42001 (leadership).\n\nNormas de referência: NIST AI RMF GOVERN; ISO/IEC 42001."
+        },
+        {
+          "id_medida": "26.2",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "Há comitê ou fórum colegiado que delibera riscos e prioridades de IA (ou o tema está formalmente na pauta de comitê existente)?",
+          "descricao": "Pode ser comitê dedicado ou inclusão explícita na agenda do CSI/CPDP/comitê de riscos. Deve haver ata/registro de deliberações sobre IA de alto impacto.\n\nNormas de referência: NIST AI RMF GOVERN; IAPP AIGP."
+        },
+        {
+          "id_medida": "26.3",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "Papéis e responsabilidades de negócio, TI, privacidade, segurança e jurídico estão definidos para o ciclo de vida de IA?",
+          "descricao": "Usar matriz RACI cobrindo concepção, aquisição, desenvolvimento, operação, monitoramento e desativação. Evitar sobreposição e lacunas.\n\nNormas de referência: ISO/IEC 42001; NIST AI RMF GOVERN."
+        },
+        {
+          "id_medida": "26.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "GOVERN",
+          "medida": "Existe canal de reporte e escalonamento de riscos/incidentes de IA à alta administração?",
+          "descricao": "Definir critérios de escalonamento (impacto a direitos, segurança, reputação, financeiro) e periodicidade de relatório executivo.\n\nNormas de referência: NIST AI RMF GOVERN/MANAGE."
+        },
+        {
+          "id_medida": "26.5",
+          "grupo_imple": "G2",
+          "funcao_nist": "GOVERN",
+          "medida": "A governança de IA está integrada ao PPSI / gestão de riscos e controles internos da organização?",
+          "descricao": "Riscos de IA devem entrar no inventário/matriz de riscos institucional e dialogar com controles PPSI (SI e privacidade), sem silos.\n\nNormas de referência: Decreto nº 9.203/2017 (quando aplicável); NIST AI RMF; PPSI 2.0."
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "numero": 27,
+      "nome": "Inventário e classificação de sistemas de IA",
+      "nist_ai_rmf": "MAP",
+      "texto": "Manter inventário atualizado dos sistemas, modelos e usos de IA (internos e de terceiros), com classificação de risco e vínculo a processos de negócio e tratamentos de dados pessoais.",
+      "por_que_implementar": "Não se governa o que não se conhece. Inventário é pré-requisito do NIST AI RMF (Map) e base para obrigações proporcionais ao risco (conceito central do EU AI Act e boas práticas AIGP).",
+      "procedimentos_e_ferramentas": "Registro central (planilha/CMDB/módulo); campos mínimos: nome, finalidade, dono, tipo (próprio/terceiro/SaaS), dados usados, decisão automatizada, nível de risco, status do ciclo de vida; revisão periódica.",
+      "medidas": [
+        {
+          "id_medida": "27.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "MAP",
+          "medida": "A organização mantém inventário atualizado de sistemas e usos de IA (incluindo ferramentas SaaS e modelos de terceiros)?",
+          "descricao": "Incluir IA generativa, modelos preditivos, visão computacional, chatbots, copilots e APIs de modelos fundacionais usados por áreas.\n\nNormas de referência: NIST AI RMF MAP; ISO/IEC 42001."
+        },
+        {
+          "id_medida": "27.2",
+          "grupo_imple": "G1",
+          "funcao_nist": "MAP",
+          "medida": "Cada sistema de IA possui dono de negócio e responsável técnico identificados?",
+          "descricao": "Sem dono claro, mudanças e incidentes não têm accountability operacional.\n\nNormas de referência: AIGP; ISO/IEC 42001."
+        },
+        {
+          "id_medida": "27.3",
+          "grupo_imple": "G1",
+          "funcao_nist": "MAP",
+          "medida": "Os sistemas de IA são classificados por nível de risco/impacto (ex.: baixo, moderado, alto) com critérios documentados?",
+          "descricao": "Critérios podem considerar direitos fundamentais, decisões sobre pessoas, segurança, escala e uso em setor regulado. Proporcionalidade dos controles deve seguir a classificação.\n\nNormas de referência: EU AI Act (conceito de risco); NIST AI RMF MAP."
+        },
+        {
+          "id_medida": "27.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "MAP",
+          "medida": "O inventário vincula sistemas de IA a processos de negócio e, quando houver, a tratamentos de dados pessoais (ROPA/mapeamento)?",
+          "descricao": "Integração com ROPA e mapeamento PPSI/LGPD evita inventários paralelos inconsistentes.\n\nNormas de referência: LGPD art. 37; PPSI controle de registro de operações."
+        },
+        {
+          "id_medida": "27.5",
+          "grupo_imple": "G2",
+          "funcao_nist": "MAP",
+          "medida": "Há processo para incluir novos usos de IA no inventário antes da entrada em produção ou uso amplo?",
+          "descricao": "Gate de onboarding: nenhum sistema relevante de IA entra em uso sem registro e classificação.\n\nNormas de referência: NIST AI RMF MAP/MANAGE."
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "numero": 28,
+      "nome": "Política e princípios de IA responsável",
+      "nist_ai_rmf": "GOVERN",
+      "texto": "Instrumentos normativos internos que expressam princípios de IA responsável (transparência, equidade, segurança, privacidade, accountability) e regras de uso aceitável, inclusive de IA generativa.",
+      "por_que_implementar": "Política traduz valores e limites; sem ela, cada área inventa regras. AIGP e OECD AI Principles enfatizam IA confiável; ISO 42001 exige política do AIMS.",
+      "procedimentos_e_ferramentas": "Política de IA / uso aceitável; princípios publicados; guidelines para IA generativa (dados sensíveis, propriedade intelectual, revisão humana); revisão periódica alinhada a mudanças regulatórias.",
+      "medidas": [
+        {
+          "id_medida": "28.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "A organização possui política (ou norma equivalente) de governança / uso responsável de IA aprovada pela alta administração?",
+          "descricao": "Documento formal com escopo, princípios, papéis, usos proibidos ou restritos e ciclo de revisão.\n\nNormas de referência: ISO/IEC 42001; OECD AI Principles; AIGP."
+        },
+        {
+          "id_medida": "28.2",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "Existem diretrizes específicas para uso de IA generativa e ferramentas de copiloto (dados, propriedade intelectual e confidencialidade)?",
+          "descricao": "Cobrir proibição/restrição de colar dados pessoais/sensíveis ou segredos em serviços públicos; regras de citação e revisão humana de saídas.\n\nNormas de referência: AIGP; boas práticas de uso seguro de GenAI."
+        },
+        {
+          "id_medida": "28.3",
+          "grupo_imple": "G2",
+          "funcao_nist": "GOVERN",
+          "medida": "Os princípios de IA responsável estão comunicados às pessoas que projetam, adquirem ou usam sistemas de IA?",
+          "descricao": "Comunicação e capacitação mínima; evidência de ciência/aceitação quando aplicável.\n\nNormas de referência: NIST AI RMF GOVERN; OECD."
+        },
+        {
+          "id_medida": "28.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "GOVERN",
+          "medida": "Há processo de revisão periódica da política de IA diante de mudanças tecnológicas e regulatórias?",
+          "descricao": "Prazo de revisão definido (ex.: anual) ou gatilho por mudança material de risco/regulamentação.\n\nNormas de referência: ISO/IEC 42001."
+        },
+        {
+          "id_medida": "28.5",
+          "grupo_imple": "G3",
+          "funcao_nist": "GOVERN",
+          "medida": "Usos proibidos ou de alto risco de IA estão explicitamente listados e monitorados?",
+          "descricao": "Exemplos: profiling discriminatório sem base legal, vigilância desproporcional, decisões automatizadas sem salvaguardas exigidas.\n\nNormas de referência: LGPD art. 20; EU AI Act (usos proibidos — referência); AIGP."
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "numero": 29,
+      "nome": "Gestão de riscos de IA",
+      "nist_ai_rmf": "MAP/MEASURE/MANAGE",
+      "texto": "Processo para identificar, avaliar, tratar e monitorar riscos específicos de IA (modelo, dados, uso, impacto a pessoas e operações), integrado à gestão de riscos institucional.",
+      "por_que_implementar": "Riscos de IA incluem viés, alucinação, drift, uso indevido, falha de segurança e danos a direitos. NIST AI RMF estrutura Map→Measure→Manage; ISO 42001 exige gestão de riscos do AIMS.",
+      "procedimentos_e_ferramentas": "Avaliação de risco pré-deploy; AIPD/FRIA quando impacto a direitos; registro de riscos residual; planos de mitigação; reassessment periódico e pós-incidente.",
+      "medidas": [
+        {
+          "id_medida": "29.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "MAP",
+          "medida": "Sistemas de IA de risco moderado/alto passam por avaliação de riscos antes da entrada em produção ou uso amplo?",
+          "descricao": "Avaliação documentada cobrindo contexto, ameaças, impactos a pessoas/operações e medidas de mitigação.\n\nNormas de referência: NIST AI RMF MAP/MEASURE; ISO/IEC 42001."
+        },
+        {
+          "id_medida": "29.2",
+          "grupo_imple": "G2",
+          "funcao_nist": "MEASURE",
+          "medida": "Há critérios e métodos para medir riscos de IA (métricas de desempenho, fairness, robustez, segurança) proporcionais ao impacto?",
+          "descricao": "Não exige ciência de ponta em todos os casos; exige método documentado e evidências mínimas para o nível de risco.\n\nNormas de referência: NIST AI RMF MEASURE."
+        },
+        {
+          "id_medida": "29.3",
+          "grupo_imple": "G1",
+          "funcao_nist": "MANAGE",
+          "medida": "Riscos residuais de IA são registrados, priorizados e acompanhados com planos de tratamento?",
+          "descricao": "Integração com matriz de riscos / plano de ação do programa.\n\nNormas de referência: NIST AI RMF MANAGE; PPSI planos de ação."
+        },
+        {
+          "id_medida": "29.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "MAP",
+          "medida": "Para IA com impacto relevante a direitos ou decisões sobre pessoas, há avaliação de impacto específica (AIPD/FRIA ou RIPD ampliado)?",
+          "descricao": "Quando houver dados pessoais, articular com RIPD (LGPD). Para impacto a direitos fundamentais, usar avaliação de impacto de IA / fundamental rights.\n\nNormas de referência: LGPD arts. 5º, XVII, e 38; EU AI Act FRIA (referência); AIGP."
+        },
+        {
+          "id_medida": "29.5",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Há reassessment de riscos após mudanças materiais no modelo, dados, finalidade ou contexto de uso?",
+          "descricao": "Mudança material dispara reavaliação — não apenas revisão calendárica.\n\nNormas de referência: NIST AI RMF MANAGE; ISO/IEC 42001."
+        },
+        {
+          "id_medida": "29.6",
+          "grupo_imple": "G3",
+          "funcao_nist": "MEASURE",
+          "medida": "A organização define limiares (thresholds) de risco aceitável para IA e critérios de go/no-go?",
+          "descricao": "Appetite de risco aprovado; sem limiar, decisões de aceite ficam ad hoc.\n\nNormas de referência: NIST AI RMF; ISO/IEC 42001."
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "numero": 30,
+      "nome": "Dados, privacidade e LGPD em sistemas de IA",
+      "nist_ai_rmf": "MAP/MANAGE",
+      "texto": "Garantir que treinamento, fine-tuning, inferência e logs de sistemas de IA observem bases legais, minimização, retenção, segurança e direitos dos titulares — em articulação com o diagnóstico de Privacidade do PPSI.",
+      "por_que_implementar": "IA amplifica riscos de proteção de dados (coleta massiva, reidentificação, decisões automatizadas). AIGP exige domínio da interseção privacy×AI; LGPD arts. 6º e 20 são centrais.",
+      "procedimentos_e_ferramentas": "Checklist LGPD para projetos de IA; bases legais; DPIA/RIPD; controles de minimização e anonimização; política de retenção de prompts/logs; contratos com processadores de IA.",
+      "medidas": [
+        {
+          "id_medida": "30.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "MAP",
+          "medida": "Tratamentos que usam IA com dados pessoais possuem hipótese legal e finalidade documentadas?",
+          "descricao": "Incluir treino, validação, inferência e telemetria. Articular com ROPA.\n\nNormas de referência: LGPD arts. 7º, 11 e 37."
+        },
+        {
+          "id_medida": "30.2",
+          "grupo_imple": "G1",
+          "funcao_nist": "MANAGE",
+          "medida": "Há minimização de dados e restrição de categorias sensíveis no treino/inferência, salvo necessidade justificada?",
+          "descricao": "Evitar uso de dados excessivos; preferir dados sintéticos/anonimizados quando viável.\n\nNormas de referência: LGPD art. 6º, III; boas práticas AIGP."
+        },
+        {
+          "id_medida": "30.3",
+          "grupo_imple": "G1",
+          "funcao_nist": "MANAGE",
+          "medida": "Prompts, saídas e logs de IA que contenham dados pessoais têm retenção, acesso e descarte definidos?",
+          "descricao": "Política de retenção; controle de acesso; proibição de uso de logs como dataset sem análise.\n\nNormas de referência: LGPD arts. 6º e 46; PPSI proteção de dados."
+        },
+        {
+          "id_medida": "30.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Há salvaguardas para decisões automatizadas que afetem interesses do titular (revisão humana, informação, contestação)?",
+          "descricao": "LGPD art. 20: direito à revisão de decisões tomadas unicamente com base em tratamento automatizado.\n\nNormas de referência: LGPD art. 20; AIGP."
+        },
+        {
+          "id_medida": "30.5",
+          "grupo_imple": "G2",
+          "funcao_nist": "MAP",
+          "medida": "Projetos de IA com alto risco a dados pessoais passam por RIPD (ou equivalente) antes do deploy?",
+          "descricao": "Articulação explícita com o módulo de RIPD do programa.\n\nNormas de referência: LGPD art. 38; Resolução ANPD aplicável."
+        },
+        {
+          "id_medida": "30.6",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Contratos com fornecedores de IA/processadores cobrem instruções de tratamento, subprocessadores e localização de dados?",
+          "descricao": "Cláusulas LGPD + requisitos de IA (uso de dados para treino do fornecedor, opt-out, subprocessadores).\n\nNormas de referência: LGPD arts. 33–36; AIGP vendor management."
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "numero": 31,
+      "nome": "Transparência, explicabilidade e direitos",
+      "nist_ai_rmf": "GOVERN/MANAGE",
+      "texto": "Informar pessoas afetadas sobre o uso de IA, fornecer explicações adequadas ao contexto e garantir canais para exercício de direitos e contestação.",
+      "por_que_implementar": "Transparência é princípio OECD/AIGP e reforça confiança. Sem informação clara, titulares e usuários não exercem direitos; reguladores esperam notice significativo.",
+      "procedimentos_e_ferramentas": "Avisos de privacidade/uso; rótulos de conteúdo gerado por IA quando cabível; camadas de explicação (usuário final vs. auditor); canais de contestação integrados ao portal de titulares.",
+      "medidas": [
+        {
+          "id_medida": "31.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "Pessoas afetadas são informadas, de forma clara, quando IA é usada em interações ou decisões relevantes?",
+          "descricao": "Notice contextual (chatbot, scoring, triagem). Evitar linguagem genérica sem utilidade prática.\n\nNormas de referência: OECD AI Principles; LGPD art. 6º, VI; AIGP."
+        },
+        {
+          "id_medida": "31.2",
+          "grupo_imple": "G2",
+          "funcao_nist": "MEASURE",
+          "medida": "Para sistemas de alto impacto, há capacidade de explicar fatores relevantes da saída/decisão em linguagem adequada ao público?",
+          "descricao": "Explicabilidade proporcional: não exige white-box em todo modelo, mas informação útil para revisão e direitos.\n\nNormas de referência: AIGP; NIST AI RMF; LGPD art. 20."
+        },
+        {
+          "id_medida": "31.3",
+          "grupo_imple": "G1",
+          "funcao_nist": "MANAGE",
+          "medida": "Há canal para questionar, corrigir ou solicitar revisão humana de decisões assistidas/automatizadas por IA?",
+          "descricao": "Integrar ao processo de pedidos de titulares / atendimento.\n\nNormas de referência: LGPD art. 20; AIGP."
+        },
+        {
+          "id_medida": "31.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "GOVERN",
+          "medida": "Conteúdo gerado por IA destinado ao público é identificado quando isso for material para confiança ou conformidade?",
+          "descricao": "Política de disclosure de conteúdo sintético em comunicações oficiais/marketing/atendimento, conforme risco.\n\nNormas de referência: boas práticas AIGP; tendências regulatórias de rotulagem."
+        },
+        {
+          "id_medida": "31.5",
+          "grupo_imple": "G3",
+          "funcao_nist": "MEASURE",
+          "medida": "A organização mantém documentação de modelo (model card / ficha técnica) para sistemas de risco moderado/alto?",
+          "descricao": "Ficha com propósito, dados, limitações, métricas e contato do dono — útil para auditoria e transparência interna.\n\nNormas de referência: NIST AI RMF; práticas de model cards."
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "numero": 32,
+      "nome": "Segurança, robustez e monitoramento de modelos",
+      "nist_ai_rmf": "MEASURE/MANAGE",
+      "texto": "Controles de segurança e confiabilidade ao longo do ciclo de vida: proteção do modelo e pipelines, testes de robustez, detecção de drift/degradação e resposta a falhas e abusos (prompt injection, data poisoning etc.).",
+      "por_que_implementar": "Modelos e pipelines são ativos críticos. Falhas de robustez e ataques específicos de IA (OWASP LLM Top 10) podem gerar incidentes de SI e danos a pessoas.",
+      "procedimentos_e_ferramentas": "Secure SDLC para ML; controle de acesso a pesos/datasets; testes adversariais básicos; monitoramento de performance em produção; playbooks de incidente de IA integrados à ETIR.",
+      "medidas": [
+        {
+          "id_medida": "32.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "MANAGE",
+          "medida": "Acesso a modelos, datasets de treino e pipelines de ML/IA é controlado e registrado?",
+          "descricao": "Princípio do menor privilégio; segregação de ambientes; logs de acesso.\n\nNormas de referência: PPSI controles de acesso; ISO/IEC 42001; NIST AI RMF."
+        },
+        {
+          "id_medida": "32.2",
+          "grupo_imple": "G1",
+          "funcao_nist": "MEASURE",
+          "medida": "Sistemas de IA em produção possuem monitoramento de desempenho, erros e degradação (drift) com alertas?",
+          "descricao": "Métricas e limiares; responsável por receber alertas; ação corretiva.\n\nNormas de referência: NIST AI RMF MEASURE/MANAGE."
+        },
+        {
+          "id_medida": "32.3",
+          "grupo_imple": "G2",
+          "funcao_nist": "MEASURE",
+          "medida": "Há testes de robustez/segurança proporcionais ao risco (ex.: prompt injection, jailbreak, envenenamento de dados) antes do deploy e periodicamente?",
+          "descricao": "Para LLM/apps: OWASP LLM Top 10 como referência mínima.\n\nNormas de referência: OWASP LLM Top 10; NIST AI RMF MEASURE."
+        },
+        {
+          "id_medida": "32.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Incidentes envolvendo IA (falha, vazamento via modelo, uso abusivo) estão cobertos pelo plano de resposta a incidentes / ETIR?",
+          "descricao": "Playbook específico ou extensão do plano existente; comunicação e lições aprendidas.\n\nNormas de referência: PPSI gestão de incidentes; NIST AI RMF MANAGE."
+        },
+        {
+          "id_medida": "32.5",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Há procedimento de rollback / desligamento seguro (kill switch) para sistemas de IA de alto impacto?",
+          "descricao": "Capacidade de interromper ou degradar graciosamente o sistema quando risco materializar.\n\nNormas de referência: NIST AI RMF MANAGE; ISO/IEC 42001."
+        },
+        {
+          "id_medida": "32.6",
+          "grupo_imple": "G3",
+          "funcao_nist": "MEASURE",
+          "medida": "Ambientes de treino/experimentação estão isolados de produção e de dados desnecessários?",
+          "descricao": "Separação de redes/contas; datasets de dev mascarados quando possível.\n\nNormas de referência: PPSI configuração segura; boas práticas MLOps."
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "numero": 33,
+      "nome": "Terceiros, fornecedores e modelos fundacionais",
+      "nist_ai_rmf": "GOVERN/MAP",
+      "texto": "Due diligence e gestão contínua de fornecedores de IA, APIs de modelos fundacionais e ferramentas embutidas em produtos — incluindo subprocessamento e uso de dados para treino do fornecedor.",
+      "por_que_implementar": "Grande parte do risco de IA entra via SaaS e APIs. AIGP e ISO 42001 exigem gestão de partes interessadas externas; PPSI já cobre provedores — este controle especializa para IA.",
+      "procedimentos_e_ferramentas": "Questionário de due diligence de IA; revisão de ToS (training opt-out); requisitos contratuais; monitoramento de mudanças do fornecedor; inventário de subprocessadores.",
+      "medidas": [
+        {
+          "id_medida": "33.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "MAP",
+          "medida": "Há due diligence específica de IA antes de contratar ou adotar fornecedor/modelo fundacional relevante?",
+          "descricao": "Avaliar segurança, privacidade, localização, uso de dados para treino, SLAs e histórico de incidentes.\n\nNormas de referência: AIGP; ISO/IEC 42001; PPSI gestão de provedores."
+        },
+        {
+          "id_medida": "33.2",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "Contratos/ToS deixam claro se dados do órgão podem ser usados para treinar modelos do fornecedor e há opt-out quando necessário?",
+          "descricao": "Configurar enterprise tiers com no-training quando disponível; registrar decisão.\n\nNormas de referência: LGPD; boas práticas GenAI enterprise."
+        },
+        {
+          "id_medida": "33.3",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Mudanças materiais do fornecedor (modelo, região, subprocessador) são acompanhadas e reavaliadas?",
+          "descricao": "Assinar status pages / change logs quando possível; reavaliar risco.\n\nNormas de referência: NIST AI RMF MANAGE."
+        },
+        {
+          "id_medida": "33.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "MAP",
+          "medida": "Sistemas de terceiros com IA embutida (sem ser o produto principal) estão identificados no inventário?",
+          "descricao": "CRM, atendimento, RH, segurança — muitos já usam IA sem label óbvio.\n\nNormas de referência: NIST AI RMF MAP."
+        },
+        {
+          "id_medida": "33.5",
+          "grupo_imple": "G3",
+          "funcao_nist": "MEASURE",
+          "medida": "Há critérios de saída (exit) e portabilidade/retenção de dados ao encerrar contrato com fornecedor de IA?",
+          "descricao": "Plano de descontinuação: exportação, apagamento, transição.\n\nNormas de referência: ISO/IEC 42001; LGPD."
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "numero": 34,
+      "nome": "Viés, equidade e impacto humano",
+      "nist_ai_rmf": "MEASURE/MANAGE",
+      "texto": "Identificar e mitigar vieses discriminatórios, garantir supervisão humana significativa em usos de alto impacto e considerar efeitos sobre trabalhadores e públicos vulneráveis.",
+      "por_que_implementar": "Sistemas viesados geram discriminação ilícita e dano reputacional. AIGP e OECD enfatizam fairness e human-centered values; LGPD veda discriminação ilícita no tratamento.",
+      "procedimentos_e_ferramentas": "Testes de fairness em atributos relevantes; revisão humana em decisões de alto impacto; consulta a stakeholders quando cabível; monitoramento contínuo de disparidades.",
+      "medidas": [
+        {
+          "id_medida": "34.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "MAP",
+          "medida": "Para IA que afeta pessoas, a organização identifica grupos potencialmente impactados e riscos de discriminação?",
+          "descricao": "Mapeamento de stakeholders e atributos sensíveis ao contexto (sem criar tratamento ilícito de dados sensíveis).\n\nNormas de referência: NIST AI RMF MAP; OECD; LGPD art. 6º, IX."
+        },
+        {
+          "id_medida": "34.2",
+          "grupo_imple": "G2",
+          "funcao_nist": "MEASURE",
+          "medida": "Há avaliação de viés/equidade (qualitativa ou quantitativa) em sistemas de risco moderado/alto antes do deploy e em operação?",
+          "descricao": "Método documentado; não exige perfeição estatística, exige esforço razoável e registro de limitações.\n\nNormas de referência: NIST AI RMF MEASURE; AIGP."
+        },
+        {
+          "id_medida": "34.3",
+          "grupo_imple": "G1",
+          "funcao_nist": "MANAGE",
+          "medida": "Decisões de alto impacto assistidas por IA contam com supervisão humana significativa (não apenas carimbo formal)?",
+          "descricao": "Humano com tempo, informação e autoridade para discordar do modelo.\n\nNormas de referência: LGPD art. 20; EU AI Act human oversight (referência); AIGP."
+        },
+        {
+          "id_medida": "34.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Há processo para tratar reclamações de discriminação ou dano atribuído a sistema de IA?",
+          "descricao": "Fluxo, prazo, análise de causa e mitigação; articulação com ouvidoria/titulares.\n\nNormas de referência: AIGP; LGPD direitos do titular."
+        },
+        {
+          "id_medida": "34.5",
+          "grupo_imple": "G3",
+          "funcao_nist": "MAP",
+          "medida": "Impactos sobre trabalhadores (monitoramento, avaliação de desempenho por IA) são avaliados com transparência e participação adequada?",
+          "descricao": "Quando aplicável: comunicação, limites de uso e revisão humana.\n\nNormas de referência: OECD; boas práticas de workplace AI."
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "numero": 35,
+      "nome": "Ciclo de vida, documentação e auditoria",
+      "nist_ai_rmf": "GOVERN/MANAGE",
+      "texto": "Documentar o ciclo de vida dos sistemas de IA, manter trilhas de auditoria, capacitar equipes e promover melhoria contínua do sistema de governança de IA.",
+      "por_que_implementar": "Sem documentação e auditoria, não há demonstrabilidade (accountability). ISO 42001 exige melhoria contínua; AIGP cobra evidências para conformidade.",
+      "procedimentos_e_ferramentas": "Gates de ciclo de vida (ideação→retire); repositório de evidências; trilhas de mudança de modelo; treinamento por papel; auditorias internas periódicas do AIMS/governança de IA.",
+      "medidas": [
+        {
+          "id_medida": "35.1",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "Há estágio formal de aprovação (gate) no ciclo de vida antes do uso produtivo de sistemas de IA relevantes?",
+          "descricao": "Checklist de conformidade (risco, privacidade, segurança, transparência) com aprovação registrada.\n\nNormas de referência: ISO/IEC 42001; NIST AI RMF MANAGE."
+        },
+        {
+          "id_medida": "35.2",
+          "grupo_imple": "G1",
+          "funcao_nist": "GOVERN",
+          "medida": "Mudanças relevantes em modelos/dados/prompts de sistemas críticos são versionadas e auditáveis?",
+          "descricao": "Controle de versão + registro de quem aprovou e por quê.\n\nNormas de referência: MLOps; ISO/IEC 42001; PPSI logs/auditoria."
+        },
+        {
+          "id_medida": "35.3",
+          "grupo_imple": "G2",
+          "funcao_nist": "GOVERN",
+          "medida": "Equipes envolvidas recebem capacitação em riscos e uso responsável de IA adequada ao papel?",
+          "descricao": "Trilhas distintas: alta administração, desenvolvedores, usuários de GenAI, privacidade/SI.\n\nNormas de referência: NIST AI RMF GOVERN; AIGP."
+        },
+        {
+          "id_medida": "35.4",
+          "grupo_imple": "G2",
+          "funcao_nist": "MEASURE",
+          "medida": "Há auditoria ou revisão interna periódica da governança de IA (amostra de sistemas + eficácia dos controles)?",
+          "descricao": "Pode integrar auditoria interna / 3ª linha; gerar achados e planos de ação.\n\nNormas de referência: ISO/IEC 42001; AIGP."
+        },
+        {
+          "id_medida": "35.5",
+          "grupo_imple": "G2",
+          "funcao_nist": "MANAGE",
+          "medida": "Sistemas de IA descontinuados são retirados de forma controlada (acesso, dados, modelos e comunicações)?",
+          "descricao": "Checklist de retire: desligar endpoints, revogar chaves, apagar/arquivar dados conforme política.\n\nNormas de referência: NIST AI RMF MANAGE; ISO/IEC 42001."
+        },
+        {
+          "id_medida": "35.6",
+          "grupo_imple": "G3",
+          "funcao_nist": "GOVERN",
+          "medida": "Indicadores de maturidade/eficácia da governança de IA são acompanhados pela liderança (ex.: % inventário completo, tempo de resposta a incidente de IA)?",
+          "descricao": "KPIs simples e acionáveis; o próprio iAIGP deste diagnóstico pode ser um deles.\n\nNormas de referência: ISO/IEC 42001; AIGP."
+        }
+      ]
+    }
+  ]
+}

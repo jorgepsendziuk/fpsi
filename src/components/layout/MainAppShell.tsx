@@ -58,6 +58,8 @@ import { CookiePreferencesDialog } from "@/components/privacy/CookiePreferencesD
 import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { landing } from "@/components/landing/landingTokens";
+import { AppAtmosphere } from "@/components/layout/AppAtmosphere";
+import { SkipToMainLink } from "@/components/a11y/SkipToMainLink";
 
 type IUser = { id: number; name: string; email: string; avatar: string };
 
@@ -257,6 +259,21 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     handleNavigate(path);
   };
 
+  const isDark = theme.palette.mode === "dark";
+
+  /** Sidebar sempre navy (eco da landing); área de conteúdo segue o tema. */
+  const side = {
+    text: landing.heroText,
+    muted: landing.heroMuted,
+    faint: landing.heroMuted,
+    line: alpha("#fff", 0.1),
+    hover: alpha("#fff", 0.07),
+    selectedBg: alpha(landing.blueBright, 0.2),
+    selectedHover: alpha(landing.blueBright, 0.28),
+    accent: "#90CAF9",
+    accentBar: landing.blueBright,
+  } as const;
+
   const renderNavLeafRow = (
     item: AppNavItem,
     opts?: { subConnector?: { isLast: boolean } }
@@ -271,24 +288,24 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             logout();
           }}
           sx={{
-            borderRadius: 1.5,
+            borderRadius: 1,
             mb: 0.1,
-            py: 0.45,
-            minHeight: 34,
+            py: 0.55,
+            minHeight: 36,
             pl: isSub ? 1.25 : 1.25,
             pr: 1,
             ml: isSub ? 1 : 0,
-            color: "text.secondary",
+            color: side.muted,
             "&:hover": {
-              bgcolor: alpha(theme.palette.error.main, 0.08),
-              color: "error.main",
+              bgcolor: alpha("#EF5350", 0.16),
+              color: "#FF8A80",
             },
           }}
         >
           <ListItemIcon sx={{ minWidth: isSub ? 30 : 32, color: "inherit" }}>{item.icon}</ListItemIcon>
           <ListItemText
             primary={item.label}
-            primaryTypographyProps={{ variant: "body2", fontWeight: 600, fontSize: "0.8125rem", color: "inherit" }}
+            primaryTypographyProps={{ variant: "body2", fontWeight: 600, fontSize: "0.875rem", color: "inherit" }}
           />
         </ListItemButton>
       );
@@ -297,7 +314,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     const selected = activePath === item.path;
     const isSub = Boolean(item.isSubItem || item.indent === 1);
     const conn = opts?.subConnector;
-    const lineColor = alpha(theme.palette.divider, 0.4);
+    const lineColor = side.line;
     const spineX = 14;
     const primaryLabel = (
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
@@ -313,18 +330,26 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         onClick={() => setMobileOpen(false)}
         sx={{
           position: "relative",
-          borderRadius: 1.5,
+          borderRadius: 1,
           mb: 0.1,
-          py: 0.45,
-          minHeight: 34,
+          py: 0.55,
+          minHeight: 36,
           pl: conn ? 3.25 : isSub ? 1.25 : 1.25,
           pr: 1,
           ml: conn ? 0 : isSub ? 1 : 0,
           overflow: "hidden",
+          color: selected ? side.accent : side.muted,
+          "&:hover": {
+            bgcolor: side.hover,
+          },
+          ...(selected && {
+            pl: conn ? 3.25 : isSub ? 1.25 : 1.35,
+            boxShadow: `inset 3px 0 0 ${side.accentBar}`,
+          }),
           "&.Mui-selected": {
-            bgcolor: alpha(theme.palette.primary.main, 0.14),
+            bgcolor: side.selectedBg,
             "&:hover": {
-              bgcolor: alpha(theme.palette.primary.main, 0.2),
+              bgcolor: side.selectedHover,
             },
           },
         }}
@@ -371,7 +396,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 width: 4,
                 height: 4,
                 borderRadius: "50%",
-                bgcolor: alpha(theme.palette.primary.main, 0.45),
+                bgcolor: alpha(side.accentBar, 0.65),
                 transform: "translate(-50%, -50%)",
               }}
             />
@@ -380,7 +405,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         <ListItemIcon
           sx={{
             minWidth: isSub ? 30 : 32,
-            color: selected ? "primary.main" : "text.secondary",
+            color: selected ? side.accent : side.muted,
             position: "relative",
             zIndex: 1,
           }}
@@ -393,8 +418,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             component: "div",
             variant: "body2",
             fontWeight: selected ? 700 : isSub ? 500 : 600,
-            fontSize: "0.8125rem",
-            color: selected ? "primary.main" : "text.primary",
+            fontSize: "0.875rem",
+            color: selected ? side.accent : side.text,
           }}
           sx={{ position: "relative", zIndex: 1 }}
         />
@@ -406,7 +431,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   const renderNavPortalPublicLeaf = () => {
     if (!programaId || !activePrograma) return null;
     const slug = activePrograma.slug?.trim();
-    const lineColor = alpha(theme.palette.divider, 0.4);
+    const lineColor = side.line;
     const spineX = 14;
     const conn = { isLast: true as const };
     const rowSx = {
@@ -419,6 +444,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
       pr: 1,
       ml: 0,
       overflow: "hidden" as const,
+      color: side.muted,
+      "&:hover": { bgcolor: side.hover },
     };
     const connector = (
       <Box
@@ -462,7 +489,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             width: 4,
             height: 4,
             borderRadius: "50%",
-            bgcolor: alpha(theme.palette.primary.main, 0.45),
+            bgcolor: alpha(side.accentBar, 0.65),
             transform: "translate(-50%, -50%)",
           }}
         />
@@ -481,18 +508,18 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           title="Defina o slug do programa na lista de programas do painel para publicar o site."
         >
           <span style={{ display: "block" }}>
-            <ListItemButton disabled sx={rowSx}>
+            <ListItemButton disabled sx={{ ...rowSx, opacity: 0.55 }}>
               {connector}
               <ListItemIcon
-                sx={{ minWidth: 36, color: "text.disabled", position: "relative", zIndex: 1 }}
+                sx={{ minWidth: 36, color: side.faint, position: "relative", zIndex: 1 }}
               >
                 <OpenInNewIcon sx={{ fontSize: 20 }} />
               </ListItemIcon>
               <ListItemText
                 primary={primaryLabel}
                 secondary="Defina o slug do programa"
-                primaryTypographyProps={{ component: "div", variant: "body2", fontWeight: 500 }}
-                secondaryTypographyProps={{ variant: "caption" }}
+                primaryTypographyProps={{ component: "div", variant: "body2", fontWeight: 500, color: side.muted }}
+                secondaryTypographyProps={{ variant: "caption", sx: { color: side.faint } }}
                 sx={{ position: "relative", zIndex: 1 }}
               />
             </ListItemButton>
@@ -514,49 +541,59 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         sx={rowSx}
       >
         {connector}
-        <ListItemIcon sx={{ minWidth: 36, color: "text.secondary", position: "relative", zIndex: 1 }}>
+        <ListItemIcon sx={{ minWidth: 36, color: side.muted, position: "relative", zIndex: 1 }}>
           <OpenInNewIcon sx={{ fontSize: 20 }} />
         </ListItemIcon>
         <ListItemText
           primary={primaryLabel}
           secondary={href}
-          primaryTypographyProps={{ component: "div", variant: "body2", fontWeight: 500 }}
-          secondaryTypographyProps={{ variant: "caption", sx: { fontFamily: "monospace", wordBreak: "break-all" } }}
+          primaryTypographyProps={{ component: "div", variant: "body2", fontWeight: 500, color: side.text }}
+          secondaryTypographyProps={{
+            variant: "caption",
+            sx: { fontFamily: "monospace", wordBreak: "break-all", color: side.faint },
+          }}
           sx={{ position: "relative", zIndex: 1 }}
         />
       </ListItemButton>
     );
   };
 
-  const isDark = theme.palette.mode === "dark";
-
   const drawer = (
     <Box
       sx={{
+        minHeight: "100%",
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background: isDark
-          ? `linear-gradient(180deg, ${landing.navy} 0%, ${landing.ink} 42%, ${theme.palette.background.paper} 100%)`
-          : `linear-gradient(180deg, ${landing.mist} 0%, ${alpha("#FFFFFF", 0.96)} 38%, ${theme.palette.background.paper} 100%)`,
+        color: side.text,
+        background: `
+          radial-gradient(ellipse 90% 55% at 0% 0%, ${alpha(landing.blueBright, 0.22)} 0%, transparent 52%),
+          radial-gradient(ellipse 70% 40% at 100% 100%, ${alpha(landing.shield, 0.12)} 0%, transparent 48%),
+          linear-gradient(180deg, ${landing.navy} 0%, ${landing.ink} 62%, #040E18 100%)
+        `,
       }}
     >
+      {/* Brand — mesmo plano escuro, com acento azul */}
       <Box
         sx={{
           px: 1.5,
-          py: 1.1,
-          borderBottom: 1,
-          borderColor: "divider",
+          py: 1.25,
           flexShrink: 0,
+          borderBottom: `1px solid ${side.line}`,
+          background: `
+            radial-gradient(ellipse 80% 120% at 100% 0%, ${alpha(landing.blueBright, 0.28)} 0%, transparent 55%),
+            linear-gradient(145deg, ${alpha("#0C3A66", 0.55)} 0%, transparent 70%)
+          `,
         }}
       >
         <Link href="/dashboard" style={{ textDecoration: "none", color: "inherit" }} onClick={() => setMobileOpen(false)}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
               sx={{
-                borderRadius: 1.5,
+                borderRadius: 1,
                 p: 0.45,
-                background: isDark ? alpha("#fff", 0.08) : alpha(landing.blue, 0.1),
+                background: alpha("#fff", 0.1),
+                border: `1px solid ${alpha("#fff", 0.12)}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -570,7 +607,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 variant="subtitle2"
                 fontWeight={900}
                 letterSpacing="-0.02em"
-                sx={{ lineHeight: 1.05, color: isDark ? landing.heroText : landing.text }}
+                sx={{ lineHeight: 1.05, color: landing.heroText }}
               >
                 FPSI
               </Typography>
@@ -581,20 +618,33 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                   sx={{
                     display: "block",
                     maxWidth: 170,
-                    color: isDark ? landing.heroMuted : "text.secondary",
-                    fontSize: "0.65rem",
+                    color: landing.heroMuted,
+                fontSize: "0.75rem",
+                fontWeight: 600,
+              }}
+            >
+              {programaContextLabel}
+            </Typography>
+          ) : (
+            <Typography
+              variant="caption"
+              sx={{
+                display: "block",
+                color: landing.heroMuted,
+                fontSize: "0.75rem",
                     fontWeight: 600,
+                    letterSpacing: "0.04em",
                   }}
                 >
-                  {programaContextLabel}
+                  Privacidade & SI
                 </Typography>
-              ) : null}
+              )}
             </Box>
           </Box>
         </Link>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: "auto", py: 0.5, px: 0.75 }}>
+      <Box sx={{ flex: "1 1 auto", py: 0.5, px: 0.75 }}>
         {navSections.map((section) => (
           <Box key={section.id} sx={{ mb: 1 }}>
             <Typography
@@ -603,10 +653,10 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 px: 1.25,
                 py: 0.35,
                 display: "block",
-                color: "text.secondary",
+                color: side.faint,
                 letterSpacing: 0.9,
                 fontWeight: 700,
-                fontSize: "0.65rem",
+                fontSize: "0.75rem",
                 lineHeight: 1.2,
               }}
             >
@@ -644,15 +694,18 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                               flex: 1,
                               minWidth: 0,
                               position: "relative",
-                              borderRadius: 1.5,
-                              py: 0.45,
-                              minHeight: 34,
+                              borderRadius: 1,
+                              py: 0.55,
+                              minHeight: 36,
                               pl: 1.25,
                               pr: 0.25,
+                              color: hubSelected ? side.accent : side.muted,
+                              "&:hover": { bgcolor: side.hover },
                               "&.Mui-selected": {
-                                bgcolor: alpha(theme.palette.primary.main, 0.14),
+                                bgcolor: side.selectedBg,
+                                boxShadow: `inset 3px 0 0 ${side.accentBar}`,
                                 "&:hover": {
-                                  bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                  bgcolor: side.selectedHover,
                                 },
                               },
                             }}
@@ -660,7 +713,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                             <ListItemIcon
                               sx={{
                                 minWidth: 32,
-                                color: hubSelected ? "primary.main" : "text.secondary",
+                                color: hubSelected ? side.accent : side.muted,
                               }}
                             >
                               {block.hub.icon}
@@ -671,8 +724,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                                 component: "div",
                                 variant: "body2",
                                 fontWeight: hubSelected ? 700 : 600,
-                                fontSize: "0.8125rem",
-                                color: hubSelected ? "primary.main" : "text.primary",
+                                fontSize: "0.875rem",
+                                color: hubSelected ? side.accent : side.text,
                               }}
                             />
                           </ListItemButton>
@@ -690,7 +743,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                               flexShrink: 0,
                               mr: 0.15,
                               p: 0.35,
-                              color: "text.secondary",
+                              color: side.muted,
+                              "&:hover": { bgcolor: side.hover, color: side.text },
                             }}
                           >
                             <ExpandMoreIcon
@@ -723,7 +777,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           </Box>
         ))}
 
-        <Divider sx={{ my: 0.75 }} />
+        <Divider sx={{ my: 0.75, borderColor: side.line }} />
 
         <Typography
           variant="overline"
@@ -731,10 +785,10 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             px: 1.25,
             py: 0.35,
             display: "block",
-            color: "text.secondary",
+            color: side.faint,
             letterSpacing: 0.9,
             fontWeight: 700,
-            fontSize: "0.65rem",
+            fontSize: "0.75rem",
             lineHeight: 1.2,
           }}
         >
@@ -750,10 +804,11 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               mb: 0.35,
               py: 0.45,
               minHeight: 34,
-              border: `1px dashed ${alpha(theme.palette.primary.main, 0.35)}`,
-              bgcolor: alpha(theme.palette.primary.main, 0.04),
+              border: `1px dashed ${alpha(landing.blueBright, 0.45)}`,
+              bgcolor: alpha(landing.blueBright, 0.08),
+              color: side.accent,
               "&:hover": {
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                bgcolor: alpha(landing.blueBright, 0.16),
               },
             }}
           >
@@ -763,8 +818,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 sx={{
                   width: 26,
                   height: 26,
-                  bgcolor: alpha(theme.palette.primary.main, 0.16),
-                  color: "primary.main",
+                  bgcolor: alpha(landing.blueBright, 0.22),
+                  color: side.accent,
                 }}
               >
                 <AddIcon sx={{ fontSize: 16 }} />
@@ -772,7 +827,12 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             </ListItemIcon>
             <ListItemText
               primary="Novo programa"
-              primaryTypographyProps={{ variant: "body2", fontWeight: 700, fontSize: "0.8125rem", color: "primary.main" }}
+              primaryTypographyProps={{
+                variant: "body2",
+                fontWeight: 700,
+                fontSize: "0.8125rem",
+                color: side.accent,
+              }}
             />
           </ListItemButton>
           {programas.map((p) => {
@@ -793,10 +853,13 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                   py: 0.4,
                   minHeight: 34,
                   alignItems: "center",
+                  color: selected ? side.accent : side.muted,
+                  "&:hover": { bgcolor: side.hover },
                   "&.Mui-selected": {
-                    bgcolor: alpha(theme.palette.primary.main, 0.14),
+                    bgcolor: side.selectedBg,
+                    boxShadow: `inset 3px 0 0 ${side.accentBar}`,
                     "&:hover": {
-                      bgcolor: alpha(theme.palette.primary.main, 0.2),
+                      bgcolor: side.selectedHover,
                     },
                   },
                 }}
@@ -810,8 +873,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                       width: 26,
                       height: 26,
                       fontSize: 12,
-                      bgcolor: alpha(theme.palette.primary.main, 0.12),
-                      color: "primary.main",
+                      bgcolor: alpha(landing.blueBright, 0.18),
+                      color: side.accent,
                     }}
                   >
                     <FolderIcon sx={{ fontSize: 16 }} />
@@ -824,7 +887,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                     fontWeight: selected ? 700 : 500,
                     fontSize: "0.8125rem",
                     noWrap: true,
-                    color: selected ? "primary.main" : "text.primary",
+                    color: selected ? side.accent : side.text,
                   }}
                 />
               </ListItemButton>
@@ -833,19 +896,18 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         </List>
       </Box>
 
-      {/* Conta + tema no rodapé da sidebar — elimina a barra branca superior no desktop */}
+      {/* Conta + tema no rodapé */}
       <Box
         sx={{
           flexShrink: 0,
-          borderTop: 1,
-          borderColor: "divider",
+          mt: "auto",
+          borderTop: `1px solid ${side.line}`,
           px: 1,
           py: 1,
           display: "flex",
           alignItems: "center",
           gap: 0.5,
-          bgcolor: isDark ? alpha(landing.ink, 0.55) : alpha("#fff", 0.72),
-          backdropFilter: "blur(8px)",
+          bgcolor: alpha(landing.ink, 0.65),
         }}
       >
         {!isMobile && (
@@ -854,14 +916,18 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               size="small"
               onClick={() => setSidebarHidden((h) => !h)}
               aria-label={sidebarHidden ? "Mostrar menu" : "Ocultar menu"}
-              sx={{ color: "text.secondary" }}
+              sx={{ color: side.muted, "&:hover": { color: side.text, bgcolor: side.hover } }}
             >
               {sidebarHidden ? <MenuOpenIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
         )}
         <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"}>
-          <IconButton size="small" onClick={() => setMode()} sx={{ color: "text.secondary" }}>
+          <IconButton
+            size="small"
+            onClick={() => setMode()}
+            sx={{ color: side.muted, "&:hover": { color: side.text, bgcolor: side.hover } }}
+          >
             {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
           </IconButton>
         </Tooltip>
@@ -869,7 +935,17 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         {user && (
           <Tooltip title={user.name || user.email || "Conta"}>
             <IconButton size="small" onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
-              <Avatar src={user.avatar} sx={{ width: 30, height: 30, fontSize: 13, bgcolor: alpha(landing.blue, 0.2), color: "primary.main" }}>
+              <Avatar
+                src={user.avatar}
+                sx={{
+                  width: 30,
+                  height: 30,
+                  fontSize: 13,
+                  bgcolor: alpha(landing.blueBright, 0.28),
+                  color: side.accent,
+                  border: `1px solid ${alpha("#fff", 0.14)}`,
+                }}
+              >
                 {(user.name || user.email || "").charAt(0).toUpperCase()}
               </Avatar>
             </IconButton>
@@ -1020,7 +1096,9 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "transparent" }}>
+    <Box sx={{ display: "flex", alignItems: "stretch", minHeight: "100vh", bgcolor: "transparent", position: "relative" }}>
+      <SkipToMainLink />
+      <AppAtmosphere />
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -1032,10 +1110,16 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             width: Math.min(drawerWidth, 320),
             maxWidth: "90vw",
             boxSizing: "border-box",
+            backgroundImage: "none",
+            bgcolor: landing.ink,
+            borderRight: `1px solid ${alpha("#fff", 0.08)}`,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
           },
         }}
       >
-        {drawer}
+        <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>{drawer}</Box>
       </Drawer>
 
       <Box
@@ -1048,16 +1132,16 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           transition: theme.transitions.create("width", { duration: theme.transitions.duration.shorter }),
           overflow: "hidden",
           position: "relative",
-          borderRight: sidebarHidden ? 0 : 1,
-          borderColor: "divider",
+          zIndex: 2,
+          borderRight: sidebarHidden ? 0 : `1px solid ${alpha(landing.ink, 0.55)}`,
+          boxShadow: sidebarHidden ? "none" : `4px 0 28px ${alpha(landing.ink, 0.35)}`,
         }}
       >
         <Box
           sx={{
             width: drawerWidth,
-            height: "100vh",
-            position: "sticky",
-            top: 0,
+            minHeight: "100vh",
+            alignSelf: "stretch",
             display: "flex",
             flexDirection: "column",
             flexShrink: 0,
@@ -1079,7 +1163,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               zIndex: 2,
               display: sidebarHidden ? "none" : "block",
               "&:hover": {
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                bgcolor: alpha(landing.blueBright, 0.18),
               },
             }}
           />
@@ -1093,6 +1177,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
+          position: "relative",
+          zIndex: 1,
         }}
       >
         {/* Mobile only: barra compacta (não branca) */}
@@ -1147,12 +1233,12 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               alignItems: "center",
               gap: 0.35,
               p: 0.35,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.background.paper, 0.92),
-              border: 1,
-              borderColor: "divider",
-              boxShadow: 2,
-              backdropFilter: "blur(10px)",
+              borderRadius: 1.5,
+              bgcolor: alpha(landing.navy, 0.92),
+              color: landing.heroText,
+              border: `1px solid ${alpha("#fff", 0.1)}`,
+              boxShadow: `0 8px 28px ${alpha(landing.ink, 0.35)}`,
+              backdropFilter: "blur(12px)",
             }}
           >
             <Tooltip title="Mostrar menu">
@@ -1175,7 +1261,20 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           </Box>
         )}
 
-        <Box component="main" sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <Box
+          component="main"
+          id="main-content"
+          tabIndex={-1}
+          sx={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
+            width: "100%",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
           {children}
         </Box>
         {userMenus}

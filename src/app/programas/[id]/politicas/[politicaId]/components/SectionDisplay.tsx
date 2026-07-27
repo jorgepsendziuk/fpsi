@@ -65,9 +65,15 @@ interface SectionDisplayProps {
   section: Section;
   onTextChange: (sectionId: number, text: string) => void;
   politicaCor?: string;
+  readOnly?: boolean;
 }
 
-export default function SectionDisplay({ section, onTextChange, politicaCor = '#2196F3' }: SectionDisplayProps) {
+export default function SectionDisplay({
+  section,
+  onTextChange,
+  politicaCor = '#2196F3',
+  readOnly = false,
+}: SectionDisplayProps) {
   const [content, setContent] = useState(section.texto || '');
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -149,7 +155,19 @@ export default function SectionDisplay({ section, onTextChange, politicaCor = '#
           </Typography>
         </Box>
         
-        {loadError ? (
+        {readOnly ? (
+          <Box
+            sx={{
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1,
+              p: 2,
+              minHeight: 120,
+              '& p': { m: 0, mb: 1 },
+            }}
+            dangerouslySetInnerHTML={{ __html: content || '<p><em>Sem conteúdo.</em></p>' }}
+          />
+        ) : loadError ? (
           <Box 
             sx={{ 
               height: 300, 
@@ -170,6 +188,7 @@ export default function SectionDisplay({ section, onTextChange, politicaCor = '#
             <Editor
               licenseKey="gpl" // GPL license for self-hosted (camelCase for React wrapper)
               value={content}
+              disabled={readOnly}
               init={{
                 height: 300,
                 menubar: true,

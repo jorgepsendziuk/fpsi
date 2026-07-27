@@ -22,17 +22,18 @@ export default function ProtectedLayout({
   const pathname = usePathname();
   /** /dashboard e /referencias usam MainAppShell no layout filho; não empilhar Header aqui. */
   const isDashboardShell = pathname === "/dashboard" || pathname.startsWith("/referencias");
-  /** Consulta ao texto da LGPD: conteúdo estático, acesso público (sem login). */
-  const isPublicLgpdReferencia = pathname === "/referencias/lgpd";
+  /** Consulta a referências estáticas: LGPD e Governança de IA (sem login). */
+  const isPublicReferencia =
+    pathname === "/referencias/lgpd" || pathname === "/referencias/aigp";
 
   useEffect(() => {
-    if (isPublicLgpdReferencia) return;
+    if (isPublicReferencia) return;
     if (!isLoading && !user) {
       router.push('/');
     }
-  }, [user, isLoading, router, pathname, isPublicLgpdReferencia]);
+  }, [user, isLoading, router, pathname, isPublicReferencia]);
 
-  if (isLoading && !isPublicLgpdReferencia) {
+  if (isLoading && !isPublicReferencia) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -45,7 +46,7 @@ export default function ProtectedLayout({
     );
   }
 
-  if (!user && !isPublicLgpdReferencia) {
+  if (!user && !isPublicReferencia) {
     return null;
   }
 

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
+import { PORTAL_DOC_TIPO_POLITICA } from "@/lib/politicas/politicasCatalog";
+import type { PortalDocSecaoPublica, PortalDocumentosPublicados } from "@/lib/portal/portalPublicTypes";
 
 type ProgramaPortalRow = {
   id: number;
@@ -18,13 +20,14 @@ type ProgramaPortalRow = {
   link_aviso_titular?: string | null;
   link_cookies?: string | null;
   link_declaracao_seguranca?: string | null;
+  link_termo_uso?: string | null;
   link_reportar_vulnerabilidade?: string | null;
 };
 
 const SELECT_PORTAL_BASE =
   "id, nome, slug, razao_social, nome_fantasia, cnpj, atendimento_fone, atendimento_email, atendimento_site, encarregado_dados_pessoais, logo_orgao_empresa, logo_programa";
 
-const SELECT_PORTAL_WITH_LINKS = `${SELECT_PORTAL_BASE}, link_politica_privacidade, link_aviso_titular, link_cookies, link_declaracao_seguranca, link_reportar_vulnerabilidade`;
+const SELECT_PORTAL_WITH_LINKS = `${SELECT_PORTAL_BASE}, link_politica_privacidade, link_aviso_titular, link_cookies, link_declaracao_seguranca, link_termo_uso, link_reportar_vulnerabilidade`;
 
 function shouldRetryProgramaSelectWithoutLinks(err: { message?: string } | null): boolean {
   const m = (err?.message ?? "").toLowerCase();
@@ -75,6 +78,7 @@ export async function GET(
         | "link_aviso_titular"
         | "link_cookies"
         | "link_declaracao_seguranca"
+        | "link_termo_uso"
         | "link_reportar_vulnerabilidade"
       > | null;
       programa = base
@@ -84,6 +88,7 @@ export async function GET(
             link_aviso_titular: null,
             link_cookies: null,
             link_declaracao_seguranca: null,
+            link_termo_uso: null,
             link_reportar_vulnerabilidade: null,
           }
         : null;
@@ -117,6 +122,40 @@ export async function GET(
       }
     }
 
+    const tiposPortal = Object.values(PORTAL_DOC_TIPO_POLITICA);
+    const { data: docsPub } = await supabase
+      .from("politica_programa")
+      .select("tipo_politica, secoes")
+      .eq("programa_id", row.id)
+      .eq("status", "publicado")
+      .in("tipo_politica", tiposPortal);
+
+    const mapSecoes = (secoes: unknown): PortalDocSecaoPublica[] | null => {
+      if (!Array.isArray(secoes) || secoes.length === 0) return null;
+      const mapped = secoes.map((s: Record<string, unknown>, idx: number) => ({
+        id: Number(s?.id ?? idx),
+        secao: String(s?.secao ?? ""),
+        titulo: String(s?.titulo ?? ""),
+        descricao: s?.descricao != null ? String(s.descricao) : undefined,
+        texto: s?.texto != null ? String(s.texto) : undefined,
+      }));
+      const hasText = mapped.some((s) => (s.texto || "").trim().length > 0);
+      return hasText ? mapped : null;
+    };
+
+    const byTipo = new Map<string, unknown>();
+    (docsPub || []).forEach((r: { tipo_politica: string; secoes: unknown }) => {
+      byTipo.set(r.tipo_politica, r.secoes);
+    });
+
+    const documentos_publicados: PortalDocumentosPublicados = {
+      politica: mapSecoes(byTipo.get(PORTAL_DOC_TIPO_POLITICA.politica)),
+      aviso: mapSecoes(byTipo.get(PORTAL_DOC_TIPO_POLITICA.aviso)),
+      cookies: mapSecoes(byTipo.get(PORTAL_DOC_TIPO_POLITICA.cookies)),
+      declaracao: mapSecoes(byTipo.get(PORTAL_DOC_TIPO_POLITICA.declaracao)),
+      termo: mapSecoes(byTipo.get(PORTAL_DOC_TIPO_POLITICA.termo)),
+    };
+
     return NextResponse.json({
       id: row.id,
       nome: row.nome ?? null,
@@ -135,7 +174,9 @@ export async function GET(
       link_aviso_titular: row.link_aviso_titular ?? null,
       link_cookies: row.link_cookies ?? null,
       link_declaracao_seguranca: row.link_declaracao_seguranca ?? null,
+      link_termo_uso: row.link_termo_uso ?? null,
       link_reportar_vulnerabilidade: row.link_reportar_vulnerabilidade ?? null,
+      documentos_publicados,
     });
   } catch (error) {
     console.error("Erro GET portal:", error);

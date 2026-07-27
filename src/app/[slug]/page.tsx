@@ -30,7 +30,7 @@ import {
   Grid,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Policy as PrivacyIcon, Send as SendIcon, Search as SearchIcon } from "@mui/icons-material";
+import { Send as SendIcon, Search as SearchIcon } from "@mui/icons-material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import SecurityIcon from "@mui/icons-material/Security";
 import LinkIcon from "@mui/icons-material/Link";
@@ -41,6 +41,9 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
 import { resolvePortalDocHref, type PortalLegalDoc } from "@/lib/portal/portalLegalLinks";
+import { landing } from "@/components/landing/landingTokens";
+import { portalHeroBandSx, portalPanelSx } from "@/lib/portal/portalPublicUi";
+import { PortalPublicHeaderSync } from "@/components/portal/PortalPublicHeaderContext";
 
 function PortalDocLink({
   slug,
@@ -288,16 +291,16 @@ export default function PortalPrivacidadePage() {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2.5, md: 3.5 } }}>
         <Skeleton variant="text" width="60%" height={56} />
-        <Skeleton variant="rectangular" height={320} sx={{ mt: 2 }} />
+        <Skeleton variant="rectangular" height={320} sx={{ mt: 2, borderRadius: 1.5 }} />
       </Container>
     );
   }
 
   if (error || !data) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3.5 } }}>
         <Typography variant="h5" fontWeight="bold" color="error" gutterBottom>
           {error ?? "Programa não encontrado"}
         </Typography>
@@ -309,9 +312,19 @@ export default function PortalPrivacidadePage() {
   }
 
   if (protocolo) {
+    const portalLogoUrl = getProgramaLogoDisplayUrl(data);
     return (
-      <Container maxWidth="sm" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 4, textAlign: "center", borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+      <>
+        <PortalPublicHeaderSync slug={slug} orgName={nomeExibicao} logoUrl={portalLogoUrl} />
+      <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
+        <Paper
+          elevation={0}
+          sx={{
+            ...portalPanelSx(theme, { accentTop: true, tint: "primary" }),
+            p: 4,
+            textAlign: "center",
+          }}
+        >
           <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
             Pedido registrado
           </Typography>
@@ -329,43 +342,66 @@ export default function PortalPrivacidadePage() {
           </Typography>
         </Paper>
       </Container>
+      </>
     );
   }
 
   const portalLogoUrl = getProgramaLogoDisplayUrl(data);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Cabeçalho */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        {portalLogoUrl ? (
-          <Box
-            component="img"
-            src={portalLogoUrl}
-            alt="Logo"
-            sx={{
-              width: 64,
-              height: 64,
-              borderRadius: 2,
-              objectFit: "contain",
-              bgcolor: alpha(theme.palette.primary.main, 0.06),
-              p: 0.5,
-            }}
-          />
-        ) : (
-          <Box sx={{ width: 56, height: 56, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: alpha(theme.palette.primary.main, 0.12), color: "primary.main" }}>
-            <PrivacyIcon sx={{ fontSize: 32 }} />
-          </Box>
-        )}
-        <Box>
-          
-        <Typography variant="h4" fontWeight="bold" >{nomeExibicao}</Typography>
-        <Typography variant="h5" component="h1" color="text.secondary">Portal de Privacidade e Segurança da Informação</Typography>
-        </Box>
+    <>
+      <PortalPublicHeaderSync slug={slug} orgName={nomeExibicao} logoUrl={portalLogoUrl} />
+    <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2 } }}>
+      <Box
+        component="h1"
+        sx={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          p: 0,
+          m: -1,
+          overflow: "hidden",
+          clip: "rect(0,0,0,0)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        {nomeExibicao} — Portal de Privacidade
       </Box>
 
-      {/* Bloco compacto: Informações básicas + Informações de contato (sem accordion) */}
-      <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+      <Box
+        sx={{
+          ...portalHeroBandSx,
+          mb: 2,
+          px: { xs: 1.5, sm: 2 },
+          py: { xs: 1, sm: 1.15 },
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            color: landing.heroText,
+            fontWeight: 600,
+            fontSize: { xs: "0.8125rem", sm: "0.875rem" },
+            lineHeight: 1.35,
+            whiteSpace: { md: "nowrap" },
+          }}
+        >
+          <Box component="span" fontWeight={800}>
+            Transparência e direitos do titular
+          </Box>
+          <Box component="span" sx={{ color: alpha(landing.heroText, 0.9), mx: { xs: 0.5, sm: 1 } }}>
+            ·
+          </Box>
+          <Box component="span" sx={{ color: alpha(landing.heroText, 0.92) }}>
+            LGPD, documentos do programa, pedidos e contato com o encarregado.
+          </Box>
+        </Typography>
+      </Box>
+
+      <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }), p: 2.5, mb: 2.5 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ letterSpacing: "0.08em" }}>Informações básicas</Typography>
@@ -406,11 +442,8 @@ export default function PortalPrivacidadePage() {
           <Paper
             elevation={0}
             sx={{
+              ...portalPanelSx(theme, { accentTop: true, tint: "primary" }),
               p: 2.5,
-              borderRadius: 2,
-              border: "1px solid",
-              borderColor: "divider",
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
             }}
           >
             <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
@@ -418,15 +451,17 @@ export default function PortalPrivacidadePage() {
                 sx={{
                   width: 48,
                   height: 48,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.primary.main, 0.12),
+                  borderRadius: 1.5,
+                  background: `linear-gradient(135deg, ${landing.blue} 0%, ${landing.blueBright} 100%)`,
+                  color: "#fff",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
+                  boxShadow: `0 4px 14px ${alpha(landing.blue, 0.35)}`,
                 }}
               >
-                <GavelIcon color="primary" />
+                <GavelIcon />
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="overline" color="primary" fontWeight="700" sx={{ letterSpacing: "0.06em" }}>
@@ -456,9 +491,9 @@ export default function PortalPrivacidadePage() {
           </Paper>
 
           {/* Documentos hospedados no portal (ou links externos configurados no cadastro) */}
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+          <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }), p: 2.5 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-              <MenuBookIcon color="primary" fontSize="small" />
+              <MenuBookIcon sx={{ color: landing.blue }} fontSize="small" />
               <Typography variant="subtitle1" fontWeight="bold">
                 Documentos e transparência
               </Typography>
@@ -474,10 +509,10 @@ export default function PortalPrivacidadePage() {
                 <ListItemText
                   primary={
                     <PortalDocLink slug={slug} doc="termo" external={data.link_termo_uso}>
-                      Termo de Uso
+                      Termo de Uso do serviço
                     </PortalDocLink>
                   }
-                  secondary="Condições de uso do serviço e do portal."
+                  secondary="Condições de adesão, direitos e responsabilidades (modelo PPSI)."
                 />
               </ListItem>
               <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
@@ -536,10 +571,21 @@ export default function PortalPrivacidadePage() {
           </Paper>
 
           {/* Segurança: formulários de reportar e contato */}
-          <Accordion defaultExpanded elevation={0} sx={{ border: "1px solid", borderColor: "divider", "&:before": { display: "none" }, borderRadius: "8px !important" }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
+          <Accordion
+            defaultExpanded
+            elevation={0}
+            sx={{
+              ...portalPanelSx(theme, { accentTop: true, tint: "shield" }),
+              "&:before": { display: "none" },
+              borderRadius: "12px !important",
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ bgcolor: alpha(landing.shield, theme.palette.mode === "dark" ? 0.12 : 0.06) }}
+            >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <SecurityIcon color="primary" />
+                <SecurityIcon sx={{ color: landing.shield }} />
                 <Typography variant="subtitle1" fontWeight="bold">Segurança</Typography>
               </Box>
             </AccordionSummary>
@@ -614,12 +660,10 @@ export default function PortalPrivacidadePage() {
         <Paper
           elevation={0}
           sx={{
+            ...portalPanelSx(theme, { accentTop: true, tint: "primary" }),
             p: 3,
-            borderRadius: 2,
-            border: "1px solid",
-            borderColor: "divider",
             position: { md: "sticky" },
-            top: { md: 24 },
+            top: { md: 72 },
             scrollMarginTop: { xs: 96, md: 100 },
           }}
           id="solicitar"
@@ -655,7 +699,7 @@ export default function PortalPrivacidadePage() {
             <form onSubmit={handleConsultar}>
               <Stack spacing={1.5}>
                 {consultaError && <Alert severity="error" onClose={() => setConsultaError(null)}>{consultaError}</Alert>}
-                <TextField size="small" fullWidth label="Protocolo" value={consultaForm.protocolo} onChange={(e) => setConsultaForm((f) => ({ ...f, protocolo: e.target.value }))} placeholder="Ex.: PT-2025-00001" />
+                <TextField size="small" fullWidth label="Protocolo" value={consultaForm.protocolo} onChange={(e) => setConsultaForm((f) => ({ ...f, protocolo: e.target.value }))} placeholder="Ex.: PT-org-2026-A3F9C2B1E0" />
                 <TextField size="small" fullWidth type="email" label="E-mail" value={consultaForm.email} onChange={(e) => setConsultaForm((f) => ({ ...f, email: e.target.value }))} />
                 <TextField size="small" fullWidth label="Documento (CPF)" value={consultaForm.documento} onChange={(e) => setConsultaForm((f) => ({ ...f, documento: e.target.value }))} placeholder="Apenas números" />
                 <Button type="submit" variant="outlined" size="medium" fullWidth startIcon={<SearchIcon />} disabled={consultaLoading || (!consultaForm.protocolo.trim() && !consultaForm.email.trim() && !consultaForm.documento.trim())}>
@@ -690,5 +734,6 @@ export default function PortalPrivacidadePage() {
         </Paper>
       </Box>
     </Container>
+    </>
   );
 }

@@ -4,9 +4,13 @@ import React from "react";
 import Link from "next/link";
 import { Box, Card, CardActionArea, CardContent, Grid, Typography, alpha, useTheme } from "@mui/material";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
+import { formatMaturityIndex } from "@/lib/utils/maturity";
 
 type Props = {
   postura?: ModulosResumoApi["postura"];
+  /** Pendências atrasadas do programa (quando disponível). */
+  atrasados?: number;
+  vencendo7d?: number;
   loading?: boolean;
   compact?: boolean;
   /** Quando informado, o KPI de riscos críticos navega para a gestão de riscos. */
@@ -17,102 +21,179 @@ type KpiDef = {
   label: string;
   value: string | number;
   color: string;
-  hint?: string;
+  hint: string;
   href?: string;
 };
 
-export function ProgramaKpiStrip({ postura, loading, compact, idOrSlug }: Props) {
+export function ProgramaKpiStrip({
+  postura,
+  atrasados,
+  vencendo7d,
+  loading,
+  compact,
+  idOrSlug,
+}: Props) {
   const theme = useTheme();
 
-  const maturidadeLabel = (() => {
-    const raw = postura?.maturidadeMedia;
-    if (raw == null || Number.isNaN(Number(raw))) return "—";
-    const n = Number(raw);
-    const pct = n > 0 && n <= 1 ? n * 100 : n;
-    return `${Math.round(pct * 10) / 10}%`;
-  })();
+  const maturidade = formatMaturityIndex(postura?.maturidadeMedia);
 
-  const kpis: KpiDef[] = [
-    {
-      label: "Maturidade",
-      value: maturidadeLabel,
-      color: theme.palette.primary.main,
-    },
-    {
-      label: "DSAR abertos",
-      value: postura?.dsarAbertos ?? 0,
-      color: theme.palette.info.main,
-    },
-    {
-      label: "Reportes novos",
-      value: postura?.reportesNovos ?? 0,
-      color: theme.palette.warning.main,
-    },
-    {
-      label: "Riscos críticos",
-      value: postura?.riscosCriticos ?? 0,
-      color: theme.palette.error.main,
-      hint: postura?.riscosTotal != null ? `${postura.riscosTotal} no total` : undefined,
-      href: idOrSlug ? `/programas/${idOrSlug}/riscos` : undefined,
-    },
-  ];
+  const showOps = atrasados != null || vencendo7d != null;
+
+  const kpis: KpiDef[] = showOps
+    ? [
+        {
+          label: "Atrasadas",
+          value: atrasados ?? 0,
+          color: theme.palette.error.main,
+          hint: "Pendências com prazo vencido",
+          href: idOrSlug ? `/programas/${idOrSlug}/conformidade` : undefined,
+        },
+        {
+          label: "Vencem em 7 dias",
+          value: vencendo7d ?? 0,
+          color: theme.palette.warning.main,
+          hint: "Vencimento nos próximos 7 dias",
+          href: idOrSlug ? `/programas/${idOrSlug}/conformidade` : undefined,
+        },
+        {
+          label: "Maturidade",
+          value: maturidade?.indexText ?? "—",
+          color: maturidade?.color ?? theme.palette.primary.main,
+          hint: maturidade
+            ? `Índice iMC · nível ${maturidade.levelId} (${maturidade.label})`
+            : "Diagnóstico · índice iMC",
+          href: idOrSlug ? `/programas/${idOrSlug}/diagnostico` : undefined,
+        },
+        {
+          label: "Pedidos abertos",
+          value: postura?.dsarAbertos ?? 0,
+          color: theme.palette.info.main,
+          hint: "Pedidos de titulares (DSAR)",
+          href: idOrSlug ? `/programas/${idOrSlug}/conformidade/pedidos-titulares` : undefined,
+        },
+        {
+          label: "Riscos críticos",
+          value: postura?.riscosCriticos ?? 0,
+          color: theme.palette.error.main,
+          hint:
+            postura?.riscosTotal != null
+              ? `Score ≥ 12 · ${postura.riscosTotal} registrado(s)`
+              : "Riscos ativos com score ≥ 12",
+          href: idOrSlug ? `/programas/${idOrSlug}/riscos` : undefined,
+        },
+      ]
+    : [
+        {
+          label: "Maturidade",
+          value: maturidade?.indexText ?? "—",
+          color: maturidade?.color ?? theme.palette.primary.main,
+          hint: maturidade
+            ? `Índice iMC · nível ${maturidade.levelId} (${maturidade.label})`
+            : "Diagnóstico · índice iMC",
+          href: idOrSlug ? `/programas/${idOrSlug}/diagnostico` : undefined,
+        },
+        {
+          label: "Pedidos abertos",
+          value: postura?.dsarAbertos ?? 0,
+          color: theme.palette.info.main,
+          hint: "Pedidos de titulares (DSAR)",
+          href: idOrSlug ? `/programas/${idOrSlug}/conformidade/pedidos-titulares` : undefined,
+        },
+        {
+          label: "Reportes novos",
+          value: postura?.reportesNovos ?? 0,
+          color: theme.palette.warning.main,
+          hint: "Reportes do canal público",
+          href: idOrSlug ? `/programas/${idOrSlug}/conformidade/reportes` : undefined,
+        },
+        {
+          label: "Riscos críticos",
+          value: postura?.riscosCriticos ?? 0,
+          color: theme.palette.error.main,
+          hint:
+            postura?.riscosTotal != null
+              ? `Score ≥ 12 · ${postura.riscosTotal} registrado(s)`
+              : "Riscos ativos com score ≥ 12",
+          href: idOrSlug ? `/programas/${idOrSlug}/riscos` : undefined,
+        },
+      ];
+
+  const cols = kpis.length >= 5 ? { xs: 6, sm: 4, md: true as const } : { xs: 6, md: 3 };
 
   return (
-    <Grid container spacing={compact ? 1 : 2}>
+    <Grid container spacing={compact ? 0.75 : 1.25}>
       {kpis.map((kpi) => {
+        const emphasize =
+          typeof kpi.value === "number" &&
+          kpi.value > 0 &&
+          (kpi.label === "Atrasadas" || kpi.label === "Riscos críticos");
+
         const content = (
           <CardContent
             sx={{
-              py: compact ? 0.85 : 1.5,
-              px: compact ? 1.25 : 2,
-              "&:last-child": { pb: compact ? 0.85 : 1.5 },
-              display: compact ? "flex" : "block",
-              alignItems: "baseline",
-              justifyContent: "space-between",
-              gap: 1,
+              py: compact ? 0.65 : 1.5,
+              px: compact ? 1 : 1.75,
+              "&:last-child": { pb: compact ? 0.65 : 1.5 },
             }}
           >
             <Typography
-              variant="caption"
+              variant="body2"
               color="text.secondary"
               fontWeight={600}
-              sx={{ fontSize: compact ? "0.7rem" : undefined }}
+              sx={{ fontSize: compact ? "0.8125rem" : "0.875rem", lineHeight: 1.25, mb: 0.35 }}
             >
               {kpi.label}
             </Typography>
-            <Box sx={{ textAlign: compact ? "right" : "left" }}>
+            <Typography
+              variant={compact ? "h6" : "h4"}
+              fontWeight={800}
+              sx={{
+                lineHeight: 1.05,
+                letterSpacing: "-0.03em",
+                fontSize: compact ? "1.35rem" : undefined,
+                color: emphasize || kpi.label === "Maturidade" ? kpi.color : "text.primary",
+              }}
+            >
+              {loading ? "…" : kpi.value}
+            </Typography>
+            {!loading && (
               <Typography
-                variant={compact ? "h6" : "h5"}
-                fontWeight={800}
-                sx={{ lineHeight: 1.15, mt: compact ? 0 : 0.25 }}
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  display: "block",
+                  mt: 0.35,
+                  lineHeight: 1.35,
+                  fontSize: compact ? "0.75rem" : "0.8125rem",
+                }}
               >
-                {loading ? "…" : kpi.value}
+                {kpi.hint}
               </Typography>
-              {kpi.hint && !loading && !compact && (
-                <Typography variant="caption" color="text.secondary">
-                  {kpi.hint}
-                </Typography>
-              )}
-            </Box>
+            )}
           </CardContent>
         );
 
         return (
-          <Grid item xs={6} md={3} key={kpi.label}>
+          <Grid
+            item
+            xs={cols.xs}
+            sm={"sm" in cols ? cols.sm : undefined}
+            md={cols.md}
+            key={kpi.label}
+            sx={cols.md === true ? { minWidth: { md: 0 }, flex: { md: "1 1 0" } } : undefined}
+          >
             <Card
               elevation={0}
               sx={{
                 height: "100%",
-                border: `1px solid ${theme.palette.divider}`,
-                borderRadius: compact ? 1.5 : 2,
-                borderTop: `${compact ? 2 : 3}px solid ${kpi.color}`,
-                bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === "dark" ? 0.72 : 0.92),
-                backdropFilter: "blur(8px)",
+                borderRadius: 1,
+                borderLeft: `3px solid ${kpi.color}`,
+                backgroundImage: `linear-gradient(135deg, ${alpha(kpi.color, theme.palette.mode === "dark" ? 0.12 : 0.06)} 0%, transparent 62%)`,
                 ...(kpi.href && {
-                  transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                  transition: "box-shadow 0.15s ease, transform 0.15s ease",
                   "&:hover": {
-                    borderColor: alpha(kpi.color, 0.55),
-                    boxShadow: `0 4px 12px ${alpha(kpi.color, 0.16)}`,
+                    boxShadow: `0 4px 14px ${alpha(kpi.color, 0.16)}`,
+                    transform: "translateY(-1px)",
                   },
                 }),
               }}
@@ -145,58 +226,89 @@ type DashboardKpisProps = {
     reportesNovos: number;
     riscosCriticos: number;
   };
+  /** Pendências com prazo vencido — prioridade operacional. */
+  atrasados?: number;
+  vencendo7d?: number;
   loading?: boolean;
 };
 
 type DashboardKpisStripProps = DashboardKpisProps & { compact?: boolean };
 
-export function DashboardKpiStrip({ kpis, loading, compact }: DashboardKpisStripProps) {
+export function DashboardKpiStrip({ kpis, atrasados, vencendo7d, loading, compact }: DashboardKpisStripProps) {
   const theme = useTheme();
   const items: KpiDef[] = [
-    { label: "Programas", value: kpis?.programasAtivos ?? 0, color: theme.palette.primary.main },
-    { label: "DSAR", value: kpis?.dsarAbertos ?? 0, color: theme.palette.info.main },
-    { label: "Incidentes", value: kpis?.incidentesAbertos ?? 0, color: theme.palette.error.main },
-    { label: "Reportes", value: kpis?.reportesNovos ?? 0, color: theme.palette.warning.main },
-    { label: "Riscos", value: kpis?.riscosCriticos ?? 0, color: "#C62828" },
+    {
+      label: "Atrasadas",
+      value: atrasados ?? 0,
+      color: theme.palette.error.main,
+      hint: "Pendências vencidas",
+    },
+    {
+      label: "Vencem em 7 dias",
+      value: vencendo7d ?? 0,
+      color: theme.palette.warning.main,
+      hint: "Próximos 7 dias",
+    },
+    {
+      label: "Pedidos abertos",
+      value: kpis?.dsarAbertos ?? 0,
+      color: theme.palette.info.main,
+      hint: "DSAR em aberto",
+    },
+    {
+      label: "Incidentes",
+      value: kpis?.incidentesAbertos ?? 0,
+      color: "#C62828",
+      hint: "Incidentes em tratamento",
+    },
+    {
+      label: "Riscos críticos",
+      value: kpis?.riscosCriticos ?? 0,
+      color: "#B71C1C",
+      hint: "Score ≥ 12",
+    },
   ];
 
   return (
-    <Box sx={{ mb: compact ? 0 : 2 }}>
-      <Grid container spacing={compact ? 1 : 1.5}>
+    <Box sx={{ mb: compact ? 0 : 0.5 }}>
+      <Grid container spacing={1.25}>
         {items.map((kpi) => (
           <Grid item xs={6} sm={4} md key={kpi.label} sx={{ minWidth: { md: 0 }, flex: { md: "1 1 0" } }}>
             <Card
               elevation={0}
               sx={{
                 height: "100%",
-                border: `1px solid ${theme.palette.divider}`,
-                borderRadius: compact ? 1.5 : 2,
-                borderTop: `${compact ? 2 : 3}px solid ${kpi.color}`,
-                bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === "dark" ? 0.72 : 0.92),
-                backgroundImage: `linear-gradient(180deg, ${alpha(kpi.color, theme.palette.mode === "dark" ? 0.1 : 0.05)} 0%, transparent 70%)`,
-                backdropFilter: "blur(8px)",
+                borderRadius: 1,
+                borderLeft: `3px solid ${kpi.color}`,
+                backgroundImage: `linear-gradient(135deg, ${alpha(kpi.color, theme.palette.mode === "dark" ? 0.14 : 0.07)} 0%, transparent 62%)`,
               }}
             >
               <CardContent
                 sx={{
-                  py: compact ? 0.75 : 1.25,
-                  px: compact ? 1.1 : 1.5,
-                  display: compact ? "flex" : "block",
-                  alignItems: "baseline",
-                  justifyContent: "space-between",
-                  gap: 0.75,
-                  "&:last-child": { pb: compact ? 0.75 : 1.25 },
+                  py: 1.5,
+                  px: 1.75,
+                  "&:last-child": { pb: 1.5 },
                 }}
               >
                 <Typography
-                  variant="caption"
+                  variant="body2"
                   color="text.secondary"
                   fontWeight={600}
-                  sx={{ fontSize: compact ? "0.68rem" : undefined }}
+                  sx={{ fontSize: "0.8125rem", lineHeight: 1.25, mb: 0.5 }}
                 >
                   {kpi.label}
                 </Typography>
-                <Typography variant={compact ? "h6" : "h5"} fontWeight={800} sx={{ lineHeight: 1.1 }}>
+                <Typography
+                  variant="h4"
+                  fontWeight={800}
+                  sx={{
+                    lineHeight: 1.05,
+                    letterSpacing: "-0.03em",
+                    color: Number(kpi.value) > 0 && (kpi.label === "Atrasadas" || kpi.label === "Riscos críticos" || kpi.label === "Incidentes")
+                      ? kpi.color
+                      : "text.primary",
+                  }}
+                >
                   {loading ? "…" : kpi.value}
                 </Typography>
               </CardContent>

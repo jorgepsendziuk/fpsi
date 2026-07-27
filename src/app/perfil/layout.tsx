@@ -10,7 +10,7 @@ export default function PerfilLayout({
 }) {
   return (
     <MainAppShell>
-      <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default", minHeight: "100%" }}>
+      <Box sx={{ flexGrow: 1, bgcolor: "background.default", minHeight: "100%" }}>
         {children}
       </Box>
     </MainAppShell>

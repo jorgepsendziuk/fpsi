@@ -14,6 +14,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import PersonIcon from "@mui/icons-material/Person";
 import GavelIcon from "@mui/icons-material/Gavel";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import PublicIcon from "@mui/icons-material/Public";
 import FolderIcon from "@mui/icons-material/Folder";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -96,10 +97,16 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
       description: "Acompanhamento de ações"
     },
     {
-      label: "Tratamento e riscos",
+      label: "Tratamento de dados",
       icon: <GavelIcon />,
       path: `/programas/${programaId}/conformidade`,
       description: "ROPA, RIPD e incidentes"
+    },
+    {
+      label: "Gestão de Riscos",
+      icon: <WarningAmberIcon />,
+      path: `/programas/${programaId}/riscos`,
+      description: "Mapa de calor e acompanhamento de tratamento"
     },
     {
       label: "Titulares e canais públicos",

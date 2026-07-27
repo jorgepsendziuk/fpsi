@@ -2,37 +2,49 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Container, Typography, Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { Gavel as GavelIcon } from "@mui/icons-material";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
-import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
-import { ProgramaLastActivityLine } from "@/components/common/ProgramaLastActivityLine";
 import { ConformidadeHubCard, TRATAMENTO_SECTIONS } from "./ConformidadeHubCard";
 
 export default function ConformidadeTratamentoHubPage() {
   const params = useParams();
   const router = useRouter();
   const idOrSlug = params.id as string;
-  const { programaId } = useProgramaIdFromParam(idOrSlug);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Box
+      sx={{
+        height: { md: "calc(100dvh - 64px)" },
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+        px: { xs: 2, sm: 3 },
+        py: { xs: 1.5, md: 2 },
+        maxWidth: 1100,
+        mx: "auto",
+        width: "100%",
+        boxSizing: "border-box",
+      }}
+    >
       <PageHeroHeader
-        title="Tratamento de dados e riscos"
-        icon={<GavelIcon sx={{ fontSize: 30 }} aria-hidden />}
-        description="Conformidade LGPD — ROPA, RIPD e incidentes."
+        title="Tratamento de dados"
+        icon={<GavelIcon sx={{ fontSize: 26 }} aria-hidden />}
+        description="ROPA, RIPD, incidentes e vínculo com a gestão de riscos do programa."
+        sx={{ mb: 1.25 }}
       />
-      <ProgramaLastActivityLine programaId={programaId} programaPathSegment={idOrSlug} sx={{ mb: 2 }} />
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: "md" }}>
-        Registro de operações (ROPA), impacto (RIPD) e incidentes — documentação e gestão de risco no tratamento de dados
-        pessoais.
-      </Typography>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5} sx={{ flex: 1, minHeight: 0, alignContent: "flex-start" }}>
         {TRATAMENTO_SECTIONS.map((section) => (
-          <ConformidadeHubCard key={section.key} section={section} idOrSlug={idOrSlug} router={router} />
+          <ConformidadeHubCard
+            key={section.key}
+            section={section}
+            idOrSlug={idOrSlug}
+            router={router}
+            dense
+          />
         ))}
       </Grid>
-    </Container>
+    </Box>
   );
 }

@@ -1,3 +1,21 @@
+/** Seção publicada de documento legal (espelha politica_programa.secoes). */
+export type PortalDocSecaoPublica = {
+  id: number;
+  secao: string;
+  titulo: string;
+  descricao?: string;
+  texto?: string;
+};
+
+/** Documentos do módulo Políticas publicados para o portal. */
+export type PortalDocumentosPublicados = {
+  politica: PortalDocSecaoPublica[] | null;
+  aviso: PortalDocSecaoPublica[] | null;
+  cookies: PortalDocSecaoPublica[] | null;
+  declaracao: PortalDocSecaoPublica[] | null;
+  termo: PortalDocSecaoPublica[] | null;
+};
+
 /** Resposta pública GET /api/portal/[slug] (portal do titular). */
 export type PortalPublicData = {
   id: number;
@@ -17,5 +35,8 @@ export type PortalPublicData = {
   link_aviso_titular: string | null;
   link_cookies: string | null;
   link_declaracao_seguranca: string | null;
+  link_termo_uso: string | null;
   link_reportar_vulnerabilidade: string | null;
+  /** Textos publicados no módulo Políticas (quando status=publicado). */
+  documentos_publicados?: PortalDocumentosPublicados;
 };
