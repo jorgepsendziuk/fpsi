@@ -1,10 +1,5 @@
 {
-  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/demo/login/page": "app/demo/login/page.js",
-  "/programas/[id]/conformidade/ropa/page": "app/programas/[id]/conformidade/ropa/page.js",
-  "/programas/[id]/page": "app/programas/[id]/page.js",
-  "/programas/[id]/escritorio/page": "app/programas/[id]/escritorio/page.js",
-  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js",
-  "/divulgacao/page": "app/divulgacao/page.js",
-  "/divulgacao/slides/page": "app/divulgacao/slides/page.js"
+  "/page": "app/page.js",
+  "/[slug]/page": "app/[slug]/page.js",
+  "/linkedin/page": "app/linkedin/page.js"
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Container,
@@ -37,6 +37,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
@@ -96,6 +97,7 @@ const STATUS_PEDIDO: Record<string, string> = {
 
 export default function PortalPrivacidadePage() {
   const params = useParams();
+  const router = useRouter();
   const theme = useTheme();
   const slug = params.slug as string;
   const [data, setData] = useState<PortalPublicData | null>(null);
@@ -304,9 +306,17 @@ export default function PortalPrivacidadePage() {
         <Typography variant="h5" fontWeight="bold" color="error" gutterBottom>
           {error ?? "Programa não encontrado"}
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5 }}>
           Verifique o endereço ou entre em contato com a organização.
         </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => router.push("/")}
+          sx={{ textTransform: "none", fontWeight: 600 }}
+        >
+          Voltar para a página inicial
+        </Button>
       </Container>
     );
   }
