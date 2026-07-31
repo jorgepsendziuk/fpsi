@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/appUrl";
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
@@ -51,9 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     const emailNorm = email.trim().toLowerCase();
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const baseUrl = getAppUrl();
 
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
       emailNorm,

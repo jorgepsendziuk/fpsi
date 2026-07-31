@@ -1,6 +1,6 @@
 /**
  * CTAs da demo na landing — mesmo espírito de “ver / experimentar / entrar”.
- * Teste ao vivo: https://fpsi.vercel.app/?cta=<id>
+ * Teste ao vivo: https://fpsi.com.br/?cta=<id>
  */
 export const DEMO_CTA_OPTIONS = [
   { id: "pratica", label: "Ver na prática", short: "Demo" },

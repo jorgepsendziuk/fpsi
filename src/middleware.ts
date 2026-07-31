@@ -6,7 +6,9 @@ export async function middleware(request: NextRequest) {
   // Skip auth para rotas que não precisam
   const path = request.nextUrl.pathname;
   if (path.startsWith('/demo') || path.startsWith('/api') || path.startsWith('/auth') ||
-      path === '/login' || path === '/register' || path === '/forgot-password') {
+      path === '/login' || path === '/register' || path === '/forgot-password' ||
+      path === '/setup' || path.startsWith('/setup/') ||
+      path === '/linkedin' || path.startsWith('/linkedin/')) {
     return NextResponse.next();
   }
   if (path === '/programas/demo' || path === '/programas/1') {

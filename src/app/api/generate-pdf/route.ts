@@ -14,6 +14,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { decode } from "he";
 import { NextResponse } from "next/server";
+import { getAppUrl } from "@/lib/appUrl";
 import {
   applyPoliticaPlaceholders,
   formatCnpjBrasil,
@@ -35,10 +36,7 @@ const FOOTER_BASELINE_Y = 32;
 const FOOTER_FONT_SIZE = 9;
 
 function getPublicAppBaseUrl(): string {
-  const raw =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  return raw.replace(/\/$/, "");
+  return getAppUrl();
 }
 
 /** URL pública do portal de privacidade (`/{slug}`), quando o programa tem slug. */

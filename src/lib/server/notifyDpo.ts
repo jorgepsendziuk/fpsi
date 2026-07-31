@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getAppUrl } from "@/lib/appUrl";
 
 type NotifyEvent =
   | "novo_dsar"
@@ -27,7 +28,7 @@ function buildSubject(payload: NotifyPayload): string {
 }
 
 function buildBody(payload: NotifyPayload): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL || "https://fpsi.vercel.app";
+  const base = getAppUrl();
   const programaPath = payload.programaSlug
     ? `${base}/programas/${payload.programaSlug}`
     : `${base}/programas/${payload.programaId}`;

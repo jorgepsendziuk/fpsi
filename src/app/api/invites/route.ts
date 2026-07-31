@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAppUrl } from "@/lib/appUrl";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { UserRole, getDefaultPermissions } from "@/lib/types/user";
@@ -120,9 +121,7 @@ export async function POST(request: NextRequest) {
       req: { headers: request.headers },
     });
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const baseUrl = getAppUrl();
     const inviteUrl = `${baseUrl}/auth/aceitar-convite?token=${token}`;
 
     return NextResponse.json({

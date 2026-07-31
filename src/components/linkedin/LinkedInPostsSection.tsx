@@ -24,6 +24,7 @@ import {
   LINKEDIN_POST_BACKLOG,
   type LinkedInPost,
 } from "./linkedinPostsContent";
+import { LinkedInShowcase } from "./showcase/LinkedInShowcase";
 
 const brandFont = Montserrat({
   subsets: ["latin"],
@@ -33,25 +34,23 @@ const brandFont = Montserrat({
 
 const ff = brandFont.style.fontFamily;
 
-function PrintSlot({ label, hint }: { label: string; hint: string }) {
+function LiveShowcaseSlot({
+  label,
+  showcaseId,
+}: {
+  label: string;
+  showcaseId: import("./showcase/types").LinkedInShowcaseId;
+}) {
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2,
-        mb: 1.5,
-        bgcolor: "action.hover",
-        borderStyle: "dashed",
-        borderWidth: 1,
-      }}
-    >
-      <Typography sx={{ fontFamily: ff, fontWeight: 600, fontSize: "0.9rem", mb: 0.5 }}>
+    <Box sx={{ mb: 2.5 }}>
+      <Typography
+        variant="caption"
+        sx={{ fontFamily: ff, fontWeight: 700, color: landing.navy, mb: 0.75, display: "block" }}
+      >
         {label}
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
-        {hint}
-      </Typography>
-    </Paper>
+      <LinkedInShowcase id={showcaseId} compact hideFrameFooter />
+    </Box>
   );
 }
 
@@ -154,10 +153,10 @@ function PostAccordion({ post, onCopied }: { post: LinkedInPost; onCopied: () =>
           variant="subtitle2"
           sx={{ fontFamily: ff, fontWeight: 700, mb: 1.5, color: landing.navy }}
         >
-          Prints sugeridos
+          Prévias ao vivo
         </Typography>
         {post.prints.map((p) => (
-          <PrintSlot key={p.label} label={p.label} hint={p.hint} />
+          <LiveShowcaseSlot key={`${p.showcaseId}-${p.label}`} label={p.label} showcaseId={p.showcaseId} />
         ))}
       </AccordionDetails>
     </Accordion>
@@ -180,11 +179,19 @@ export function LinkedInPostsSection() {
         Posts temáticos
       </Typography>
       <Typography sx={{ fontFamily: ff, fontSize: "0.95rem", color: landing.muted, mb: 3, lineHeight: 1.55 }}>
-        Rascunhos para publicação diária no LinkedIn — tom open source, prints das telas reais. Expanda, copie e
-        ajuste antes de postar.
+        Rascunhos para publicação diária no LinkedIn — cada post traz vitrines interativas do sistema real. Expanda,
+        copie o texto e use as prévias como referência visual.
       </Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
+        <Chip
+          component="button"
+          label="Explorar módulos"
+          variant="outlined"
+          size="small"
+          onClick={() => scrollTo("explorar")}
+          sx={{ fontFamily: ff, cursor: "pointer", fontWeight: 600 }}
+        />
         <Chip
           component="button"
           label="Artigo longo"

@@ -6,7 +6,7 @@ Diagnóstico de maturidade, plano de trabalho, políticas, mapeamento de dados, 
 
 Alternativa em **software livre** à ferramenta oficial em planilha Excel: multi-usuário, sem dependência de software proprietário e adaptável à realidade de cada organização.
 
-**Produção:** [fpsi.geoapps.com.br](https://fpsi.geoapps.com.br) · **Demo aberta:** [fpsi.geoapps.com.br/demo/login](https://fpsi.geoapps.com.br/demo/login)
+**Produção:** [fpsi.com.br](https://fpsi.com.br) (canônico: `www.fpsi.com.br`) · **Demo:** [fpsi.com.br/demo/login](https://fpsi.com.br/demo/login)
 
 ## Para quem é
 
@@ -45,9 +45,55 @@ O projeto nasceu de uma pesquisa com profissionais da área (incl. formação CD
 
 **Documentação da pesquisa e do contexto regulatório:** [docs/essentials/CONTEXTO_PESQUISA_ORIGEM.md](docs/essentials/CONTEXTO_PESQUISA_ORIGEM.md)
 
-## Como rodar
+## Implantação rápida
 
-- **Setup local:** [docs/essentials/setup/COMO_RODAR_LOCALMENTE.md](docs/essentials/setup/COMO_RODAR_LOCALMENTE.md)
+Passo a passo completo: **[docs/essentials/setup/IMPLANTACAO.md](docs/essentials/setup/IMPLANTACAO.md)**  
+Assistente interativo no app (após `npm run dev`): **[http://localhost:3000/setup](http://localhost:3000/setup)**
+
+### Resumo (nova instância)
+
+```bash
+git clone https://github.com/SEU_ORG/fpsi.git && cd fpsi
+npm install
+cp .env.example .env.local   # preencher chaves do Supabase
+
+supabase login
+supabase link --project-ref SEU_PROJECT_REF
+supabase db push             # schema base + todas as migrações (incl. catálogo PPSI 2.0)
+
+npm run dev                  # http://localhost:3000 — assistente: /setup
+```
+
+### Variáveis de ambiente
+
+Copie [`.env.example`](.env.example) para `.env.local` (dev) ou configure no painel do deploy.
+
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Sim | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Sim | Chave anon (pública) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Sim* | Cadastro por e-mail, convites, API admin |
+| `NEXT_PUBLIC_APP_URL` | Recomendada | URL pública do app (links e OAuth) |
+| `OPENAI_API_KEY` | Não | IA no mapeamento de dados |
+| `RESEND_API_KEY` | Não | E-mails transacionais |
+| `FPSI_ADMIN_EMAILS` | Não | E-mails com acesso admin global |
+
+\*Sem a service role, login manual ainda funciona; fluxos de cadastro/convite pela UI exigem essa chave.
+
+O app **não** embute mais credenciais Supabase no código — tudo vem das variáveis acima.
+
+### Banco de dados
+
+- Migrações versionadas em [`supabase/migrations/`](supabase/migrations/)
+- A primeira migração (`20240101000000_baseline_core_schema.sql`) cria o schema legado (programa, diagnóstico, respostas)
+- Migrações seguintes adicionam usuários, ROPA, portal, políticas e o **catálogo PPSI 2.0** (210 medidas)
+- Comando: `supabase db push` em projeto Supabase **novo e vazio**
+
+Backups e dumps: [database/README_DUMP.md](database/README_DUMP.md)
+
+## Desenvolvimento local
+
+- **Setup e troubleshooting:** [docs/essentials/setup/COMO_RODAR_LOCALMENTE.md](docs/essentials/setup/COMO_RODAR_LOCALMENTE.md)
 - **Documentação geral:** [docs/README.md](docs/README.md)
 - **PRD (escopo do produto):** [docs/essentials/requirements/PRD.md](docs/essentials/requirements/PRD.md)
 

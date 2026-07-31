@@ -1,5 +1,8 @@
 # 🚀 Como Rodar o Projeto FPSI Localmente
 
+> **Primeira instância (Supabase novo + deploy):** use o guia dedicado [IMPLANTACAO.md](./IMPLANTACAO.md).  
+> Este documento foca em **desenvolvimento** e troubleshooting no dia a dia.
+
 ## 📋 **Pré-requisitos**
 - **Node.js**: ≥ 20.0.0
 - **npm**: ≥ 10.0.0  
@@ -69,20 +72,29 @@ SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role
 ```
 
 ### **Migrações Supabase**
-O projeto usa Supabase CLI com migrações em `supabase/migrations/`. Para aplicar:
+O projeto usa Supabase CLI com migrações em `supabase/migrations/`. A cadeia começa em `20240101000000_baseline_core_schema.sql` (schema base) e inclui o catálogo PPSI 2.0.
+
+Em um **projeto Supabase novo e vazio**:
 ```bash
+supabase link --project-ref SEU_PROJECT_REF
 supabase db push
 ```
-Para comparar schema documentado com o Supabase, veja [SCHEMA_COMPARISON.md](./SCHEMA_COMPARISON.md).
+
+Detalhes, Auth e primeiro programa: [IMPLANTACAO.md](./IMPLANTACAO.md).  
+Comparação de schema: [SCHEMA_COMPARISON.md](./SCHEMA_COMPARISON.md).
 
 **Auth e papéis:** A identidade do usuário vem do Supabase Auth; papéis e permissões por programa vêm das tabelas `programa_users` e `profiles`. Ver seção "Autenticação e autorização" no [README do projeto](../../../README.md).
 
 ### **Login com Google (OAuth)**
-1. No **Supabase Dashboard** → Authentication → Providers → ative **Google**
-2. Em [Google Cloud Console](https://console.cloud.google.com/), crie credenciais OAuth 2.0 (Client ID e Client Secret)
-3. Configure a Redirect URL fornecida pelo Supabase
-4. Cole Client ID e Client Secret no Supabase
-5. O botão "Entrar com Google" aparece automaticamente na tela de login
+
+Guia completo (produção + local, URLs e erros comuns): **[LOGIN_SOCIAL_GOOGLE.md](./LOGIN_SOCIAL_GOOGLE.md)**
+
+Resumo:
+
+1. **Supabase** → Authentication → Providers → ative **Google** (obrigatório — hoje desligado no remoto retorna `provider is not enabled`).
+2. **Google Cloud** → OAuth 2.0 → redirect URI: `https://SEU_PROJECT_REF.supabase.co/auth/v1/callback`
+3. **Supabase** → URL Configuration → Redirect URLs: `https://www.fpsi.com.br/auth/callback`, `http://localhost:3000/auth/callback`
+4. **Site URL:** `https://www.fpsi.com.br` (apex `fpsi.com.br` redireciona para www)
 
 ### **Portas Alternativas**
 Se a porta 3000 estiver ocupada, use a 3001:

@@ -1,7 +1,8 @@
 export type LinkedInPostPrint = {
   label: string;
   /** Rota ou tela sugerida para captura */
-  hint: string;
+  hint?: string;
+  showcaseId: import("./showcase/types").LinkedInShowcaseId;
 };
 
 export type LinkedInPost = {
@@ -15,93 +16,114 @@ export type LinkedInPost = {
   hashtags?: string;
 };
 
-/** Rascunhos para posts diários no LinkedIn — tom open source, não comercial. */
+/** Rascunhos para posts diários no LinkedIn — tom direto, open source. */
 export const LINKEDIN_POSTS: LinkedInPost[] = [
   {
     id: "post-opensource",
-    title: "Código aberto: implantação, fork e IA de produtividade",
+    title: "Com o código do framework de privacidade, sua organização escolhe onde e como rodar",
     status: "ready",
-    summary: "Implantar na empresa, rodar localmente, estender com agentes de código.",
-    feedText: `Software de privacidade costuma fechar três caminhos: planilha oficial, SaaS mensal ou montar um quebra-cabeça de ferramentas.
+    summary:
+      "Clonar o repositório, hospedar na infra própria, manter instância por cliente ou adaptar fluxos — sem ficar preso a fornecedor fechado.",
+    feedText: `O FPSI é código aberto. Quem quiser pode clonar o repositório, rodar na infraestrutura da organização ou manter uma instância por cliente na consultoria.
 
-Com código aberto no FPSI, o repositório vira base técnica: clone na infra da organização, ambiente local com Supabase, ou instância por cliente na consultoria.
+O repositório cobre o ciclo do programa PPSI em ambiente web: diagnóstico, plano de trabalho, tratamento de dados, portal do titular, riscos, papéis e auditoria.
 
-O interessante na prática — além do deploy — é a extensibilidade. O código é TypeScript legível; dá para acelerar adaptações com Cursor, Copilot ou agentes sobre o repo: novos campos no mapeamento, relatórios, integrações com ticket ou GRC, automações no plano de trabalho.
+Também dá para adaptar fluxos com assistentes de código sobre o repositório — estender campos no mapeamento, relatórios ou integrações internas, conforme a necessidade de cada organização.
 
-Implantação típica: fork → variáveis de ambiente → Supabase (Auth + Postgres) → deploy (Vercel ou on-prem). Multi-usuário, papéis e auditoria já vêm no núcleo.
+Instruções de instalação no README do projeto.
 
 Repositório: github.com/jorgepsendziuk/fpsi`,
     commentHint: "Demo: fpsi.com.br/demo/login",
     prints: [
-      { label: "README / estrutura do repositório", hint: "GitHub — README e docs/essentials/setup" },
-      { label: "Home do programa (módulos)", hint: "/programas/[id] — grid de módulos" },
-      { label: "Usuários e permissões", hint: "/programas/[id]/usuarios" },
+      { label: "Implantação open source", showcaseId: "opensource-hub" },
+      { label: "Home do programa (módulos)", showcaseId: "program-modules" },
+      { label: "Painel operacional", showcaseId: "program-dashboard" },
     ],
     hashtags: "#opensource #PPSI #LGPD #privacidade",
   },
   {
     id: "post-ia-mapeamento",
-    title: "IA como assistente — não como DPO automático",
+    title: "Mapeamento de dados pessoais: sugestões por IA, decisão sempre humana",
     status: "ready",
-    summary: "Sugestões de levantamentos com revisão humana obrigatória.",
-    feedText: `Mapeamento de dados pessoais é trabalho repetitivo: setor, finalidade, categorias, titular, retenção — linha após linha.
+    summary:
+      "Em um programa de privacidade web, rascunhos de levantamentos saem do contexto da organização; o analista revisa e valida antes de gravar.",
+    feedText: `No mapeamento de dados pessoais entram setor, finalidade, categorias, titular, retenção — muitas linhas parecidas.
 
-No FPSI, a função "Sugerir levantamentos com IA" gera rascunhos a partir de metadados institucionais do programa (nome, escopo, atividade) — sem enviar dados pessoais de titulares para o modelo.
+O FPSI tem a função "Sugerir levantamentos com IA". Ela usa metadados institucionais do programa (nome, escopo, atividade) e devolve rascunhos em formato estruturado. Dados pessoais de titulares não saem para o modelo.
 
-O fluxo: a API valida cada sugestão contra listas fechadas do inventário → o analista pré-visualiza → seleciona o que faz sentido → grava. Assistência operacional, revisão humana obrigatória.
+Cada sugestão passa por listas fechadas do inventário. O analista pré-visualiza, escolhe o que vale e grava. A decisão final é sempre humana.
 
-A mesma lógica pode evoluir para apoiar operações no ROPA a partir de levantamentos já validados — sempre com limite de taxa e sem substituir parecer jurídico.
-
-Print do painel de mapeamento + modal de sugestões costuma comunicar bem a ideia.`,
-    commentHint: "Código da API: src/app/api/.../suggest-mapeamentos",
+Serve para aliviar o preenchimento inicial. O parecer jurídico continua com a equipe.`,
+    commentHint: "Demo: fpsi.com.br/demo/login → mapeamento de dados",
     prints: [
-      { label: "Lista de mapeamentos", hint: "/programas/[id]/conformidade/mapeamento" },
-      { label: "Modal / painel de sugestões IA", hint: "Botão 'Sugerir levantamentos com IA' no mapeamento" },
-      { label: "Aviso de revisão humana", hint: "Texto de disclaimer na UI após sugestão" },
+      { label: "Lista de mapeamentos", showcaseId: "conformidade", hint: "ROPA e tratamentos" },
+      { label: "Painel de sugestões IA", showcaseId: "ai-mapeamento" },
+      { label: "Revisão humana", showcaseId: "ai-mapeamento" },
     ],
     hashtags: "#LGPD #IA #privacidade #ROPA",
   },
   {
     id: "post-ppsi-aigp",
-    title: "PPSI 2.0 + Governança de IA no mesmo diagnóstico",
+    title: "Programa PPSI 2.0 e Governança de IA no mesmo painel de maturidade",
     status: "ready",
-    summary: "Catálogo AIGP integrado — além da planilha Excel oficial.",
-    feedText: `O PPSI 2.0 organiza privacidade e segurança da informação em Estrutura, Segurança e Privacidade. Organizações que usam IA precisam de um eixo a mais.
+    summary:
+      "Estrutura, Segurança, Privacidade e domínio AIGP na mesma escala — normas como NIST AI RMF e ISO 42001 consultáveis em cada medida.",
+    feedText: `O PPSI 2.0 organiza o programa em Estrutura, Segurança e Privacidade. Quem também precisa tratar governança de IA encontra no FPSI um domínio adicional: Governança de IA (AIGP), com controles e medidas na mesma escala de maturidade.
 
-O FPSI mantém o catálogo oficial PPSI e acrescenta o domínio Governança de IA (AIGP): 10 controles, 54 medidas, mesma escala de maturidade — inventário de sistemas de IA, riscos, LGPD×IA, fornecedores, viés, ciclo de vida.
+Inventário de sistemas de IA, riscos, LGPD×IA, fornecedores, viés, ciclo de vida — com referências como NIST AI RMF, ISO 42001 e OECD consultáveis nos chips de cada medida.
 
-Na planilha Excel, o foco é o roteiro PPSI clássico. Aqui, diagnóstico web colaborativo com referências in-app (LGPD, NIST AI RMF, ISO 42001, OECD) nos chips de cada medida — sem trocar de aba a cada dúvida.
+Diagnóstico colaborativo, índices por domínio num só relatório.
 
-Para quem conduz programa de privacidade e governança de IA no mesmo comitê, um índice de maturidade unificado faz diferença operacional.
-
-Demo: fpsi.com.br/demo/login — módulo Diagnóstico → domínio Governança de IA.`,
+Demo: fpsi.com.br/demo/login → Diagnóstico → Governança de IA`,
     prints: [
-      { label: "Diagnóstico — domínios PPSI + AIGP", hint: "/programas/[id]/diagnostico — sidebar" },
-      { label: "Medida AIGP com referências", hint: "Expandir medida → chips Normas de referência" },
-      { label: "Referências AIGP in-app", hint: "/referencias/aigp" },
+      { label: "Diagnóstico — domínios PPSI + AIGP", showcaseId: "diagnostico" },
+      { label: "Medida AIGP com referências", showcaseId: "aigp" },
+      { label: "Normas consultáveis", showcaseId: "diagnostico-normas" },
     ],
     hashtags: "#PPSI #AIGP #governançadeIA #LGPD",
   },
   {
     id: "post-diagnostico",
-    title: "Diagnóstico de maturidade e normas de referência",
+    title: "Diagnóstico de maturidade em privacidade: controles, evidências e normas no fluxo",
     status: "ready",
-    summary: "Controles, medidas, evidências e ligação com LGPD, CIS, NIST, ISO.",
-    feedText: `Diagnóstico de maturidade no PPSI não é checklist decorativo — é a fotografia do programa: controles, medidas, nível de implementação (INCC), evidências e responsáveis.
+    summary:
+      "Medidas do PPSI com LGPD, CIS, NIST e ISO acessíveis na tela; relatório e plano de trabalho saem do mesmo ambiente colaborativo.",
+    feedText: `O diagnóstico de maturidade no PPSI registra controles, medidas, nível de implementação (INCC), evidências e responsáveis. A partir daí saem o relatório e o plano de trabalho.
 
-No FPSI, cada medida traz normas de referência mapeadas. Citação à LGPD abre o artigo in-app; CIS, NIST, ISO e demais referências têm atalho conforme o mapeamento — o analista consulta sem sair do fluxo.
+No FPSI, cada medida pode trazer normas de referência. Citação à LGPD abre o artigo dentro do sistema; CIS, NIST, ISO e outras referências têm atalho conforme o mapeamento da medida.
 
-O relatório consolida índices por domínio (Estrutura, Segurança, Privacidade, Governança de IA) e alimenta o plano de trabalho: lacunas viram ações com prazo e responsável.
+O relatório consolida índices por domínio — Estrutura, Segurança, Privacidade, Governança de IA — e as lacunas podem virar ações no plano de trabalho, com prazo e responsável.
 
-Comparado à planilha oficial: mesma metodologia PPSI 2.0, com multi-usuário, trilha de auditoria e relatório exportável num ambiente web.
-
-Print sugerido: árvore diagnóstico → controle → medida com chip LGPD + trecho do relatório.`,
+Metodologia PPSI 2.0 alinhada à ferramenta oficial, com trabalho multi-usuário e histórico de alterações.`,
     prints: [
-      { label: "Árvore diagnóstico → medida", hint: "/programas/[id]/diagnostico" },
-      { label: "Popup artigo LGPD", hint: "Chip LGPD em medida → drawer/dialog" },
-      { label: "Relatório de maturidade", hint: "/programas/[id]/diagnostico/relatorio" },
+      { label: "Árvore diagnóstico → medida", showcaseId: "diagnostico" },
+      { label: "Normas LGPD / CIS / NIST", showcaseId: "diagnostico-normas" },
+      { label: "Relatório de maturidade", showcaseId: "diagnostico" },
     ],
     hashtags: "#PPSI #diagnóstico #LGPD #maturidade",
+  },
+  {
+    id: "post-riscos",
+    title: "Programa de privacidade e segurança: mapa de riscos com prioridade visual",
+    status: "ready",
+    summary:
+      "Probabilidade × impacto em matriz 5×5, categorias (privacidade, segurança, conformidade…), mitigação e acompanhamento de status — no mesmo ambiente do PPSI.",
+    feedText: `Risco de privacidade, segurança, conformidade ou reputação costuma ficar espalhado: planilha aqui, e-mail ali, ata de comitê em outro lugar. Sem mapa comum, a equipe trata o urgente e esquece o importante.
+
+No FPSI, a gestão de riscos fica no mesmo programa do diagnóstico PPSI e do tratamento de dados. Cada risco tem título, categoria, probabilidade e impacto (escala 1–5), score de prioridade e estratégia de mitigação.
+
+A matriz de calor mostra onde concentrar esforço: clique numa célula e filtre a lista. Status como identificado, em tratamento, mitigado ou aceito acompanham o ciclo de vida — útil para comitês, auditorias e revisões periódicas.
+
+Privacidade, segurança, direitos dos titulares e operacional no mesmo registro, acessível à equipe multi-usuário do programa.
+
+Demo: fpsi.com.br/demo/login → Gestão de riscos`,
+    commentHint: "Demo: fpsi.com.br/demo/login → /programas/[id]/riscos",
+    prints: [
+      { label: "Mapa de calor 5×5 (clique)", showcaseId: "riscos-interactive" },
+      { label: "Matriz animada", showcaseId: "riscos-matrix" },
+      { label: "Priorização visual", showcaseId: "riscos-interactive" },
+    ],
+    hashtags: "#gestãoderiscos #PPSI #LGPD #privacidade #segurança",
   },
 ];
 
@@ -109,42 +131,37 @@ Print sugerido: árvore diagnóstico → controle → medida com chip LGPD + tre
 export const LINKEDIN_POST_BACKLOG: Array<{ id: string; title: string; note: string }> = [
   {
     id: "portal-titular",
-    title: "Portal do titular e art. 18 LGPD",
-    note: "Pedidos, reportes, docs legais (cookies, aviso, política) por slug.",
+    title: "Canal público da organização para pedidos dos titulares (LGPD art. 18)",
+    note: "Portal por slug: pedidos, reportes, cookies, aviso e política de privacidade.",
   },
   {
     id: "ropa-fluxo",
-    title: "Do mapeamento ao ROPA",
-    note: "Levantamento → operação de tratamento → vínculo no registro art. 37.",
+    title: "Do levantamento de tratamentos ao ROPA (art. 37) em fluxo contínuo",
+    note: "Inventário de dados → operação de tratamento → registro formal no mesmo sistema.",
   },
   {
     id: "plano-trabalho",
-    title: "Plano de trabalho a partir do diagnóstico",
-    note: "Lacunas de maturidade viram ações com prazo e responsável.",
-  },
-  {
-    id: "riscos-matriz",
-    title: "Gestão de riscos integrada ao programa",
-    note: "Matriz 5×5, risco residual, mitigação ligada ao plano.",
+    title: "Do diagnóstico ao plano de ação: lacunas de maturidade viram tarefas",
+    note: "Gaps identificados no PPSI convertidos em ações com prazo e responsável.",
   },
   {
     id: "auditoria",
-    title: "Trilha de auditoria multi-usuário",
-    note: "Papéis (admin, coordenador, analista, consultor, auditor) e histórico.",
+    title: "Equipe multi-usuário no mesmo programa, com papéis e trilha de alterações",
+    note: "Admin, coordenador, analista, consultor e auditor — histórico do que mudou.",
   },
   {
     id: "politicas-portal",
-    title: "Políticas versionadas e portal público",
-    note: "Editor, PDF, publicação de textos legais no canal do titular.",
+    title: "Políticas internas editáveis, versionadas e publicadas no portal do titular",
+    note: "Editor, PDF e textos legais no canal público da organização.",
   },
   {
     id: "ripd-incidentes",
-    title: "RIPD e incidentes no mesmo hub",
-    note: "Tratamento de dados: impacto, registro e resposta.",
+    title: "RIPD e gestão de incidentes no mesmo módulo de tratamento de dados",
+    note: "Análise de impacto, registro e resposta a incidentes em um hub.",
   },
   {
     id: "referencias-lgpd",
-    title: "LGPD consultável dentro do fluxo",
-    note: "Artigos indexados — consulta sem trocar de ferramenta.",
+    title: "Artigos da LGPD consultáveis dentro do fluxo de conformidade",
+    note: "Referência normativa na medida, sem trocar de ferramenta.",
   },
 ];

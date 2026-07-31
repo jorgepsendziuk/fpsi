@@ -6,12 +6,11 @@ export const LINKEDIN_ARTICLE = {
   demoUrl: "https://fpsi.com.br/demo/login",
   repoUrl: "https://github.com/jorgepsendziuk/fpsi",
   repoPath: "github.com/jorgepsendziuk/fpsi",
-  stack: "Next.js · React · TypeScript · Supabase",
 } as const;
 
 export type ArticleSection =
   | { type: "paragraphs"; paragraphs: string[] }
-  | { type: "print"; legend: string; paragraphs: string[]; placeholder: string };
+  | { type: "showcase"; legend: string; paragraphs: string[]; showcaseId: import("./showcase/types").LinkedInShowcaseId };
 
 export type ArticleBlock = {
   id: string;
@@ -38,9 +37,9 @@ export const LINKEDIN_ARTICLE_BODY: ArticleBlock[] = [
     heading: "Tela inicial",
     sections: [
       {
-        type: "print",
+        type: "showcase",
         legend: "Documentação pública do projeto e ambiente explorável.",
-        placeholder: "Print: tela inicial — fpsi.com.br",
+        showcaseId: "landing-teaser",
         paragraphs: [
           "A página inicial descreve o escopo do repositório: conduzir o Programa de Privacidade e Segurança da Informação em um só lugar — diagnóstico, plano de trabalho, políticas, tratamento de dados, titulares, riscos e assistência por IA, alinhados à LGPD e ao PPSI 2.0.",
           "Há um ambiente de exploração sem cadastro, útil para quem quer entender o código em uso antes de clonar ou implantar localmente.",
@@ -53,13 +52,13 @@ export const LINKEDIN_ARTICLE_BODY: ArticleBlock[] = [
     heading: "Dashboard do programa",
     sections: [
       {
-        type: "print",
+        type: "showcase",
         legend: "Visão operacional dos módulos já implementados.",
-        placeholder: "Print: dashboard / página inicial do programa",
+        showcaseId: "program-modules",
         paragraphs: [
           "Dentro de um programa, a home concentra a operação. Dá para ver o andamento do diagnóstico (Estrutura, Segurança, Privacidade + domínio AIGP), pendências, plano de trabalho, políticas, tratamento de dados e governança.",
-          "Os módulos no código incluem diagnóstico com evidências e relatório, plano de ação, políticas versionadas (com export PDF), mapeamento → ROPA → RIPD, incidentes, estrutura de responsáveis e papéis PPSI/LGPD, usuários com permissões por perfil e histórico de auditoria.",
-          "É a parte que a planilha oficial, sozinha, não cobre — colaboração multi-usuário, com papéis e rastreabilidade.",
+          "Da home do programa partem diagnóstico com evidências e relatório, plano de ação, políticas versionadas (com export PDF), mapeamento → ROPA → RIPD, incidentes, estrutura de responsáveis e papéis PPSI/LGPD, usuários com permissões por perfil e histórico de auditoria.",
+          "Colaboração multi-usuário, com papéis e rastreabilidade.",
         ],
       },
     ],
@@ -69,12 +68,12 @@ export const LINKEDIN_ARTICLE_BODY: ArticleBlock[] = [
     heading: "Portal do titular",
     sections: [
       {
-        type: "print",
+        type: "showcase",
         legend: "Canal público por organização — pedidos, reportes e documentos legais.",
-        placeholder: "Print: portal do titular — ex.: /fpsi ou slug demo",
+        showcaseId: "program-portal",
         paragraphs: [
           "Cada programa pode expor um portal público por slug (fpsi.com.br/sua-org): pedidos de direitos, reportes, contato com o encarregado e documentos legais — política de privacidade, aviso do portal, cookies, declaração de segurança, termo de uso.",
-          "Para quem implanta o fork, isso evita montar um site separado só para o canal de titulares. Configura, publica e versiona junto com o restante do programa.",
+          "Para quem implanta o código, o portal evita montar um site separado só para o canal de titulares. Configura, publica e versiona junto com o restante do programa.",
         ],
       },
     ],
@@ -84,9 +83,9 @@ export const LINKEDIN_ARTICLE_BODY: ArticleBlock[] = [
     heading: "Gestão de riscos",
     sections: [
       {
-        type: "print",
+        type: "showcase",
         legend: "Matriz de riscos, priorização e acompanhamento de mitigação.",
-        placeholder: "Print: gestão de riscos — matriz / lista",
+        showcaseId: "riscos-interactive",
         paragraphs: [
           "O módulo de riscos permite registrar, posicionar na matriz (impacto × probabilidade), calcular risco residual e vincular ações de mitigação — conectado ao plano de trabalho e ao tratamento de dados quando faz sentido.",
           "No código, faz parte do mesmo fluxo do PPSI, em vez de ficar em planilha paralela.",
@@ -102,7 +101,7 @@ export const LINKEDIN_ARTICLE_BODY: ArticleBlock[] = [
         type: "paragraphs",
         paragraphs: [
           "Além das telas acima: mapeamento de dados com assistência por IA (sempre com revisão humana), referências consultáveis à LGPD e ao catálogo AIGP in-app, convites e permissões granulares (admin, coordenador, analista, consultor, auditor) e trilha de auditoria das ações relevantes.",
-          "Stack: Next.js, React, TypeScript, Supabase. Licença aberta — veja o repositório para detalhes.",
+          "Licença aberta — veja o repositório para detalhes.",
         ],
       },
     ],
@@ -115,7 +114,7 @@ export const LINKEDIN_ARTICLE_BODY: ArticleBlock[] = [
         type: "paragraphs",
         paragraphs: [
           "Implantar na infraestrutura da organização ou do cliente, com dados sob controle local. Adaptar módulos, portal e fluxos à realidade de cada programa, sem ficar preso a planilha isolada ou a ferramenta fechada.",
-          "Consultorias podem operar uma instância por cliente; times internos podem estender integrações e relatórios — inclusive com assistentes de código sobre o repositório. O framework continua alinhado ao PPSI; a implementação pode evoluir com forks, issues e PRs.",
+          "Consultorias podem operar uma instância por cliente; times internos podem estender integrações e relatórios com assistentes de código sobre o repositório. O framework continua alinhado ao PPSI; a implementação pode evoluir com issues e PRs.",
         ],
       },
     ],

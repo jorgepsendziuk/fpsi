@@ -3,12 +3,13 @@
 import type { AuthProvider } from "@refinedev/core";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 
-/** Origem pública do app: env fixa (produção/Vercel) ou URL atual no browser. */
+/** Origem para OAuth e reset de senha: no browser, usa o host atual (www vs apex). */
 function getPublicOrigin(): string {
-  if (typeof window === "undefined") return "";
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
-  return window.location.origin;
+  return fromEnv || "";
 }
 
 export const authProviderClient: AuthProvider = {

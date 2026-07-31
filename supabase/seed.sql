@@ -1,0 +1,3 @@
+-- Seed opcional para `supabase db reset` local.
+-- Dados de demo e catálogo PPSI vêm das migrações em supabase/migrations/.
+-- Para popular um programa inicial após o deploy, use a UI ou scripts em database/.
