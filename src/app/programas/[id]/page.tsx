@@ -66,6 +66,21 @@ import { getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import NextLink from "next/link";
 import { ProgramaOperacionalDashboard } from "@/components/programa/ProgramaOperacionalDashboard";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
+import { Programa } from "@/lib/types/types";
+import {
+  ProgramaEscopoBar,
+  useEscopoPreviewState,
+} from "@/components/programa/ProgramaEscopoSelector";
+import {
+  ativarDiagnostico,
+  ativarModulo,
+  detectPresetFromEscopo,
+  resolveProgramaEscopo,
+  isModuloAtivo,
+  type ModuloKey,
+  type PerfilEscopoPreset,
+  type ProgramaEscopoV1,
+} from "@/lib/programa/perfilEscopo";
 
 /** Ordem: escritório (camada visual opcional) → estrutura de governança → … → auditoria */
 const sections: Array<{
@@ -371,6 +386,110 @@ export default function ProgramaMainPage() {
 
   const [modulosResumo, setModulosResumo] = useState<ModulosResumoApi | null>(null);
   const [modulosResumoLoading, setModulosResumoLoading] = useState(false);
+  const [escopoApplying, setEscopoApplying] = useState(false);
+  const [escopoError, setEscopoError] = useState<string | null>(null);
+
+  const savedEscopoResolved = useMemo(() => {
+    if (!programa) return null;
+    return resolveProgramaEscopo(programa as Programa);
+  }, [programa]);
+
+  const {
+    effectivePreset,
+    effectiveEscopo,
+    isPreview,
+    setPreview,
+    clearPreview,
+  } = useEscopoPreviewState(
+    (savedEscopoResolved?.preset ?? "completo") as PerfilEscopoPreset,
+    savedEscopoResolved?.escopo ?? resolveProgramaEscopo({}).escopo
+  );
+
+  const sectionsWithEscopo = useMemo(
+    () =>
+      sections.map((s) => ({
+        ...s,
+        outOfScope: !isModuloAtivo(effectiveEscopo, s.key as ModuloKey),
+      })),
+    [effectiveEscopo]
+  );
+
+  const reloadModulosResumo = () => {
+    if (!programaId) return;
+    setModulosResumoLoading(true);
+    dataService
+      .fetchModulosResumo(programaId)
+      .then(setModulosResumo)
+      .catch(() => setModulosResumo(null))
+      .finally(() => setModulosResumoLoading(false));
+  };
+
+  const persistEscopo = async (nextEscopo: ProgramaEscopoV1, preset: PerfilEscopoPreset) => {
+    if (!programa?.id || isDemoMode) return;
+    setEscopoApplying(true);
+    setEscopoError(null);
+    try {
+      const updated = await dataService.updateProgramaEscopo(programa.id, {
+        escopo: nextEscopo,
+        perfil_escopo: preset,
+      });
+      setPrograma((p: Programa | null) =>
+        p
+          ? {
+              ...p,
+              perfil_escopo: updated.perfil_escopo,
+              gi_alvo: updated.gi_alvo,
+              escopo: updated.escopo,
+            }
+          : p
+      );
+      clearPreview();
+      reloadModulosResumo();
+    } catch (err) {
+      console.error(err);
+      setEscopoError(err instanceof Error ? err.message : "Erro ao atualizar escopo");
+    } finally {
+      setEscopoApplying(false);
+    }
+  };
+
+  const handleApplyPreset = async (preset: PerfilEscopoPreset) => {
+    if (!programa?.id || preset === "custom") return;
+    setEscopoApplying(true);
+    setEscopoError(null);
+    try {
+      const updated = await dataService.updateProgramaEscopo(programa.id, { aplicar_preset: preset });
+      setPrograma((p: Programa | null) =>
+        p
+          ? {
+              ...p,
+              perfil_escopo: updated.perfil_escopo,
+              gi_alvo: updated.gi_alvo,
+              escopo: updated.escopo,
+            }
+          : p
+      );
+      clearPreview();
+      reloadModulosResumo();
+    } catch (err) {
+      console.error(err);
+      setEscopoError(err instanceof Error ? err.message : "Erro ao atualizar escopo");
+    } finally {
+      setEscopoApplying(false);
+    }
+  };
+
+  const handleAtivarModulo = async (key: ModuloKey) => {
+    const next = ativarModulo(effectiveEscopo, key);
+    const preset = detectPresetFromEscopo(next);
+    await persistEscopo(next, preset);
+  };
+
+  const handleAtivarDiagnostico = async (id: 1 | 2 | 3 | 4) => {
+    const next = ativarDiagnostico(effectiveEscopo, id);
+    const preset = detectPresetFromEscopo(next);
+    await persistEscopo(next, preset);
+  };
 
   useEffect(() => {
     if (!programaId) {
@@ -1184,13 +1303,46 @@ export default function ProgramaMainPage() {
         </LocalizationProvider>
       </Popover>
 
+      <ProgramaEscopoBar
+        savedPreset={(savedEscopoResolved?.preset ?? "completo") as PerfilEscopoPreset}
+        savedEscopo={savedEscopoResolved?.escopo ?? effectiveEscopo}
+        displayEscopo={effectiveEscopo}
+        canEdit={canEditProgramaFieldsUi}
+        applying={escopoApplying}
+        onPreviewChange={(preset, escopo) => setPreview({ preset, escopo })}
+        onApply={handleApplyPreset}
+        onDiscardPreview={clearPreview}
+        onAtivarModulo={canEditProgramaFieldsUi && !isDemoMode ? handleAtivarModulo : undefined}
+        onAtivarDiagnostico={canEditProgramaFieldsUi && !isDemoMode ? handleAtivarDiagnostico : undefined}
+        onToggleComite={
+          canEditProgramaFieldsUi && !isDemoMode
+            ? async (key, ativo) => {
+                const next = structuredClone(effectiveEscopo);
+                next.comites[key] = ativo;
+                const preset = detectPresetFromEscopo(next);
+                await persistEscopo(next, preset);
+              }
+            : undefined
+        }
+      />
+      {escopoError && (
+        <Alert severity="error" sx={{ mt: 1 }} onClose={() => setEscopoError(null)}>
+          {escopoError}
+        </Alert>
+      )}
+
       <ProgramaOperacionalDashboard
         idOrSlug={idOrSlug}
         programaId={programa.id}
         isDemoMode={isDemoMode}
         modulosResumo={modulosResumo}
         modulosResumoLoading={modulosResumoLoading}
-        sections={sections}
+        sections={sectionsWithEscopo}
+        onEnableSection={
+          canEditProgramaFieldsUi && !isDemoMode
+            ? (key) => handleAtivarModulo(key as ModuloKey)
+            : undefined
+        }
         programaNome={programaName}
       />
 

@@ -1,21 +1,6 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { requireSystemAdmin } from "@/lib/admin/requireSystemAdmin";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
-
-async function requireSystemAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, user: null };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_system_admin")
-    .eq("user_id", user.id)
-    .single();
-
-  if (profile?.is_system_admin !== true) return { ok: false, user };
-  return { ok: true, user };
-}
 
 export async function GET() {
   const { ok } = await requireSystemAdmin();

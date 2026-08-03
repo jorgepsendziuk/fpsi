@@ -72,6 +72,7 @@ type Props = {
   modulosResumo: ModulosResumoApi | null;
   modulosResumoLoading: boolean;
   sections: ModuloNavSection[];
+  onEnableSection?: (key: string) => void;
   programaNome?: string;
 };
 
@@ -95,6 +96,7 @@ export function ProgramaOperacionalDashboard({
   modulosResumo,
   modulosResumoLoading,
   sections,
+  onEnableSection,
 }: Props) {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -214,6 +216,7 @@ export function ProgramaOperacionalDashboard({
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
       <ProgramaKpiStrip
         postura={modulosResumo?.postura}
+        maturidade={modulosResumo?.maturidade}
         atrasados={modulosResumo?.pendencias?.atrasados}
         vencendo7d={modulosResumo?.pendencias?.vencendo7d}
         loading={modulosResumoLoading}
@@ -434,7 +437,12 @@ export function ProgramaOperacionalDashboard({
         >
           Módulos do programa
         </Typography>
-        <ModuloNavGrid sections={sections} idOrSlug={idOrSlug} layout="wide" />
+        <ModuloNavGrid
+          sections={sections}
+          idOrSlug={idOrSlug}
+          layout="wide"
+          onEnableSection={onEnableSection}
+        />
       </Box>
     </Box>
   );

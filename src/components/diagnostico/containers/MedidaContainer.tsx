@@ -94,6 +94,7 @@ const MedidaContainer: React.FC<MedidaContainerProps> = ({
           comiteSi: gruposRaw.comite_seguranca_informacao.length,
           comiteDados: gruposRaw.comite_protecao_dados.length,
           etir: gruposRaw.etir.length,
+          comiteIa: gruposRaw.comite_governanca_ia.length,
         };
         const ctx = buildEvidenciaContext(
           programa,

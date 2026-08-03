@@ -50,3 +50,6 @@ docs/**/*.pptx
 docs/**/*.mht
 # Lote bruto de modelos/guias (PDF/DOCX/XLSX/JPG)
 docs/ppsi/ppsi docs/
+
+# Lista pessoal de tarefas — não versionar
+docs/essentials/TO-DO.md

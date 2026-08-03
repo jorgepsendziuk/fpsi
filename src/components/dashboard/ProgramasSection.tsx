@@ -51,10 +51,12 @@ import * as dataService from "@/lib/services/dataService";
 import { Programa } from "@/lib/types/types";
 import { initialState, reducer } from "@/lib/state/state";
 import { getMaturityLabel } from "@/lib/utils/maturity";
+import { MaturityDiagnosticoSummary } from "@/components/dashboard/MaturityDiagnosticoSummary";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import { supabaseBrowserClient } from "@utils/supabase/client";
 import type { BoardItemSize } from "@/lib/dashboard/smartBoardGrid";
 import type { DashboardProgramaResumo } from "@/lib/types/pendencias";
+import { CriarProgramaWizard } from "@/components/programa/CriarProgramaWizard";
 
 export type ProgramasSectionProps = {
   /** Integra cards no board compartilhado com empresas. */
@@ -374,15 +376,10 @@ export function ProgramasSection({
     else router.push("/dashboard");
   };
 
-  const getMaturityColor = (score: number): string => {
-    if (score >= 0.9) return "#2E7D32";
-    if (score >= 0.7) return "#388E3C";
-    if (score >= 0.5) return "#F9A825";
-    if (score >= 0.3) return "#EF6C00";
-    return "#C62828";
-  };
+  const diagnosticos = state.diagnosticos || [];
+  const itemSize = boardMode ? boardItemSize : { xs: 12, sm: 6, md: 4 };
 
-  type MaturityEntry = { score: number; label: string; byDiagnostico: { diagnostico_id: number; score: number; label: string }[] };
+  type MaturityEntry = { byDiagnostico: { diagnostico_id: number; score: number; label: string }[] };
   const programaMaturityData = useMemo(() => {
     if (!dataLoaded) return new Map<number, MaturityEntry>();
     const maturityMap = new Map<number, MaturityEntry>();
@@ -393,20 +390,11 @@ export function ProgramasSection({
         score: Math.min(1, Math.max(0, Number(r.score))),
         label: r.label || getMaturityLabel(Number(r.score)),
       }));
-      if (rows.length === 0) {
-        maturityMap.set(programa.id, { score: 0, label: "Inicial", byDiagnostico: [] });
-        return;
-      }
-      const avgScore = rows.reduce((s, r) => s + Number(r.score), 0) / rows.length;
-      const score = Math.min(1, Math.max(0, avgScore));
-      maturityMap.set(programa.id, { score, label: getMaturityLabel(score), byDiagnostico });
+      maturityMap.set(programa.id, { byDiagnostico });
     });
     return maturityMap;
   }, [programas, dataLoaded, maturityRows]);
 
-  const diagnosticos = state.diagnosticos || [];
-  const diagnosticosBoard = diagnosticos.slice(0, 4);
-  const itemSize = boardMode ? boardItemSize : { xs: 12, sm: 6, md: 4 };
   const opsMap = useMemo(() => {
     const m = new Map<number, DashboardProgramaResumo>();
     for (const o of opsByPrograma ?? []) m.set(o.programaId, o);
@@ -414,12 +402,14 @@ export function ProgramasSection({
   }, [opsByPrograma]);
 
   const programaCards = programas.map((programa) => {
-    const maturityData = programaMaturityData.get(programa.id) || { score: 0, label: "Inicial", byDiagnostico: [] };
-    const getMaturityEntry = (diagId: number) =>
-      maturityData.byDiagnostico.find((d) => d.diagnostico_id === diagId) ?? { score: 0, label: "Inicial" };
+    const maturityData = programaMaturityData.get(programa.id) || { byDiagnostico: [] };
+    const maturidadeItems = maturityData.byDiagnostico.map((d) => ({
+      diagnostico_id: d.diagnostico_id,
+      nome: diagnosticos.find((diag) => diag.id === d.diagnostico_id)?.descricao || `Diagnóstico ${d.diagnostico_id}`,
+      score: d.score,
+      label: d.label,
+    }));
     const logoUrl = getProgramaLogoDisplayUrl(programa);
-    const avgPct = Math.round(maturityData.score * 100);
-    const avgColor = getMaturityColor(maturityData.score);
     const title = programa.nome || programa.nome_fantasia || programa.razao_social || `Programa #${programa.id}`;
     const subtitle =
       programa.nome_fantasia && programa.nome && programa.nome_fantasia !== programa.nome
@@ -542,75 +532,15 @@ export function ProgramasSection({
                 </IconButton>
               </Box>
 
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 1,
-                  py: 1,
-                  px: 1.35,
-                  mb: 1.1,
-                  borderRadius: 1,
-                  bgcolor: alpha(avgColor, 0.08),
-                  borderLeft: `3px solid ${avgColor}`,
-                }}
-              >
-                <Box>
-                  <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                    Maturidade média
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-                    Índice consolidado dos diagnósticos
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: avgColor, lineHeight: 1, letterSpacing: "-0.03em" }}>
-                    {avgPct}%
-                  </Typography>
-                  <Chip size="small" label={maturityData.label} sx={{ height: 24, fontWeight: 700, bgcolor: alpha(avgColor, 0.18), color: avgColor }} />
-                </Stack>
+              <Box sx={{ mb: 1.1 }}>
+                <MaturityDiagnosticoSummary
+                  items={maturidadeItems}
+                  diagnosticos={diagnosticos}
+                  compact
+                  layout="panel"
+                  href={`/programas/${programa.slug || programa.id}/diagnostico`}
+                />
               </Box>
-
-              {diagnosticosBoard.length > 0 && (
-                <Box sx={{ mb: 1.1 }}>
-                  <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 0.65, letterSpacing: "0.03em" }}>
-                    Scores por diagnóstico
-                  </Typography>
-                  <Grid container spacing={0.75}>
-                    {diagnosticosBoard.map((diag) => {
-                      const entry = getMaturityEntry(diag.id);
-                      const scorePct = Math.round(entry.score * 100);
-                      const color = getMaturityColor(entry.score);
-                      return (
-                        <Grid item xs={12} sm={6} key={diag.id}>
-                          <Box
-                            sx={{
-                              py: 0.75,
-                              px: 1,
-                              borderRadius: 1,
-                              border: `1px solid ${alpha(theme.palette.divider, 0.85)}`,
-                              borderLeft: `3px solid ${color}`,
-                              bgcolor: alpha(color, 0.04),
-                              height: "100%",
-                            }}
-                          >
-                            <Typography variant="body2" fontWeight={600} noWrap title={diag.descricao ?? undefined} sx={{ fontSize: "0.78rem", mb: 0.25 }}>
-                              {diag.descricao ?? `Diagnóstico ${diag.id}`}
-                            </Typography>
-                            <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
-                              <Typography variant="subtitle1" sx={{ fontWeight: 800, color, lineHeight: 1, fontSize: "1.05rem" }}>
-                                {scorePct}%
-                              </Typography>
-                              <Chip size="small" label={entry.label} sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600, bgcolor: alpha(color, 0.14), color }} />
-                            </Stack>
-                          </Box>
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                </Box>
-              )}
 
               <Stack direction="row" spacing={0.6} flexWrap="wrap" useFlexGap sx={{ mb: 0.25 }}>
                   {ops && ops.pendenciasAtrasadas > 0 && (
@@ -743,46 +673,15 @@ export function ProgramasSection({
                 sx={{ mb: 1, height: 22 }}
               />
             )}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 1,
-                py: 0.85,
-                px: 1.25,
-                borderRadius: 1,
-                backgroundColor: alpha(avgColor, 0.08),
-                borderLeft: `3px solid ${avgColor}`,
-                mb: 0.75,
-              }}
-            >
-              <Typography variant="body2" fontWeight={600} color="text.secondary">
-                Maturidade
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: avgColor, lineHeight: 1 }}>
-                {avgPct}%
-              </Typography>
-              <Chip size="small" label={maturityData.label} sx={{ height: 22, fontWeight: 600, backgroundColor: alpha(avgColor, 0.18), color: avgColor }} />
+            <Box sx={{ mb: 0.75 }}>
+              <MaturityDiagnosticoSummary
+                items={maturidadeItems}
+                diagnosticos={diagnosticos}
+                compact
+                layout="panel"
+                href={`/programas/${programa.slug || programa.id}/diagnostico`}
+              />
             </Box>
-            {diagnosticosBoard.length > 0 && (
-              <Stack spacing={0.5}>
-                {diagnosticosBoard.slice(0, 2).map((diag) => {
-                  const entry = getMaturityEntry(diag.id);
-                  const scorePct = Math.round(entry.score * 100);
-                  return (
-                    <Box key={diag.id} sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-                      <Typography variant="body2" color="text.secondary" noWrap sx={{ flex: 1 }}>
-                        {diag.descricao ?? `Diag. ${diag.id}`}
-                      </Typography>
-                      <Typography variant="body2" fontWeight={700}>
-                        {scorePct}%
-                      </Typography>
-                    </Box>
-                  );
-                })}
-              </Stack>
-            )}
           </CardContent>
           <CardActions sx={{ px: 2, pb: 1.5, pt: 0 }}>
             {!viewExcluidos && (
@@ -931,136 +830,23 @@ export function ProgramasSection({
           ]}
       </Menu>
 
-      <Dialog open={openDialog} onClose={() => !creating && setOpenDialog(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-        <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Image src="/logo_p.png" alt="FPSI" width={24} height={24} />
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-              Criar Novo Programa
-            </Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <Stack spacing={2}>
-            <TextField
-              fullWidth
-              required
-              label="Nome do programa"
-              value={createForm.nome}
-              onChange={(e) => setCreateForm((f) => ({ ...f, nome: e.target.value }))}
-              placeholder="Ex.: Secretaria X, E-commerce Brasil"
-            />
-            <FormControl fullWidth>
-              <InputLabel>Tipo de programa</InputLabel>
-              <Select value={createForm.tipo_programa} label="Tipo" onChange={(e) => setCreateForm((f) => ({ ...f, tipo_programa: e.target.value }))}>
-                {TIPOS_PROGRAMA.map((t) => (
-                  <MenuItem key={t.value} value={t.value}>
-                    {t.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl component="fieldset">
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
-                Setor
-              </Typography>
-              <RadioGroup
-                row
-                value={String(createForm.setor)}
-                onChange={(e) => setCreateForm((f) => ({ ...f, setor: Number(e.target.value), orgao_id: "" }))}
-              >
-                <FormControlLabel value="1" control={<Radio />} label="Órgão público" />
-                <FormControlLabel value="2" control={<Radio />} label="Empresa" />
-              </RadioGroup>
-            </FormControl>
-            <Collapse in={createForm.setor === 1}>
-              <FormControl fullWidth required={createForm.setor === 1}>
-                <InputLabel>Órgão</InputLabel>
-                <Select
-                  value={createForm.orgao_id === "" ? "" : createForm.orgao_id}
-                  label="Órgão"
-                  onChange={(e) => setCreateForm((f) => ({ ...f, orgao_id: e.target.value === "" ? "" : Number(e.target.value) }))}
-                >
-                  <MenuItem value="">Selecione</MenuItem>
-                  {orgaos.map((o) => (
-                    <MenuItem key={o.id} value={o.id}>
-                      {o.nome || ""} {o.sigla ? `(${o.sigla})` : ""}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Collapse>
-            <Collapse in={createForm.setor === 2}>
-              <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  Opcional: empresa existente ou nova.
-                </Typography>
-                <FormControl component="fieldset" sx={{ mb: 1 }}>
-                  <RadioGroup
-                    row
-                    value={createForm.empresa_modo}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, empresa_modo: e.target.value as "nova" | "existente", empresa_id: "" }))}
-                  >
-                    <FormControlLabel value="existente" control={<Radio />} label="Empresa cadastrada" />
-                    <FormControlLabel value="nova" control={<Radio />} label="Nova empresa" />
-                  </RadioGroup>
-                </FormControl>
-                {createForm.empresa_modo === "existente" && (
-                  <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-                    <InputLabel>Empresa</InputLabel>
-                    <Select
-                      value={createForm.empresa_id === "" ? "" : createForm.empresa_id}
-                      label="Empresa"
-                      onChange={(e) => setCreateForm((f) => ({ ...f, empresa_id: e.target.value === "" ? "" : Number(e.target.value) }))}
-                    >
-                      <MenuItem value="">Selecione</MenuItem>
-                      {empresas.map((e) => (
-                        <MenuItem key={e.id} value={e.id}>
-                          {e.nome_fantasia || e.razao_social || `Empresa #${e.id}`}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
-                {createForm.empresa_modo === "nova" && (
-                  <Stack spacing={1}>
-                    <TextField fullWidth size="small" label="CNPJ" value={createForm.empresa_cnpj} onChange={(e) => setCreateForm((f) => ({ ...f, empresa_cnpj: e.target.value }))} />
-                    <TextField fullWidth size="small" label="Razão social" value={createForm.empresa_razao_social} onChange={(e) => setCreateForm((f) => ({ ...f, empresa_razao_social: e.target.value }))} />
-                    <TextField fullWidth size="small" label="Nome fantasia" value={createForm.empresa_nome_fantasia} onChange={(e) => setCreateForm((f) => ({ ...f, empresa_nome_fantasia: e.target.value }))} />
-                    <TextField fullWidth size="small" label="E-mail" type="email" value={createForm.empresa_email} onChange={(e) => setCreateForm((f) => ({ ...f, empresa_email: e.target.value }))} />
-                    <TextField fullWidth size="small" label="Telefone" value={createForm.empresa_telefone} onChange={(e) => setCreateForm((f) => ({ ...f, empresa_telefone: e.target.value }))} />
-                  </Stack>
-                )}
-              </Box>
-            </Collapse>
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              label="Principal atividade"
-              value={createForm.atividade_principal_organizacao}
-              onChange={(e) => setCreateForm((f) => ({ ...f, atividade_principal_organizacao: e.target.value }))}
-              helperText="Atividade institucional da empresa ou organização."
-            />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              label="Escopo do programa de privacidade"
-              value={createForm.descricao_escopo}
-              onChange={(e) => setCreateForm((f) => ({ ...f, descricao_escopo: e.target.value }))}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={() => setOpenDialog(false)} disabled={creating}>
-            Cancelar
-          </Button>
-          <Button onClick={handleCreatePrograma} variant="contained" disabled={creating} sx={{ borderRadius: 2, px: 3 }}>
-            {creating ? "Criando…" : "Criar"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <CriarProgramaWizard
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        orgaos={orgaos}
+        empresas={empresas}
+        onCreated={async (programaId, slug) => {
+          try {
+            const list = await dataService.fetchProgramasForCurrentUser(false);
+            setProgramas(list || []);
+          } catch {
+            /* ignore */
+          }
+          setToastMessage("Programa criado com sucesso");
+          setToastSeverity("success");
+          router.push(`/programas/${slug || programaId}`);
+        }}
+      />
 
       <Snackbar open={!!toastMessage} autoHideDuration={6000} onClose={() => setToastMessage(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert onClose={() => setToastMessage(null)} severity={toastSeverity} sx={{ borderRadius: 1 }}>

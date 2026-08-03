@@ -81,9 +81,12 @@ export const useUserPermissions = (programaId?: number): UseUserPermissionsRetur
   }, [fetchUserPermissions]);
 
   const checkPermission = useCallback((permission: keyof ProgramaPermissions): boolean => {
-    if (!permissions) return false;
-    return hasPermission(permissions, permission);
-  }, [permissions]);
+    if (permissions) return hasPermission(permissions, permission);
+    if (programaUser?.role) {
+      return getDefaultPermissions(programaUser.role as UserRole)[permission] === true;
+    }
+    return false;
+  }, [permissions, programaUser]);
 
   const canViewResource = useCallback((resource: string): boolean => {
     switch (resource) {

@@ -7,23 +7,31 @@ import {
   Grid,
   LinearProgress,
   Stack,
-  Paper,
-  Chip,
   alpha,
   useTheme,
   Skeleton,
+  Chip,
 } from '@mui/material';
 import {
-  Dashboard as DashboardIcon,
   AccountBalance as AccountBalanceIcon,
   Lock as LockIcon,
   Person as PersonIcon,
   Psychology as PsychologyIcon,
   Assessment as AssessmentIcon,
+  ArrowForward as ArrowForwardIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
+  Tune as TuneIcon,
+  FactCheck as FactCheckIcon,
+  AddCircleOutline as AddCircleOutlineIcon,
 } from '@mui/icons-material';
-import MaturityChip from './MaturityChip';
-import { type GrupoImpleFilter } from '../../lib/utils/grupoImplementacao';
-import { formatMaturityIndex, getMaturityColorHex } from '../../lib/utils/maturity';
+import { MaturityLevelIndicator } from './MaturityLevelIndicator';
+import { GrupoImplementacaoFilter } from './GrupoImplementacaoFilter';
+import { CoberturaRespostasIndicator } from './CoberturaRespostasIndicator';
+import { type GrupoImpleFilter, DIAGNOSTICO_SEGURANCA_ID, isDiagnosticoSeguranca, matchesGrupoFilter } from '../../lib/utils/grupoImplementacao';
+import { getDiagnosticoTheme } from '../../lib/utils/diagnosticoThemes';
+import { DIAGNOSTICO_INDICE_LABELS } from '../../lib/utils/diagnosticoTreeLabels';
+import { getMaturityColorHex } from '../../lib/utils/maturity';
+import { escopoGreyedSx, ESCOPO_CHIP_LABEL } from '@/lib/programa/escopoVisual';
 
 interface DashboardProps {
   diagnosticos: any[];
@@ -34,35 +42,28 @@ interface DashboardProps {
   getDiagnosticoMaturity: (diagnosticoId: number) => any;
   programaId: number;
   grupoImpleFilter?: GrupoImpleFilter;
+  onGrupoImpleFilterChange?: (value: GrupoImpleFilter) => void;
   onDiagnosticoClick?: (diagnosticoId: number) => void;
   dataLoading?: boolean;
+  /** IDs de eixos fora do escopo — cards cinza, consultáveis, não contam no score */
+  diagnosticosOutOfScopeIds?: number[];
+  onAtivarDiagnostico?: (diagnosticoId: number) => void;
 }
 
-const INDICE_DIAG: Record<number, string> = {
-  1: 'iMC₀',
-  2: 'iSeg',
-  3: 'iPriv',
-  4: 'iAIGP',
-};
+const INDICE_DIAG = DIAGNOSTICO_INDICE_LABELS;
 
-/** Diagnósticos com escala 1–6 (incl. “Não se aplica” = 6). */
 function usesEscalaRespostas(diagnosticoId: number): boolean {
   return diagnosticoId !== 1;
 }
 
-function diagnosticoIcon(id: number, color: string) {
-  const sx = { color, fontSize: 28 };
+function diagnosticoIcon(id: number) {
+  const sx = { fontSize: 26 };
   switch (id) {
-    case 1:
-      return <AccountBalanceIcon sx={sx} />;
-    case 2:
-      return <LockIcon sx={sx} />;
-    case 3:
-      return <PersonIcon sx={sx} />;
-    case 4:
-      return <PsychologyIcon sx={sx} />;
-    default:
-      return <AssessmentIcon sx={sx} />;
+    case 1: return <AccountBalanceIcon sx={sx} />;
+    case 2: return <LockIcon sx={sx} />;
+    case 3: return <PersonIcon sx={sx} />;
+    case 4: return <PsychologyIcon sx={sx} />;
+    default: return <AssessmentIcon sx={sx} />;
   }
 }
 
@@ -72,12 +73,17 @@ function countMedidasForDiagnostico(
   medidas: { [key: number]: any[] },
   programaMedidas: { [key: string]: any },
   programaId: number,
+  grupoImpleFilter: GrupoImpleFilter = "all",
 ) {
   let total = 0;
   let respondidas = 0;
 
   diagnosticoControles.forEach((controle) => {
-    const controleMedidas = medidas[controle.id] || [];
+    const controleMedidas = (medidas[controle.id] || []).filter((medida: any) =>
+      isDiagnosticoSeguranca(diagnosticoId)
+        ? matchesGrupoFilter(medida.grupo_imple, grupoImpleFilter)
+        : true
+    );
     controleMedidas.forEach((medida: any) => {
       const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
       const respostaId = programaMedida?.resposta;
@@ -99,22 +105,35 @@ function DiagnosticoStatCell({
   label,
   color,
   loaded,
+  icon,
 }: {
   value: number | string;
   label: string;
   color: string;
   loaded: boolean;
+  icon: React.ReactNode;
 }) {
   return (
-    <Box sx={{ textAlign: 'center', minWidth: 0, px: 0.25 }}>
-      <Typography variant="subtitle2" fontWeight={800} sx={{ color, lineHeight: 1.2 }}>
+    <Box
+      sx={{
+        textAlign: 'center',
+        minWidth: 0,
+        px: 0.75,
+        py: 0.65,
+        borderRadius: 1.5,
+        bgcolor: alpha(color, 0.06),
+        border: `1px solid ${alpha(color, 0.12)}`,
+      }}
+    >
+      <Box sx={{ color, opacity: 0.85, mb: 0.35, '& svg': { fontSize: 18 } }}>{icon}</Box>
+      <Typography variant="h6" fontWeight={800} sx={{ color, lineHeight: 1.1, fontSize: '1.1rem' }}>
         {loaded ? value : '—'}
       </Typography>
       <Typography
-        variant="caption"
+        variant="body2"
         color="text.secondary"
         display="block"
-        sx={{ mt: 0.35, lineHeight: 1.25, fontSize: '0.6875rem' }}
+        sx={{ mt: 0.25, lineHeight: 1.2, fontSize: '0.8125rem', fontWeight: 600 }}
       >
         {label}
       </Typography>
@@ -130,257 +149,63 @@ const Dashboard: React.FC<DashboardProps> = ({
   getDiagnosticoMaturity,
   programaId,
   grupoImpleFilter = 'all',
+  onGrupoImpleFilterChange,
   onDiagnosticoClick,
   dataLoading = false,
+  diagnosticosOutOfScopeIds = [],
+  onAtivarDiagnostico,
 }) => {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const outOfScopeSet = useMemo(() => new Set(diagnosticosOutOfScopeIds), [diagnosticosOutOfScopeIds]);
+  const diagnosticosNoScore = useMemo(
+    () => diagnosticos.filter((d) => !outOfScopeSet.has(d.id)),
+    [diagnosticos, outOfScopeSet]
+  );
 
   const stats = useMemo(() => {
-    let totalControles = 0;
     let totalMedidas = 0;
     let medidasRespondidas = 0;
-    let somaMaturityDiagnosticos = 0;
-    let diagnosticosComIndice = 0;
 
-    diagnosticos.forEach((diagnostico) => {
+    diagnosticosNoScore.forEach((diagnostico) => {
       const diagnosticoControles = controles[diagnostico.id] || [];
-      totalControles += diagnosticoControles.length;
-
-      const maturityData = getDiagnosticoMaturity(diagnostico.id);
-      if (diagnosticoControles.length > 0) {
-        somaMaturityDiagnosticos += maturityData.score;
-        diagnosticosComIndice++;
-      }
-
       const { total, respondidas } = countMedidasForDiagnostico(
         diagnostico.id,
         diagnosticoControles,
         medidas,
         programaMedidas,
         programaId,
+        grupoImpleFilter,
       );
       totalMedidas += total;
       medidasRespondidas += respondidas;
     });
 
-    const avgMaturity =
-      diagnosticosComIndice > 0 ? somaMaturityDiagnosticos / diagnosticosComIndice : 0;
-    const pctRespondidas = totalMedidas > 0 ? (medidasRespondidas / totalMedidas) * 100 : 0;
-
     return {
-      totalDiagnosticos: diagnosticos.length,
-      totalControles,
       totalMedidas,
       medidasRespondidas,
-      avgMaturity,
-      pctRespondidas,
     };
-  }, [diagnosticos, controles, medidas, programaMedidas, getDiagnosticoMaturity, programaId, grupoImpleFilter]);
-
-  const maturityOverview = formatMaturityIndex(stats.avgMaturity);
-  const heroColor = maturityOverview?.color ?? theme.palette.primary.main;
+  }, [diagnosticosNoScore, controles, medidas, programaMedidas, programaId, grupoImpleFilter]);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box sx={{ p: { xs: 1.25, md: 1.5 } }}>
       {dataLoading && (
-        <LinearProgress sx={{ mb: 2, borderRadius: 1 }} aria-label="Carregando dados do diagnóstico" />
+        <LinearProgress sx={{ mb: 1.25, borderRadius: 1 }} aria-label="Carregando dados do diagnóstico" />
       )}
 
-      <Grid container spacing={2.5}>
-        {/* Hero — índice consolidado */}
+      <Grid container spacing={1.75}>
+        {/* Resumo discreto de cobertura */}
         <Grid item xs={12}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 2, md: 2.5 },
-              borderRadius: 2,
-              border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-              background: `linear-gradient(135deg, ${alpha(heroColor, 0.12)} 0%, ${alpha(theme.palette.primary.main, 0.06)} 55%, ${alpha(theme.palette.background.paper, 0.9)} 100%)`,
-              borderLeft: `4px solid ${heroColor}`,
-            }}
-          >
-            <Stack spacing={2}>
-              <Stack
-                direction={{ xs: 'column', lg: 'row' }}
-                spacing={2}
-                alignItems={{ xs: 'stretch', lg: 'center' }}
-                justifyContent="space-between"
-              >
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, minWidth: 0, flex: 1 }}>
-                  <Box
-                    sx={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: alpha(heroColor, 0.14),
-                      color: heroColor,
-                      flexShrink: 0,
-                      boxShadow: `0 4px 14px ${alpha(heroColor, 0.2)}`,
-                    }}
-                  >
-                    <DashboardIcon sx={{ fontSize: 30 }} />
-                  </Box>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography
-                      variant="h5"
-                      fontWeight={800}
-                      sx={{
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1.25,
-                        fontSize: { xs: '1.25rem', sm: '1.45rem' },
-                        mb: 1,
-                      }}
-                    >
-                      {maturityOverview ? (
-                        <>
-                          Índice médio{' '}
-                          <Box component="span" sx={{ color: heroColor }}>
-                            {maturityOverview.indexText}
-                          </Box>
-                          <Box component="span" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-                            {' '}
-                            · {maturityOverview.label}
-                          </Box>
-                        </>
-                      ) : (
-                        'Índice de maturidade'
-                      )}
-                    </Typography>
-                    <Stack
-                      direction="row"
-                      spacing={0.75}
-                      alignItems="center"
-                      useFlexGap
-                      flexWrap="wrap"
-                    >
-                      <Chip
-                        label="Visão geral"
-                        size="small"
-                        sx={{
-                          height: 24,
-                          fontWeight: 800,
-                          fontSize: '0.6875rem',
-                          letterSpacing: 0.3,
-                          bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          color: 'primary.main',
-                          border: `1px solid ${alpha(theme.palette.primary.main, 0.22)}`,
-                        }}
-                      />
-                      <Chip
-                        label="PPSI 2.0"
-                        size="small"
-                        variant="outlined"
-                        sx={{ height: 24, fontWeight: 700, fontSize: '0.6875rem' }}
-                      />
-                      <Chip
-                        label="AIGP"
-                        size="small"
-                        variant="outlined"
-                        sx={{ height: 24, fontWeight: 700, fontSize: '0.6875rem' }}
-                      />
-                    </Stack>
-                  </Box>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                    gap: 1.25,
-                    width: '100%',
-                    maxWidth: { lg: 480 },
-                    flexShrink: 0,
-                  }}
-                >
-                {[
-                  {
-                    label: 'Medidas respondidas',
-                    value: stats.medidasRespondidas,
-                    sub: `${stats.pctRespondidas.toFixed(0)}% de ${stats.totalMedidas}`,
-                    color: theme.palette.success.main,
-                  },
-                  {
-                    label: 'Pendentes',
-                    value: stats.totalMedidas - stats.medidasRespondidas,
-                    sub: 'aguardando avaliação',
-                    color: theme.palette.warning.main,
-                  },
-                  {
-                    label: 'Diagnósticos',
-                    value: stats.totalDiagnosticos,
-                    sub: '4 eixos',
-                    color: theme.palette.info.main,
-                  },
-                ].map((kpi) => (
-                  <Box
-                    key={kpi.label}
-                    sx={{
-                      textAlign: 'center',
-                      px: 1,
-                      py: 1.35,
-                      borderRadius: 1.5,
-                      bgcolor: alpha(kpi.color, 0.08),
-                      border: `1px solid ${alpha(kpi.color, 0.2)}`,
-                      minWidth: 0,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight={600}
-                      display="block"
-                      sx={{ lineHeight: 1.2, fontSize: '0.6875rem', mb: 0.35 }}
-                    >
-                      {kpi.label}
-                    </Typography>
-                    <Typography variant="h6" fontWeight={800} sx={{ color: kpi.color, lineHeight: 1.15 }}>
-                      {dataLoading && stats.totalMedidas === 0 ? '…' : kpi.value}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      display="block"
-                      sx={{ fontSize: '0.65rem', lineHeight: 1.2, mt: 0.25 }}
-                    >
-                      {kpi.sub}
-                    </Typography>
-                  </Box>
-                ))}
-                </Box>
-              </Stack>
-
-              <Box sx={{ mt: 0 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    Progresso de respostas (todos os diagnósticos)
-                  </Typography>
-                  <Typography variant="caption" fontWeight={700} sx={{ color: heroColor }}>
-                    {stats.pctRespondidas.toFixed(0)}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={Math.min(100, stats.pctRespondidas)}
-                  sx={{
-                    height: 8,
-                    borderRadius: 4,
-                    bgcolor: alpha(theme.palette.divider, 0.35),
-                    '& .MuiLinearProgress-bar': {
-                      borderRadius: 4,
-                      bgcolor: heroColor,
-                    },
-                  }}
-                />
-              </Box>
-            </Stack>
-          </Paper>
+          <CoberturaRespostasIndicator
+            respondidas={stats.medidasRespondidas}
+            total={stats.totalMedidas}
+            loading={dataLoading}
+          />
         </Grid>
 
-        {/* Cards por diagnóstico */}
+        {/* Cards por eixo */}
         {diagnosticos.map((diagnostico) => {
+          const outOfScope = outOfScopeSet.has(diagnostico.id);
           const diagnosticoControles = controles[diagnostico.id];
           const controlesLoaded = diagnosticoControles !== undefined;
           const diagnosticoControlesList = diagnosticoControles || [];
@@ -395,116 +220,197 @@ const Dashboard: React.FC<DashboardProps> = ({
               medidas,
               programaMedidas,
               programaId,
+              grupoImpleFilter,
             );
 
           const maturityData = getDiagnosticoMaturity(diagnostico.id);
           const maturityColor = getMaturityColorHex(maturityData.score);
+          const diagTheme = getDiagnosticoTheme(diagnostico.id);
           const indiceLabel =
             (typeof diagnostico.indice === 'string' && diagnostico.indice) ||
             INDICE_DIAG[diagnostico.id] ||
             `D${diagnostico.id}`;
+          const clickable = Boolean(onDiagnosticoClick);
 
           return (
-            <Grid item xs={12} sm={6} lg={3} key={diagnostico.id}>
+            <Grid item xs={12} sm={6} key={diagnostico.id}>
               <Card
+                elevation={0}
                 sx={{
                   height: '100%',
-                  cursor: onDiagnosticoClick ? 'pointer' : 'default',
-                  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-                  borderTop: `3px solid ${maturityColor}`,
-                  boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.06)}`,
-                  '&:hover': onDiagnosticoClick
-                    ? {
-                        boxShadow: `0 8px 24px ${alpha(maturityColor, 0.18)}`,
-                        transform: 'translateY(-2px)',
-                      }
-                    : undefined,
+                  cursor: clickable ? 'pointer' : 'default',
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+                  bgcolor: alpha(theme.palette.background.paper, isDark ? 0.5 : 0.95),
+                  transition: 'transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, opacity 0.22s ease',
+                  ...(outOfScope ? escopoGreyedSx(theme) : {}),
+                  ...(clickable && !outOfScope && {
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: `0 16px 40px ${alpha(diagTheme.color, 0.2)}`,
+                      borderColor: alpha(diagTheme.color, 0.35),
+                      '& .diag-card-cta': {
+                        opacity: 1,
+                        transform: 'translateX(0)',
+                      },
+                      '& .diag-card-header': {
+                        filter: 'brightness(1.05)',
+                      },
+                    },
+                  }),
                 }}
                 onClick={() => onDiagnosticoClick?.(diagnostico.id)}
               >
-                <CardContent sx={{ p: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, mb: 1.5 }}>
-                    {diagnosticoIcon(diagnostico.id, maturityColor)}
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography
-                        variant="overline"
-                        sx={{ fontWeight: 800, color: 'text.secondary', lineHeight: 1.1, fontSize: '0.65rem' }}
-                      >
-                        {indiceLabel}
-                      </Typography>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 700,
-                          lineHeight: 1.25,
-                          fontSize: '0.95rem',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {diagnostico.descricao}
-                      </Typography>
-                    </Box>
+                {/* Faixa gradiente */}
+                <Box
+                  className="diag-card-header"
+                  sx={{
+                    px: 1.75,
+                    py: 1.15,
+                    background: outOfScope ? alpha(theme.palette.text.primary, 0.15) : diagTheme.gradient,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    transition: 'filter 0.22s ease',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: alpha('#fff', 0.18),
+                      color: '#fff',
+                      border: `1px solid ${alpha('#fff', 0.22)}`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {diagnosticoIcon(diagnostico.id)}
                   </Box>
+                  <Typography
+                    variant="subtitle1"
+                    component="div"
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      color: '#fff',
+                      fontWeight: 800,
+                      lineHeight: 1.25,
+                      fontSize: { xs: '0.95rem', sm: '1.05rem' },
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Box component="span" sx={{ opacity: 0.92 }}>{indiceLabel}</Box>
+                    <Box component="span" sx={{ mx: 0.75, opacity: 0.55, fontWeight: 600 }}>·</Box>
+                    {diagnostico.descricao}
+                  </Typography>
+                  {clickable && (
+                    <ArrowForwardIcon
+                      className="diag-card-cta"
+                      sx={{
+                        color: alpha('#fff', 0.9),
+                        fontSize: 20,
+                        opacity: 0.6,
+                        transform: 'translateX(-4px)',
+                        transition: 'opacity 0.22s ease, transform 0.22s ease',
+                      }}
+                    />
+                  )}
+                </Box>
 
-                  {!controlesLoaded ? (
-                    <Skeleton variant="rounded" height={36} sx={{ mb: 1.5 }} />
-                  ) : (
-                    <Box sx={{ textAlign: 'center', mb: 1.5 }}>
-                      <MaturityChip
+                <CardContent sx={{ px: 1.75, py: 1.25, '&:last-child': { pb: 1.25 } }}>
+                  {outOfScope && (
+                    <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mb: 1 }}>
+                      <Chip size="small" label={ESCOPO_CHIP_LABEL} sx={{ height: 22, fontSize: '0.68rem' }} />
+                      {onAtivarDiagnostico && (
+                        <Chip
+                          size="small"
+                          icon={<AddCircleOutlineIcon sx={{ fontSize: '14px !important' }} />}
+                          label="Incluir no escopo"
+                          clickable
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAtivarDiagnostico(diagnostico.id);
+                          }}
+                          sx={{ height: 22, fontSize: '0.68rem' }}
+                        />
+                      )}
+                    </Stack>
+                  )}
+                  <Box sx={{ mb: 1 }}>
+                    {!controlesLoaded ? (
+                      <Skeleton variant="rounded" height={28} sx={{ maxWidth: 240, mx: 'auto' }} />
+                    ) : (
+                      <MaturityLevelIndicator
                         score={maturityData.score}
                         label={maturityData.label}
-                        size="medium"
-                        showLabel={true}
-                        animated={true}
                         calculationData={maturityData.calculationData}
-                        controleId={undefined}
                         controleNome={`Diagnóstico ${diagnostico.id}`}
                       />
-                    </Box>
-                  )}
-
-                  <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 1.5 }}>
-                    {controlesLoaded ? (
-                      <>
-                        <strong>{medidasRespondidasDiag}</strong> de {totalMedidasDiag} medidas respondidas
-                      </>
-                    ) : (
-                      'Carregando controles…'
                     )}
-                  </Typography>
+                  </Box>
+
+                  <Box sx={{ mb: 1 }}>
+                    {controlesLoaded ? (
+                      <CoberturaRespostasIndicator
+                        compact
+                        respondidas={medidasRespondidasDiag}
+                        total={totalMedidasDiag}
+                        loading={dataLoading}
+                        barColor={diagTheme.color}
+                      />
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" align="center" sx={{ fontWeight: 600 }}>
+                        Carregando controles…
+                      </Typography>
+                    )}
+                  </Box>
 
                   <Box
                     sx={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                      gap: 1,
-                      borderTop: '1px solid',
-                      borderColor: 'divider',
-                      pt: 1.5,
+                      gap: 0.65,
                     }}
                   >
                     <DiagnosticoStatCell
                       loaded={controlesLoaded}
                       value={controlesComMedidasNoFiltro.length}
                       label="Controles"
-                      color={theme.palette.primary.main}
+                      color={diagTheme.color}
+                      icon={<TuneIcon />}
                     />
                     <DiagnosticoStatCell
                       loaded={controlesLoaded}
                       value={totalMedidasDiag}
                       label="Medidas"
-                      color={theme.palette.success.main}
+                      color={theme.palette.info.main}
+                      icon={<FactCheckIcon />}
                     />
                     <DiagnosticoStatCell
                       loaded={controlesLoaded}
                       value={medidasRespondidasDiag}
                       label="Respondidas"
                       color={maturityColor}
+                      icon={<CheckCircleOutlineIcon />}
                     />
                   </Box>
+
+                  {diagnostico.id === DIAGNOSTICO_SEGURANCA_ID && onGrupoImpleFilterChange && (
+                    <GrupoImplementacaoFilter
+                      compact
+                      stopClickPropagation
+                      value={grupoImpleFilter}
+                      onChange={onGrupoImpleFilterChange}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </Grid>

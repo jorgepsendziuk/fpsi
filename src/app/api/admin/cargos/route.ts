@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { requireSystemAdmin } from "@/lib/admin/requireSystemAdmin";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
-
-async function requireSystemAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false };
-  const { data: profile } = await supabase.from("profiles").select("is_system_admin").eq("user_id", user.id).single();
-  if (profile?.is_system_admin !== true) return { ok: false };
-  return { ok: true };
-}
 
 export async function GET() {
   const { ok } = await requireSystemAdmin();
@@ -19,7 +10,28 @@ export async function GET() {
   if (!admin) return NextResponse.json({ error: "Configuração inválida" }, { status: 500 });
 
   const { data, error } = await admin.from("cargo").select("*").order("nome");
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
+}
+
+export async function POST(request: Request) {
+  const { ok } = await requireSystemAdmin();
+  if (!ok) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+
+  const body = await request.json();
+  if (!body.nome?.trim()) {
+    return NextResponse.json({ error: "Nome é obrigatório." }, { status: 400 });
+  }
+
+  const admin = createSupabaseAdminClient();
+  if (!admin) return NextResponse.json({ error: "Configuração inválida" }, { status: 500 });
+
+  const { data, error } = await admin
+    .from("cargo")
+    .insert({ nome: body.nome.trim(), ativo: body.ativo !== false })
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data, { status: 201 });
 }

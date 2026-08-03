@@ -323,6 +323,7 @@ export const fetchPlanoAcaoResumo = async (programaId: number): Promise<{
 };
 
 import type { PendenciasResumo } from "@/lib/types/pendencias";
+import { buildEscopoFromPreset } from "@/lib/programa/perfilEscopo";
 
 /** Resumo agregado para os versos dos cards «Módulos do Sistema» (home do programa). */
 export type ModulosResumoApi = {
@@ -352,7 +353,12 @@ export type ModulosResumoApi = {
     papeisInstituicoes: number;
     conexoes: number;
   };
-  maturidade: Array<{ diagnostico_id: number; nome: string; score: number; label: string }>;
+  maturidade: Array<{ diagnostico_id: number; nome: string; score: number; label: string; ativo?: boolean }>;
+  escopo?: {
+    perfil_escopo: string;
+    gi_alvo: string | null;
+    maturidadeCortados?: number[];
+  };
   politicas: {
     implementadas: number;
     naoImplementadas: number;
@@ -499,22 +505,24 @@ export type GovernancaGruposMembros = {
   comite_seguranca_informacao: number[];
   comite_protecao_dados: number[];
   etir: number[];
+  comite_governanca_ia: number[];
 };
 
 export async function fetchGovernancaGruposMembros(programaId: number): Promise<GovernancaGruposMembros> {
   try {
     const res = await fetch(`/api/programas/${programaId}/governanca-grupos`, { credentials: "include" });
     if (!res.ok) {
-      return { comite_seguranca_informacao: [], comite_protecao_dados: [], etir: [] };
+      return { comite_seguranca_informacao: [], comite_protecao_dados: [], etir: [], comite_governanca_ia: [] };
     }
     const j = await res.json();
     return {
       comite_seguranca_informacao: Array.isArray(j.comite_seguranca_informacao) ? j.comite_seguranca_informacao : [],
       comite_protecao_dados: Array.isArray(j.comite_protecao_dados) ? j.comite_protecao_dados : [],
       etir: Array.isArray(j.etir) ? j.etir : [],
+      comite_governanca_ia: Array.isArray(j.comite_governanca_ia) ? j.comite_governanca_ia : [],
     };
   } catch {
-    return { comite_seguranca_informacao: [], comite_protecao_dados: [], etir: [] };
+    return { comite_seguranca_informacao: [], comite_protecao_dados: [], etir: [], comite_governanca_ia: [] };
   }
 }
 
@@ -522,7 +530,7 @@ export async function fetchGovernancaGruposMembros(programaId: number): Promise<
 export async function fetchEvidenciaConformidadeSnapshot(
   programaId: number
 ): Promise<EvidenciaConformidadeSnapshot> {
-  const [ropaRes, mapRes, incRes, pedRes, ripdRes, programa, posin, protecao] = await Promise.all([
+  const [ropaRes, mapRes, incRes, pedRes, ripdRes, siaRes, siaProdRes, programa, posin, protecao] = await Promise.all([
     supabaseBrowserClient.from("ropa").select("id", { count: "exact", head: true }).eq("programa_id", programaId),
     supabaseBrowserClient
       .from("mapeamento_dados")
@@ -534,6 +542,12 @@ export async function fetchEvidenciaConformidadeSnapshot(
       .select("id", { count: "exact", head: true })
       .eq("programa_id", programaId),
     supabaseBrowserClient.from("ripd").select("id", { count: "exact", head: true }).eq("programa_id", programaId),
+    supabaseBrowserClient.from("sistema_ia").select("id", { count: "exact", head: true }).eq("programa_id", programaId),
+    supabaseBrowserClient
+      .from("sistema_ia")
+      .select("id", { count: "exact", head: true })
+      .eq("programa_id", programaId)
+      .eq("status_ciclo", "producao"),
     fetchProgramaById(programaId),
     fetchPoliticaProgramaByTipo(programaId, "politica_seguranca_informacao"),
     fetchPoliticaProgramaByTipo(programaId, "politica_protecao_dados_pessoais"),
@@ -549,6 +563,8 @@ export async function fetchEvidenciaConformidadeSnapshot(
     temSlugPortal: typeof slug === "string" && slug.trim().length > 0,
     temPoliticaProtecao: protecao != null,
     temPosin: posin != null,
+    sistemasIaCount: siaRes.count ?? 0,
+    sistemasIaProducaoCount: siaProdRes.count ?? 0,
   };
 }
 
@@ -1041,6 +1057,8 @@ export type CreateProgramaPayload = {
   tipo_programa?: string | null;
   descricao_escopo?: string | null;
   atividade_principal_organizacao?: string | null;
+  /** Preset de escopo na criação (default: essencial para setor 2, completo para setor 1) */
+  perfil_escopo?: "essencial" | "completo" | "com_ia";
   /** Vincular programa a uma empresa já cadastrada */
   empresa_id?: number | null;
   /** Ou criar nova empresa e vincular (ignorado se empresa_id for informado) */
@@ -1227,6 +1245,11 @@ export const createPrograma = async (payload: CreateProgramaPayload) => {
     const { data: emp } = await createEmpresa(payload.empresa);
     if (emp?.id) empresa_id = emp.id;
   }
+  const defaultPreset =
+    payload.perfil_escopo ??
+    (payload.setor === 1 ? "completo" : "essencial");
+  const escopoBuilt = buildEscopoFromPreset(defaultPreset);
+
   const insertPayload: Record<string, unknown> = {
     nome: payload.nome || null,
     tipo_programa: payload.tipo_programa || null,
@@ -1235,6 +1258,9 @@ export const createPrograma = async (payload: CreateProgramaPayload) => {
     setor: payload.setor ?? null,
     orgao: payload.orgao ?? null,
     empresa_id: empresa_id ?? null,
+    perfil_escopo: escopoBuilt.perfil_escopo,
+    gi_alvo: escopoBuilt.gi_alvo,
+    escopo: escopoBuilt.escopo,
   };
   const result = await supabaseBrowserClient
     .from("programa")
@@ -1312,6 +1338,38 @@ export const updateProgramaField = async (programaId: number, field: string, val
     logActivityFromClient({ action: "update", resourceType: "programa", resourceId: programaId, programaId, details: { field } });
   }
   return { data, error };
+};
+
+export type ProgramaEscopoApi = {
+  perfil_escopo: string;
+  gi_alvo: string | null;
+  escopo: import("@/lib/programa/perfilEscopo").ProgramaEscopoV1;
+};
+
+export const fetchProgramaEscopo = async (programaId: number): Promise<ProgramaEscopoApi> => {
+  const res = await fetch(`/api/programas/${programaId}/escopo`, { credentials: "include" });
+  if (!res.ok) throw new Error("Erro ao carregar escopo");
+  return res.json();
+};
+
+export const updateProgramaEscopo = async (
+  programaId: number,
+  body: {
+    aplicar_preset?: "essencial" | "completo" | "com_ia";
+    perfil_escopo?: string;
+    gi_alvo?: string | null;
+    escopo?: import("@/lib/programa/perfilEscopo").ProgramaEscopoV1;
+  }
+): Promise<ProgramaEscopoApi> => {
+  const res = await fetch(`/api/programas/${programaId}/escopo`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Erro ao atualizar escopo");
+  return data;
 };
 
 /** Upload de logo (orgao ou programa). Comprime no servidor e salva base64. */

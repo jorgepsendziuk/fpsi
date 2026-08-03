@@ -43,6 +43,11 @@ export interface Programa {
   gestor_seguranca_informacao?: number | null;
   encarregado_dados_pessoais?: number | null;
   gestor_tic?: number | null;
+  /** AIGP — accountability formal para sistemas de IA (medida 26.1). */
+  responsavel_governanca_ia?: number | null;
+  substituto_governanca_ia?: number | null;
+  comite_si_ia_na_pauta?: boolean;
+  comite_priva_ia_na_pauta?: boolean;
   setor: number;
   cnpj: number;
   razao_social: string;
@@ -59,6 +64,12 @@ export interface Programa {
   logo_orgao_empresa?: string | null;
   /** Logo do programa (base64 data URL, comprimida) */
   logo_programa?: string | null;
+  /** Preset de escopo: essencial | completo | com_ia | custom */
+  perfil_escopo?: string | null;
+  /** GI alvo para SI (G1/G2/G3); null se SI fora do escopo */
+  gi_alvo?: string | null;
+  /** Matriz de escopo (diagnósticos, módulos, comitês, ignorados) */
+  escopo?: import("@/lib/programa/perfilEscopo").ProgramaEscopoV1 | Record<string, unknown> | null;
 }
 
 /**

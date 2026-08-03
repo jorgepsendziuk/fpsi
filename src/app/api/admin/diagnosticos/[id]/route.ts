@@ -1,0 +1,58 @@
+import { NextResponse } from "next/server";
+import { requireSystemAdmin } from "@/lib/admin/requireSystemAdmin";
+import { createSupabaseAdminClient } from "@/utils/supabase/admin";
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { ok } = await requireSystemAdmin();
+  if (!ok) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+
+  const { id } = await params;
+  const admin = createSupabaseAdminClient();
+  if (!admin) return NextResponse.json({ error: "Configuração inválida" }, { status: 500 });
+
+  const { data, error } = await admin.from("diagnostico").select("*").eq("id", id).single();
+  if (error || !data) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+  return NextResponse.json(data);
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { ok } = await requireSystemAdmin();
+  if (!ok) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+
+  const { id } = await params;
+  const body = await request.json();
+  const admin = createSupabaseAdminClient();
+  if (!admin) return NextResponse.json({ error: "Configuração inválida" }, { status: 500 });
+
+  const update: Record<string, unknown> = {};
+  if (body.descricao != null) update.descricao = body.descricao;
+  if (body.cor != null) update.cor = body.cor;
+  if (body.indice != null) update.indice = String(body.indice);
+  if (body.maturidade != null) update.maturidade = Number(body.maturidade);
+
+  const { data, error } = await admin.from("diagnostico").update(update).eq("id", id).select().single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { ok } = await requireSystemAdmin();
+  if (!ok) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+
+  const { id } = await params;
+  const admin = createSupabaseAdminClient();
+  if (!admin) return NextResponse.json({ error: "Configuração inválida" }, { status: 500 });
+
+  const { error } = await admin.from("diagnostico").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}

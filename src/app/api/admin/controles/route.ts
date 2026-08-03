@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { requireSystemAdmin } from "@/lib/admin/requireSystemAdmin";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
-
-async function requireSystemAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false };
-  const { data: profile } = await supabase.from("profiles").select("is_system_admin").eq("user_id", user.id).single();
-  if (profile?.is_system_admin !== true) return { ok: false };
-  return { ok: true };
-}
 
 export async function GET(request: Request) {
   const { ok } = await requireSystemAdmin();
@@ -20,13 +11,36 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const diagnosticoId = searchParams.get("diagnostico_id");
+  const q = searchParams.get("q")?.trim();
 
-  let query = admin.from("controle").select("id, numero, nome, diagnostico").order("diagnostico").order("numero");
+  let query = admin.from("controle").select("*").order("diagnostico").order("numero");
 
   if (diagnosticoId) query = query.eq("diagnostico", diagnosticoId);
+  if (q) query = query.or(`nome.ilike.%${q}%,numero.eq.${Number(q) || -1}`);
 
   const { data, error } = await query;
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
+}
+
+export async function POST(request: Request) {
+  const { ok } = await requireSystemAdmin();
+  if (!ok) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+
+  const body = await request.json();
+  const admin = createSupabaseAdminClient();
+  if (!admin) return NextResponse.json({ error: "Configuração inválida" }, { status: 500 });
+
+  const { data, error } = await admin
+    .from("controle")
+    .insert({
+      numero: body.numero != null ? Number(body.numero) : null,
+      diagnostico: body.diagnostico != null ? Number(body.diagnostico) : null,
+      nome: body.nome ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data, { status: 201 });
 }

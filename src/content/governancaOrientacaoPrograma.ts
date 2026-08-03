@@ -16,7 +16,9 @@ export type CampoResponsavelProgramaId =
   | "responsavel_gestao_integridade"
   | "gestor_seguranca_informacao"
   | "encarregado_dados_pessoais"
-  | "gestor_tic";
+  | "gestor_tic"
+  | "responsavel_governanca_ia"
+  | "substituto_governanca_ia";
 
 export type OrientacaoCampoResponsavel = {
   id: CampoResponsavelProgramaId;
@@ -100,6 +102,34 @@ export const ORIENTACAO_CAMPOS_RESPONSAVEIS: OrientacaoCampoResponsavel[] = [
     dicasCartilha: [
       "Inclusão em comitês de governança digital, SI e privacidade, ou estruturas equivalentes, para subsídio técnico à decisão.",
       "Elaborar e manter plano de ações com metas, prazos e responsáveis para implementação das medidas PPSI nas soluções tecnológicas.",
+    ],
+  },
+  {
+    id: "responsavel_governanca_ia",
+    rotulo: "Responsável por governança de IA",
+    instrucao:
+      "Designar pessoa ou estrutura com mandato para supervisionar o uso de IA na organização, com reporte à alta administração. Complementa os papéis PPSI; não substitui ato de nomeação institucional.",
+    fundamentacao: [
+      "NIST AI RMF — função GOVERN (accountability).",
+      "ISO/IEC 42001 — liderança e papéis no sistema de gestão de IA.",
+      "IAPP AIGP — governança operacional de IA.",
+    ],
+    dicasCartilha: [
+      "Articulação com gestor de TIC, SI, privacidade e jurídico no ciclo de vida de sistemas de IA.",
+      "Reporte periódico de riscos e incidentes de IA à alta administração.",
+    ],
+  },
+  {
+    id: "substituto_governanca_ia",
+    rotulo: "Substituto — governança de IA",
+    instrucao:
+      "Indicar substituto do responsável por governança de IA para continuidade operacional (ausências, férias, transição).",
+    fundamentacao: [
+      "ISO/IEC 42001 — continuidade de papéis no AIMS.",
+      "Boas práticas AIGP de accountability.",
+    ],
+    dicasCartilha: [
+      "Evitar lacuna de mandato quando o titular estiver indisponível.",
     ],
   },
 ];

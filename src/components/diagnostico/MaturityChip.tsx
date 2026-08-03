@@ -2,6 +2,7 @@ import React from 'react';
 import { Chip, Tooltip, Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import MaturityCalculationTooltip from './MaturityCalculationTooltip';
+import { formatMaturityIndex, getMaturityColorHex } from '@/lib/utils/maturity';
 
 interface MaturityChipProps {
   score: number;
@@ -37,28 +38,6 @@ interface MaturityChipProps {
 }
 
 /**
- * Mapping de scores para cores de maturidade
- */
-const getMaturityColor = (score: number): { main: string; light: string; dark: string } => {
-  if (score >= 0.9) return { main: '#2E7D32', light: '#4CAF50', dark: '#1B5E20' }; // Verde Escuro - Aprimorado
-  if (score >= 0.7) return { main: '#4CAF50', light: '#8BC34A', dark: '#2E7D32' }; // Verde - Em Aprimoramento  
-  if (score >= 0.5) return { main: '#FFC107', light: '#FFEB3B', dark: '#F57C00' }; // Amarelo - Intermediário
-  if (score >= 0.3) return { main: '#FF9800', light: '#FFB74D', dark: '#F57C00' }; // Laranja - Básico
-  return { main: '#FF5252', light: '#FF8A80', dark: '#D32F2F' }; // Vermelho - Inicial
-};
-
-/**
- * Mapping de scores para labels de maturidade
- */
-const getMaturityLabel = (score: number): string => {
-  if (score >= 0.9) return 'Aprimorado';
-  if (score >= 0.7) return 'Em Aprimoramento';
-  if (score >= 0.5) return 'Intermediário';
-  if (score >= 0.3) return 'Básico';
-  return 'Inicial';
-};
-
-/**
  * Componente MaturityChip para exibir índices de maturidade
  */
 const MaturityChip: React.FC<MaturityChipProps> = ({
@@ -72,26 +51,31 @@ const MaturityChip: React.FC<MaturityChipProps> = ({
   controleId,
   controleNome
 }) => {
-  const maturityColor = getMaturityColor(score);
-  const maturityLabel = label || getMaturityLabel(score);
-  const scoreFormatted = score.toFixed(2);
+  const formatted = formatMaturityIndex(score);
+  const maturityColor = formatted?.color ?? getMaturityColorHex(score);
+  const maturityLabel = label || formatted?.label || 'Inicial';
+  const scoreFormatted = formatted?.indexText ?? score.toFixed(2);
 
   const chipStyle = {
-    backgroundColor: variant === 'filled' ? alpha(maturityColor.main, 0.1) : 'transparent',
-    color: maturityColor.dark,
-    border: `1px solid ${alpha(maturityColor.main, 0.3)}`,
-    fontWeight: 600,
-    fontSize: size === 'small' ? '0.75rem' : '0.875rem',
-    transition: animated ? 'all 0.3s ease-in-out' : undefined,
+    backgroundColor: variant === 'filled' ? alpha(maturityColor, 0.1) : alpha(maturityColor, 0.04),
+    color: maturityColor,
+    border: `1px solid ${alpha(maturityColor, 0.35)}`,
+    fontWeight: 700,
+    fontVariantNumeric: 'tabular-nums' as const,
+    fontSize: size === 'small' ? '0.72rem' : '0.875rem',
+    height: size === 'small' ? 22 : undefined,
+    transition: animated ? 'all 0.2s ease-in-out' : undefined,
+    '& .MuiChip-label': {
+      px: size === 'small' ? 0.75 : 1,
+    },
     '&:hover': {
-      backgroundColor: alpha(maturityColor.main, 0.2),
-      borderColor: maturityColor.main,
-      transform: animated ? 'scale(1.05)' : undefined,
+      backgroundColor: alpha(maturityColor, 0.12),
+      borderColor: alpha(maturityColor, 0.55),
+      transform: animated ? 'scale(1.03)' : undefined,
     }
   };
 
-  // Para chips pequenos (menu árvore), só mostrar o score
-  const displayLabel = (size === 'small' || !showLabel) ? scoreFormatted : `${scoreFormatted} - ${maturityLabel}`;
+  const displayLabel = (size === 'small' || !showLabel) ? scoreFormatted : `${scoreFormatted} · ${maturityLabel}`;
 
   const chipElement = (
     <Chip

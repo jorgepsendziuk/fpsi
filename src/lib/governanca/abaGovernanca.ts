@@ -1,5 +1,5 @@
 /** Valores de `?aba=` na rota Estrutura de Governança (ordem = índice das Tabs). */
-export const GOVERNANCA_ABA_QUERY = ["equipe", "si", "priva", "etir", "tratamento"] as const;
+export const GOVERNANCA_ABA_QUERY = ["equipe", "si", "priva", "etir", "ia", "tratamento"] as const;
 
 export type GovernancaAbaQuery = (typeof GOVERNANCA_ABA_QUERY)[number];
 

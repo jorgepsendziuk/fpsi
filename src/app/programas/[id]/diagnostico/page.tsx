@@ -9,29 +9,19 @@ import {
   Typography,
   Paper,
   Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Collapse,
   Card,
   CardContent,
   CardHeader,
   Chip,
   IconButton,
   Skeleton,
-  Stack,
   Divider,
   useTheme,
   alpha,
-  Tooltip,
   Fab,
   useMediaQuery,
   LinearProgress,
   Alert,
-  ToggleButton,
-  ToggleButtonGroup,
 } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import {
@@ -51,16 +41,7 @@ import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
   Dashboard as DashboardIcon,
-  Add as AddIcon,
-  Remove as RemoveIcon,
-  // Ícones específicos para diagnósticos
-  AccountBalance as AccountBalanceIcon, // Estrutura/Governança
-  Lock as LockIcon, // Segurança
-  Person as PersonIcon, // Privacidade
-  Psychology as PsychologyIcon, // Governança de IA / AIGP
   HourglassEmpty as HourglassEmptyIcon,
-  FilterList as FilterListIcon,
-  InfoOutlined as InfoOutlinedIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -68,38 +49,46 @@ import 'dayjs/locale/pt-br';
 
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { shouldUseDemoData } from "@/lib/services/demoDataService";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../../components/diagnostico/containers/MedidaContainer";
 import ControleContainer from "../../../../components/diagnostico/containers/ControleContainer";
 import { useMaturityCache } from "../../../../components/diagnostico/hooks/useMaturityCache";
 import MaturityChip from "../../../../components/diagnostico/MaturityChip";
 import Dashboard from "../../../../components/diagnostico/Dashboard";
+import { GrupoImplementacaoFilter } from "../../../../components/diagnostico/GrupoImplementacaoFilter";
 import ReportButton from "../../../../components/diagnostico/ReportButton";
+import { DiagnosticoNavBar } from "../../../../components/diagnostico/DiagnosticoNavBar";
+import {
+  DiagnosticoTreeNav,
+  type DiagnosticoTreeNode,
+} from "../../../../components/diagnostico/DiagnosticoTreeNav";
+import {
+  getControleTreeLabel,
+  getDiagnosticoIndiceLabel,
+  getDiagnosticoTreeLabel,
+  getMedidaTreeLabel,
+} from "../../../../lib/utils/diagnosticoTreeLabels";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
+import { getDiagnosticoTheme } from "../../../../lib/utils/diagnosticoThemes";
 import {
   GrupoImpleFilter,
-  GRUPO_IMPLEMENTACAO_HINT,
-  GRUPO_FILTRO_CUMULATIVO_RESUMO,
-  GRUPO_GI_PALETTE,
-  labelGrupoGi,
+  isDiagnosticoSeguranca,
   matchesGrupoFilter,
 } from "../../../../lib/utils/grupoImplementacao";
+import {
+  isDiagnosticoAtivo,
+  isControleAtivo,
+  resolveProgramaEscopo,
+  ativarDiagnostico,
+  detectPresetFromEscopo,
+} from "@/lib/programa/perfilEscopo";
 import { sortMedidasByIdMedida } from "../../../../lib/utils/medidaSort";
 
 const DRAWER_WIDTH = 380;
 
-interface TreeNode {
-  id: string;
-  type: 'dashboard' | 'diagnostico' | 'controle' | 'medida';
-  label: string;
-  description?: string;
-  icon: React.ReactNode;
-  data: any;
-  children?: TreeNode[];
-  expanded?: boolean;
-  maturityScore?: number;
-  maturityLabel?: string;
-}
+type TreeNode = DiagnosticoTreeNode;
 
 export default function DiagnosticoPage() {
   const params = useParams();
@@ -108,6 +97,9 @@ export default function DiagnosticoPage() {
   const idOrSlug = params.id as string;
   const { programaId: resolvedProgramaId, loading: resolvingId } = useProgramaIdFromParam(idOrSlug);
   const programaId = resolvedProgramaId ?? 0;
+  const isDemoMode = shouldUseDemoData(programaId);
+  const { hasPermission } = useUserPermissions(isDemoMode ? undefined : programaId);
+  const canEditEscopo = isDemoMode || hasPermission("can_edit_programa");
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Estado principal
@@ -133,6 +125,36 @@ export default function DiagnosticoPage() {
   const wasLoadingRef = useRef(false);
   const loadMedidasForDashboardRef = useRef<() => Promise<void>>(() => Promise.resolve());
   const [grupoImpleFilter, setGrupoImpleFilter] = useState<GrupoImpleFilter>("all");
+
+  const programaEscopo = useMemo(
+    () => (programa ? resolveProgramaEscopo(programa).escopo : null),
+    [programa]
+  );
+
+  const diagnosticosAtivos = useMemo(
+    () =>
+      programaEscopo
+        ? diagnosticos.filter((d) => isDiagnosticoAtivo(programaEscopo, d.id))
+        : diagnosticos,
+    [diagnosticos, programaEscopo]
+  );
+
+  const diagnosticosCortados = useMemo(
+    () =>
+      programaEscopo
+        ? diagnosticos.filter((d) => !isDiagnosticoAtivo(programaEscopo, d.id))
+        : [],
+    [diagnosticos, programaEscopo]
+  );
+
+  useEffect(() => {
+    if (!programa) return;
+    const { giAlvo } = resolveProgramaEscopo(programa);
+    if (giAlvo) {
+      setGrupoImpleFilter((prev) => (prev === "all" ? (giAlvo as GrupoImpleFilter) : prev));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- aplica GI alvo só na carga do programa
+  }, [programa?.id]);
 
   // Carregamento em segundo plano (controles, medidas, índices) — não bloqueia a tela
   const isBackgroundLoading = loading || loadingControles.size > 0 || loadingMedidas.size > 0;
@@ -188,15 +210,14 @@ export default function DiagnosticoPage() {
   useEffect(() => {
     if (!selectedNode && !loading) {
       setSelectedNode({
-        id: 'dashboard',
-        type: 'dashboard',
-        label: 'Visão Geral',
-        description: 'Visão geral consolidada dos diagnósticos',
-        icon: <DashboardIcon sx={{ color: theme.palette.primary.main }} />,
-        data: { type: 'dashboard' },
+        id: "dashboard",
+        type: "dashboard",
+        label: "Visão geral",
+        badge: "Resumo",
+        data: { type: "dashboard" },
       });
     }
-  }, [selectedNode, loading, theme.palette.primary.main]);
+  }, [selectedNode, loading]);
 
   // Carregar controles de um diagnóstico
   const loadControles = useCallback(async (diagnosticoId: number) => {
@@ -326,22 +347,20 @@ export default function DiagnosticoPage() {
 
   loadMedidasForDashboardRef.current = loadMedidasForDashboard;
 
-  // Trigger do carregamento de medidas para dashboard. Usa ref para não depender de
-  // loadMedidasForDashboard (evita loop quando medidas/programaMedidas atualizam).
-  // Reexecuta quando controles aumentam; o último timeout (após controles estáveis) dispara o load.
+  // Carrega estrutura de medidas (id + grupo_imple) para dashboard e filtro GI em Segurança.
+  const precisaEstruturaMedidas =
+    selectedNode?.type === "dashboard" ||
+    (selectedNode?.type === "diagnostico" && isDiagnosticoSeguranca(selectedNode.data?.id));
+
   useEffect(() => {
-    if (
-      selectedNode?.type === 'dashboard' &&
-      !loading &&
-      Object.keys(controles).length > 0
-    ) {
+    if (precisaEstruturaMedidas && !loading && Object.keys(controles).length > 0) {
       const timer = setTimeout(() => {
         loadMedidasForDashboardRef.current?.();
       }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [selectedNode?.type, loading, controles]);
+  }, [precisaEstruturaMedidas, loading, controles]);
 
   // Manipular expansão de nós
   const handleNodeToggle = useCallback(async (nodeId: string, node: TreeNode) => {
@@ -378,10 +397,14 @@ export default function DiagnosticoPage() {
       setExpandedNodes((prev) => new Set([...Array.from(prev), ...parentIds]));
     }
 
+    if (node.type === "diagnostico") {
+      await loadControles(node.data.id);
+    }
+
     if (isMobile && node.type === "medida") {
       setDrawerOpen(false);
     }
-  }, [isMobile]);
+  }, [isMobile, loadControles]);
 
   // Para maturidade/dashboard: usar medidas completas quando existirem, senão estrutura (id, id_controle).
   const medidasParaCalculo = useMemo(() => {
@@ -395,19 +418,33 @@ export default function DiagnosticoPage() {
     return out;
   }, [medidas, medidasStructure]);
 
-  /** Visão geral e índices do dashboard respeitam o filtro cumulativo GI (GI2 inclui GI1; GI3 inclui GI1+GI2). */
+  /** Visão geral: filtro GI só afeta medidas do diagnóstico Segurança (CIS). */
+  const controleDiagnosticoMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    Object.entries(controles).forEach(([diagId, ctrls]) => {
+      (ctrls || []).forEach((c) => {
+        map[c.id] = Number(diagId);
+      });
+    });
+    return map;
+  }, [controles]);
+
   const medidasParaDashboard = useMemo(() => {
     if (grupoImpleFilter === "all") return medidasParaCalculo;
     const out: { [key: number]: Array<Medida | dataService.MedidaStructureItem> } = {};
     Object.keys(medidasParaCalculo).forEach((k) => {
       const cid = Number(k);
       const arr = medidasParaCalculo[cid] || [];
-      out[cid] = arr.filter((m) =>
-        matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
-      );
+      if (isDiagnosticoSeguranca(controleDiagnosticoMap[cid])) {
+        out[cid] = arr.filter((m) =>
+          matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
+        );
+      } else {
+        out[cid] = arr;
+      }
     });
     return out;
-  }, [medidasParaCalculo, grupoImpleFilter]);
+  }, [medidasParaCalculo, grupoImpleFilter, controleDiagnosticoMap]);
 
   // Construir árvore de navegação
   const treeData = useMemo((): TreeNode[] => {
@@ -415,111 +452,114 @@ export default function DiagnosticoPage() {
 
     const tree: TreeNode[] = [
       {
-      id: 'dashboard',
-      type: 'dashboard',
-      label: 'Visão Geral',
-      description: 'Visão geral consolidada dos diagnósticos',
-      icon: <DashboardIcon sx={{ color: theme.palette.primary.main }} />,
-      data: { type: 'dashboard' },
-      }
+        id: "dashboard",
+        type: "dashboard",
+        label: "Visão geral",
+        badge: "Resumo",
+        data: { type: "dashboard" },
+      },
     ];
 
-    diagnosticos.forEach(diagnostico => {
+    diagnosticos.forEach((diagnostico) => {
+      if (programaEscopo && !isDiagnosticoAtivo(programaEscopo, diagnostico.id)) return;
       const diagnosticoControles = controles[diagnostico.id] || [];
-      const diagnosticoMaturity = getDiagnosticoMaturity(diagnostico, diagnosticoControles, medidasParaCalculo as { [key: number]: Medida[] });
-
-      // Escolher ícone específico baseado no diagnóstico
-      const getDiagnosticoIcon = (diagnosticoId: number) => {
-        switch (diagnosticoId) {
-          case 1: // Estrutura Básica de Gestão
-            return <AccountBalanceIcon sx={{ color: diagnosticoMaturity.color }} />;
-          case 2: // Segurança da Informação
-            return <LockIcon sx={{ color: diagnosticoMaturity.color }} />;
-          case 3: // Privacidade
-            return <PersonIcon sx={{ color: diagnosticoMaturity.color }} />;
-          case 4: // Governança de IA / AIGP
-            return <PsychologyIcon sx={{ color: diagnosticoMaturity.color }} />;
-          default:
-            return <AssessmentIcon sx={{ color: diagnosticoMaturity.color }} />;
-        }
-      };
+      const diagnosticoMaturity = getDiagnosticoMaturity(
+        diagnostico,
+        diagnosticoControles,
+        medidasParaCalculo as { [key: number]: Medida[] }
+      );
 
       const diagnosticoNode: TreeNode = {
         id: `diagnostico-${diagnostico.id}`,
-        type: 'diagnostico',
-        label: diagnostico.descricao,
-        description: `Diagnóstico ${diagnostico.id}`,
-        icon: getDiagnosticoIcon(diagnostico.id),
+        type: "diagnostico",
+        label: diagnostico.descricao?.trim() || getDiagnosticoTreeLabel(diagnostico.id, diagnostico.descricao),
+        indiceLabel: getDiagnosticoIndiceLabel(diagnostico.id),
         data: diagnostico,
+        diagnosticoId: diagnostico.id,
         maturityScore: diagnosticoMaturity.score,
         maturityLabel: diagnosticoMaturity.label,
-        children: []
+        children: [],
       };
 
-            for (const controle of diagnosticoControles) {
+      for (const controle of diagnosticoControles) {
+        if (programaEscopo && !isControleAtivo(programaEscopo, controle.id, diagnostico.id)) continue;
         const medidasControle = medidasParaCalculo[controle.id] || [];
         const controleMedidas = medidas[controle.id] || [];
-        const medidasLoaded =
-          controleMedidas.length > 0 && typeof (controleMedidas[0] as any)?.medida === "string";
-        if (grupoImpleFilter !== "all" && medidasLoaded) {
-          const hasAny = controleMedidas.some((m) =>
-            matchesGrupoFilter(m.grupo_imple, grupoImpleFilter)
+        if (grupoImpleFilter !== "all" && medidasControle.length > 0 && isDiagnosticoSeguranca(diagnostico.id)) {
+          const hasAny = medidasControle.some((m) =>
+            matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
           );
           if (!hasAny) continue;
         }
-        const controleMaturity = getControleMaturity(controle, medidasControle as Medida[], controle, programaMedidas);
+        const controleMaturity = getControleMaturity(
+          controle,
+          medidasControle as Medida[],
+          controle,
+          programaMedidas
+        );
 
         const controleNode: TreeNode = {
-              id: `controle-${controle.id}`,
-              type: 'controle',
-              label: `${controle.numero} - ${controle.nome}`,
-          description: `Controle ${controle.numero}`,
-              icon: <SecurityIcon sx={{ color: controleMaturity.color }} />,
-          data: { 
+          id: `controle-${controle.id}`,
+          type: "controle",
+          label: getControleTreeLabel(controle.numero, controle.nome),
+          badge: undefined,
+          data: {
             ...controle,
-            calculationData: controleMaturity.calculationData
+            calculationData: controleMaturity.calculationData,
           },
+          diagnosticoId: diagnostico.id,
           maturityScore: controleMaturity.score,
-              maturityLabel: controleMaturity.label,
-          children: []
+          maturityLabel: controleMaturity.label,
+          children: [],
         };
 
-                sortMedidasByIdMedida(controleMedidas).forEach((medida) => {
-              // Só mostrar nó de medida na árvore quando tiver dados completos (carregados ao expandir)
-              const hasFullMedida = typeof (medida as any).medida === 'string';
-              if (!hasFullMedida) return;
-              if (!matchesGrupoFilter(medida.grupo_imple, grupoImpleFilter)) return;
+        sortMedidasByIdMedida(controleMedidas).forEach((medida) => {
+          const hasFullMedida = typeof (medida as Medida).medida === "string";
+          if (!hasFullMedida) return;
+          if (isDiagnosticoSeguranca(diagnostico.id) && !matchesGrupoFilter(medida.grupo_imple, grupoImpleFilter)) {
+            return;
+          }
 
-              const programaMedida = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
-              const getMedidaColor = () => {
-                if (!programaMedida?.resposta) return '#9E9E9E';
-                const respostaNum = typeof programaMedida.resposta === 'string'
-                  ? parseInt(programaMedida.resposta, 10) : programaMedida.resposta;
-                if (isNaN(respostaNum)) return '#9E9E9E';
-                if (controle.diagnostico === 1) {
-                  return respostaNum === 1 ? '#4CAF50' : respostaNum === 2 ? '#FF5252' : '#9E9E9E';
-                }
-                switch (respostaNum) {
-                  case 1: return '#4CAF50';
-                  case 2: return '#8BC34A';
-                  case 3: return '#FFC107';
-                  case 4: return '#FF9800';
-                  case 5: return '#FF5252';
-                  case 6: return '#9E9E9E';
-                  default: return '#9E9E9E';
-                }
-              };
+          const programaMedidaRow = programaMedidas[`${medida.id}-${controle.id}-${programaId}`];
+          const getMedidaResponseColor = () => {
+            if (!programaMedidaRow?.resposta) return "#9E9E9E";
+            const respostaNum =
+              typeof programaMedidaRow.resposta === "string"
+                ? parseInt(programaMedidaRow.resposta, 10)
+                : programaMedidaRow.resposta;
+            if (isNaN(respostaNum)) return "#9E9E9E";
+            if (controle.diagnostico === 1) {
+              return respostaNum === 1 ? "#4CAF50" : respostaNum === 2 ? "#FF5252" : "#9E9E9E";
+            }
+            switch (respostaNum) {
+              case 1:
+                return "#4CAF50";
+              case 2:
+                return "#8BC34A";
+              case 3:
+                return "#FFC107";
+              case 4:
+                return "#FF9800";
+              case 5:
+                return "#FF5252";
+              case 6:
+                return "#9E9E9E";
+              default:
+                return "#9E9E9E";
+            }
+          };
 
-              const medidaNode: TreeNode = {
-                id: `medida-${medida.id}`,
-                type: 'medida',
-                label: `${medida.id_medida} - ${(medida as any).medida?.substring(0, 50)}...`,
-                description: `Medida ${(medida as any).id_medida}`,
-                icon: <PolicyIcon sx={{ color: getMedidaColor() }} />,
-                data: { medida, controle, programaMedida },
-              };
-              controleNode.children!.push(medidaNode);
-            });
+          const medidaNode: TreeNode = {
+            id: `medida-${medida.id}`,
+            type: "medida",
+            label: getMedidaTreeLabel((medida as Medida).medida),
+            badge: (medida as Medida).id_medida,
+            data: { medida, controle, programaMedida: programaMedidaRow },
+            diagnosticoId: diagnostico.id,
+            responseColor: getMedidaResponseColor(),
+          };
+          controleNode.children!.push(medidaNode);
+        });
 
         diagnosticoNode.children!.push(controleNode);
       }
@@ -536,7 +576,6 @@ export default function DiagnosticoPage() {
     medidasParaCalculo,
     programaMedidas,
     programaId,
-    theme,
     getDiagnosticoMaturity,
     getControleMaturity,
     grupoImpleFilter,
@@ -549,14 +588,21 @@ export default function DiagnosticoPage() {
     if (itemType === 'diagnostico') {
       allItems = treeData.filter(node => node.type === 'diagnostico');
     } else if (itemType === 'controle') {
-      // Encontrar todos os controles do diagnóstico atual
       const currentDiagnostico = diagnosticos.find(d => {
         const diagnosticoControles = controles[d.id] || [];
         return diagnosticoControles.some(c => c.id === currentNode.data.id);
       });
       if (currentDiagnostico) {
         const diagnosticoControles = controles[currentDiagnostico.id] || [];
-        allItems = diagnosticoControles.map(controle => ({
+        const filtrados =
+          grupoImpleFilter === "all" || !isDiagnosticoSeguranca(currentDiagnostico.id)
+            ? diagnosticoControles
+            : diagnosticoControles.filter((controle) => {
+                const cm = medidasParaCalculo[controle.id] || [];
+                if (cm.length === 0) return true;
+                return cm.some((m) => matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter));
+              });
+        allItems = filtrados.map(controle => ({
           id: `controle-${controle.id}`,
           type: 'controle' as const,
           label: `${controle.numero} - ${controle.nome}`,
@@ -569,7 +615,7 @@ export default function DiagnosticoPage() {
       const controle = currentNode.data.controle;
       const controleMedidas = medidas[controle.id] || [];
       const filtradas =
-        grupoImpleFilter === "all"
+        grupoImpleFilter === "all" || !isDiagnosticoSeguranca(controle.diagnostico)
           ? controleMedidas
           : controleMedidas.filter((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
       allItems = sortMedidasByIdMedida(filtradas).map((medida) => ({
@@ -591,12 +637,13 @@ export default function DiagnosticoPage() {
       currentIndex: currentIndex + 1, // 1-based index for display
       total: allItems.length 
     };
-  }, [treeData, diagnosticos, controles, medidas, programaMedidas, programaId, grupoImpleFilter]);
+  }, [treeData, diagnosticos, controles, medidas, medidasParaCalculo, programaMedidas, programaId, grupoImpleFilter]);
 
   useEffect(() => {
     if (grupoImpleFilter === "all") return;
     setSelectedNode((cur) => {
       if (!cur || cur.type !== "medida") return cur;
+      if (!isDiagnosticoSeguranca(cur.data.controle?.diagnostico)) return cur;
       if (matchesGrupoFilter(cur.data.medida.grupo_imple, grupoImpleFilter)) return cur;
       const c = cur.data.controle;
       const controleNode = treeData
@@ -664,269 +711,6 @@ export default function DiagnosticoPage() {
     await loadMedidas(controleId);
   }, [loadMedidas]);
 
-  // Renderizar item da árvore com linhas conectoras
-  const renderTreeItem = useCallback((node: TreeNode, level: number = 0, isLast: boolean = false, parentPath: boolean[] = []) => {
-    const isExpanded = expandedNodes.has(node.id);
-    const isSelected = selectedNode?.id === node.id;
-    const isLoading = (node.type === 'diagnostico' && loadingControles.has(node.data.id)) ||
-                     (node.type === 'controle' && loadingMedidas.has(node.data.id));
-
-    // Determinar se deve mostrar botão de expansão
-    const showExpandButton = node.type === 'diagnostico' || node.type === 'controle';
-
-    // Função para lidar com o clique no item (apenas seleção)
-    const handleItemClick = async () => {
-      // Apenas selecionar o nó, sem expandir
-      await handleNodeSelect(node);
-    };
-
-    // Função para lidar com o clique no botão de expansão
-    const handleExpandClick = async (event: React.MouseEvent) => {
-      // Prevenir que o clique propague para o item pai
-      event.stopPropagation();
-      
-      // Expandir/contrair
-      await handleNodeToggle(node.id, node);
-    };
-
-    // Calcular o padding considerando as linhas conectoras
-    const paddingLeft = level * 24 + 8; // 24px por nível + 8px base
-
-    return (
-      <React.Fragment key={node.id}>
-        <ListItem 
-          disablePadding 
-          sx={{ 
-            position: 'relative',
-            pl: 0,
-          }}
-        >
-          {/* Linhas conectoras */}
-          {level > 0 && (
-            <Box
-              sx={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: paddingLeft,
-                pointerEvents: 'none',
-                zIndex: 1,
-              }}
-            >
-              {/* Linhas verticais dos níveis pais */}
-              {parentPath.map((hasMore, index) => (
-                hasMore && (
-                  <Box
-                    key={`vertical-${index}`}
-                    sx={{
-                      position: 'absolute',
-                      left: index * 24 + 20,
-                      top: 0,
-                      bottom: 0,
-                      width: '1px',
-                      backgroundColor: alpha(theme.palette.divider, 0.4),
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        left: '-0.5px',
-                        top: 0,
-                        bottom: 0,
-                        width: '2px',
-                        backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                        zIndex: -1,
-                      }
-                    }}
-                  />
-                )
-              ))}
-              
-              {/* Linha horizontal para este item */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: (level - 1) * 24 + 20,
-                  top: '50%',
-                  width: '20px',
-                  height: '1px',
-                  backgroundColor: alpha(theme.palette.divider, 0.4),
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    right: '-2px',
-                    top: '-1px',
-                    width: '3px',
-                    height: '3px',
-                    borderRadius: '50%',
-                    backgroundColor: alpha(theme.palette.primary.main, 0.6),
-                  }
-                }}
-              />
-              
-              {/* Linha vertical para este item */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: (level - 1) * 24 + 20,
-                  top: 0,
-                  bottom: isLast ? '50%' : 0,
-                  width: '1px',
-                  backgroundColor: alpha(theme.palette.divider, 0.4),
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    left: '-0.5px',
-                    top: 0,
-                    bottom: 0,
-                    width: '2px',
-                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                    zIndex: -1,
-                  }
-                }}
-              />
-            </Box>
-          )}
-
-          <ListItemButton
-            selected={isSelected}
-            onClick={handleItemClick}
-            disabled={isLoading}
-            sx={{
-              borderRadius: 1,
-              mx: 1,
-              py: node.type === 'dashboard' ? 2 : 1.5,
-              minHeight: node.type === 'dashboard' ? 70 : 60,
-              width: '100%',
-              ml: `${paddingLeft}px`,
-              ...(node.type === 'dashboard' && {
-                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
-                border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
-                '&:hover': {
-                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${alpha(theme.palette.secondary.main, 0.12)} 100%)`,
-                  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
-              },
-              }),
-              '&.Mui-selected': {
-                backgroundColor: node.type === 'dashboard' 
-                  ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.16)} 0%, ${alpha(theme.palette.secondary.main, 0.16)} 100%)`
-                  : alpha(theme.palette.primary.main, 0.12),
-              '&:hover': {
-                  backgroundColor: node.type === 'dashboard' 
-                    ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)} 0%, ${alpha(theme.palette.secondary.main, 0.2)} 100%)`
-                    : alpha(theme.palette.primary.main, 0.16),
-                },
-              },
-            }}
-          >
-            {/* Ícone circular de expand/collapse */}
-            {showExpandButton && (
-              <IconButton
-                size="small"
-                onClick={handleExpandClick}
-                disabled={isLoading}
-                sx={{ 
-                  mr: 1.5,
-                  width: 24,
-                  height: 24,
-                  border: `2px solid ${theme.palette.primary.main}`,
-                  borderRadius: '50%',
-                  backgroundColor: isExpanded ? theme.palette.primary.main : 'transparent',
-                  color: isExpanded ? 'white' : theme.palette.primary.main,
-                  '&:hover': {
-                    backgroundColor: isExpanded ? theme.palette.primary.dark : alpha(theme.palette.primary.main, 0.1),
-                  },
-                }}
-              >
-                {isLoading ? (
-                  <Box
-                    sx={{
-                      width: 14,
-                      height: 14,
-                      border: '2px solid',
-                      borderColor: 'primary.main',
-                      borderTopColor: 'transparent',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                      '@keyframes spin': {
-                        '0%': { transform: 'rotate(0deg)' },
-                        '100%': { transform: 'rotate(360deg)' }
-                      }
-                    }}
-                  />
-                ) : isExpanded ? (
-                  <RemoveIcon sx={{ fontSize: 16, color: 'inherit' }} />
-                ) : (
-                  <AddIcon sx={{ fontSize: 16, color: 'inherit' }} />
-                )}
-              </IconButton>
-            )}
-            
-            <ListItemIcon sx={{ minWidth: 36 }}>
-              {node.icon}
-            </ListItemIcon>
-            
-            <ListItemText
-              primary={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: node.type === 'dashboard' ? 700 : (isSelected ? 600 : 400),
-                      fontSize: node.type === 'dashboard' ? '1rem' : '0.875rem',
-                      flex: 1,
-                      wordBreak: 'break-word',
-                      ...(node.type === 'dashboard' && {
-                        background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                      }),
-                    }}
-                  >
-                    {node.label}
-                  </Typography>
-                  {node.maturityScore !== undefined && (
-                    <MaturityChip
-                      score={node.maturityScore}
-                      label={node.maturityLabel || ''}
-                      size="small"
-                      animated={true}
-                      calculationData={node.data?.calculationData}
-                      controleId={node.type === 'controle' ? node.data.id : undefined}
-                      controleNome={node.type === 'controle' ? node.data.nome : undefined}
-                    />
-                  )}
-                </Box>
-              }
-            />
-          </ListItemButton>
-        </ListItem>
-        
-        {/* Mostrar filhos quando expandido */}
-        {isExpanded && node.children && node.children.length > 0 && (
-          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              {node.children.map((child, index) => {
-                const isLastChild = index === node.children!.length - 1;
-                const newParentPath = [...parentPath, !isLast];
-                return renderTreeItem(child, level + 1, isLastChild, newParentPath);
-              })}
-            </List>
-          </Collapse>
-        )}
-      </React.Fragment>
-    );
-  }, [
-    expandedNodes,
-    selectedNode,
-    loadingControles,
-    loadingMedidas,
-    theme,
-    handleNodeSelect,
-    handleNodeToggle
-  ]);
-
   // Conteúdo da área principal
   const renderMainContent = () => {
     if (loading || resolvingId) {
@@ -952,11 +736,32 @@ export default function DiagnosticoPage() {
       return (
         <Dashboard
           diagnosticos={diagnosticos}
+          diagnosticosOutOfScopeIds={diagnosticosCortados.map((d) => d.id)}
+          onAtivarDiagnostico={
+            programa?.id && canEditEscopo && !isDemoMode
+              ? async (diagnosticoId) => {
+                  if (!programaEscopo) return;
+                  try {
+                    const next = ativarDiagnostico(programaEscopo, diagnosticoId as 1 | 2 | 3 | 4);
+                    await dataService.updateProgramaEscopo(programa.id, {
+                      escopo: next,
+                      perfil_escopo: detectPresetFromEscopo(next),
+                    });
+                    const refreshed = await dataService.fetchProgramaById(programa.id);
+                    setPrograma(refreshed);
+                  } catch (err) {
+                    console.error(err);
+                    alert(err instanceof Error ? err.message : "Erro ao atualizar escopo");
+                  }
+                }
+              : undefined
+          }
           controles={controles}
           medidas={medidasParaDashboard as { [key: number]: Medida[] }}
           programaMedidas={programaMedidas}
           getControleMaturity={getControleMaturity}
           grupoImpleFilter={grupoImpleFilter}
+          onGrupoImpleFilterChange={setGrupoImpleFilter}
           dataLoading={isBackgroundLoading}
           getDiagnosticoMaturity={(id) => {
             const diagnostico = diagnosticos.find(d => d.id === id);
@@ -980,15 +785,18 @@ export default function DiagnosticoPage() {
 
     if (selectedNode.type === 'diagnostico') {
       const diagnosticoControles = controles[selectedNode.data.id] || [];
+      const giEstruturaPronta =
+        grupoImpleFilter === "all" ||
+        !isDiagnosticoSeguranca(selectedNode.data.id) ||
+        diagnosticoControles.some((c) => (medidasParaCalculo[c.id]?.length ?? 0) > 0);
+
       const diagnosticoControlesVisiveis =
-        grupoImpleFilter === "all"
+        grupoImpleFilter === "all" || !isDiagnosticoSeguranca(selectedNode.data.id)
           ? diagnosticoControles
           : diagnosticoControles.filter((controle) => {
-              const cm = medidas[controle.id] || [];
-              const loaded =
-                cm.length > 0 && typeof (cm[0] as Medida)?.medida === "string";
-              if (!loaded) return true;
-              return cm.some((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
+              const cm = medidasParaCalculo[controle.id] || [];
+              if (cm.length === 0) return false;
+              return cm.some((m) => matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter));
             });
       const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'diagnostico');
       
@@ -1009,33 +817,25 @@ export default function DiagnosticoPage() {
 
       return (
         <Box>
-          {/* Navegação entre diagnósticos */}
-          <Paper elevation={1} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <IconButton 
-              onClick={() => prevItem && navigateToItem(prevItem)}
-              disabled={!prevItem}
-              color="primary"
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Diagnóstico {currentIndex} de {total}
-              </Typography>
-              <Typography variant="h6" color="primary" fontWeight="bold">
-                {selectedNode.data.descricao}
-              </Typography>
+          <DiagnosticoNavBar
+            currentIndex={currentIndex}
+            total={total}
+            title={`${getDiagnosticoIndiceLabel(selectedNode.data.id)} · ${selectedNode.data.descricao?.trim() || getDiagnosticoTreeLabel(selectedNode.data.id, selectedNode.data.descricao)}`}
+            accentColor={getDiagnosticoTheme(selectedNode.data.id).color}
+            onPrev={prevItem ? () => navigateToItem(prevItem) : undefined}
+            onNext={nextItem ? () => navigateToItem(nextItem) : undefined}
+          />
+
+          {isDiagnosticoSeguranca(selectedNode.data.id) && (
+            <Box sx={{ mb: 2 }}>
+              <GrupoImplementacaoFilter value={grupoImpleFilter} onChange={setGrupoImpleFilter} />
+              {grupoImpleFilter !== "all" && !giEstruturaPronta && isBackgroundLoading && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1, px: 0.5 }}>
+                  Carregando classificação GI das medidas…
+                </Typography>
+              )}
             </Box>
-            
-            <IconButton 
-              onClick={() => nextItem && navigateToItem(nextItem)}
-              disabled={!nextItem}
-              color="primary"
-            >
-              <ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />
-            </IconButton>
-          </Paper>
+          )}
 
           <Card>
             <CardHeader
@@ -1094,7 +894,7 @@ export default function DiagnosticoPage() {
                 </Typography>
               ) : diagnosticoControlesVisiveis.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  Nenhum controle com medidas no grupo selecionado. Escolha &quot;Todos&quot; ou outro grupo no filtro acima.
+                  Nenhum controle com medidas no grupo selecionado. Escolha &quot;Todos&quot; ou outro grupo no filtro de Segurança.
                 </Typography>
               ) : (
                 <Box>
@@ -1103,14 +903,25 @@ export default function DiagnosticoPage() {
                   </Typography>
                   <Grid container spacing={2}>
                     {diagnosticoControlesVisiveis.map((controle) => {
-                      const controleMedidas = medidasParaCalculo[controle.id] || [];
+                      const controleMedidasAll = medidasParaCalculo[controle.id] || [];
+                      const controleMedidasVisiveis =
+                        grupoImpleFilter === "all" || !isDiagnosticoSeguranca(selectedNode.data.id)
+                          ? controleMedidasAll
+                          : controleMedidasAll.filter((m) =>
+                              matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
+                            );
                       const programaControle = {
                         id: controle.programa_controle_id || 0,
                         programa: programaId,
                         controle: controle.id,
                         nivel: controle.nivel || 1
                       };
-                      const controleMaturity = getControleMaturity(controle, controleMedidas as Medida[], programaControle, programaMedidas);
+                      const controleMaturity = getControleMaturity(
+                        controle,
+                        controleMedidasAll as Medida[],
+                        programaControle,
+                        programaMedidas
+                      );
                       
                       return (
                         <Grid size={{ xs: 12, md: 6 }} key={controle.id}>
@@ -1150,10 +961,12 @@ export default function DiagnosticoPage() {
                                       controleId={controle.id}
                                       controleNome={controle.nome}
                                     />
-                                    <Chip 
-                                      label={`${controleMedidas.length} medidas`} 
-                                      size="small" 
-                                      variant="outlined" 
+                                    <Chip
+                                      label={`${controleMedidasVisiveis.length} medida${
+                                        controleMedidasVisiveis.length === 1 ? "" : "s"
+                                      }`}
+                                      size="small"
+                                      variant="outlined"
                                     />
                                   </Box>
                                 </Box>
@@ -1193,35 +1006,16 @@ export default function DiagnosticoPage() {
 
       return (
         <Box>
-          {/* Navegação entre medidas */}
-          <Paper elevation={1} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <IconButton 
-              onClick={() => prevItem && navigateToItem(prevItem)}
-              disabled={!prevItem}
-              color="primary"
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Medida {currentIndex} de {total} • {controle.numero} - {controle.nome}
-              </Typography>
-              <Typography variant="h6" color="primary" fontWeight="bold">
-                {medida.id_medida || medida.id} - {medida.medida}
-              </Typography>
-            </Box>
-            
-            <IconButton 
-              onClick={() => nextItem && navigateToItem(nextItem)}
-              disabled={!nextItem}
-              color="primary"
-            >
-              <ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />
-            </IconButton>
-          </Paper>
+          <DiagnosticoNavBar
+            currentIndex={currentIndex}
+            total={total}
+            subtitle={`${controle.numero} — ${controle.nome}`}
+            title={`${medida.id_medida || medida.id} · ${medida.medida}`}
+            accentColor={getDiagnosticoTheme(diagnostico?.id ?? 4).color}
+            onPrev={prevItem ? () => navigateToItem(prevItem) : undefined}
+            onNext={nextItem ? () => navigateToItem(nextItem) : undefined}
+          />
 
-          {/* Componente original da medida */}
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
             <MedidaContainer
               medida={medida}
@@ -1320,7 +1114,32 @@ export default function DiagnosticoPage() {
         }
       };
 
+      const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'controle');
+      const navigateToControle = (item: { id: string }) => {
+        const node = treeData
+          .flatMap((d) => d.children || [])
+          .find((n) => n.id === item.id);
+        if (node) handleNodeSelect(node);
+      };
+
       return (
+        <Box>
+          <DiagnosticoNavBar
+            currentIndex={currentIndex}
+            total={total}
+            subtitle={diagnostico.descricao}
+            title={`${controle.numero} · ${controle.nome}`}
+            accentColor={getDiagnosticoTheme(diagnostico.id).color}
+            onPrev={prevItem ? () => navigateToControle(prevItem) : undefined}
+            onNext={nextItem ? () => navigateToControle(nextItem) : undefined}
+          />
+
+          {isDiagnosticoSeguranca(diagnostico.id) && (
+            <Box sx={{ mb: 2 }}>
+              <GrupoImplementacaoFilter value={grupoImpleFilter} onChange={setGrupoImpleFilter} />
+            </Box>
+          )}
+
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
             <ControleContainer
               controle={controle}
@@ -1338,6 +1157,7 @@ export default function DiagnosticoPage() {
               grupoImpleFilter={grupoImpleFilter}
             />
           </LocalizationProvider>
+        </Box>
       );
     }
 
@@ -1378,171 +1198,18 @@ export default function DiagnosticoPage() {
             <PageHeroHeader
               title="Diagnóstico"
               icon={<AssessmentIcon sx={{ fontSize: 30 }} aria-hidden />}
-              description="Controles e medidas por diagnóstico (CIS · PPSI 2.0 · Governança de IA). Use o filtro de grupos de implementação abaixo."
+              description="Controles e medidas por diagnóstico (CIS · PPSI 2.0 · Governança de IA)."
+              trailing={
+                <>
+                  {isMobile && (
+                    <IconButton color="primary" onClick={() => setDrawerOpen(!drawerOpen)} aria-label="Menu">
+                      <MenuIcon />
+                    </IconButton>
+                  )}
+                  <ReportButton programaPathSegment={idOrSlug} iconOnly />
+                </>
+              }
             />
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-              <Box sx={{ flex: 1 }} />
-              {isMobile && (
-                <IconButton color="primary" onClick={() => setDrawerOpen(!drawerOpen)} aria-label="Menu">
-                  <MenuIcon />
-                </IconButton>
-              )}
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "stretch",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 2,
-                width: "100%",
-                mt: 0.5,
-              }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  flex: "1 1 280px",
-                  minWidth: 0,
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  alignItems: { xs: "stretch", sm: "center" },
-                  gap: { xs: 1.25, sm: 2 },
-                  pl: { xs: 1.5, sm: 2 },
-                  pr: { xs: 1.5, sm: 1.75 },
-                  py: 1.25,
-                  borderRadius: 2,
-                  borderLeft: `4px solid ${theme.palette.primary.main}`,
-                  borderTop: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-                  borderRight: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-                  borderBottom: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.07)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
-                  boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.06)}`,
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
-                  <FilterListIcon sx={{ fontSize: 26, color: "primary.main" }} aria-hidden />
-                  <Box>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ fontWeight: 800, letterSpacing: 0.2, lineHeight: 1.2 }}
-                    >
-                      Grupos de implementação (GI)
-                    </Typography>
-                  </Box>
-                  <Tooltip
-                    title={
-                      <Box sx={{ maxWidth: 520, py: 0.5 }}>
-                        <Typography variant="body2" component="div" sx={{ whiteSpace: "pre-line", lineHeight: 1.55 }}>
-                          {GRUPO_IMPLEMENTACAO_HINT}
-                        </Typography>
-                        <Typography variant="body2" component="p" sx={{ mt: 2, fontWeight: 600, lineHeight: 1.5 }}>
-                          {GRUPO_FILTRO_CUMULATIVO_RESUMO}
-                        </Typography>
-                        <Typography variant="caption" component="p" sx={{ mt: 1, display: "block", opacity: 0.95 }}>
-                          Filtra a árvore, as listas e a visão geral. Na tela de um controle, o índice de maturidade do controle continua considerando todas as medidas.
-                        </Typography>
-                      </Box>
-                    }
-                    placement="bottom-start"
-                    enterDelay={200}
-                    slotProps={{ tooltip: { sx: { maxWidth: 560 } } }}
-                  >
-                    <InfoOutlinedIcon
-                      fontSize="small"
-                      color="primary"
-                      sx={{ cursor: "help", opacity: 0.9, display: "block" }}
-                      aria-label="Sobre os grupos de implementação GI1, GI2 e GI3"
-                    />
-                  </Tooltip>
-                </Stack>
-                <ToggleButtonGroup
-                  exclusive
-                  value={grupoImpleFilter}
-                  onChange={(_, v) => v != null && setGrupoImpleFilter(v)}
-                  size="small"
-                  aria-label="Filtrar por grupo de implementação GI1, GI2 ou GI3"
-                  sx={{
-                    alignSelf: { xs: "stretch", sm: "center" },
-                    flexWrap: "wrap",
-                    justifyContent: { xs: "center", sm: "flex-end" },
-                    gap: 0.75,
-                    "& .MuiToggleButtonGroup-grouped": {
-                      border: "none",
-                      mx: 0,
-                      "&:not(:first-of-type)": { borderRadius: 2 },
-                      "&:first-of-type": { borderRadius: 2 },
-                    },
-                    "& .MuiToggleButton-root": {
-                      px: { xs: 1.2, sm: 1.65 },
-                      py: 0.55,
-                      fontSize: "0.875rem",
-                      fontWeight: 700,
-                      textTransform: "none",
-                      borderRadius: "10px !important",
-                      border: "none",
-                      color: "text.secondary",
-                    },
-                  }}
-                >
-                  <ToggleButton
-                    value="all"
-                    sx={{
-                      "&.Mui-selected": {
-                        bgcolor: "primary.main",
-                        color: "primary.contrastText",
-                        "&:hover": { bgcolor: "primary.dark" },
-                      },
-                    }}
-                  >
-                    Todos
-                  </ToggleButton>
-                  <ToggleButton
-                    value="G1"
-                    sx={{
-                      "&.Mui-selected": {
-                        bgcolor: GRUPO_GI_PALETTE.G1.main,
-                        color: GRUPO_GI_PALETTE.G1.contrastText,
-                        "&:hover": { bgcolor: "#1B5E20" },
-                      },
-                    }}
-                  >
-                    {labelGrupoGi("G1")}
-                  </ToggleButton>
-                  <ToggleButton
-                    value="G2"
-                    sx={{
-                      "&.Mui-selected": {
-                        bgcolor: GRUPO_GI_PALETTE.G2.main,
-                        color: GRUPO_GI_PALETTE.G2.contrastText,
-                        "&:hover": { bgcolor: "#9A3412" },
-                      },
-                    }}
-                  >
-                    {labelGrupoGi("G2")}
-                  </ToggleButton>
-                  <ToggleButton
-                    value="G3"
-                    sx={{
-                      "&.Mui-selected": {
-                        bgcolor: GRUPO_GI_PALETTE.G3.main,
-                        color: GRUPO_GI_PALETTE.G3.contrastText,
-                        "&:hover": { bgcolor: "#004D40" },
-                      },
-                    }}
-                  >
-                    {labelGrupoGi("G3")}
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Paper>
-              <Box sx={{ display: "flex", alignItems: "center", flex: "0 0 auto" }}>
-                <ReportButton programaPathSegment={idOrSlug} />
-              </Box>
-            </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-              As datas de atualização deste diagnóstico aparecem em cada controle (nível INCC) e em cada medida ao abrir o detalhe.
-            </Typography>
         </Box>
         </Paper>
 
@@ -1600,6 +1267,7 @@ export default function DiagnosticoPage() {
                 position: 'relative',
                 height: '100%',
             borderRight: `1px solid ${theme.palette.divider}`,
+            bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.92 : 0.96),
           },
         }}
       >
@@ -1617,17 +1285,16 @@ export default function DiagnosticoPage() {
         </Box>
             )}
             <Box sx={{ flex: 1, overflow: 'auto' }}>
-              {loading ? (
-            <Box sx={{ p: 2 }}>
-                  {[1, 2, 3].map(i => (
-                    <Skeleton key={i} variant="rectangular" height={40} sx={{ mb: 1, borderRadius: 1 }} />
-                  ))}
-            </Box>
-          ) : (
-                <List sx={{ py: 1 }}>
-                  {treeData.map(node => renderTreeItem(node))}
-              </List>
-          )}
+              <DiagnosticoTreeNav
+                nodes={treeData}
+                selectedNodeId={selectedNode?.id ?? null}
+                expandedNodes={expandedNodes}
+                loadingControles={loadingControles}
+                loadingMedidas={loadingMedidas}
+                loading={loading}
+                onSelect={handleNodeSelect}
+                onToggle={handleNodeToggle}
+              />
         </Box>
       </Drawer>
 

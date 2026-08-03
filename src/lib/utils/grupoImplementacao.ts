@@ -1,6 +1,13 @@
 /** Filtro global do diagnóstico por grupo de implementação (CIS / PPSI 2.0 — GI1, GI2, GI3). */
 export type GrupoImpleFilter = "all" | "G1" | "G2" | "G3";
 
+/** ID do diagnóstico Segurança da Informação (classificação CIS / GI). */
+export const DIAGNOSTICO_SEGURANCA_ID = 2;
+
+export function isDiagnosticoSeguranca(diagnosticoId: number | undefined | null): boolean {
+  return diagnosticoId === DIAGNOSTICO_SEGURANCA_ID;
+}
+
 /** Texto do guia (CIS / PPSI 2.0) para tooltip do seletor de grupos. */
 export const GRUPO_IMPLEMENTACAO_HINT = `Os grupos GI aplicam-se às medidas do diagnóstico de Segurança da Informação (classificação CIS). Nos demais diagnósticos as medidas não possuem GI.
 

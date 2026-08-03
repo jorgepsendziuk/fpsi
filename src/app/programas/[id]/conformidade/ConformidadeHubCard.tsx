@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardActionArea, Box, Grid, Typography, alpha } from "@mui/material";
+import { Card, CardContent, CardActionArea, Box, Grid, Typography, Chip, Stack, alpha, useTheme } from "@mui/material";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { escopoGreyedSx, ESCOPO_CHIP_LABEL } from "@/lib/programa/escopoVisual";
 import {
   Assignment as AssignmentIcon,
   Description as DescriptionIcon,
@@ -11,6 +13,7 @@ import {
   ReportProblem as ReportProblemIcon,
   ContactMail as ContactMailIcon,
   WarningAmber as WarningAmberIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from "@mui/icons-material";
 
 export type HubCardDef = {
@@ -84,6 +87,21 @@ export const TRATAMENTO_SECTIONS: HubCardDef[] = [
   },
 ];
 
+/** Governança de IA — inventário e ciclo de vida */
+export const AIGP_SECTIONS: HubCardDef[] = [
+  {
+    key: "inventario-ia",
+    title: "Inventário de IA",
+    subtitle: "Sistemas e usos de IA (AIGP 27)",
+    icon: <AutoAwesomeIcon fontSize="large" />,
+    description:
+      "Cadastro central de sistemas de IA: finalidade, dono de negócio, responsável técnico, risco e status de ciclo de vida.",
+    path: "inventario-ia",
+    color: "#0A2744",
+    gradient: "linear-gradient(135deg, #0A2744 0%, #1565c0 100%)",
+  },
+];
+
 /** Pedidos, reportes e contato — portal público */
 export const PORTAL_SECTIONS: HubCardDef[] = [
   {
@@ -124,13 +142,17 @@ export function ConformidadeHubCard({
   idOrSlug,
   router,
   dense = false,
+  outOfScope = false,
+  onEnable,
 }: {
   section: HubCardDef;
   idOrSlug: string;
   router: { push: (href: string) => void };
-  /** Cards mais baixos — hub em uma altura de tela. */
   dense?: boolean;
+  outOfScope?: boolean;
+  onEnable?: () => void;
 }) {
+  const theme = useTheme();
   const href = section.programaModule
     ? `/programas/${idOrSlug}/${section.programaModule}`
     : `/programas/${idOrSlug}/conformidade/${section.path}`;
@@ -144,11 +166,14 @@ export function ConformidadeHubCard({
           flexDirection: "column",
           position: "relative",
           overflow: "hidden",
-          transition: "transform 0.2s ease, box-shadow 0.2s ease",
-          "&:hover": {
-            transform: dense ? "translateY(-2px)" : "translateY(-6px)",
-            boxShadow: `0 12px 24px ${alpha(section.color, 0.25)}`,
-          },
+          transition: "transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease",
+          ...(outOfScope ? escopoGreyedSx(theme) : {}),
+          ...(!outOfScope && {
+            "&:hover": {
+              transform: dense ? "translateY(-2px)" : "translateY(-6px)",
+              boxShadow: `0 12px 24px ${alpha(section.color, 0.25)}`,
+            },
+          }),
           "&::before": {
             content: '""',
             position: "absolute",
@@ -156,7 +181,7 @@ export function ConformidadeHubCard({
             left: 0,
             right: 0,
             height: dense ? 3 : 4,
-            background: section.gradient,
+            background: outOfScope ? alpha(theme.palette.text.primary, 0.2) : section.gradient,
           },
         }}
       >
@@ -216,6 +241,25 @@ export function ConformidadeHubCard({
                 >
                   {section.description}
                 </Typography>
+                {outOfScope && (
+                  <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mt: 1 }}>
+                    <Chip size="small" label={ESCOPO_CHIP_LABEL} sx={{ height: 22, fontSize: "0.68rem" }} />
+                    {onEnable && (
+                      <Chip
+                        size="small"
+                        icon={<AddCircleOutlineIcon sx={{ fontSize: "14px !important" }} />}
+                        label="Incluir no escopo"
+                        clickable
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          onEnable();
+                        }}
+                        sx={{ height: 22, fontSize: "0.68rem" }}
+                      />
+                    )}
+                  </Stack>
+                )}
               </Box>
             </Box>
           </CardContent>

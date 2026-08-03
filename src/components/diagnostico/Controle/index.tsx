@@ -1,69 +1,46 @@
-// React and hooks
 import React from 'react';
-
-// Material UI components
 import {
   Typography,
   Select,
   MenuItem,
   Box,
-  Card,
-  CardContent,
   Chip,
-  Divider,
-  Paper,
   IconButton,
+  alpha,
+  useTheme,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
-
-// Material UI icons
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import PolicyIcon from '@mui/icons-material/Policy';
-import EditIcon from '@mui/icons-material/Edit';
-
-// Types
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '../../../lib/types/types';
-
-// Components
 import MaturityChip from '../MaturityChip';
 import { ResourceLastUpdateLine } from '@/components/common/ResourceLastUpdateLine';
 import { formatDateTimePtBr } from '@/components/common/LastUpdateInfo';
-
-// Utils
 import { incc } from '../../../lib/utils/utils';
+import { getDiagnosticoTheme } from '@/lib/utils/diagnosticoThemes';
+import {
+  diagnosticoGlassPanel,
+  diagnosticoHeaderBand,
+  diagnosticoHeaderBadge,
+  diagnosticoInfoSection,
+} from '@/lib/utils/diagnosticoSurfaceStyles';
+import { labelGrupoGi, normalizeGrupoImpleCode } from '@/lib/utils/grupoImplementacao';
 
-// Styles
-import { controleStyles } from './styles';
-import { useThemeColors } from '../hooks/useThemeColors';
-
-/**
- * Props for the Controle component
- */
 export interface ControleProps {
-  /** The control data */
   controle: Controle;
-  /** The programa controle data containing nivel and other junction table data */
   programaControle?: ProgramaControle;
-  /** The diagnostic this control belongs to */
   diagnostico: Diagnostico;
-  /** The measures for this control */
   medidas: Medida[];
-  /** The program ID */
   programaId: number;
   programaPathSegment?: string;
-  /** List of available responsibles */
   responsaveis: Responsavel[];
-  /** Function to handle changes to the NCC level */
   handleINCCChange: (controleId: number, value: number) => void;
-  /** Function to handle changes to a measure */
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
-  /** Function to calculate the maturity index */
   calculateMaturityIndex: (controle: Controle) => number;
-  /** Optional function to handle navigation to a measure */
   onMedidaNavigate?: (medidaId: number, controleId: number) => void;
 }
 
@@ -90,36 +67,42 @@ const infoLabels: Record<InfoType, string> = {
   aplicabilidade_privacidade: 'Aplicabilidade em privacidade',
 };
 
-
-
 const tabIcons: Record<InfoType, React.ReactElement> = {
-  texto: <DescriptionOutlinedIcon sx={{ mr: 1 }} />,
-  por_que_implementar: <HelpOutlineOutlinedIcon sx={{ mr: 1 }} />,
-  procedimentos_e_ferramentas: <BuildOutlinedIcon sx={{ mr: 1 }} />,
-  fique_atento: <ErrorOutlineOutlinedIcon sx={{ mr: 1 }} />,
-  aplicabilidade_privacidade: <SecurityOutlinedIcon sx={{ mr: 1 }} />,
+  texto: <DescriptionOutlinedIcon fontSize="small" />,
+  por_que_implementar: <HelpOutlineOutlinedIcon fontSize="small" />,
+  procedimentos_e_ferramentas: <BuildOutlinedIcon fontSize="small" />,
+  fique_atento: <ErrorOutlineOutlinedIcon fontSize="small" />,
+  aplicabilidade_privacidade: <SecurityOutlinedIcon fontSize="small" />,
 };
 
-const getBackgroundColor = (info: InfoType) => {
-  switch (info) {
-    case 'texto':
-      return '#F5F5F5';
-    case 'por_que_implementar':
-      return '#D8E6C3';
-    case 'procedimentos_e_ferramentas':
-      return '#E3F2FD';
-    case 'fique_atento':
-      return '#E6E0ED';
-    case 'aplicabilidade_privacidade':
-      return '#FFF3E0';
-    default:
-      return 'background.paper';
+function getStatusColor(diagnosticoId: number, respostaNum: number | undefined, hasResponse: boolean): string {
+  if (!hasResponse || respostaNum === undefined || Number.isNaN(respostaNum)) return '#9E9E9E';
+  if (diagnosticoId === 1) return respostaNum === 1 ? '#4CAF50' : '#FF5252';
+  switch (respostaNum) {
+    case 1: return '#4CAF50';
+    case 2: return '#8BC34A';
+    case 3: return '#FFC107';
+    case 4: return '#FF9800';
+    case 5: return '#FF5252';
+    case 6: return '#9E9E9E';
+    default: return '#9E9E9E';
   }
-};
+}
 
-/**
- * Controle component displays a control with its measures
- */
+function getStatusLabel(diagnosticoId: number, respostaNum: number | undefined, hasResponse: boolean): string {
+  if (!hasResponse || respostaNum === undefined || Number.isNaN(respostaNum)) return 'Não respondida';
+  if (diagnosticoId === 1) return respostaNum === 1 ? 'Sim' : 'Não';
+  switch (respostaNum) {
+    case 1: return 'Adota totalmente';
+    case 2: return 'Adota em menor parte';
+    case 3: return 'Adota parcialmente';
+    case 4: return 'Há plano aprovado';
+    case 5: return 'Não adota';
+    case 6: return 'Não se aplica';
+    default: return 'Não respondida';
+  }
+}
+
 const ControleComponent: React.FC<ControleProps> = ({
   controle,
   programaControle,
@@ -127,428 +110,256 @@ const ControleComponent: React.FC<ControleProps> = ({
   medidas,
   programaId,
   programaPathSegment,
-  responsaveis,
   handleINCCChange,
-  handleMedidaChange,
-  calculateMaturityIndex,
   onMedidaNavigate,
+  calculateMaturityIndex,
 }) => {
-  const { accordionStyles } = useThemeColors();
-  
+  const theme = useTheme();
+  const diagTheme = getDiagnosticoTheme(diagnostico.id);
   const maturityScore = calculateMaturityIndex(controle);
-  
-  // Função para obter cor baseada no score
-  const getMaturityColor = (score: number): string => {
-    if (score >= 0.9) return '#2E7D32';      // Verde escuro
-    if (score >= 0.7) return '#4CAF50';      // Verde
-    if (score >= 0.5) return '#FFC107';      // Amarelo
-    if (score >= 0.3) return '#FF9800';      // Laranja
-    return '#FF5252';                        // Vermelho
-  };
-
-  const getMaturityLevel = (score: number): string => {
-    if (score >= 0.9) return 'Aprimorado';
-    if (score >= 0.7) return 'Em Aprimoramento';
-    if (score >= 0.5) return 'Intermediário';
-    if (score >= 0.3) return 'Básico';
-    return 'Inicial';
-  };
 
   return (
-    <Card sx={{ width: '100%', mb: 2 }}>
-      <CardContent sx={{ p: 0 }}>
-        {/* Header do Controle */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
-            borderRadius: 0,
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+    <Box sx={{ mb: 2 }}>
+      {/* Cabeçalho do controle */}
+      <Box sx={diagnosticoHeaderBand(diagTheme)}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'stretch', md: 'flex-start' },
+            justifyContent: 'space-between',
+            gap: 2,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <SecurityOutlinedIcon 
-                sx={{ 
-                  fontSize: 32, 
-                  color: 'primary.main',
-                  p: 0.5,
-                  borderRadius: 1,
-                  backgroundColor: 'rgba(25, 118, 210, 0.1)'
-                }} 
-              />
-              <Box>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    color: 'primary.main',
-                    mb: 0.5 
-                  }}
-                >
-                  Controle {controle.numero}
-                </Typography>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontWeight: 500, 
-                    color: 'text.primary',
-                    lineHeight: 1.2 
-                  }}
-                >
-                  {controle.nome}
-                </Typography>
-                {controle.programa_controle_id ? (
-                  <ResourceLastUpdateLine
-                    programaId={programaId}
-                    programaPathSegment={programaPathSegment}
-                    resourceType="controle"
-                    resourceId={controle.programa_controle_id}
-                    dbUpdatedAt={controle.programa_controle_updated_at ?? null}
-                    sx={{ mt: 1 }}
-                  />
-                ) : null}
-              </Box>
-            </Box>
-            
-            {/* Card do Índice de Maturidade */}
-            <Card 
-              elevation={3}
-              sx={{ 
-                minWidth: 200,
-                background: `linear-gradient(135deg, ${getMaturityColor(maturityScore)}15 0%, ${getMaturityColor(maturityScore)}25 100%)`,
-                border: `2px solid ${getMaturityColor(maturityScore)}`,
-                borderRadius: 2
-              }}
-            >
-              <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    textTransform: 'uppercase',
-                    color: 'text.secondary',
-                    letterSpacing: 0.5
-                  }}
-                >
-                  Índice de Maturidade
-                </Typography>
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    fontWeight: 800, 
-                    color: getMaturityColor(maturityScore),
-                    my: 1 
-                  }}
-                >
-                  {maturityScore.toFixed(2)}
-                </Typography>
-                <Chip 
-                  label={getMaturityLevel(maturityScore)}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: getMaturityColor(maturityScore),
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: '0.75rem'
-                  }}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, flex: 1, minWidth: 0 }}>
+            <Box sx={diagnosticoHeaderBadge()}>{controle.numero}</Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="overline" sx={{ opacity: 0.85, fontWeight: 700, letterSpacing: 1, lineHeight: 1.2 }}>
+                Controle
+              </Typography>
+              <Typography sx={{ fontWeight: 800, fontSize: '1.125rem', lineHeight: 1.3, mt: 0.25 }}>
+                {controle.nome}
+              </Typography>
+              {controle.programa_controle_id ? (
+                <ResourceLastUpdateLine
+                  programaId={programaId}
+                  programaPathSegment={programaPathSegment}
+                  resourceType="controle"
+                  resourceId={controle.programa_controle_id}
+                  dbUpdatedAt={controle.programa_controle_updated_at ?? null}
+                  sx={{ mt: 0.75, '& .MuiTypography-root': { color: alpha('#fff', 0.88) } }}
                 />
-              </CardContent>
-            </Card>
+              ) : null}
+            </Box>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
-
-          {/* Seção do INCC */}
-          <Box>
-            <Typography 
-              variant="subtitle1" 
-              sx={{ 
-                fontWeight: 600, 
-                color: 'text.primary',
-                mb: 1.5 
-              }}
-            >
-              Nível de Capacidade do Controle (INCC)
-            </Typography>
-            <Select
-              fullWidth
-              value={programaControle?.nivel || ""}
-              onChange={(event) => {
-                handleINCCChange(controle.id, parseInt(event.target.value.toString(), 10));
-              }}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1,
-                },
-                '& .MuiSelect-select': {
-                  py: 1.5
-                }
-              }}
-            >
-              {incc.map((incc) => (
-                <MenuItem key={incc.id} value={incc.id}>
-                  <Box sx={{ py: 0.5 }}>
-                    <Typography 
-                      variant="body1" 
-                      sx={{ 
-                        fontWeight: 600,
-                        mb: 0.5 
-                      }}
-                    >
-                      Nível {incc.nivel} - {incc.indice}%
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary"
-                      sx={{ 
-                        fontSize: '0.875rem',
-                        lineHeight: 1.3,
-                        whiteSpace: 'normal'
-                      }}
-                    >
-                      {incc.label}
-                    </Typography>
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
-        </Paper>
-
-        {/* Conteúdo das Medidas */}
-        <Box sx={{ p: 3 }}>
-          <div style={controleStyles.medidasContainer}>
-          <Box sx={{ mb: 3 }}>
-            {INFO_SECTION_ORDER.map((info) => {
-              const content = controle[info];
-              if (!content || String(content).trim() === '') return null;
-              
-              return (
-                <Box
-                  key={info}
-                  sx={{
-                    backgroundColor: getBackgroundColor(info),
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 2,
-                    mb: 2,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      backgroundColor: getBackgroundColor(info),
-                      padding: '12px 24px',
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      {tabIcons[info]}
-                      <Typography
-                        sx={{
-                          textTransform: 'uppercase',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          color: '#1F2937',
-                        }}
-                      >
-                        {infoLabels[info]}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box
-                    sx={{
-                      backgroundColor: getBackgroundColor(info),
-                      padding: { xs: '16px', md: '24px' },
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        lineHeight: 1.6,
-                        color: '#000000 !important',
-                        display: 'block',
-                        fontSize: { xs: '0.875rem', md: '1rem' }
-                      }}
-                    >
-                      {content}
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            })}
-          </Box>
-
-          {/* Título da seção de medidas */}
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontWeight: 600, 
-              color: 'text.primary',
-              mb: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
+          <Box
+            sx={{
+              ...diagnosticoGlassPanel(theme),
+              px: 2,
+              py: 1.25,
+              minWidth: { md: 180 },
+              textAlign: 'center',
+              bgcolor: alpha('#fff', 0.12),
+              border: `1px solid ${alpha('#fff', 0.22)}`,
+              alignSelf: { xs: 'stretch', md: 'center' },
             }}
           >
-            <PolicyIcon color="primary" />
-            Medidas ({medidas.length})
-          </Typography>
-
-          {/* Lista simples de medidas */}
-          <Box>
-            {medidas.map((medida) => {
-              // Determinar status da medida (resposta pode vir como string do banco)
-              const respostaRaw = medida.programa_medida?.resposta;
-              const respostaNum = typeof respostaRaw === 'string'
-                ? parseInt(respostaRaw, 10) : respostaRaw;
-              const hasResponse = respostaNum !== undefined && respostaNum !== null && !isNaN(respostaNum);
-              
-              // Determinar cor baseada no status
-              const getStatusColor = () => {
-                if (!hasResponse) return '#9E9E9E'; // Cinza para não respondida
-                if (diagnostico.id === 1) {
-                  // Diagnóstico 1: Sim/Não
-                  return respostaNum === 1 ? '#4CAF50' : '#FF5252'; // Verde para Sim, Vermelho para Não
-                } else {
-                  // Diagnósticos 2-3: Escala de maturidade
-                  if (respostaNum === 1) return '#4CAF50';      // Verde - Adota totalmente
-                  if (respostaNum === 2) return '#8BC34A';      // Verde claro - Adota em menor parte
-                  if (respostaNum === 3) return '#FFC107';      // Amarelo - Adota parcialmente
-                  if (respostaNum === 4) return '#FF9800';      // Laranja - Há plano
-                  if (respostaNum === 5) return '#FF5252';      // Vermelho - Não adota
-                  if (respostaNum === 6) return '#9E9E9E';      // Cinza - Não se aplica
-                }
-                return '#9E9E9E';
-              };
-
-              const getStatusLabel = () => {
-                if (!hasResponse) return 'Não Respondida';
-                if (diagnostico.id === 1) {
-                  return respostaNum === 1 ? 'Sim' : 'Não';
-                } else {
-                  if (respostaNum === 1) return 'Adota Totalmente';
-                  if (respostaNum === 2) return 'Adota em Menor Parte';
-                  if (respostaNum === 3) return 'Adota Parcialmente';
-                  if (respostaNum === 4) return 'Há Plano Aprovado';
-                  if (respostaNum === 5) return 'Não Adota';
-                  if (respostaNum === 6) return 'Não se Aplica';
-                }
-                return 'Não Respondida';
-              };
-
-              return (
-                <Card 
-                  key={medida.id}
-                  sx={{
-                    mb: 1,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 2,
-                    cursor: onMedidaNavigate ? 'pointer' : 'default',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      ...(onMedidaNavigate && {
-                        boxShadow: 2,
-                        transform: 'translateY(-1px)',
-                      })
-                    },
-                    backgroundColor: hasResponse ? `${getStatusColor()}08` : 'background.paper',
-                  }}
-                  onClick={() => onMedidaNavigate && onMedidaNavigate(medida.id, controle.id)}
-                >
-                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
-                      gap: 2
-                    }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
-                        <Box
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                            backgroundColor: getStatusColor(),
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '0.875rem'
-                          }}
-                        >
-                          {medida.id_medida || medida.id}
-                        </Box>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography 
-                            variant="subtitle1" 
-                            sx={{ 
-                              fontWeight: 600,
-                              lineHeight: 1.3,
-                              color: 'text.primary',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                            }}
-                          >
-                            {medida.medida}
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary"
-                            sx={{ mt: 0.5 }}
-                          >
-                            Medida {medida.id_medida || medida.id}
-                          </Typography>
-                          {medida.programa_medida?.updated_at ? (
-                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-                              Atualizado em {formatDateTimePtBr(medida.programa_medida.updated_at)}
-                            </Typography>
-                          ) : null}
-                        </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-                        <Chip
-                          label={getStatusLabel()}
-                          size="small"
-                          sx={{
-                            backgroundColor: getStatusColor(),
-                            color: 'white',
-                            fontWeight: 500,
-                            minWidth: 120
-                          }}
-                        />
-                        {onMedidaNavigate && (
-                          <IconButton 
-                            size="small" 
-                            sx={{ 
-                              color: 'primary.main',
-                              '&:hover': { backgroundColor: 'primary.light', color: 'white' }
-                            }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.9, letterSpacing: 0.5 }}>
+              Índice de maturidade
+            </Typography>
+            <Typography sx={{ fontWeight: 800, fontSize: '1.75rem', lineHeight: 1.2, my: 0.5 }}>
+              {maturityScore.toFixed(2)}
+            </Typography>
+            <MaturityChip
+              score={maturityScore}
+              size="small"
+              showLabel
+              controleId={controle.id}
+              controleNome={controle.nome}
+            />
           </Box>
-          </div>
         </Box>
-      </CardContent>
-    </Card>
+      </Box>
+
+      {/* INCC */}
+      <Box sx={{ ...diagnosticoGlassPanel(theme, diagTheme.color), p: 2, mt: 2 }}>
+        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.25 }}>
+          Nível de Capacidade do Controle (INCC)
+        </Typography>
+        <Select
+          fullWidth
+          size="small"
+          value={programaControle?.nivel || ''}
+          onChange={(event) => {
+            handleINCCChange(controle.id, parseInt(event.target.value.toString(), 10));
+          }}
+          sx={{
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.background.paper, 0.7),
+          }}
+        >
+          {incc.map((item) => (
+            <MenuItem key={item.id} value={item.id}>
+              <Box sx={{ py: 0.25 }}>
+                <Typography variant="body2" fontWeight={700}>
+                  Nível {item.nivel} — {item.indice}%
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'normal', display: 'block' }}>
+                  {item.label}
+                </Typography>
+              </Box>
+            </MenuItem>
+          ))}
+        </Select>
+      </Box>
+
+      {/* Orientações do controle */}
+      <Box sx={{ mt: 2 }}>
+        {INFO_SECTION_ORDER.map((info) => {
+          const content = controle[info];
+          if (!content || String(content).trim() === '') return null;
+
+          return (
+            <Box key={info} sx={{ ...diagnosticoInfoSection(theme, diagTheme.accent), mb: 1.5 }}>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1,
+                  borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Box sx={{ color: diagTheme.color, display: 'flex' }}>{tabIcons[info]}</Box>
+                <Typography variant="caption" fontWeight={800} sx={{ letterSpacing: 0.4, textTransform: 'uppercase' }}>
+                  {infoLabels[info]}
+                </Typography>
+              </Box>
+              <Box sx={{ px: 2, py: 1.5 }}>
+                <Typography variant="body2" sx={{ lineHeight: 1.65, color: 'text.primary' }}>
+                  {content}
+                </Typography>
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+
+      {/* Lista de medidas */}
+      <Box sx={{ mt: 2.5 }}>
+        <Typography
+          variant="subtitle1"
+          fontWeight={800}
+          sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: diagTheme.color }}
+        >
+          <PolicyIcon fontSize="small" />
+          Medidas ({medidas.length})
+        </Typography>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {medidas.map((medida) => {
+            const respostaRaw = medida.programa_medida?.resposta;
+            const respostaNum =
+              typeof respostaRaw === 'string' ? parseInt(respostaRaw, 10) : respostaRaw;
+            const hasResponse =
+              respostaNum !== undefined && respostaNum !== null && !Number.isNaN(respostaNum);
+            const statusColor = getStatusColor(diagnostico.id, respostaNum, hasResponse);
+            const giCode = normalizeGrupoImpleCode(medida.grupo_imple);
+
+            return (
+              <Box
+                key={medida.id}
+                onClick={() => onMedidaNavigate?.(medida.id, controle.id)}
+                sx={{
+                  ...diagnosticoGlassPanel(theme, statusColor),
+                  p: 1.5,
+                  cursor: onMedidaNavigate ? 'pointer' : 'default',
+                  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                  bgcolor: alpha(statusColor, theme.palette.mode === 'dark' ? 0.08 : 0.04),
+                  ...(onMedidaNavigate && {
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 8px 24px ${alpha(statusColor, 0.18)}`,
+                    },
+                  }),
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      bgcolor: statusColor,
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '0.8125rem',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {medida.id_medida || medida.id}
+                  </Box>
+
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={700}
+                      sx={{
+                        lineHeight: 1.35,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {medida.medida}
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.75, alignItems: 'center' }}>
+                      <Chip
+                        label={getStatusLabel(diagnostico.id, respostaNum, hasResponse)}
+                        size="small"
+                        sx={{
+                          height: 24,
+                          bgcolor: statusColor,
+                          color: '#fff',
+                          fontWeight: 600,
+                          fontSize: '0.6875rem',
+                        }}
+                      />
+                      {giCode && (
+                        <Chip
+                          label={labelGrupoGi(giCode as 'G1' | 'G2' | 'G3')}
+                          size="small"
+                          variant="outlined"
+                          sx={{ height: 24, fontSize: '0.6875rem', fontWeight: 700 }}
+                        />
+                      )}
+                      {medida.programa_medida?.updated_at && (
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDateTimePtBr(medida.programa_medida.updated_at)}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {onMedidaNavigate && (
+                    <IconButton size="small" sx={{ color: diagTheme.color, flexShrink: 0 }} aria-label="Abrir medida">
+                      <ArrowForwardIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
-export default ControleComponent; 
+export default ControleComponent;

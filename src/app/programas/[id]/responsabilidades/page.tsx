@@ -33,6 +33,8 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import {
@@ -51,6 +53,7 @@ import {
   Person,
   PersonAdd,
   PrivacyTipOutlined,
+  Psychology as PsychologyIcon,
   Save,
   SecurityOutlined,
 } from "@mui/icons-material";
@@ -73,6 +76,9 @@ import {
   governancaAbaQueryFromIndex,
   governancaIndexFromQueryParam,
 } from "@/lib/governanca/abaGovernanca";
+import { AigpSectionDivider } from "@/components/aigp/AigpSectionDivider";
+import { RequisitoIaLabel } from "@/components/aigp/RequisitoIaLabel";
+import { aigpBorderColor, aigpSectionBg } from "@/lib/aigp/aigpVisualTokens";
 
 type OrgaoRow = { id: number; nome: string };
 
@@ -85,7 +91,10 @@ type PapelDef = {
     | "gestor_seguranca_informacao"
     | "encarregado_dados_pessoais"
     | "gestor_tic"
+    | "responsavel_governanca_ia"
+    | "substituto_governanca_ia"
   >;
+  aigp?: boolean;
 };
 
 const PAPEIS_PROGRAMA: PapelDef[] = [
@@ -94,6 +103,11 @@ const PAPEIS_PROGRAMA: PapelDef[] = [
   { campoId: "gestor_seguranca_informacao", dbField: "gestor_seguranca_informacao" },
   { campoId: "encarregado_dados_pessoais", dbField: "encarregado_dados_pessoais" },
   { campoId: "gestor_tic", dbField: "gestor_tic" },
+];
+
+const PAPEIS_AIGP: PapelDef[] = [
+  { campoId: "responsavel_governanca_ia", dbField: "responsavel_governanca_ia", aigp: true },
+  { campoId: "substituto_governanca_ia", dbField: "substituto_governanca_ia", aigp: true },
 ];
 
 type EditResponsavelForm = {
@@ -173,7 +187,10 @@ export default function ProgramaResponsaveisCRUDPage() {
     comite_seguranca_informacao: [],
     comite_protecao_dados: [],
     etir: [],
+    comite_governanca_ia: [],
   });
+  const [comiteSiIaPauta, setComiteSiIaPauta] = useState(false);
+  const [comitePrivaIaPauta, setComitePrivaIaPauta] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
@@ -265,11 +282,13 @@ export default function ProgramaResponsaveisCRUDPage() {
     setProgramaData(programa as Programa);
     const p = programa as Programa;
     const next: Record<string, string> = {};
-    for (const { dbField } of PAPEIS_PROGRAMA) {
+    for (const { dbField } of [...PAPEIS_PROGRAMA, ...PAPEIS_AIGP]) {
       const v = p[dbField];
       next[dbField as string] = typeof v === "number" && v > 0 ? String(v) : "";
     }
     setPapelResponsavelId(next);
+    setComiteSiIaPauta(Boolean(p.comite_si_ia_na_pauta));
+    setComitePrivaIaPauta(Boolean(p.comite_priva_ia_na_pauta));
   }, [programaId]);
 
   const loadGrupos = useCallback(async () => {
@@ -311,6 +330,63 @@ export default function ProgramaResponsaveisCRUDPage() {
     if (!isMounted.current) return;
     setSnackbar({ message: "Papel atualizado.", severity: "success" });
     setLoading(false);
+  };
+
+  const handleSaveFlagIaPauta = async (field: "comite_si_ia_na_pauta" | "comite_priva_ia_na_pauta", value: boolean) => {
+    setLoading(true);
+    await dataService.updateProgramaField(programaId, field, value);
+    if (!isMounted.current) return;
+    setSnackbar({ message: "Preferência de pauta IA atualizada.", severity: "success" });
+    setLoading(false);
+  };
+
+  const renderPapelSelect = ({ campoId, dbField, aigp }: PapelDef) => {
+    const rotulo = getOrientacaoCampo(campoId)?.rotulo || campoId;
+    const fieldKey = dbField as string;
+    return (
+      <Box key={fieldKey} sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          {aigp ? (
+            <RequisitoIaLabel variant="inline" component="div" sx={{ mb: 0.75 }}>
+              {rotulo}
+            </RequisitoIaLabel>
+          ) : (
+            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.75, lineHeight: 1.3 }}>
+              {rotulo}
+            </Typography>
+          )}
+          <FormControl fullWidth size="small">
+            <Select
+              displayEmpty
+              value={papelResponsavelId[fieldKey] ?? ""}
+              onChange={handleChangePapel(fieldKey, (v) =>
+                setPapelResponsavelId((prev) => ({ ...prev, [fieldKey]: v }))
+              )}
+            >
+              <MenuItem value="">
+                <em>Não definido</em>
+              </MenuItem>
+              {responsaveis.map((r) => (
+                <MenuItem key={r.id} value={String(r.id)}>
+                  {r.nome}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        <Tooltip title="Ver fundamentação e referências">
+          <IconButton
+            size="small"
+            color={aigp ? "inherit" : "primary"}
+            aria-label={`Ajuda: ${rotulo}`}
+            onClick={() => setHintCampo(campoId)}
+            sx={{ flexShrink: 0, mb: 0.35, ...(aigp ? { color: "primary.dark" } : {}) }}
+          >
+            <HelpOutlineOutlined fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    );
   };
 
   const handleChangePapel =
@@ -501,6 +577,11 @@ export default function ProgramaResponsaveisCRUDPage() {
           <Tab icon={<SecurityOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="Comitê de SI" />
           <Tab icon={<PrivacyTipOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="Comitê de privacidade" />
           <Tab icon={<CrisisAlertOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="ETIR" />
+          <Tab
+            icon={<PsychologyIcon sx={{ fontSize: 22, color: abaGovernanca === 4 ? "primary.main" : undefined }} />}
+            iconPosition="start"
+            label={<RequisitoIaLabel variant="tab" showIcon={false}>Gov. de IA</RequisitoIaLabel>}
+          />
           <Tab icon={<AccountTreeOutlined sx={{ fontSize: 22 }} />} iconPosition="start" label="Tratamento LGPD" />
         </Tabs>
 
@@ -516,48 +597,12 @@ export default function ProgramaResponsaveisCRUDPage() {
                   Escolha alguém da equipe. Use (?) para fundamentação legal e cartilha PPSI 2.0.
                 </Typography>
                 <Stack spacing={2.25}>
-                  {PAPEIS_PROGRAMA.map(({ campoId, dbField }) => {
-                    const rotulo = getOrientacaoCampo(campoId)?.rotulo || campoId;
-                    const fieldKey = dbField as string;
-                    return (
-                      <Box key={fieldKey} sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.75, lineHeight: 1.3 }}>
-                            {rotulo}
-                          </Typography>
-                          <FormControl fullWidth size="small">
-                            <Select
-                              displayEmpty
-                              value={papelResponsavelId[fieldKey] ?? ""}
-                              onChange={handleChangePapel(fieldKey, (v) =>
-                                setPapelResponsavelId((prev) => ({ ...prev, [fieldKey]: v }))
-                              )}
-                            >
-                              <MenuItem value="">
-                                <em>Não definido</em>
-                              </MenuItem>
-                              {responsaveis.map((r) => (
-                                <MenuItem key={r.id} value={String(r.id)}>
-                                  {r.nome}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </Box>
-                        <Tooltip title="Ver fundamentação e referências">
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            aria-label={`Ajuda: ${rotulo}`}
-                            onClick={() => setHintCampo(campoId)}
-                            sx={{ flexShrink: 0, mb: 0.35 }}
-                          >
-                            <HelpOutlineOutlined fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    );
-                  })}
+                  {PAPEIS_PROGRAMA.map(renderPapelSelect)}
+                  <AigpSectionDivider />
+                  {PAPEIS_AIGP.map(renderPapelSelect)}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", pt: 0.5 }}>
+                    Cadastro no FPSI não substitui portaria, ata ou ato institucional de nomeação.
+                  </Typography>
                 </Stack>
               </Grid>
 
@@ -689,6 +734,23 @@ export default function ProgramaResponsaveisCRUDPage() {
                 onChange={(ids) => void saveGrupoMembros({ comite_seguranca_informacao: ids })}
                 disabled={loading}
               />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={comiteSiIaPauta}
+                    disabled={loading}
+                    onChange={(_, checked) => {
+                      setComiteSiIaPauta(checked);
+                      void handleSaveFlagIaPauta("comite_si_ia_na_pauta", checked);
+                    }}
+                  />
+                }
+                label={
+                  <RequisitoIaLabel variant="inline" tooltip="Alternativa ao comitê dedicado de IA (medida AIGP 26.2).">
+                    IA formalmente na pauta deste comitê
+                  </RequisitoIaLabel>
+                }
+              />
             </Stack>
           )}
 
@@ -702,6 +764,23 @@ export default function ProgramaResponsaveisCRUDPage() {
                 selectedIds={gruposMembros.comite_protecao_dados}
                 onChange={(ids) => void saveGrupoMembros({ comite_protecao_dados: ids })}
                 disabled={loading}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={comitePrivaIaPauta}
+                    disabled={loading}
+                    onChange={(_, checked) => {
+                      setComitePrivaIaPauta(checked);
+                      void handleSaveFlagIaPauta("comite_priva_ia_na_pauta", checked);
+                    }}
+                  />
+                }
+                label={
+                  <RequisitoIaLabel variant="inline">
+                    IA formalmente na pauta deste comitê
+                  </RequisitoIaLabel>
+                }
               />
             </Stack>
           )}
@@ -720,7 +799,24 @@ export default function ProgramaResponsaveisCRUDPage() {
             </Stack>
           )}
 
-          {abaGovernanca === 4 && <PapelLgpdManager programaId={programaId} idOrSlug={idOrSlug} />}
+          {abaGovernanca === 4 && (
+            <Stack spacing={2}>
+              <RequisitoIaLabel variant="section" component="div">
+                Comitê de governança de IA
+              </RequisitoIaLabel>
+              <Typography variant="body2" color="text.secondary">
+                Fórum colegiado que delibera riscos e prioridades de IA (AIGP medida 26.2). Alternativa: marcar IA na pauta do comitê de SI ou privacidade.
+              </Typography>
+              <GovernancaGrupoMembrosPicklist
+                responsaveis={responsaveis}
+                selectedIds={gruposMembros.comite_governanca_ia}
+                onChange={(ids) => void saveGrupoMembros({ comite_governanca_ia: ids })}
+                disabled={loading}
+              />
+            </Stack>
+          )}
+
+          {abaGovernanca === 5 && <PapelLgpdManager programaId={programaId} idOrSlug={idOrSlug} />}
         </Box>
       </Paper>
 

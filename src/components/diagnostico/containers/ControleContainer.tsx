@@ -9,7 +9,7 @@ import ControleComponent from '../Controle';
 
 // Utils
 import { calculateMaturityIndexForControle } from '../../../lib/utils/calculations';
-import { GrupoImpleFilter, matchesGrupoFilter } from '../../../lib/utils/grupoImplementacao';
+import { GrupoImpleFilter, isDiagnosticoSeguranca, matchesGrupoFilter } from '../../../lib/utils/grupoImplementacao';
 import { respostas, respostasimnao, incc } from '../../../lib/utils/utils';
 
 /**
@@ -105,9 +105,9 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   }, [medidas, programaMedidasFromPage, controle.id, programaId]);
 
   const medidasParaLista = useMemo(() => {
-    if (grupoImpleFilter === 'all') return medidasParaExibir;
+    if (grupoImpleFilter === 'all' || !isDiagnosticoSeguranca(diagnostico.id)) return medidasParaExibir;
     return medidasParaExibir.filter((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
-  }, [medidasParaExibir, grupoImpleFilter]);
+  }, [medidasParaExibir, grupoImpleFilter, diagnostico.id]);
 
   // Load measures when the component mounts
   useEffect(() => {

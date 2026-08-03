@@ -4,10 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { Box, Card, CardActionArea, CardContent, Grid, Typography, alpha, useTheme } from "@mui/material";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
-import { formatMaturityIndex } from "@/lib/utils/maturity";
+import { MaturityDiagnosticoSummary } from "@/components/dashboard/MaturityDiagnosticoSummary";
 
 type Props = {
   postura?: ModulosResumoApi["postura"];
+  maturidade?: ModulosResumoApi["maturidade"];
   /** Pendências atrasadas do programa (quando disponível). */
   atrasados?: number;
   vencendo7d?: number;
@@ -27,6 +28,7 @@ type KpiDef = {
 
 export function ProgramaKpiStrip({
   postura,
+  maturidade,
   atrasados,
   vencendo7d,
   loading,
@@ -34,8 +36,6 @@ export function ProgramaKpiStrip({
   idOrSlug,
 }: Props) {
   const theme = useTheme();
-
-  const maturidade = formatMaturityIndex(postura?.maturidadeMedia);
 
   const showOps = atrasados != null || vencendo7d != null;
 
@@ -56,15 +56,6 @@ export function ProgramaKpiStrip({
           href: idOrSlug ? `/programas/${idOrSlug}/conformidade` : undefined,
         },
         {
-          label: "Maturidade",
-          value: maturidade?.indexText ?? "—",
-          color: maturidade?.color ?? theme.palette.primary.main,
-          hint: maturidade
-            ? `Índice iMC · nível ${maturidade.levelId} (${maturidade.label})`
-            : "Diagnóstico · índice iMC",
-          href: idOrSlug ? `/programas/${idOrSlug}/diagnostico` : undefined,
-        },
-        {
           label: "Pedidos abertos",
           value: postura?.dsarAbertos ?? 0,
           color: theme.palette.info.main,
@@ -83,15 +74,6 @@ export function ProgramaKpiStrip({
         },
       ]
     : [
-        {
-          label: "Maturidade",
-          value: maturidade?.indexText ?? "—",
-          color: maturidade?.color ?? theme.palette.primary.main,
-          hint: maturidade
-            ? `Índice iMC · nível ${maturidade.levelId} (${maturidade.label})`
-            : "Diagnóstico · índice iMC",
-          href: idOrSlug ? `/programas/${idOrSlug}/diagnostico` : undefined,
-        },
         {
           label: "Pedidos abertos",
           value: postura?.dsarAbertos ?? 0,
@@ -118,10 +100,18 @@ export function ProgramaKpiStrip({
         },
       ];
 
-  const cols = kpis.length >= 5 ? { xs: 6, sm: 4, md: true as const } : { xs: 6, md: 3 };
+  const cols = kpis.length >= 4 ? { xs: 6, sm: 4, md: true as const } : { xs: 6, md: 3 };
 
   return (
-    <Grid container spacing={compact ? 0.75 : 1.25}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: compact ? 0.75 : 1.25 }}>
+      <MaturityDiagnosticoSummary
+        items={maturidade}
+        loading={loading}
+        compact={compact}
+        layout="kpi"
+        href={idOrSlug ? `/programas/${idOrSlug}/diagnostico` : undefined}
+      />
+      <Grid container spacing={compact ? 0.75 : 1.25}>
       {kpis.map((kpi) => {
         const emphasize =
           typeof kpi.value === "number" &&
@@ -151,7 +141,7 @@ export function ProgramaKpiStrip({
                 lineHeight: 1.05,
                 letterSpacing: "-0.03em",
                 fontSize: compact ? "1.35rem" : undefined,
-                color: emphasize || kpi.label === "Maturidade" ? kpi.color : "text.primary",
+                color: emphasize ? kpi.color : "text.primary",
               }}
             >
               {loading ? "…" : kpi.value}
@@ -214,7 +204,8 @@ export function ProgramaKpiStrip({
           </Grid>
         );
       })}
-    </Grid>
+      </Grid>
+    </Box>
   );
 }
 

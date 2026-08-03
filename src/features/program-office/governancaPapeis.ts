@@ -23,9 +23,13 @@ export function idResponsavelPapel(programa: Programa, campo: CampoResponsavelPr
   return typeof v === "number" ? v : null;
 }
 
-export type TipoComite = "comite_seguranca_informacao" | "comite_protecao_dados" | "etir";
+export type TipoComite =
+  | "comite_seguranca_informacao"
+  | "comite_protecao_dados"
+  | "etir"
+  | "comite_governanca_ia";
 
-export const COMITES: { tipo: TipoComite; titulo: string; subtitulo: string; aba: "si" | "priva" | "etir" }[] = [
+export const COMITES: { tipo: TipoComite; titulo: string; subtitulo: string; aba: "si" | "priva" | "etir" | "ia" }[] = [
   {
     tipo: "comite_seguranca_informacao",
     titulo: "Comitê de segurança da informação",
@@ -43,5 +47,11 @@ export const COMITES: { tipo: TipoComite; titulo: string; subtitulo: string; aba
     titulo: "ETIR",
     subtitulo: "Prevenção e resposta a incidentes",
     aba: "etir",
+  },
+  {
+    tipo: "comite_governanca_ia",
+    titulo: "Comitê de governança de IA",
+    subtitulo: "Gov. IA",
+    aba: "ia",
   },
 ];

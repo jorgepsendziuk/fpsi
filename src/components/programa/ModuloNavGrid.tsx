@@ -14,6 +14,8 @@ import {
   useTheme,
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { escopoGreyedSx, ESCOPO_CHIP_LABEL } from "@/lib/programa/escopoVisual";
 
 export type ModuloNavSection = {
   key: string;
@@ -25,16 +27,17 @@ export type ModuloNavSection = {
   gradient: string;
   featured?: boolean;
   badge?: string;
+  /** Fora do escopo do programa — cinza, consultável, não conta no score */
+  outOfScope?: boolean;
 };
 
 type Props = {
   sections: ModuloNavSection[];
   idOrSlug: string;
   compact?: boolean;
-  /** Grade mais apertada (mais colunas, menos altura) para home single-face. */
   dense?: boolean;
-  /** Largura total: tiles legíveis em 2–4 colunas. */
   layout?: "default" | "dense" | "wide";
+  onEnableSection?: (key: string) => void;
 };
 
 function ModuloTile({
@@ -43,16 +46,19 @@ function ModuloTile({
   dense,
   wide,
   compact,
+  onEnableSection,
 }: {
   section: ModuloNavSection;
   idOrSlug: string;
   dense?: boolean;
   wide?: boolean;
   compact?: boolean;
+  onEnableSection?: (key: string) => void;
 }) {
   const theme = useTheme();
   const tight = dense || compact;
-  const featured = Boolean(section.featured);
+  const greyed = Boolean(section.outOfScope);
+  const featured = Boolean(section.featured) && !greyed;
 
   return (
     <Card
@@ -60,16 +66,19 @@ function ModuloTile({
         height: "100%",
         border: `1px solid ${alpha(section.color, featured ? 0.42 : dense ? 0.2 : 0.22)}`,
         borderRadius: wide ? 1 : dense ? 1.5 : 2,
-        transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease",
+        transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.15s ease",
         bgcolor: featured
           ? alpha(section.color, theme.palette.mode === "dark" ? 0.12 : 0.06)
           : theme.palette.background.paper,
         boxShadow: featured ? `0 4px 14px ${alpha(section.color, 0.14)}` : undefined,
-        "&:hover": {
-          transform: dense ? "none" : "translateY(-1px)",
-          boxShadow: dense ? 1 : 2,
-          borderColor: alpha(section.color, 0.45),
-        },
+        ...(greyed ? escopoGreyedSx(theme) : {}),
+        ...(!greyed && {
+          "&:hover": {
+            transform: dense ? "none" : "translateY(-1px)",
+            boxShadow: dense ? 1 : 2,
+            borderColor: alpha(section.color, 0.45),
+          },
+        }),
       }}
     >
       <CardActionArea
@@ -96,8 +105,8 @@ function ModuloTile({
                 height: dense ? 32 : wide ? 44 : 44,
                 flexShrink: 0,
                 borderRadius: dense ? 1 : 1.5,
-                background: section.gradient,
-                color: "#fff",
+                background: greyed ? alpha(theme.palette.text.primary, 0.12) : section.gradient,
+                color: greyed ? theme.palette.text.secondary : "#fff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -121,7 +130,14 @@ function ModuloTile({
               >
                 {section.title}
               </Typography>
-              {section.badge && (
+              {greyed && (
+                <Chip
+                  size="small"
+                  label={ESCOPO_CHIP_LABEL}
+                  sx={{ mt: 0.35, height: 20, fontSize: "0.65rem", maxWidth: "100%" }}
+                />
+              )}
+              {section.badge && !greyed && (
                 <Chip
                   size="small"
                   label={section.badge}
@@ -159,13 +175,32 @@ function ModuloTile({
               />
             )}
           </Box>
+          {greyed && onEnableSection && (
+            <Chip
+              size="small"
+              icon={<AddCircleOutlineIcon sx={{ fontSize: "14px !important" }} />}
+              label="Incluir no escopo"
+              clickable
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEnableSection(section.key);
+              }}
+              sx={{
+                mt: 1,
+                height: 24,
+                fontSize: "0.7rem",
+                "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.12) },
+              }}
+            />
+          )}
         </CardContent>
       </CardActionArea>
     </Card>
   );
 }
 
-export function ModuloNavGrid({ sections, idOrSlug, compact, dense, layout }: Props) {
+export function ModuloNavGrid({ sections, idOrSlug, compact, dense, layout, onEnableSection }: Props) {
   const mode = layout ?? (dense ? "dense" : "default");
 
   if (mode === "dense") {
@@ -182,7 +217,7 @@ export function ModuloNavGrid({ sections, idOrSlug, compact, dense, layout }: Pr
         }}
       >
         {sections.map((section) => (
-          <ModuloTile key={section.key} section={section} idOrSlug={idOrSlug} dense />
+          <ModuloTile key={section.key} section={section} idOrSlug={idOrSlug} dense onEnableSection={onEnableSection} />
         ))}
       </Box>
     );
@@ -204,7 +239,7 @@ export function ModuloNavGrid({ sections, idOrSlug, compact, dense, layout }: Pr
         }}
       >
         {sections.map((section) => (
-          <ModuloTile key={section.key} section={section} idOrSlug={idOrSlug} wide />
+          <ModuloTile key={section.key} section={section} idOrSlug={idOrSlug} wide onEnableSection={onEnableSection} />
         ))}
       </Box>
     );
@@ -214,7 +249,7 @@ export function ModuloNavGrid({ sections, idOrSlug, compact, dense, layout }: Pr
     <Grid container spacing={compact ? 1.5 : 2}>
       {sections.map((section) => (
         <Grid item xs={12} sm={6} md={4} key={section.key}>
-          <ModuloTile section={section} idOrSlug={idOrSlug} compact={compact} />
+          <ModuloTile section={section} idOrSlug={idOrSlug} compact={compact} onEnableSection={onEnableSection} />
         </Grid>
       ))}
     </Grid>

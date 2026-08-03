@@ -15,19 +15,14 @@ import {
   FormControl,
   Divider,
   Tooltip,
-  Alert,
   alpha,
-  CircularProgress,
-  Link,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 // Material UI icons
 import SaveIcon from '@mui/icons-material/Save';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 import InfoIcon from '@mui/icons-material/Info';
 import CircleIcon from '@mui/icons-material/Circle';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 // Components
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -42,9 +37,7 @@ import { respostas, respostasimnao, status_medida, status_plano_acao } from '../
 // Types
 import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
 import type { EvidenciaSugestao as EvidenciaSugestaoTipo } from '../../../lib/medidas/evidenciaRules';
-import { respostaAtualIgualSugestao, labelRespostaSugerida } from '../../../lib/medidas/evidenciaRules';
 import { formatResponsavelOptionLabel } from "@/lib/utils/responsavelDisplay";
-import { hrefEstruturaGovernanca } from '@/lib/governanca/abaGovernanca';
 import {
   GRUPO_IMPLEMENTACAO_HINT,
   GRUPO_FILTRO_CUMULATIVO_RESUMO,
@@ -55,12 +48,15 @@ import {
 
 // Styles
 import { medidaStyles } from './styles';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { useTheme } from '@mui/material/styles';
 import { splitMedidaDescricao } from '@/lib/normas/medidaDescricao';
 import { NormasReferenciaSection } from '@/components/normas/NormasReferenciaSection';
 import { ResourceLastUpdateLine } from '@/components/common/ResourceLastUpdateLine';
-import NextLink from 'next/link';
+import { EvidenciaAssistidaPanel } from '../EvidenciaAssistidaPanel';
+import { RequisitoIaLabel } from '@/components/aigp/RequisitoIaLabel';
+import { DIAGNOSTICO_IA_ID } from '@/lib/aigp/aigpVisualTokens';
+import { getDiagnosticoTheme } from '@/lib/utils/diagnosticoThemes';
+import { diagnosticoHeaderBadge } from '@/lib/utils/diagnosticoSurfaceStyles';
 
 /**
  * Props for the Medida component
@@ -109,7 +105,6 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   evidenciaLoading = false,
   onAplicarSugestao,
 }) => {
-  const { getContrastTextColor } = useThemeColors();
   const theme = useTheme();
 
   const { textoOrientativo, normasReferencia } = useMemo(
@@ -153,18 +148,20 @@ const MedidaComponent: React.FC<MedidaProps> = ({
 
   const giCode = normalizeGrupoImpleCode(medida.grupo_imple) as 'G1' | 'G2' | 'G3' | null;
   const giPalette = giCode ? GRUPO_GI_PALETTE[giCode] : null;
+  const isAigpMedida = controle.diagnostico === DIAGNOSTICO_IA_ID;
+  const diagTheme = getDiagnosticoTheme(controle.diagnostico);
+  const respostaNum =
+    typeof programaMedida?.resposta === 'string'
+      ? parseInt(programaMedida.resposta, 10)
+      : programaMedida?.resposta;
+  const respostaColor =
+    respostaNum && !Number.isNaN(respostaNum) ? getRespostaColor(respostaNum) : diagTheme.color;
 
   const grupoGiTooltip = `${GRUPO_IMPLEMENTACAO_HINT}\n\n${GRUPO_FILTRO_CUMULATIVO_RESUMO}`;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-          <Box
-            sx={{
-              ...medidaStyles.container(theme),
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
+          <Box sx={{ ...medidaStyles.container(theme, diagTheme), position: 'relative', overflow: 'hidden' }}>
             {giCode && giPalette && (
               <Tooltip
                 title={
@@ -216,116 +213,67 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                 resourceType="medida"
                 resourceId={programaMedida.id}
                 dbUpdatedAt={programaMedida.updated_at ?? null}
-                sx={{ mb: 2 }}
+                sx={{ mb: 1.5 }}
               />
             ) : null}
 
-            {evidenciaLoading && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <CircularProgress size={18} />
-                <Typography variant="body2" color="text.secondary">
-                  Carregando sugestão do sistema…
-                </Typography>
+            <Box sx={medidaStyles.headerBand(theme, diagTheme)}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25 }}>
+                <Box sx={diagnosticoHeaderBadge()}>{medida.id_medida || medida.id}</Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={medidaStyles.headerTitle}>{medida.medida}</Typography>
+                  <Typography sx={medidaStyles.headerMeta}>
+                    Controle {controle.numero} · {controle.nome}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            {evidenciaLoading || evidenciaSugestao ? (
+              <EvidenciaAssistidaPanel
+                sugestao={evidenciaSugestao}
+                loading={evidenciaLoading}
+                respostaAtual={programaMedida?.resposta}
+                diagnosticoId={controle.diagnostico}
+                programaPathSegment={programaPathSegment}
+                onAplicar={onAplicarSugestao}
+                showSemRegraHint
+                idMedida={(medida.id_medida || "").trim()}
+              />
+            ) : null}
+
+            {isAigpMedida && (
+              <Box sx={{ mb: 2 }}>
+                <RequisitoIaLabel variant="inline">
+                  Medida do domínio Governança de IA (AIGP)
+                </RequisitoIaLabel>
               </Box>
             )}
 
-            {!evidenciaLoading &&
-              evidenciaSugestao?.regraDefinida &&
-              evidenciaSugestao.respostaSugerida != null && (
-                <Alert
-                  severity="info"
-                  icon={<AutoAwesomeIcon fontSize="inherit" />}
-                  sx={{ mb: 2, alignItems: 'flex-start' }}
-                  action={
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={respostaAtualIgualSugestao(
-                        programaMedida?.resposta,
-                        evidenciaSugestao.respostaSugerida
-                      )}
-                      onClick={() => void onAplicarSugestao?.()}
-                    >
-                      Aplicar
-                    </Button>
-                  }
-                >
-                  <Typography variant="body2">
-                    <strong>{labelRespostaSugerida(evidenciaSugestao)}</strong>
-                    {' — '}
-                    {evidenciaSugestao.motivo}
-                  </Typography>
-                  {evidenciaSugestao.governancaContexto && programaPathSegment ? (
-                    <Box sx={{ mt: 1.25 }}>
-                      <Link
-                        component={NextLink}
-                        href={hrefEstruturaGovernanca(
-                          programaPathSegment,
-                          evidenciaSugestao.governancaContexto.aba
-                        )}
-                        underline="hover"
-                        fontWeight={600}
-                      >
-                        Abrir Estrutura de Governança
-                      </Link>
-                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                        {evidenciaSugestao.governancaContexto.detalhe}
-                      </Typography>
-                    </Box>
-                  ) : null}
-                </Alert>
-              )}
-
-            {controle.diagnostico === 1 &&
-              !evidenciaLoading &&
-              evidenciaSugestao &&
-              !evidenciaSugestao.regraDefinida &&
-              (medida.id_medida || "").trim().startsWith("0.") && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  {evidenciaSugestao.motivo}
-                </Alert>
-              )}
-
             {/* Cards de Resposta e Plano de Trabalho */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
-              {/* Card de Resposta */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Box sx={medidaStyles.responseCard(theme, false)}>
-                  <Typography sx={medidaStyles.responseTitle(theme, false)}>
-                    RESPOSTA
+                <Box sx={medidaStyles.responseCard(theme, respostaColor)}>
+                  <Typography sx={medidaStyles.responseTitle(theme)}>
+                    Resposta
                   </Typography>
                   <Box sx={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
                     <Select
-                      sx={{ 
-                        width: '100%',
-                      }}
+                      sx={{ width: '100%' }}
                       value={programaMedida?.resposta || ""}
                       displayEmpty
                       onChange={(event) =>
                         handleMedidaChange(medida.id, controle.id, programaId, "resposta", event.target.value)
                       }
                       renderValue={(selected) => {
-                        console.log('renderValue chamado com:', selected, 'tipo:', typeof selected);
                         if (!selected) {
-                          return <em>Selecionar resposta...</em>;
+                          return <em>Selecionar resposta…</em>;
                         }
-                        
-                        // Converter para number para comparação
                         const selectedId = typeof selected === 'string' ? parseInt(selected, 10) : selected;
-                        console.log('renderValue - selectedId convertido:', selectedId);
-                        console.log('renderValue - respostasArray:', respostasArray);
-                        
-                        const resposta = respostasArray.find(r => {
-                          console.log('Comparando:', r.id, '===', selectedId, '?', r.id === selectedId);
-                          return r.id === selectedId;
-                        });
-                        
-                        console.log('renderValue - resposta encontrada:', resposta);
-                        
+                        const resposta = respostasArray.find((r) => r.id === selectedId);
                         if (!resposta) {
                           return `Resposta inválida (ID: ${selectedId})`;
                         }
-                        
                         return (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selectedId) }} />
@@ -335,29 +283,25 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       }}
                     >
                       <MenuItem value="">
-                        <em>Selecionar resposta...</em>
+                        <em>Selecionar resposta…</em>
                       </MenuItem>
-                      {respostasArray.map((resposta) => {
-                        console.log('Renderizando MenuItem:', resposta);
-                        return (
-                          <MenuItem key={resposta.id} value={resposta.id}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
-                              <Typography>{resposta.label}</Typography>
-                            </Box>
-                          </MenuItem>
-                        );
-                      })}
+                      {respostasArray.map((resposta) => (
+                        <MenuItem key={resposta.id} value={resposta.id}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
+                            <Typography>{resposta.label}</Typography>
+                          </Box>
+                        </MenuItem>
+                      ))}
                     </Select>
                   </Box>
                 </Box>
               </Grid>
 
-              {/* Card do Plano de Trabalho */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Box sx={medidaStyles.actionPlanCard(theme, statusInfo?.color)}>
                   <Typography sx={medidaStyles.actionPlanTitle(theme)}>
-                    PLANO DE TRABALHO
+                    Plano de trabalho
                   </Typography>
                   <Box sx={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
                     <Chip
@@ -382,22 +326,20 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               </Grid>
             </Grid>
 
-            {/* Descrição da Resposta Selecionada */}
             {programaMedida?.resposta && controle.diagnostico !== 1 && getRespostaDescricao(programaMedida.resposta) && (
-              <Alert 
-                severity="info" 
-                icon={<InfoIcon />}
-                sx={{ mb: 2 }}
-              >
-                <Typography variant="body2">
-                  <strong>Descrição da resposta selecionada:</strong><br />
-                  {getRespostaDescricao(programaMedida.resposta)}
-                </Typography>
-              </Alert>
+              <Box sx={medidaStyles.infoCallout(theme, diagTheme.accent)}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                  <InfoIcon sx={{ fontSize: 20, color: diagTheme.color, mt: 0.15 }} />
+                  <Typography variant="body2" sx={{ lineHeight: 1.55 }}>
+                    <strong>Descrição da resposta selecionada</strong>
+                    <br />
+                    {getRespostaDescricao(programaMedida.resposta)}
+                  </Typography>
+                </Box>
+              </Box>
             )}
 
-            {/* Seção de Descrição (sem bloco &quot;Normas de referência&quot;, exibido à parte) */}
-            <Box sx={medidaStyles.descriptionSection(theme)}>
+            <Box sx={medidaStyles.descriptionSection(theme, diagTheme.color)}>
               <Typography sx={medidaStyles.descriptionText(theme)} align="justify">
                 &ldquo;{textoOrientativo || medida.descricao}&rdquo;
               </Typography>
@@ -407,8 +349,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               <NormasReferenciaSection normasReferencia={normasReferencia} />
             )}
 
-            {/* Formulário */}
-            <Box sx={medidaStyles.formSection(theme)}>
+            <Box sx={medidaStyles.formSection(theme, diagTheme.color)}>
               <Grid container spacing={3}>
                 {/* Responsável */}
                 <Grid size={{ md: 4, sm: 12, xs: 12 }}>

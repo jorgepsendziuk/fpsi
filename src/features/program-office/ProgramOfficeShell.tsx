@@ -18,6 +18,7 @@ export function ProgramOfficeShell({ idOrSlug }: ProgramOfficeShellProps) {
     comite_seguranca_informacao: [],
     comite_protecao_dados: [],
     etir: [],
+    comite_governanca_ia: [],
   });
   const [resumo, setResumo] = useState<dataService.ModulosResumoApi | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);

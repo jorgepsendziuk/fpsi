@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { computePlanoAcaoResumo } from "@/lib/server/planoAcaoResumo";
 import { fetchPendenciasPrograma } from "@/lib/server/pendenciasService";
+import { getMaturityLabel } from "@/lib/utils/maturity";
+import {
+  filterMaturidadeByEscopo,
+  mediaMaturidadeEscopo,
+  normalizeEscopo,
+  resolveProgramaEscopo,
+} from "@/lib/programa/perfilEscopo";
 
 function politicaTemConteudoMinimo(secoes: unknown): boolean {
   if (!Array.isArray(secoes)) return false;
@@ -83,7 +90,7 @@ export async function GET(
       supabase.from("diagnostico").select("id, descricao"),
       supabase.from("politica_modelo").select("id").eq("ativo", true),
       supabase.from("politica_programa").select("tipo_politica, secoes").eq("programa_id", programaId),
-      supabase.from("programa").select("slug, nome").eq("id", programaId).maybeSingle(),
+      supabase.from("programa").select("slug, nome, perfil_escopo, gi_alvo, escopo").eq("id", programaId).maybeSingle(),
       supabase.from("pedido_titular").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
       supabase.from("programa_reportes").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
       supabase.from("programa_contato").select("*", { count: "exact", head: true }).eq("programa_id", programaId),
@@ -112,15 +119,37 @@ export async function GET(
         .limit(5),
     ]);
 
-    const diagNome = new Map<number, string>();
-    (diagnosticosCatalog || []).forEach((d: { id: number; descricao: string | null }) => {
-      diagNome.set(d.id, d.descricao?.trim() || `Diagnóstico ${d.id}`);
+    const maturidadeByDiag = new Map<number, { score: number; label: string }>();
+    (maturidadeRows || []).forEach((r: { diagnostico_id: number; score: number; label: string }) => {
+      maturidadeByDiag.set(r.diagnostico_id, { score: r.score, label: r.label });
     });
-    const maturidade = (maturidadeRows || []).map((r: { diagnostico_id: number; score: number; label: string }) => ({
-      diagnostico_id: r.diagnostico_id,
-      nome: diagNome.get(r.diagnostico_id) ?? `Diagnóstico ${r.diagnostico_id}`,
-      score: r.score,
-      label: r.label,
+
+    const { escopo } = resolveProgramaEscopo({
+      perfil_escopo: (programaRow as { perfil_escopo?: string } | null)?.perfil_escopo,
+      gi_alvo: (programaRow as { gi_alvo?: string } | null)?.gi_alvo,
+      escopo: (programaRow as { escopo?: unknown } | null)?.escopo,
+    });
+
+    const maturidadeAll = (diagnosticosCatalog || []).map((d: { id: number; descricao: string | null }) => {
+      const entry = maturidadeByDiag.get(d.id);
+      const score = entry ? Number(entry.score) : 0;
+      return {
+        diagnostico_id: d.id,
+        nome: d.descricao?.trim() || `Diagnóstico ${d.id}`,
+        score,
+        label: entry?.label || getMaturityLabel(score),
+        ativo: normalizeEscopo(escopo).diagnosticos[String(d.id)] === true,
+      };
+    });
+
+    const { ativos: maturidadeAtivos, cortados: maturidadeCortados } = filterMaturidadeByEscopo(
+      maturidadeAll.map((m) => ({ diagnostico_id: m.diagnostico_id, score: m.score, label: m.label })),
+      escopo
+    );
+    const maturidadeAtivaSet = new Set(maturidadeAtivos.map((m) => m.diagnostico_id));
+    const maturidade = maturidadeAll.map((m) => ({
+      ...m,
+      ativo: maturidadeAtivaSet.has(m.diagnostico_id),
     }));
 
     if (planoRes.error) {
@@ -150,13 +179,18 @@ export async function GET(
       15
     );
 
-    const maturidadeMedia =
-      maturidade.length > 0
-        ? maturidade.reduce((s, m) => s + Number(m.score), 0) / maturidade.length
-        : null;
+    const maturidadeMedia = mediaMaturidadeEscopo(
+      maturidadeAll.map((m) => ({ diagnostico_id: m.diagnostico_id, score: m.score })),
+      escopo
+    );
 
     return NextResponse.json({
       planoAcao: planoRes.data,
+      escopo: {
+        perfil_escopo: (programaRow as { perfil_escopo?: string } | null)?.perfil_escopo ?? "completo",
+        gi_alvo: (programaRow as { gi_alvo?: string } | null)?.gi_alvo ?? null,
+        maturidadeCortados: maturidadeCortados.map((m) => m.diagnostico_id),
+      },
       conformidade: {
         mapeamentoDados: mapeamentoDados ?? 0,
         ropaOperacoes: ropaOps ?? 0,

@@ -151,7 +151,8 @@ export function OfficeGameScene({
   );
 
   const committeeTypesOrdered = useMemo(
-    () => ["comite_seguranca_informacao", "etir", "comite_protecao_dados"] as TipoComite[],
+    () =>
+      ["comite_seguranca_informacao", "comite_protecao_dados", "etir", "comite_governanca_ia"] as TipoComite[],
     [],
   );
 

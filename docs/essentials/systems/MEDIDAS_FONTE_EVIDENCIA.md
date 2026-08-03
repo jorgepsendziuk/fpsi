@@ -29,6 +29,21 @@ As medidas **0.1 a 0.8** estão alinhadas à página **Programa → Estrutura de
 | 0.11 | POSIN | `politica_programa` | `tipo_politica = politica_seguranca_informacao` e seções com texto | média | Módulo **Políticas** do programa. |
 | 0.12 | Política de Proteção de Dados Pessoais | `politica_programa` | `tipo_politica = politica_protecao_dados_pessoais` e seções com texto | média | Idem. |
 
+## Diagnóstico 4 — Governança de IA (AIGP), medidas `26.x` e `27.x`
+
+Escala de resposta: maturidade (1–5), conforme o eixo AIGP. Identidade visual distinta (azul `#0A2744` + ícone `AutoAwesome`); navegação do diagnóstico usa `DiagnosticoNavBar` com tema roxo do eixo.
+
+| id_medida | Pergunta (resumo) | Tipo de fonte | Caminho / predicado | Confiança | Onde no FPSI |
+|-----------|-------------------|---------------|---------------------|-----------|----------------|
+| 26.1 | Responsável por governança de IA | `programa` | `responsavel_governanca_ia` > 0 | média | Aba **Papéis e equipe** (seção AIGP mesclada). |
+| 26.2 | Comitê / pauta de IA | `programa_grupo_governanca` + flags | ≥1 membro em `comite_governanca_ia` **ou** `comite_si_ia_na_pauta` **ou** `comite_priva_ia_na_pauta` | média | Aba **Gov. de IA** ou flags nas abas SI/priva. |
+| 26.3 | RACI / substituto IA | `programa` | `substituto_governanca_ia` > 0 | baixa | Aba **Papéis e equipe** — substituto governança IA. |
+| 27.1 | Inventário de IA | `sistema_ia` | contagem > 0 | média | **Conformidade → Inventário de IA**. |
+| 27.2 | Dono e responsável técnico | `sistema_ia` | itens com campos preenchidos | baixa | Inventário de IA. |
+| 27.5 | Gate de produção | `sistema_ia` | `status_ciclo = producao` | média | Inventário de IA. |
+
+Documentação de sistematização: [`docs/aigp/SISTEMATIZACAO_EVIDENCIA_GOVERNANCA_IA.md`](../../aigp/SISTEMATIZACAO_EVIDENCIA_GOVERNANCA_IA.md).
+
 ## Próximas fases (iteração)
 
 - **Fase B:** incluir medidas cujo atendimento possa ser inferido de **inventário**, **ROPA**, **registro de incidentes**, etc., quando esses módulos estiverem estáveis.

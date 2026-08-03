@@ -1,21 +1,6 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { requireSystemAdmin } from "@/lib/admin/requireSystemAdmin";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
-
-async function requireSystemAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_system_admin")
-    .eq("user_id", user.id)
-    .single();
-
-  if (profile?.is_system_admin !== true) return { ok: false };
-  return { ok: true };
-}
 
 export async function GET(
   _request: Request,
@@ -28,12 +13,7 @@ export async function GET(
   const admin = createSupabaseAdminClient();
   if (!admin) return NextResponse.json({ error: "Configuração inválida" }, { status: 500 });
 
-  const { data, error } = await admin
-    .from("politica_modelo")
-    .select("*")
-    .eq("id", id)
-    .single();
-
+  const { data, error } = await admin.from("politica_modelo").select("*").eq("id", id).single();
   if (error || !data) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   return NextResponse.json(data);
 }
@@ -58,13 +38,7 @@ export async function PUT(
   if (body.secoes != null) update.secoes = body.secoes;
   if (body.ativo != null) update.ativo = body.ativo;
 
-  const { data, error } = await admin
-    .from("politica_modelo")
-    .update(update)
-    .eq("id", id)
-    .select()
-    .single();
-
+  const { data, error } = await admin.from("politica_modelo").update(update).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }

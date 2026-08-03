@@ -29,6 +29,14 @@ Migration: `supabase/migrations/20260719230000_diagnostico_aigp_governanca_ia.sq
 9. **Viés, equidade e impacto humano** — fairness, supervisão humana significativa  
 10. **Ciclo de vida, documentação e auditoria** — gates, versionamento, capacitação, KPIs  
 
+## Integração com módulos do FPSI (evidência assistida)
+
+Plano de produto para cruzar as **54 medidas** com governança, inventário, políticas, conformidade LGPD e demais módulos — matriz medida a medida, fases e lacunas:
+
+→ **[SISTEMATIZACAO_EVIDENCIA_GOVERNANCA_IA.md](./SISTEMATIZACAO_EVIDENCIA_GOVERNANCA_IA.md)**
+
+Hoje as regras de evidência assistida ([`evidenciaRules.ts`](../../src/lib/medidas/evidenciaRules.ts)) cobrem o diagnóstico **Estrutura (0.x)** e parte de **Privacidade/SI**; **nenhuma medida AIGP (`26.x`–`35.x`) está ligada ainda**.
+
 ## Referências (boas práticas)
 
 - **IAPP AIGP** — Body of Knowledge (governança, risco e conformidade de IA)  

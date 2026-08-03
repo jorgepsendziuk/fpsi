@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 
-const TIPOS = ["comite_seguranca_informacao", "comite_protecao_dados", "etir"] as const;
+const TIPOS = ["comite_seguranca_informacao", "comite_protecao_dados", "etir", "comite_governanca_ia"] as const;
 type TipoGrupo = (typeof TIPOS)[number];
 
 async function assertProgramaMember(
@@ -58,6 +58,7 @@ export async function GET(
       comite_seguranca_informacao: [],
       comite_protecao_dados: [],
       etir: [],
+      comite_governanca_ia: [],
     };
 
     const grupoIds = (grupos || []) as { id: number; tipo: string }[];

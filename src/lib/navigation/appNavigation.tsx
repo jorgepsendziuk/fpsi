@@ -20,7 +20,14 @@ import ContactMailIcon from "@mui/icons-material/ContactMail";
 import HomeIcon from "@mui/icons-material/Home";
 import PersonIcon from "@mui/icons-material/Person";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import CategoryIcon from "@mui/icons-material/Category";
+import BadgeIcon from "@mui/icons-material/Badge";
+import BusinessIcon from "@mui/icons-material/Business";
+import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { filterNavItemsByEscopo, type ProgramaEscopoV1 } from "@/lib/programa/perfilEscopo";
 
 export type AppNavItem = {
   id: string;
@@ -115,10 +122,17 @@ export function getGlobalNavSections(): AppNavSection[] {
  * Visão geral = página inicial do programa (não é card, mas âncora lógica).
  */
 export function getProgramaNavSections(programaId: string): AppNavSection[] {
+  return buildProgramaNavSections(programaId);
+}
+
+export function buildProgramaNavSections(
+  programaId: string,
+  escopo?: ProgramaEscopoV1 | null
+): AppNavSection[] {
   const base = `/programas/${programaId}`;
   const subIcon = { fontSize: 20 as const };
 
-  return [
+  const sections: AppNavSection[] = [
     {
       id: "programa",
       title: "Programa",
@@ -254,6 +268,72 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
           label: "Histórico de atividades",
           path: `${base}/auditoria`,
           icon: <SecurityIcon sx={iconSx} />,
+        },
+      ],
+    },
+  ];
+
+  if (!escopo) return sections;
+
+  return sections.map((section) => ({
+    ...section,
+    items: filterNavItemsByEscopo(section.items, escopo),
+  }));
+}
+
+export function getAdminNavSections(): AppNavSection[] {
+  return [
+    {
+      id: "admin",
+      title: "Administração",
+      items: [
+        {
+          id: "admin-dash",
+          label: "Painel admin",
+          path: "/admin",
+          icon: <AdminPanelSettingsIcon sx={iconSx} />,
+        },
+        {
+          id: "admin-politicas",
+          label: "Modelos de políticas",
+          path: "/admin/modelos-politicas",
+          icon: <PolicyIcon sx={iconSx} />,
+        },
+        {
+          id: "admin-controles",
+          label: "Controles",
+          path: "/admin/controles",
+          icon: <SecurityIcon sx={iconSx} />,
+        },
+        {
+          id: "admin-medidas",
+          label: "Medidas",
+          path: "/admin/medidas",
+          icon: <ChecklistIcon sx={iconSx} />,
+        },
+        {
+          id: "admin-diagnosticos",
+          label: "Diagnósticos",
+          path: "/admin/diagnosticos",
+          icon: <CategoryIcon sx={iconSx} />,
+        },
+        {
+          id: "admin-cargos",
+          label: "Cargos",
+          path: "/admin/cargos",
+          icon: <BadgeIcon sx={iconSx} />,
+        },
+        {
+          id: "admin-departamentos",
+          label: "Departamentos",
+          path: "/admin/departamentos",
+          icon: <BusinessIcon sx={iconSx} />,
+        },
+        {
+          id: "admin-config",
+          label: "Configurações",
+          path: "/admin/config",
+          icon: <SettingsIcon sx={iconSx} />,
         },
       ],
     },

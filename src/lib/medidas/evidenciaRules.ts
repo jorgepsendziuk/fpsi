@@ -32,6 +32,12 @@ export type EvidenciaSugestao = {
     aba: GovernancaAbaQuery;
     detalhe: string;
   };
+  /** Link para módulo fora da estrutura de governança (ex.: inventário de IA). */
+  acaoModulo?: {
+    path: string;
+    label: string;
+    detalhe?: string;
+  };
 };
 
 export type EvidenciaProgramaSnapshot = {
@@ -40,12 +46,17 @@ export type EvidenciaProgramaSnapshot = {
   gestor_seguranca_informacao: unknown;
   encarregado_dados_pessoais: unknown;
   responsavel_gestao_integridade: unknown;
+  responsavel_governanca_ia?: unknown;
+  substituto_governanca_ia?: unknown;
+  comite_si_ia_na_pauta?: boolean;
+  comite_priva_ia_na_pauta?: boolean;
 };
 
 export type EvidenciaGruposGovernanca = {
   comiteSi: number;
   comiteDados: number;
   etir: number;
+  comiteIa: number;
 };
 
 export type EvidenciaPoliticaPosin = {
@@ -61,6 +72,8 @@ export type EvidenciaConformidadeSnapshot = {
   temSlugPortal: boolean;
   temPoliticaProtecao: boolean;
   temPosin: boolean;
+  sistemasIaCount?: number;
+  sistemasIaProducaoCount?: number;
 };
 
 export type EvidenciaContext = {
@@ -94,19 +107,29 @@ export function buildEvidenciaContext(
   politicaPgsi: EvidenciaPoliticaPosin = null,
   politicaPgp: EvidenciaPoliticaPosin = null
 ): EvidenciaContext {
-  const p = programa as Partial<EvidenciaProgramaSnapshot> | null | undefined;
   const grupos: EvidenciaGruposGovernanca = gruposGovernanca ?? {
     comiteSi: 0,
     comiteDados: 0,
     etir: 0,
+    comiteIa: 0,
   };
+  const pg = programa as Partial<
+    EvidenciaProgramaSnapshot & {
+      comite_si_ia_na_pauta?: boolean;
+      comite_priva_ia_na_pauta?: boolean;
+    }
+  > | null | undefined;
   return {
     programa: {
-      representante_alta_administracao: p?.representante_alta_administracao,
-      gestor_tic: p?.gestor_tic,
-      gestor_seguranca_informacao: p?.gestor_seguranca_informacao,
-      encarregado_dados_pessoais: p?.encarregado_dados_pessoais,
-      responsavel_gestao_integridade: p?.responsavel_gestao_integridade,
+      representante_alta_administracao: pg?.representante_alta_administracao,
+      gestor_tic: pg?.gestor_tic,
+      gestor_seguranca_informacao: pg?.gestor_seguranca_informacao,
+      encarregado_dados_pessoais: pg?.encarregado_dados_pessoais,
+      responsavel_gestao_integridade: pg?.responsavel_gestao_integridade,
+      responsavel_governanca_ia: pg?.responsavel_governanca_ia,
+      substituto_governanca_ia: pg?.substituto_governanca_ia,
+      comite_si_ia_na_pauta: pg?.comite_si_ia_na_pauta,
+      comite_priva_ia_na_pauta: pg?.comite_priva_ia_na_pauta,
     },
     grupos,
     posinComConteudo: politicaPosin != null && politicaPosinTemConteudoRelevante(politicaPosin.secoes),
@@ -282,6 +305,134 @@ export function getEvidenciaSugestao(
         );
       default:
         return semRegra;
+    }
+  }
+
+  if (id.startsWith("26.")) {
+    const comiteIaOk =
+      grupos.comiteIa > 0 ||
+      programa.comite_si_ia_na_pauta === true ||
+      programa.comite_priva_ia_na_pauta === true;
+
+    switch (id) {
+      case "26.1":
+        return {
+          ...maturidade(
+            responsavelPreenchido(programa.responsavel_governanca_ia) ? 1 : 5,
+            responsavelPreenchido(programa.responsavel_governanca_ia)
+              ? "Há responsável por governança de IA indicado na Estrutura de Governança."
+              : "Não há responsável por governança de IA no cadastro do programa.",
+            ["programa.responsavel_governanca_ia"],
+            responsavelPreenchido(programa.responsavel_governanca_ia) ? "media" : "media"
+          ),
+          governancaContexto: {
+            aba: "equipe",
+            detalhe: "Campo «Responsável por governança de IA» (seção AIGP).",
+          },
+        };
+      case "26.2": {
+        const motivoComite =
+          grupos.comiteIa > 0
+            ? `Comitê de IA: ${grupos.comiteIa} membro(s) registrado(s).`
+            : programa.comite_si_ia_na_pauta || programa.comite_priva_ia_na_pauta
+              ? "IA na pauta formal de comitê SI/privacidade (confirme atas institucionais)."
+              : "Nenhum comitê de IA nem flag de pauta em comitês PPSI.";
+        return {
+          ...maturidade(
+            comiteIaOk ? (grupos.comiteIa > 0 ? 1 : 3) : 5,
+            motivoComite,
+            [
+              "programa_grupo_governanca.comite_governanca_ia",
+              "programa.comite_si_ia_na_pauta",
+              "programa.comite_priva_ia_na_pauta",
+            ],
+            grupos.comiteIa > 0 ? "media" : "baixa"
+          ),
+          governancaContexto: {
+            aba: grupos.comiteIa > 0 ? "ia" : programa.comite_si_ia_na_pauta ? "si" : "priva",
+            detalhe: grupos.comiteIa > 0
+              ? "Membros do comitê de governança de IA."
+              : "Marque «IA na pauta» no comitê SI ou privacidade, ou cadastre comitê dedicado.",
+          },
+        };
+      }
+      case "26.3": {
+        const papeis = [
+          programa.representante_alta_administracao,
+          programa.gestor_tic,
+          programa.gestor_seguranca_informacao,
+          programa.encarregado_dados_pessoais,
+          programa.responsavel_gestao_integridade,
+        ];
+        const preenchidos = papeis.filter((v) => responsavelPreenchido(v)).length;
+        const nivel = preenchidos >= 5 ? 1 : preenchidos >= 3 ? 3 : 5;
+        return {
+          ...maturidade(
+            nivel,
+            `${preenchidos}/5 papéis PPSI preenchidos na equipe${responsavelPreenchido(programa.responsavel_governanca_ia) ? "; responsável IA indicado." : "."}`,
+            ["programa.*_papeis_ppsi", "programa.responsavel_governanca_ia"]
+          ),
+          governancaContexto: {
+            aba: "equipe",
+            detalhe: "Papéis PPSI + responsável por governança de IA (RACI operacional).",
+          },
+        };
+      }
+      default:
+        return semRegra;
+    }
+  }
+
+  if (id.startsWith("27.") && conformidade) {
+    const n = conformidade.sistemasIaCount ?? 0;
+    const nProd = conformidade.sistemasIaProducaoCount ?? 0;
+    switch (id) {
+      case "27.1":
+        return {
+          ...maturidade(
+            n > 0 ? 1 : 5,
+            n > 0 ? `${n} sistema(s) de IA no inventário.` : "Inventário de IA vazio.",
+            ["sistema_ia"]
+          ),
+          acaoModulo: {
+            path: "conformidade/inventario-ia",
+            label: "Abrir inventário de IA",
+            detalhe: "Cadastre sistemas e usos de IA para fundamentar as medidas 27.x.",
+          },
+        };
+      case "27.2":
+        return {
+          ...maturidade(
+            n > 0 ? 3 : 5,
+            n > 0
+              ? "Verifique dono de negócio e responsável técnico em cada item do inventário."
+              : "Sem sistemas cadastrados no inventário de IA.",
+            ["sistema_ia.dono_negocio", "sistema_ia.responsavel_tecnico_id"],
+            "baixa"
+          ),
+          acaoModulo: {
+            path: "conformidade/inventario-ia",
+            label: "Abrir inventário de IA",
+            detalhe: "Preencha dono de negócio e responsável técnico em cada sistema.",
+          },
+        };
+      case "27.5":
+        return {
+          ...maturidade(
+            nProd > 0 ? 3 : n > 0 ? 4 : 5,
+            nProd > 0
+              ? `${nProd} sistema(s) em produção no inventário (gate parcial).`
+              : "Nenhum sistema em status produção no inventário.",
+            ["sistema_ia.status_ciclo"]
+          ),
+          acaoModulo: {
+            path: "conformidade/inventario-ia",
+            label: "Abrir inventário de IA",
+            detalhe: "Atualize o status de ciclo de vida dos sistemas de IA.",
+          },
+        };
+      default:
+        break;
     }
   }
 

@@ -41,13 +41,15 @@ import {
 import { alpha, useTheme } from "@mui/material/styles";
 import * as dataService from "@/lib/services/dataService";
 import type { Programa } from "@/lib/types/types";
+import { resolveProgramaEscopo } from "@/lib/programa/perfilEscopo";
 import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import type { AppNavItem } from "@/lib/navigation/appNavigation";
 import {
   getBestMatchingNavPath,
   getGlobalNavSections,
-  getProgramaNavSections,
+  getAdminNavSections,
+  buildProgramaNavSections,
   isNavGroupDiagnosticoPath,
   isNavGroupPortalPath,
   isNavGroupTratamentoPath,
@@ -64,10 +66,11 @@ import { SkipToMainLink } from "@/components/a11y/SkipToMainLink";
 type IUser = { id: number; name: string; email: string; avatar: string };
 
 const DRAWER_WIDTH_DEFAULT = 248;
+const DRAWER_WIDTH_COLLAPSED = 68;
 const DRAWER_WIDTH_MIN = 200;
 const DRAWER_WIDTH_MAX = 380;
 const LS_WIDTH = "fpsi-sidebar-width";
-const LS_HIDDEN = "fpsi-sidebar-hidden";
+const LS_COLLAPSED = "fpsi-sidebar-collapsed";
 
 export function MainAppShell({ children }: { children: React.ReactNode }) {
   const theme = useTheme();
@@ -86,7 +89,13 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   const [empresas, setEmpresas] = useState<EmpresaRow[]>([]);
   const [isSystemAdmin, setIsSystemAdmin] = useState(false);
   const [drawerWidth, setDrawerWidth] = useState(DRAWER_WIDTH_DEFAULT);
-  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [collapsedGroupMenu, setCollapsedGroupMenu] = useState<{
+    anchor: HTMLElement;
+    hub: AppNavItem;
+    subs: AppNavItem[];
+    groupId: string;
+  } | null>(null);
   const [navGroupOpen, setNavGroupOpen] = useState<Record<string, boolean>>({});
   const [cookiePrefsOpen, setCookiePrefsOpen] = useState(false);
   const prevProgramaForNavRef = useRef<string | null>(null);
@@ -94,6 +103,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   const programaMatch = pathname.match(/^\/programas\/([\w-]+)(\/|$)/);
   const programaId = programaMatch ? programaMatch[1] : null;
   const programaBase = programaId ? `/programas/${programaId}` : "";
+  const isAdminArea = pathname === "/admin" || pathname.startsWith("/admin/");
 
   const defaultNavGroups = useMemo(() => {
     if (!programaBase) return { tratamento: false, diagnostico: false, portal: false };
@@ -104,11 +114,20 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     };
   }, [pathname, programaBase]);
 
+  const activePrograma = useMemo(() => {
+    if (!programaId || programas.length === 0) return null;
+    return (
+      programas.find((p) => p.slug === programaId || String(p.id) === programaId) ?? null
+    );
+  }, [programaId, programas]);
+
   const navSections = useMemo(() => {
     const global = getGlobalNavSections();
+    if (isAdminArea) return [...global, ...getAdminNavSections()];
     if (!programaId) return global;
-    return [...global, ...getProgramaNavSections(programaId)];
-  }, [programaId]);
+    const escopo = activePrograma ? resolveProgramaEscopo(activePrograma).escopo : null;
+    return [...global, ...buildProgramaNavSections(programaId, escopo)];
+  }, [programaId, isAdminArea, activePrograma]);
 
   const flatPaths = useMemo(
     () =>
@@ -119,14 +138,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   );
   const activePath = getBestMatchingNavPath(pathname, flatPaths);
 
-  const activePrograma = useMemo(() => {
-    if (!programaId || programas.length === 0) return null;
-    return (
-      programas.find((p) => p.slug === programaId || String(p.id) === programaId) ?? null
-    );
-  }, [programaId, programas]);
-
   const programaContextLabel = useMemo(() => {
+    if (isAdminArea) return "Administração do sistema";
     if (!programaId) return null;
     if (activePrograma) {
       const main = getProgramaTituloPrincipal(activePrograma);
@@ -134,7 +147,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
       return org ? `${main} · ${org}` : main;
     }
     return "Programa";
-  }, [programaId, activePrograma]);
+  }, [isAdminArea, programaId, activePrograma]);
 
   useEffect(() => {
     if (!user) return;
@@ -166,7 +179,12 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           setDrawerWidth(Math.min(DRAWER_WIDTH_MAX, Math.max(DRAWER_WIDTH_MIN, n)));
         }
       }
-      if (localStorage.getItem(LS_HIDDEN) === "1") setSidebarHidden(true);
+      if (localStorage.getItem(LS_COLLAPSED) === "1") setSidebarCollapsed(true);
+      // migra preferência antiga de ocultar total → recolhido
+      if (localStorage.getItem("fpsi-sidebar-hidden") === "1") {
+        setSidebarCollapsed(true);
+        localStorage.removeItem("fpsi-sidebar-hidden");
+      }
     } catch {
       /* ignore */
     }
@@ -182,11 +200,11 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(LS_HIDDEN, sidebarHidden ? "1" : "0");
+      localStorage.setItem(LS_COLLAPSED, sidebarCollapsed ? "1" : "0");
     } catch {
       /* ignore */
     }
-  }, [sidebarHidden]);
+  }, [sidebarCollapsed]);
 
   useEffect(() => {
     if (!programaId) {
@@ -260,6 +278,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   };
 
   const isDark = theme.palette.mode === "dark";
+  const rail = sidebarCollapsed && !isMobile;
+  const effectiveDrawerWidth = rail ? DRAWER_WIDTH_COLLAPSED : drawerWidth;
 
   /** Sidebar sempre navy (eco da landing); área de conteúdo segue o tema. */
   const side = {
@@ -278,9 +298,19 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     item: AppNavItem,
     opts?: { subConnector?: { isLast: boolean } }
   ) => {
+    const wrapRail = (node: React.ReactElement) =>
+      rail ? (
+        <Tooltip key={item.id} title={item.label} placement="right">
+          {node}
+        </Tooltip>
+      ) : (
+        node
+      );
+
     if (item.action === "logout") {
       const isSub = Boolean(item.isSubItem || item.indent === 1);
-      return (
+      const logoutColor = "#EF5350";
+      return wrapRail(
         <ListItemButton
           key={item.id}
           onClick={() => {
@@ -292,28 +322,33 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             mb: 0.1,
             py: 0.55,
             minHeight: 36,
-            pl: isSub ? 1.25 : 1.25,
-            pr: 1,
-            ml: isSub ? 1 : 0,
-            color: side.muted,
+            pl: rail ? 0 : isSub ? 1.25 : 1.25,
+            pr: rail ? 0 : 1,
+            ml: rail ? 0 : isSub ? 1 : 0,
+            justifyContent: rail ? "center" : "flex-start",
+            color: logoutColor,
             "&:hover": {
-              bgcolor: alpha("#EF5350", 0.16),
-              color: "#FF8A80",
+              bgcolor: alpha("#EF5350", 0.18),
+              color: "#FF5252",
             },
           }}
         >
-          <ListItemIcon sx={{ minWidth: isSub ? 30 : 32, color: "inherit" }}>{item.icon}</ListItemIcon>
-          <ListItemText
-            primary={item.label}
-            primaryTypographyProps={{ variant: "body2", fontWeight: 600, fontSize: "0.875rem", color: "inherit" }}
-          />
+          <ListItemIcon sx={{ minWidth: rail ? 0 : isSub ? 30 : 32, color: "inherit", justifyContent: "center" }}>
+            {item.icon}
+          </ListItemIcon>
+          {!rail && (
+            <ListItemText
+              primary={item.label}
+              primaryTypographyProps={{ variant: "body2", fontWeight: 700, fontSize: "0.875rem", color: "inherit" }}
+            />
+          )}
         </ListItemButton>
       );
     }
 
     const selected = activePath === item.path;
     const isSub = Boolean(item.isSubItem || item.indent === 1);
-    const conn = opts?.subConnector;
+    const conn = rail ? undefined : opts?.subConnector;
     const lineColor = side.line;
     const spineX = 14;
     const primaryLabel = (
@@ -321,7 +356,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         <span>{item.label}</span>
       </Box>
     );
-    return (
+    return wrapRail(
       <ListItemButton
         key={item.id}
         component={Link}
@@ -334,18 +369,24 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           mb: 0.1,
           py: 0.55,
           minHeight: 36,
-          pl: conn ? 3.25 : isSub ? 1.25 : 1.25,
-          pr: 1,
-          ml: conn ? 0 : isSub ? 1 : 0,
+          pl: rail ? 0 : conn ? 3.25 : isSub ? 1.25 : 1.25,
+          pr: rail ? 0 : 1,
+          ml: rail ? 0 : conn ? 0 : isSub ? 1 : 0,
           overflow: "hidden",
+          justifyContent: rail ? "center" : "flex-start",
           color: selected ? side.accent : side.muted,
           "&:hover": {
             bgcolor: side.hover,
           },
-          ...(selected && {
-            pl: conn ? 3.25 : isSub ? 1.25 : 1.35,
-            boxShadow: `inset 3px 0 0 ${side.accentBar}`,
-          }),
+          ...(selected &&
+            !rail && {
+              pl: conn ? 3.25 : isSub ? 1.25 : 1.35,
+              boxShadow: `inset 3px 0 0 ${side.accentBar}`,
+            }),
+          ...(selected &&
+            rail && {
+              bgcolor: side.selectedBg,
+            }),
           "&.Mui-selected": {
             bgcolor: side.selectedBg,
             "&:hover": {
@@ -404,25 +445,28 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         ) : null}
         <ListItemIcon
           sx={{
-            minWidth: isSub ? 30 : 32,
+            minWidth: rail ? 0 : isSub ? 30 : 32,
             color: selected ? side.accent : side.muted,
             position: "relative",
             zIndex: 1,
+            justifyContent: "center",
           }}
         >
           {item.icon}
         </ListItemIcon>
-        <ListItemText
-          primary={primaryLabel}
-          primaryTypographyProps={{
-            component: "div",
-            variant: "body2",
-            fontWeight: selected ? 700 : isSub ? 500 : 600,
-            fontSize: "0.875rem",
-            color: selected ? side.accent : side.text,
-          }}
-          sx={{ position: "relative", zIndex: 1 }}
-        />
+        {!rail && (
+          <ListItemText
+            primary={primaryLabel}
+            primaryTypographyProps={{
+              component: "div",
+              variant: "body2",
+              fontWeight: selected ? 700 : isSub ? 500 : 600,
+              fontSize: "0.875rem",
+              color: selected ? side.accent : side.text,
+            }}
+            sx={{ position: "relative", zIndex: 1 }}
+          />
+        )}
       </ListItemButton>
     );
   };
@@ -576,7 +620,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
       {/* Brand — mesmo plano escuro, com acento azul */}
       <Box
         sx={{
-          px: 1.5,
+          px: rail ? 0.75 : 1.5,
           py: 1.25,
           flexShrink: 0,
           borderBottom: `1px solid ${side.line}`,
@@ -587,7 +631,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         }}
       >
         <Link href="/dashboard" style={{ textDecoration: "none", color: "inherit" }} onClick={() => setMobileOpen(false)}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: rail ? "center" : "flex-start" }}>
             <Box
               sx={{
                 borderRadius: 1,
@@ -602,67 +646,195 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             >
               <Image src="/logo_p.png" alt="FPSI" width={26} height={26} />
             </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                variant="subtitle2"
-                fontWeight={900}
-                letterSpacing="-0.02em"
-                sx={{ lineHeight: 1.05, color: landing.heroText }}
-              >
-                FPSI
-              </Typography>
-              {programaContextLabel ? (
+            {!rail && (
+              <Box sx={{ minWidth: 0 }}>
                 <Typography
-                  variant="caption"
-                  noWrap
-                  sx={{
-                    display: "block",
-                    maxWidth: 170,
-                    color: landing.heroMuted,
-                fontSize: "0.75rem",
-                fontWeight: 600,
-              }}
-            >
-              {programaContextLabel}
-            </Typography>
-          ) : (
-            <Typography
-              variant="caption"
-              sx={{
-                display: "block",
-                color: landing.heroMuted,
-                fontSize: "0.75rem",
-                    fontWeight: 600,
-                    letterSpacing: "0.04em",
-                  }}
+                  variant="subtitle2"
+                  fontWeight={900}
+                  letterSpacing="-0.02em"
+                  sx={{ lineHeight: 1.05, color: landing.heroText }}
                 >
-                  Privacidade & SI
+                  FPSI
                 </Typography>
-              )}
-            </Box>
+                {programaContextLabel ? (
+                  <Typography
+                    variant="caption"
+                    noWrap
+                    sx={{
+                      display: "block",
+                      maxWidth: 170,
+                      color: landing.heroMuted,
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {programaContextLabel}
+                  </Typography>
+                ) : (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: "block",
+                      color: landing.heroMuted,
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    Privacidade & SI
+                  </Typography>
+                )}
+              </Box>
+            )}
           </Box>
         </Link>
       </Box>
 
-      <Box sx={{ flex: "1 1 auto", py: 0.5, px: 0.75 }}>
-        {navSections.map((section) => (
-          <Box key={section.id} sx={{ mb: 1 }}>
-            <Typography
-              variant="overline"
+      {/* Controles: recolher, tema e conta — abaixo do logo */}
+      <Box
+        sx={{
+          flexShrink: 0,
+          borderBottom: `1px solid ${side.line}`,
+          px: rail ? 0.5 : 0.75,
+          py: 0.65,
+          bgcolor: alpha(landing.ink, 0.45),
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: rail ? "column" : "row",
+            alignItems: "stretch",
+            gap: 0.5,
+            width: "100%",
+            p: 0.45,
+            borderRadius: 1.5,
+            bgcolor: alpha("#fff", 0.04),
+            border: `1px solid ${alpha("#fff", 0.08)}`,
+          }}
+        >
+          {!isMobile && (
+            <Tooltip title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"} placement={rail ? "right" : "bottom"}>
+              <IconButton
+                size="small"
+                onClick={() => setSidebarCollapsed((c) => !c)}
+                aria-label={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+                aria-expanded={!sidebarCollapsed}
+                sx={{
+                  flex: 1,
+                  minHeight: rail ? 36 : 38,
+                  borderRadius: 1.25,
+                  color: side.muted,
+                  bgcolor: alpha("#fff", 0.03),
+                  "&:hover": { color: side.text, bgcolor: side.hover },
+                }}
+              >
+                {sidebarCollapsed ? <MenuOpenIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"} placement={rail ? "right" : "bottom"}>
+            <IconButton
+              size="small"
+              onClick={() => setMode()}
+              aria-label={mode === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
               sx={{
-                px: 1.25,
-                py: 0.35,
-                display: "block",
-                color: side.faint,
-                letterSpacing: 0.9,
-                fontWeight: 700,
-                fontSize: "0.75rem",
-                lineHeight: 1.2,
+                flex: 1,
+                minHeight: rail ? 36 : 38,
+                borderRadius: 1.25,
+                color: side.muted,
+                bgcolor: alpha("#fff", 0.03),
+                "&:hover": { color: side.text, bgcolor: side.hover },
               }}
             >
-              {section.title}
-            </Typography>
-            <List dense disablePadding component="nav">
+              {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+          {user && (
+            <Tooltip title={user.name || user.email || "Conta"} placement={rail ? "right" : "bottom"}>
+              <IconButton
+                size="small"
+                onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                aria-label="Conta e menu do usuário"
+                sx={{
+                  flex: 1,
+                  minHeight: rail ? 36 : 38,
+                  borderRadius: 1.25,
+                  p: 0.35,
+                  bgcolor: alpha("#fff", 0.03),
+                  "&:hover": { bgcolor: side.hover },
+                }}
+              >
+                <Avatar
+                  src={user.avatar}
+                  sx={{
+                    width: rail ? 26 : 28,
+                    height: rail ? 26 : 28,
+                    fontSize: 12,
+                    bgcolor: alpha(landing.blueBright, 0.28),
+                    color: side.accent,
+                    border: `1px solid ${alpha("#fff", 0.14)}`,
+                  }}
+                >
+                  {(user.name || user.email || "").charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      </Box>
+
+      <Box sx={{ flex: "1 1 auto", py: 0.5, px: 0.75, minHeight: 0, overflowY: "auto" }}>
+        {navSections.map((section, sectionIdx) => (
+          <Box
+            key={section.id}
+            sx={{
+              mb: 1.25,
+              ...(rail
+                ? {
+                    ...(sectionIdx > 0
+                      ? { pt: 0.75, mt: 0.25, borderTop: `1px solid ${side.line}` }
+                      : {}),
+                  }
+                : {
+                    mx: 0.15,
+                    borderRadius: 1.5,
+                    bgcolor: alpha("#fff", section.id === "programa" ? 0.05 : 0.035),
+                    border: `1px solid ${alpha("#fff", 0.09)}`,
+                    boxShadow: `inset 0 1px 0 ${alpha("#fff", 0.04)}`,
+                    overflow: "hidden",
+                  }),
+            }}
+          >
+            {!rail && (
+              <Box
+                sx={{
+                  px: 1.25,
+                  py: 0.65,
+                  bgcolor:
+                    section.id === "programa"
+                      ? alpha(landing.blueBright, 0.14)
+                      : alpha("#fff", 0.06),
+                  borderBottom: `1px solid ${alpha("#fff", 0.07)}`,
+                }}
+              >
+                <Typography
+                  variant="overline"
+                  sx={{
+                    display: "block",
+                    color: section.id === "programa" ? side.accent : landing.heroText,
+                    letterSpacing: 1.1,
+                    fontWeight: 800,
+                    fontSize: "0.6875rem",
+                    lineHeight: 1.2,
+                    opacity: 0.95,
+                  }}
+                >
+                  {section.title}
+                </Typography>
+              </Box>
+            )}
+            <List dense disablePadding component="nav" sx={{ py: rail ? 0.2 : 0.45, px: rail ? 0 : 0.35 }}>
               {section.id === "programa" && programaId
                 ? parseProgramaNavItems(section.items).map((block) => {
                     if (block.kind === "single") {
@@ -675,6 +847,40 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                         <span>{block.hub.label}</span>
                       </Box>
                     );
+                    if (rail) {
+                      return (
+                        <Tooltip key={block.groupId} title={block.hub.label} placement="right">
+                          <ListItemButton
+                            selected={hubSelected}
+                            onClick={(e) => {
+                              setCollapsedGroupMenu({
+                                anchor: e.currentTarget,
+                                hub: block.hub,
+                                subs: block.subs,
+                                groupId: block.groupId,
+                              });
+                            }}
+                            sx={{
+                              borderRadius: 1,
+                              mb: 0.1,
+                              py: 0.55,
+                              minHeight: 36,
+                              justifyContent: "center",
+                              color: hubSelected ? side.accent : side.muted,
+                              "&:hover": { bgcolor: side.hover },
+                              "&.Mui-selected": {
+                                bgcolor: side.selectedBg,
+                                "&:hover": { bgcolor: side.selectedHover },
+                              },
+                            }}
+                          >
+                            <ListItemIcon sx={{ minWidth: 0, color: hubSelected ? side.accent : side.muted, justifyContent: "center" }}>
+                              {block.hub.icon}
+                            </ListItemIcon>
+                          </ListItemButton>
+                        </Tooltip>
+                      );
+                    }
                     return (
                       <React.Fragment key={block.groupId}>
                         <Box
@@ -779,178 +985,133 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
 
         <Divider sx={{ my: 0.75, borderColor: side.line }} />
 
-        <Typography
-          variant="overline"
-          sx={{
-            px: 1.25,
-            py: 0.35,
-            display: "block",
-            color: side.faint,
-            letterSpacing: 0.9,
-            fontWeight: 700,
-            fontSize: "0.75rem",
-            lineHeight: 1.2,
-          }}
-        >
-          Programas
-        </Typography>
-        <List dense disablePadding>
-          <ListItemButton
-            component={Link}
-            href="/dashboard?novoPrograma=1"
-            onClick={() => setMobileOpen(false)}
+        {!rail && (
+          <Typography
+            variant="overline"
             sx={{
-              borderRadius: 1.5,
-              mb: 0.35,
-              py: 0.45,
-              minHeight: 34,
-              border: `1px dashed ${alpha(landing.blueBright, 0.45)}`,
-              bgcolor: alpha(landing.blueBright, 0.08),
-              color: side.accent,
-              "&:hover": {
-                bgcolor: alpha(landing.blueBright, 0.16),
-              },
+              px: 1.25,
+              py: 0.35,
+              display: "block",
+              color: side.faint,
+              letterSpacing: 0.9,
+              fontWeight: 700,
+              fontSize: "0.75rem",
+              lineHeight: 1.2,
             }}
           >
-            <ListItemIcon sx={{ minWidth: 32 }}>
-              <Avatar
-                variant="rounded"
-                sx={{
-                  width: 26,
-                  height: 26,
-                  bgcolor: alpha(landing.blueBright, 0.22),
-                  color: side.accent,
-                }}
-              >
-                <AddIcon sx={{ fontSize: 16 }} />
-              </Avatar>
-            </ListItemIcon>
-            <ListItemText
-              primary="Novo programa"
-              primaryTypographyProps={{
-                variant: "body2",
-                fontWeight: 700,
-                fontSize: "0.8125rem",
+            Programas
+          </Typography>
+        )}
+        <List dense disablePadding>
+          <Tooltip title="Novo programa" placement="right" disableHoverListener={!rail}>
+            <ListItemButton
+              component={Link}
+              href="/dashboard?novoPrograma=1"
+              onClick={() => setMobileOpen(false)}
+              sx={{
+                borderRadius: 1.5,
+                mb: 0.35,
+                py: 0.45,
+                minHeight: 34,
+                justifyContent: rail ? "center" : "flex-start",
+                border: rail ? "none" : `1px dashed ${alpha(landing.blueBright, 0.45)}`,
+                bgcolor: alpha(landing.blueBright, 0.08),
                 color: side.accent,
+                "&:hover": {
+                  bgcolor: alpha(landing.blueBright, 0.16),
+                },
               }}
-            />
-          </ListItemButton>
+            >
+              <ListItemIcon sx={{ minWidth: rail ? 0 : 32, justifyContent: "center" }}>
+                <Avatar
+                  variant="rounded"
+                  sx={{
+                    width: 26,
+                    height: 26,
+                    bgcolor: alpha(landing.blueBright, 0.22),
+                    color: side.accent,
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: 16 }} />
+                </Avatar>
+              </ListItemIcon>
+              {!rail && (
+                <ListItemText
+                  primary="Novo programa"
+                  primaryTypographyProps={{
+                    variant: "body2",
+                    fontWeight: 700,
+                    fontSize: "0.8125rem",
+                    color: side.accent,
+                  }}
+                />
+              )}
+            </ListItemButton>
+          </Tooltip>
           {programas.map((p) => {
             const href = p.slug ? `/programas/${p.slug}` : `/programas/${p.id}`;
             const selected =
               Boolean(programaId) && (p.slug === programaId || String(p.id) === programaId);
             const thumb = p.logo_programa || p.logo_orgao_empresa || undefined;
+            const titulo = getProgramaTituloPrincipal(p);
             return (
-              <ListItemButton
-                key={p.id}
-                component={Link}
-                href={href}
-                selected={selected}
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  borderRadius: 1.5,
-                  mb: 0.1,
-                  py: 0.4,
-                  minHeight: 34,
-                  alignItems: "center",
-                  color: selected ? side.accent : side.muted,
-                  "&:hover": { bgcolor: side.hover },
-                  "&.Mui-selected": {
-                    bgcolor: side.selectedBg,
-                    boxShadow: `inset 3px 0 0 ${side.accentBar}`,
-                    "&:hover": {
-                      bgcolor: side.selectedHover,
+              <Tooltip key={p.id} title={titulo} placement="right" disableHoverListener={!rail}>
+                <ListItemButton
+                  component={Link}
+                  href={href}
+                  selected={selected}
+                  onClick={() => setMobileOpen(false)}
+                  sx={{
+                    borderRadius: 1.5,
+                    mb: 0.1,
+                    py: 0.4,
+                    minHeight: 34,
+                    alignItems: "center",
+                    justifyContent: rail ? "center" : "flex-start",
+                    color: selected ? side.accent : side.muted,
+                    "&:hover": { bgcolor: side.hover },
+                    "&.Mui-selected": {
+                      bgcolor: side.selectedBg,
+                      boxShadow: rail ? "none" : `inset 3px 0 0 ${side.accentBar}`,
+                      "&:hover": {
+                        bgcolor: side.selectedHover,
+                      },
                     },
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  <Avatar
-                    variant="rounded"
-                    src={thumb}
-                    alt=""
-                    sx={{
-                      width: 26,
-                      height: 26,
-                      fontSize: 12,
-                      bgcolor: alpha(landing.blueBright, 0.18),
-                      color: side.accent,
-                    }}
-                  >
-                    <FolderIcon sx={{ fontSize: 16 }} />
-                  </Avatar>
-                </ListItemIcon>
-                <ListItemText
-                  primary={getProgramaTituloPrincipal(p)}
-                  primaryTypographyProps={{
-                    variant: "body2",
-                    fontWeight: selected ? 700 : 500,
-                    fontSize: "0.8125rem",
-                    noWrap: true,
-                    color: selected ? side.accent : side.text,
                   }}
-                />
-              </ListItemButton>
+                >
+                  <ListItemIcon sx={{ minWidth: rail ? 0 : 32, justifyContent: "center" }}>
+                    <Avatar
+                      variant="rounded"
+                      src={thumb}
+                      alt=""
+                      sx={{
+                        width: 26,
+                        height: 26,
+                        fontSize: 12,
+                        bgcolor: alpha(landing.blueBright, 0.18),
+                        color: side.accent,
+                      }}
+                    >
+                      <FolderIcon sx={{ fontSize: 16 }} />
+                    </Avatar>
+                  </ListItemIcon>
+                  {!rail && (
+                    <ListItemText
+                      primary={titulo}
+                      primaryTypographyProps={{
+                        variant: "body2",
+                        fontWeight: selected ? 700 : 500,
+                        fontSize: "0.8125rem",
+                        noWrap: true,
+                        color: selected ? side.accent : side.text,
+                      }}
+                    />
+                  )}
+                </ListItemButton>
+              </Tooltip>
             );
           })}
         </List>
-      </Box>
-
-      {/* Conta + tema no rodapé */}
-      <Box
-        sx={{
-          flexShrink: 0,
-          mt: "auto",
-          borderTop: `1px solid ${side.line}`,
-          px: 1,
-          py: 1,
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          bgcolor: alpha(landing.ink, 0.65),
-        }}
-      >
-        {!isMobile && (
-          <Tooltip title={sidebarHidden ? "Mostrar menu" : "Ocultar menu"}>
-            <IconButton
-              size="small"
-              onClick={() => setSidebarHidden((h) => !h)}
-              aria-label={sidebarHidden ? "Mostrar menu" : "Ocultar menu"}
-              sx={{ color: side.muted, "&:hover": { color: side.text, bgcolor: side.hover } }}
-            >
-              {sidebarHidden ? <MenuOpenIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-        )}
-        <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"}>
-          <IconButton
-            size="small"
-            onClick={() => setMode()}
-            sx={{ color: side.muted, "&:hover": { color: side.text, bgcolor: side.hover } }}
-          >
-            {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-        <Box sx={{ flex: 1 }} />
-        {user && (
-          <Tooltip title={user.name || user.email || "Conta"}>
-            <IconButton size="small" onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
-              <Avatar
-                src={user.avatar}
-                sx={{
-                  width: 30,
-                  height: 30,
-                  fontSize: 13,
-                  bgcolor: alpha(landing.blueBright, 0.28),
-                  color: side.accent,
-                  border: `1px solid ${alpha("#fff", 0.14)}`,
-                }}
-              >
-                {(user.name || user.email || "").charAt(0).toUpperCase()}
-              </Avatar>
-            </IconButton>
-          </Tooltip>
-        )}
       </Box>
     </Box>
   );
@@ -1042,6 +1203,12 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             logout();
             setUserMenuAnchor(null);
           }}
+          sx={{
+            color: "error.main",
+            fontWeight: 600,
+            "& .MuiListItemIcon-root": { color: "error.main" },
+            "&:hover": { bgcolor: (t) => alpha(t.palette.error.main, 0.08) },
+          }}
         >
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
@@ -1092,6 +1259,79 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         ))}
       </Menu>
       <CookiePreferencesDialog open={cookiePrefsOpen} onClose={() => setCookiePrefsOpen(false)} />
+      <Menu
+        anchorEl={collapsedGroupMenu?.anchor ?? null}
+        open={Boolean(collapsedGroupMenu)}
+        onClose={() => setCollapsedGroupMenu(null)}
+        anchorOrigin={{ horizontal: "right", vertical: "top" }}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
+        slotProps={{ paper: { sx: { minWidth: 220 } } }}
+      >
+        {collapsedGroupMenu && (
+          <>
+            <MenuItem
+              component={Link}
+              href={collapsedGroupMenu.hub.path}
+              selected={activePath === collapsedGroupMenu.hub.path}
+              onClick={() => {
+                setMobileOpen(false);
+                setCollapsedGroupMenu(null);
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>{collapsedGroupMenu.hub.icon}</ListItemIcon>
+              <ListItemText primary={collapsedGroupMenu.hub.label} primaryTypographyProps={{ fontWeight: 700 }} />
+            </MenuItem>
+            <Divider />
+            {collapsedGroupMenu.subs.map((sub) => (
+              <MenuItem
+                key={sub.id}
+                component={Link}
+                href={sub.path}
+                selected={activePath === sub.path}
+                onClick={() => {
+                  setMobileOpen(false);
+                  setCollapsedGroupMenu(null);
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>{sub.icon}</ListItemIcon>
+                <ListItemText primary={sub.label} />
+              </MenuItem>
+            ))}
+            {collapsedGroupMenu.groupId === "portal" ? (
+              <>
+                <Divider />
+                {activePrograma?.slug?.trim() ? (
+                  <MenuItem
+                    component="a"
+                    href={`/${encodeURIComponent(activePrograma.slug.trim())}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCollapsedGroupMenu(null)}
+                  >
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <OpenInNewIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Portal público (site)"
+                      secondary={`/${activePrograma.slug.trim()}`}
+                    />
+                  </MenuItem>
+                ) : (
+                  <MenuItem disabled>
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <OpenInNewIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Portal público (site)"
+                      secondary="Defina o slug do programa"
+                    />
+                  </MenuItem>
+                )}
+              </>
+            ) : null}
+          </>
+        )}
+      </Menu>
     </>
   );
 
@@ -1127,19 +1367,19 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         aria-label="Navegação principal"
         sx={{
           display: { xs: "none", md: "flex" },
-          width: sidebarHidden ? 0 : drawerWidth,
+          width: effectiveDrawerWidth,
           flexShrink: 0,
           transition: theme.transitions.create("width", { duration: theme.transitions.duration.shorter }),
           overflow: "hidden",
           position: "relative",
           zIndex: 2,
-          borderRight: sidebarHidden ? 0 : `1px solid ${alpha(landing.ink, 0.55)}`,
-          boxShadow: sidebarHidden ? "none" : `4px 0 28px ${alpha(landing.ink, 0.35)}`,
+          borderRight: `1px solid ${alpha(landing.ink, 0.55)}`,
+          boxShadow: `4px 0 28px ${alpha(landing.ink, 0.35)}`,
         }}
       >
         <Box
           sx={{
-            width: drawerWidth,
+            width: effectiveDrawerWidth,
             minHeight: "100vh",
             alignSelf: "stretch",
             display: "flex",
@@ -1148,25 +1388,26 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           }}
         >
           {drawer}
-          <Box
-            onMouseDown={startResize}
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="Redimensionar menu"
-            sx={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              width: 10,
-              height: "100%",
-              cursor: "col-resize",
-              zIndex: 2,
-              display: sidebarHidden ? "none" : "block",
-              "&:hover": {
-                bgcolor: alpha(landing.blueBright, 0.18),
-              },
-            }}
-          />
+          {!rail && (
+            <Box
+              onMouseDown={startResize}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Redimensionar menu"
+              sx={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                width: 10,
+                height: "100%",
+                cursor: "col-resize",
+                zIndex: 2,
+                "&:hover": {
+                  bgcolor: alpha(landing.blueBright, 0.18),
+                },
+              }}
+            />
+          )}
         </Box>
       </Box>
 
@@ -1220,46 +1461,6 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             )}
           </Toolbar>
         </AppBar>
-
-        {/* Desktop: chrome flutuante quando sidebar oculto */}
-        {!isMobile && sidebarHidden && (
-          <Box
-            sx={{
-              position: "fixed",
-              left: 10,
-              top: 10,
-              zIndex: theme.zIndex.appBar,
-              display: "flex",
-              alignItems: "center",
-              gap: 0.35,
-              p: 0.35,
-              borderRadius: 1.5,
-              bgcolor: alpha(landing.navy, 0.92),
-              color: landing.heroText,
-              border: `1px solid ${alpha("#fff", 0.1)}`,
-              boxShadow: `0 8px 28px ${alpha(landing.ink, 0.35)}`,
-              backdropFilter: "blur(12px)",
-            }}
-          >
-            <Tooltip title="Mostrar menu">
-              <IconButton onClick={() => setSidebarHidden(false)} aria-label="Mostrar menu" size="small">
-                <MenuOpenIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={mode === "dark" ? "Modo claro" : "Modo escuro"}>
-              <IconButton size="small" onClick={() => setMode()}>
-                {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
-              </IconButton>
-            </Tooltip>
-            {user && (
-              <IconButton size="small" onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
-                <Avatar src={user.avatar} sx={{ width: 28, height: 28, fontSize: 12 }}>
-                  {(user.name || user.email || "").charAt(0).toUpperCase()}
-                </Avatar>
-              </IconButton>
-            )}
-          </Box>
-        )}
 
         <Box
           component="main"

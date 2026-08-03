@@ -20,8 +20,12 @@ export default function ProtectedLayout({
   const { data: user, isLoading } = useGetIdentity<IUser>();
   const router = useRouter();
   const pathname = usePathname();
-  /** /dashboard e /referencias usam MainAppShell no layout filho; não empilhar Header aqui. */
-  const isDashboardShell = pathname === "/dashboard" || pathname.startsWith("/referencias");
+  /** Rotas com MainAppShell no layout filho — não empilhar Header legado aqui. */
+  const isDashboardShell =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/referencias") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
   /** Consulta a referências estáticas: LGPD e Governança de IA (sem login). */
   const isPublicReferencia =
     pathname === "/referencias/lgpd" || pathname === "/referencias/aigp";

@@ -11,6 +11,7 @@ import {
   Grid,
   useTheme,
   alpha,
+  Divider,
 } from "@mui/material";
 import {
   Policy as PolicyIcon,
@@ -25,53 +26,54 @@ import {
 } from "@mui/icons-material";
 import Link from "next/link";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
+import { AdminStatsPanel } from "@/components/admin/AdminStatsPanel";
 
 const ADMIN_CARDS = [
   {
     title: "Modelos de Políticas",
-    description: "Editar templates de políticas (Proteção de Dados, Backup, etc.) com seções e conteúdo padrão.",
+    description: "Templates de políticas (Proteção de Dados, Backup, etc.) com seções e conteúdo padrão.",
     path: "/admin/modelos-politicas",
     icon: <PolicyIcon sx={{ fontSize: 40 }} />,
     color: "#2196F3",
   },
   {
     title: "Controles",
-    description: "Gerenciar controles do framework de segurança (nome, texto, por que implementar).",
+    description: "Controles do framework PPSI/AIGP — número, nome e diagnóstico.",
     path: "/admin/controles",
     icon: <SecurityIcon sx={{ fontSize: 40 }} />,
     color: "#4CAF50",
   },
   {
     title: "Medidas",
-    description: "Gerenciar medidas por controle (perguntas, descrições, id_cisv8).",
+    description: "Medidas por controle — perguntas, CIS v8, grupo de implementação.",
     path: "/admin/medidas",
     icon: <ChecklistIcon sx={{ fontSize: 40 }} />,
     color: "#FF9800",
   },
   {
     title: "Diagnósticos",
-    description: "Categorias de diagnóstico (descrição, cor, índice, maturidade).",
+    description: "Domínios de diagnóstico (estruturação, SI, privacidade, governança IA).",
     path: "/admin/diagnosticos",
     icon: <CategoryIcon sx={{ fontSize: 40 }} />,
     color: "#9C27B0",
   },
   {
     title: "Cargos",
-    description: "Cargos institucionais disponíveis para perfis.",
+    description: "Cargos institucionais disponíveis nos perfis de usuário.",
     path: "/admin/cargos",
     icon: <BadgeIcon sx={{ fontSize: 40 }} />,
     color: "#607D8B",
   },
   {
     title: "Departamentos",
-    description: "Departamentos institucionais.",
+    description: "Departamentos institucionais para perfis e responsáveis.",
     path: "/admin/departamentos",
     icon: <BusinessIcon sx={{ fontSize: 40 }} />,
     color: "#00BCD4",
   },
   {
     title: "Configurações",
-    description: "Configurações gerais do sistema.",
+    description: "Variáveis de ambiente, saúde do banco, admins e implantação.",
     path: "/admin/config",
     icon: <SettingsIcon sx={{ fontSize: 40 }} />,
     color: "#795548",
@@ -86,8 +88,16 @@ export default function AdminDashboardPage() {
       <PageHeroHeader
         title="Área de administração"
         icon={<AdminPanelIcon sx={{ fontSize: 30 }} aria-hidden />}
-        description="Gerencie modelos de políticas, controles, medidas, diagnósticos e demais entidades globais do sistema."
+        description="Catálogo global do framework, modelos de políticas, referências institucionais e configurações da plataforma."
       />
+
+      <AdminStatsPanel />
+
+      <Divider sx={{ my: 3 }} />
+
+      <Typography variant="h6" fontWeight={700} gutterBottom>
+        Gerenciamento
+      </Typography>
 
       <Grid container spacing={3}>
         {ADMIN_CARDS.map((card) => (

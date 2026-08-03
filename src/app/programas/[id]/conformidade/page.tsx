@@ -1,16 +1,55 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { Gavel as GavelIcon } from "@mui/icons-material";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
-import { ConformidadeHubCard, TRATAMENTO_SECTIONS } from "./ConformidadeHubCard";
+import { RequisitoIaLabel } from "@/components/aigp/RequisitoIaLabel";
+import { ConformidadeHubCard, TRATAMENTO_SECTIONS, AIGP_SECTIONS } from "./ConformidadeHubCard";
+import { useProgramaEscopoFromRoute } from "@/hooks/useProgramaEscopoFromRoute";
+import { HUB_SECTION_MODULO_MAP, isModuloAtivo, ativarModulo, detectPresetFromEscopo } from "@/lib/programa/perfilEscopo";
+import * as dataService from "@/lib/services/dataService";
+
+function isSectionOutOfScope(sectionKey: string, escopo: ReturnType<typeof useProgramaEscopoFromRoute>["escopo"]) {
+  const modKey = HUB_SECTION_MODULO_MAP[sectionKey];
+  return Boolean(modKey && !isModuloAtivo(escopo, modKey));
+}
 
 export default function ConformidadeTratamentoHubPage() {
   const params = useParams();
   const router = useRouter();
   const idOrSlug = params.id as string;
+  const { escopo, programaId, canEdit, refresh } = useProgramaEscopoFromRoute();
+
+  const handleAtivar = async (sectionKey: string) => {
+    const modKey = HUB_SECTION_MODULO_MAP[sectionKey];
+    if (!modKey || !programaId) return;
+    const next = ativarModulo(escopo, modKey);
+    await dataService.updateProgramaEscopo(programaId, {
+      escopo: next,
+      perfil_escopo: detectPresetFromEscopo(next),
+    });
+    refresh();
+  };
+
+  const tratamentoSections = useMemo(
+    () =>
+      TRATAMENTO_SECTIONS.map((s) => ({
+        section: s,
+        outOfScope: isSectionOutOfScope(s.key, escopo),
+      })),
+    [escopo]
+  );
+
+  const aigpSections = useMemo(
+    () =>
+      AIGP_SECTIONS.map((s) => ({
+        section: s,
+        outOfScope: isSectionOutOfScope(s.key, escopo),
+      })),
+    [escopo]
+  );
 
   return (
     <Box
@@ -35,13 +74,35 @@ export default function ConformidadeTratamentoHubPage() {
       />
 
       <Grid container spacing={1.5} sx={{ flex: 1, minHeight: 0, alignContent: "flex-start" }}>
-        {TRATAMENTO_SECTIONS.map((section) => (
+        {tratamentoSections.map(({ section, outOfScope }) => (
           <ConformidadeHubCard
             key={section.key}
             section={section}
             idOrSlug={idOrSlug}
             router={router}
             dense
+            outOfScope={outOfScope}
+            onEnable={canEdit && outOfScope ? () => handleAtivar(section.key) : undefined}
+          />
+        ))}
+      </Grid>
+
+      <RequisitoIaLabel variant="section" sx={{ mt: 2.5, mb: 1 }}>
+        Governança de IA
+      </RequisitoIaLabel>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.25 }}>
+        Módulos AIGP integrados ao hub de conformidade.
+      </Typography>
+      <Grid container spacing={1.5} sx={{ alignContent: "flex-start" }}>
+        {aigpSections.map(({ section, outOfScope }) => (
+          <ConformidadeHubCard
+            key={section.key}
+            section={section}
+            idOrSlug={idOrSlug}
+            router={router}
+            dense
+            outOfScope={outOfScope}
+            onEnable={canEdit && outOfScope ? () => handleAtivar(section.key) : undefined}
           />
         ))}
       </Grid>
