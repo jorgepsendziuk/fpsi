@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const supabase = await getSupabaseClient();
 
     const body = await request.json();
-    const { programaId, email, role, nome } = body;
+    const { programaId, email, role, nome, areaIds, assignmentScope, dueAt } = body;
 
     if (!programaId || !email || !email.trim()) {
       return NextResponse.json(
@@ -75,11 +75,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Quem convida precisa ser membro full (admin/coord ou papel de governança)
+    const { data: inviterMember } = await supabase
+      .from("programa_users")
+      .select("role, permissions")
+      .eq("programa_id", programaId)
+      .eq("user_id", user.id)
+      .eq("status", "accepted")
+      .maybeSingle();
+
+    if (!inviterMember) {
+      return NextResponse.json({ error: "Acesso negado ao programa" }, { status: 403 });
+    }
+
+    const inviterPerms = inviterMember.permissions as { can_invite_users?: boolean } | null;
+    const canInvite =
+      inviterPerms?.can_invite_users === true ||
+      inviterMember.role === UserRole.ADMIN ||
+      inviterMember.role === UserRole.COORDENADOR;
+    if (!canInvite) {
+      return NextResponse.json({ error: "Sem permissão para convidar" }, { status: 403 });
+    }
+
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     const message = nome && String(nome).trim() ? JSON.stringify({ nome: String(nome).trim() }) : null;
+    const area_ids = Array.isArray(areaIds)
+      ? areaIds.map(Number).filter(Number.isFinite)
+      : [];
 
     const { data: invite, error } = await supabase
       .from("programa_invites")
@@ -93,6 +118,9 @@ export async function POST(request: NextRequest) {
         invited_by: user.id,
         expires_at: expiresAt.toISOString(),
         message,
+        area_ids,
+        assignment_scope: assignmentScope || null,
+        due_at: dueAt || null,
       })
       .select()
       .single();

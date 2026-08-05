@@ -32,6 +32,9 @@ import { Montserrat } from "next/font/google";
 import { ColorModeContext } from "@contexts/color-mode";
 import { LgpdReferenciaDrawer } from "@/components/normas/LgpdReferenciaDrawer";
 import { AigpReferenciaDrawer } from "@/components/normas/AigpReferenciaDrawer";
+import { CreditosDialog } from "@/components/credits/CreditosDialog";
+import { FPSI_AUTHORSHIP, FPSI_GITHUB_URL, JORGE_PORTFOLIO_URL } from "@/lib/credits/fpsiCredits";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import { HeroAtmosphere } from "./HeroAtmosphere";
 import { LandingDeckHero } from "./LandingDeckHero";
 import { LandingNav } from "./LandingNav";
@@ -260,6 +263,7 @@ export function LandingPage() {
   const [lgpdDrawerOpen, setLgpdDrawerOpen] = useState(false);
   const [aigpDrawerOpen, setAigpDrawerOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [creditosOpen, setCreditosOpen] = useState(false);
   const [heroReady, setHeroReady] = useState(false);
   const [demoCta, setDemoCta] = useState(() => resolveDemoCta(null));
   const { mode, setMode } = useContext(ColorModeContext);
@@ -639,65 +643,171 @@ export function LandingPage() {
           px: { xs: 2, md: 3 },
           pb: { xs: 1.5, md: 2 },
           display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
+          flexDirection: "column",
           gap: 1,
           animation: heroReady ? "lpFade 1s 0.3s ease both" : "none",
         }}
       >
-        <Typography
+        <Box
           sx={{
-            fontFamily: ff,
-            fontWeight: 500,
-            fontSize: "0.72rem",
-            color: "rgba(244,248,252,0.45)",
-            letterSpacing: "0.02em",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1.25,
           }}
         >
-          © 2026 FPSI — Framework de Privacidade e Segurança da Informação · Código aberto
-        </Typography>
-        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {[
-            { label: "Sobre", href: "/sobre" },
-            { label: "Artigo", href: "/artigo" },
-            { label: "Privacidade", href: "/privacidade" },
-          ].map((item) => (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: { xs: 1, sm: 1.5 },
+              minWidth: 0,
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: ff,
+                fontWeight: 500,
+                fontSize: "0.72rem",
+                color: "rgba(244,248,252,0.45)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              © {FPSI_AUTHORSHIP.year} FPSI · Código aberto
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.85,
+                pl: { xs: 0, sm: 0.5 },
+                borderLeft: { sm: "1px solid rgba(244,248,252,0.14)" },
+                ml: { sm: 0.25 },
+              }}
+            >
+              <Box
+                component="a"
+                href={FPSI_AUTHORSHIP.orgUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GeoApps"
+                sx={{
+                  display: "inline-flex",
+                  lineHeight: 0,
+                  opacity: 0.88,
+                  transition: "opacity 0.2s ease",
+                  "&:hover": { opacity: 1 },
+                }}
+              >
+                <Image
+                  src={FPSI_AUTHORSHIP.logoSrc}
+                  alt="GeoApps"
+                  width={88}
+                  height={40}
+                  style={{ width: 88, height: "auto", display: "block" }}
+                />
+              </Box>
+              <Typography
+                component="a"
+                href={JORGE_PORTFOLIO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  fontFamily: ff,
+                  fontWeight: 600,
+                  fontSize: "0.68rem",
+                  color: "rgba(244,248,252,0.5)",
+                  textDecoration: "none",
+                  letterSpacing: "0.01em",
+                  "&:hover": { color: landing.heroText },
+                }}
+              >
+                {FPSI_AUTHORSHIP.authorShort}
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 0.25, flexWrap: "wrap", alignItems: "center" }}>
             <Button
-              key={item.label}
               size="small"
-              onClick={() => router.push(item.href)}
+              onClick={() => setCreditosOpen(true)}
               sx={{
                 fontFamily: ff,
                 textTransform: "none",
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: "0.72rem",
-                color: "rgba(244,248,252,0.5)",
+                color: "rgba(244,248,252,0.55)",
                 minWidth: 0,
                 px: 1,
+                "&:hover": { color: landing.lock, bgcolor: "transparent" },
+              }}
+            >
+              Créditos
+            </Button>
+            {[
+              { label: "Sobre", href: "/sobre" },
+              { label: "Artigo", href: "/artigo" },
+              { label: "Privacidade", href: "/privacidade" },
+            ].map((item) => (
+              <Button
+                key={item.label}
+                size="small"
+                onClick={() => router.push(item.href)}
+                sx={{
+                  fontFamily: ff,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.72rem",
+                  color: "rgba(244,248,252,0.5)",
+                  minWidth: 0,
+                  px: 1,
+                  "&:hover": { color: landing.heroText, bgcolor: "transparent" },
+                }}
+              >
+                {item.label}
+              </Button>
+            ))}
+            <Button
+              size="small"
+              component="a"
+              href={FPSI_GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              startIcon={<GitHubIcon sx={{ fontSize: "0.95rem !important" }} />}
+              sx={{
+                fontFamily: ff,
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: "0.72rem",
+                color: "rgba(244,248,252,0.55)",
+                minWidth: 0,
+                px: 1,
+                "& .MuiButton-startIcon": { mr: 0.45 },
                 "&:hover": { color: landing.heroText, bgcolor: "transparent" },
               }}
             >
-              {item.label}
+              GitHub
             </Button>
-          ))}
-          <Button
-            size="small"
-            onClick={() => setFeaturesOpen(true)}
-            sx={{
-              fontFamily: ff,
-              textTransform: "none",
-              fontWeight: 700,
-              fontSize: "0.72rem",
-              color: landing.lock,
-              minWidth: 0,
-              px: 1,
-              display: { xs: "inline-flex", md: "none" },
-              "&:hover": { bgcolor: "transparent", color: "#FFB300" },
-            }}
-          >
-            Módulos
-          </Button>
+            <Button
+              size="small"
+              onClick={() => setFeaturesOpen(true)}
+              sx={{
+                fontFamily: ff,
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: "0.72rem",
+                color: landing.lock,
+                minWidth: 0,
+                px: 1,
+                display: { xs: "inline-flex", md: "none" },
+                "&:hover": { bgcolor: "transparent", color: "#FFB300" },
+              }}
+            >
+              Módulos
+            </Button>
+          </Box>
         </Box>
       </Box>
 
@@ -709,6 +819,7 @@ export function LandingPage() {
         bannerData={BANNER_DATA}
       />
 
+      <CreditosDialog open={creditosOpen} onClose={() => setCreditosOpen(false)} variant="dark" />
       <LgpdReferenciaDrawer open={lgpdDrawerOpen} onClose={() => setLgpdDrawerOpen(false)} />
       <AigpReferenciaDrawer open={aigpDrawerOpen} onClose={() => setAigpDrawerOpen(false)} />
     </Box>

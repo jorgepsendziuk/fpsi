@@ -57,7 +57,11 @@ import {
 } from "@/lib/navigation/appNavigation";
 import type { EmpresaRow } from "@/lib/services/dataService";
 import { CookiePreferencesDialog } from "@/components/privacy/CookiePreferencesDialog";
+import { CreditosDialog } from "@/components/credits/CreditosDialog";
+import { FPSI_GITHUB_URL } from "@/lib/credits/fpsiCredits";
 import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { landing } from "@/components/landing/landingTokens";
 import { AppAtmosphere } from "@/components/layout/AppAtmosphere";
@@ -98,6 +102,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   } | null>(null);
   const [navGroupOpen, setNavGroupOpen] = useState<Record<string, boolean>>({});
   const [cookiePrefsOpen, setCookiePrefsOpen] = useState(false);
+  const [creditosOpen, setCreditosOpen] = useState(false);
+  const [accessMode, setAccessMode] = useState<"full" | "scoped" | "minimal" | null>(null);
   const prevProgramaForNavRef = useRef<string | null>(null);
 
   const programaMatch = pathname.match(/^\/programas\/([\w-]+)(\/|$)/);
@@ -126,8 +132,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
     if (isAdminArea) return [...global, ...getAdminNavSections()];
     if (!programaId) return global;
     const escopo = activePrograma ? resolveProgramaEscopo(activePrograma).escopo : null;
-    return [...global, ...buildProgramaNavSections(programaId, escopo)];
-  }, [programaId, isAdminArea, activePrograma]);
+    return [...global, ...buildProgramaNavSections(programaId, escopo, accessMode)];
+  }, [programaId, isAdminArea, activePrograma, accessMode]);
 
   const flatPaths = useMemo(
     () =>
@@ -161,6 +167,26 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
       })
       .catch(() => {});
   }, [user]);
+
+  useEffect(() => {
+    const numericId = activePrograma?.id;
+    if (!user || !numericId) {
+      setAccessMode(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/programas/${numericId}/access`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled) setAccessMode(d?.mode ?? "full");
+      })
+      .catch(() => {
+        if (!cancelled) setAccessMode("full");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, activePrograma?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -1197,6 +1223,30 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           </ListItemIcon>
           Privacidade e cookies
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setCreditosOpen(true);
+            setUserMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon>
+            <MenuBookOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          Créditos e fontes
+        </MenuItem>
+        <MenuItem
+          component="a"
+          href={FPSI_GITHUB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setUserMenuAnchor(null)}
+        >
+          <ListItemIcon>
+            <GitHubIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="GitHub" secondary="código aberto" />
+          <OpenInNewIcon sx={{ fontSize: 14, ml: 1, opacity: 0.55 }} />
+        </MenuItem>
         <Divider />
         <MenuItem
           onClick={() => {
@@ -1259,6 +1309,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         ))}
       </Menu>
       <CookiePreferencesDialog open={cookiePrefsOpen} onClose={() => setCookiePrefsOpen(false)} />
+      <CreditosDialog open={creditosOpen} onClose={() => setCreditosOpen(false)} />
       <Menu
         anchorEl={collapsedGroupMenu?.anchor ?? null}
         open={Boolean(collapsedGroupMenu)}

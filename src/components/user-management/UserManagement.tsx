@@ -74,6 +74,8 @@ interface InviteDialogData {
   email: string;
   role: UserRole;
   message: string;
+  areaIds: number[];
+  dueAt: string;
 }
 
 export const UserManagement: React.FC<UserManagementProps> = ({ 
@@ -90,8 +92,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     nome: '',
     email: '',
     role: UserRole.ANALISTA,
-    message: ''
+    message: '',
+    areaIds: [],
+    dueAt: '',
   });
+  const [areas, setAreas] = useState<Array<{ id: number; nome: string }>>([]);
   const [inviteSuccessUrl, setInviteSuccessUrl] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteMode, setInviteMode] = useState<'convidar' | 'cadastrar'>('convidar');
@@ -104,6 +109,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   useEffect(() => {
     if (canViewResource('users')) {
       loadUsersAndInvites();
+      fetch(`/api/programas/${programaId}/areas`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((list) => setAreas(Array.isArray(list) ? list.map((a: { id: number; nome: string }) => ({ id: a.id, nome: a.nome })) : []))
+        .catch(() => setAreas([]));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [programaId, canViewResource]);
@@ -156,6 +165,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           nome: inviteData.nome.trim() || undefined,
           email: inviteData.email,
           role: inviteData.role,
+          areaIds: inviteData.areaIds,
+          dueAt: inviteData.dueAt || undefined,
         }),
       });
 
@@ -179,7 +190,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setInviteSuccessUrl(null);
     setInviteError(null);
     setInviteMode('convidar');
-    setInviteData({ nome: '', email: '', role: UserRole.ANALISTA, message: '' });
+    setInviteData({ nome: '', email: '', role: UserRole.ANALISTA, message: '', areaIds: [], dueAt: '' });
   };
 
   const handleChangeUserRole = async (userId: string, newRole: UserRole) => {
@@ -791,6 +802,47 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   {getRoleDescription(inviteData.role)}
                 </Typography>
               </Alert>
+
+              {areas.length > 0 && (
+                <FormControl fullWidth>
+                  <InputLabel>Áreas (questionário setorial)</InputLabel>
+                  <Select
+                    multiple
+                    value={inviteData.areaIds}
+                    label="Áreas (questionário setorial)"
+                    onChange={(e) =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        areaIds: (typeof e.target.value === 'string'
+                          ? e.target.value.split(',').map(Number)
+                          : e.target.value
+                        ).map(Number),
+                      }))
+                    }
+                    renderValue={(selected) =>
+                      areas
+                        .filter((a) => selected.includes(a.id))
+                        .map((a) => a.nome)
+                        .join(', ')
+                    }
+                  >
+                    {areas.map((a) => (
+                      <MenuItem key={a.id} value={a.id}>
+                        {a.nome}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              <TextField
+                label="Prazo do questionário (opcional)"
+                type="date"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={inviteData.dueAt}
+                onChange={(e) => setInviteData((prev) => ({ ...prev, dueAt: e.target.value }))}
+              />
               
               <TextField
                 label="Mensagem (opcional)"

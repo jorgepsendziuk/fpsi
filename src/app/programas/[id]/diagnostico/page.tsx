@@ -50,6 +50,7 @@ import 'dayjs/locale/pt-br';
 import * as dataService from "../../../../lib/services/dataService";
 import { useProgramaIdFromParam } from "../../../../hooks/useProgramaIdFromParam";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { useProgramaAccess } from "@/hooks/useProgramaAccess";
 import { shouldUseDemoData } from "@/lib/services/demoDataService";
 import { Diagnostico, Controle, Medida, Responsavel, ProgramaMedida } from "../../../../lib/types/types";
 import MedidaContainer from "../../../../components/diagnostico/containers/MedidaContainer";
@@ -99,6 +100,7 @@ export default function DiagnosticoPage() {
   const programaId = resolvedProgramaId ?? 0;
   const isDemoMode = shouldUseDemoData(programaId);
   const { hasPermission } = useUserPermissions(isDemoMode ? undefined : programaId);
+  const { access } = useProgramaAccess(isDemoMode ? undefined : programaId || undefined);
   const canEditEscopo = isDemoMode || hasPermission("can_edit_programa");
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -131,13 +133,18 @@ export default function DiagnosticoPage() {
     [programa]
   );
 
-  const diagnosticosAtivos = useMemo(
-    () =>
-      programaEscopo
-        ? diagnosticos.filter((d) => isDiagnosticoAtivo(programaEscopo, d.id))
-        : diagnosticos,
-    [diagnosticos, programaEscopo]
-  );
+  const diagnosticosAtivos = useMemo(() => {
+    let list = programaEscopo
+      ? diagnosticos.filter((d) => isDiagnosticoAtivo(programaEscopo, d.id))
+      : diagnosticos;
+    if (access?.mode === "scoped" && access.diagnosticoIds.length > 0) {
+      const allowed = new Set(access.diagnosticoIds);
+      list = list.filter((d) => allowed.has(d.id));
+    } else if (access?.mode === "minimal") {
+      list = [];
+    }
+    return list;
+  }, [diagnosticos, programaEscopo, access]);
 
   const diagnosticosCortados = useMemo(
     () =>
@@ -229,7 +236,12 @@ export default function DiagnosticoPage() {
     try {
       const controlesData = await dataService.fetchControles(diagnosticoId, programaId);
       console.log("Loaded controles for diagnostico", diagnosticoId, ":", controlesData);
-      setControles(prev => ({ ...prev, [diagnosticoId]: controlesData || [] }));
+      let list = controlesData || [];
+      if (access?.mode === "scoped" && access.controleIds.length > 0) {
+        const allowed = new Set(access.controleIds);
+        list = list.filter((c: Controle) => allowed.has(c.id));
+      }
+      setControles(prev => ({ ...prev, [diagnosticoId]: list }));
     } catch (error) {
       console.error(`Erro ao carregar controles do diagnóstico ${diagnosticoId}:`, error);
       setControles(prev => ({ ...prev, [diagnosticoId]: [] }));
@@ -240,7 +252,7 @@ export default function DiagnosticoPage() {
         return newSet;
       });
     }
-  }, [controles, programaId]);
+  }, [controles, programaId, access]);
 
   // Carregar medidas de um controle (completas: texto, programa_medida, etc.)
   // Só considera "já carregado" quando tem dados completos; estrutura só (id, id_controle) do dashboard não bloqueia.

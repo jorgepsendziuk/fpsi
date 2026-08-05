@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       emailNorm,
       {
         data: { nome: nome?.trim() || null },
-        redirectTo: `${baseUrl}/dashboard`,
+        redirectTo: `${baseUrl}/auth/callback?next=${encodeURIComponent("/dashboard")}`,
       }
     );
 

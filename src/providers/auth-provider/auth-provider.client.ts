@@ -104,14 +104,14 @@ export const authProviderClient: AuthProvider = {
     };
   },
   forgotPassword: async ({ email }) => {
-    const redirectTo =
-      typeof window !== "undefined"
-        ? `${getPublicOrigin()}/login`
-        : "/login";
+    const origin = getPublicOrigin();
+    const redirectTo = origin
+      ? `${origin}/auth/callback?next=${encodeURIComponent("/login")}`
+      : undefined;
 
     const { error } = await supabaseBrowserClient.auth.resetPasswordForEmail(
       email,
-      { redirectTo }
+      redirectTo ? { redirectTo } : undefined
     );
 
     if (error) {
@@ -127,9 +127,15 @@ export const authProviderClient: AuthProvider = {
   },
   register: async ({ email, password }) => {
     try {
+      const origin = getPublicOrigin();
+      const emailRedirectTo = origin
+        ? `${origin}/auth/callback?next=${encodeURIComponent("/dashboard")}`
+        : undefined;
+
       const { data, error } = await supabaseBrowserClient.auth.signUp({
         email,
         password,
+        options: emailRedirectTo ? { emailRedirectTo } : undefined,
       });
 
       if (error) {

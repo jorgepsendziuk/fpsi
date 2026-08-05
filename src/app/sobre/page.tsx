@@ -26,15 +26,24 @@ import {
   Warning as WarningIcon,
   Code as CodeIcon,
   CheckCircle as CheckCircleIcon,
+  GitHub as GitHubIcon,
 } from "@mui/icons-material";
+import Image from "next/image";
 import LinkNext from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { ColorModeContext } from "@contexts/color-mode";
+import { CreditosDialog } from "@/components/credits/CreditosDialog";
+import {
+  FPSI_AUTHORSHIP,
+  FPSI_GITHUB_URL,
+  JORGE_PORTFOLIO_URL,
+} from "@/lib/credits/fpsiCredits";
 
 export default function SobrePage() {
   const router = useRouter();
   const { mode, setMode } = useContext(ColorModeContext);
+  const [creditosOpen, setCreditosOpen] = useState(false);
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: "100vh", bgcolor: "background.default" }}>
@@ -255,12 +264,71 @@ export default function SobrePage() {
 
         <Divider sx={{ my: 4 }} />
 
-        <Typography variant="caption" display="block" color="text.secondary" component="div">
-          Referências: LGPD (Lei nº 13.709/2018); programa e Guia{" "}
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Typography variant="h6" component="h2" sx={{ fontWeight: "bold", mb: 2 }}>
+            Autoria e créditos
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "flex-start", sm: "center" },
+              gap: 2.5,
+            }}
+          >
+            <Link
+              href={FPSI_AUTHORSHIP.orgUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="none"
+              aria-label="GeoApps"
+              sx={{ lineHeight: 0, borderRadius: 1.5, overflow: "hidden", display: "block" }}
+            >
+              <Image
+                src={FPSI_AUTHORSHIP.logoSrc}
+                alt="Logo GeoApps"
+                width={160}
+                height={73}
+                style={{ display: "block", width: 160, height: "auto" }}
+              />
+            </Link>
+            <Box>
+              <Typography variant="body1" paragraph sx={{ mb: 1 }}>
+                Desenvolvido por{" "}
+                <Link href={JORGE_PORTFOLIO_URL} target="_blank" rel="noopener noreferrer" fontWeight={700}>
+                  {FPSI_AUTHORSHIP.authorShort}
+                </Link>{" "}
+                ({FPSI_AUTHORSHIP.orgName}). Código aberto sob licença {FPSI_AUTHORSHIP.license}.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph sx={{ mb: 1.5 }}>
+                Fontes legais (LGPD, PPSI 2.0, ANPD) e frameworks de referência (CIS, NIST, ISO, AIGP/IAPP e correlatos)
+                estão devidamente creditados — com disclaimer de que o FPSI não é produto oficial desses órgãos.
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                <Button variant="outlined" size="small" onClick={() => setCreditosOpen(true)}>
+                  Ver créditos completos
+                </Button>
+                <Button
+                  variant="text"
+                  size="small"
+                  startIcon={<GitHubIcon />}
+                  href={FPSI_GITHUB_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        </Paper>
+
+        <Typography variant="caption" display="block" color="text.secondary" component="div" sx={{ mt: 3 }}>
+          Referências principais: LGPD (Lei nº 13.709/2018); programa e Guia{" "}
           <Link href="https://www.gov.br/governodigital/pt-br/privacidade-e-seguranca/ppsi-2.0/" target="_blank" rel="noopener noreferrer" color="inherit" underline="hover">
             PPSI 2.0
           </Link>{" "}
-          (MGI / Governo Digital); planilha oficial de apoio ao Framework; ANPD.
+          (MGI / Governo Digital); planilha oficial de apoio ao Framework; ANPD. Lista completa no modal de créditos.
         </Typography>
 
         <Box sx={{ mt: 4, display: "flex", gap: 2, flexWrap: "wrap" }}>
@@ -279,6 +347,8 @@ export default function SobrePage() {
           </Button>
         </Box>
       </Container>
+
+      <CreditosDialog open={creditosOpen} onClose={() => setCreditosOpen(false)} />
     </Box>
   );
 }

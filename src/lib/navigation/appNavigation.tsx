@@ -27,7 +27,13 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import BusinessIcon from "@mui/icons-material/Business";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import HubIcon from "@mui/icons-material/Hub";
 import { filterNavItemsByEscopo, type ProgramaEscopoV1 } from "@/lib/programa/perfilEscopo";
+import {
+  navItemAllowedForAccess,
+  type ProgramaAccessMode,
+} from "@/lib/authz/programaAccess";
 
 export type AppNavItem = {
   id: string;
@@ -127,7 +133,8 @@ export function getProgramaNavSections(programaId: string): AppNavSection[] {
 
 export function buildProgramaNavSections(
   programaId: string,
-  escopo?: ProgramaEscopoV1 | null
+  escopo?: ProgramaEscopoV1 | null,
+  accessMode?: ProgramaAccessMode | null
 ): AppNavSection[] {
   const base = `/programas/${programaId}`;
   const subIcon = { fontSize: 20 as const };
@@ -138,6 +145,12 @@ export function buildProgramaNavSections(
       title: "Programa",
       items: [
         { id: "visao", label: "Visão geral", path: base, icon: <DashboardIcon sx={iconSx} /> },
+        {
+          id: "tarefas",
+          label: "Minhas tarefas",
+          path: `${base}/tarefas`,
+          icon: <TaskAltIcon sx={iconSx} />,
+        },
 
         {
           id: "responsaveis",
@@ -210,6 +223,14 @@ export function buildProgramaNavSections(
           isSubItem: true,
           collapseGroup: "diagnostico",
         },
+        {
+          id: "diag-rte",
+          label: "Relatório Técnico Executivo",
+          path: `${base}/diagnostico/relatorio-executivo`,
+          icon: <DescriptionIcon sx={subIcon} />,
+          isSubItem: true,
+          collapseGroup: "diagnostico",
+        },
 
         {
           id: "plano",
@@ -258,6 +279,12 @@ export function buildProgramaNavSections(
         },
 
         {
+          id: "areas",
+          label: "Áreas e questionários",
+          path: `${base}/areas`,
+          icon: <HubIcon sx={iconSx} />,
+        },
+        {
           id: "usuarios",
           label: "Usuários e permissões",
           path: `${base}/usuarios`,
@@ -273,12 +300,33 @@ export function buildProgramaNavSections(
     },
   ];
 
-  if (!escopo) return sections;
+  let result = sections;
+  if (escopo) {
+    result = result.map((section) => ({
+      ...section,
+      items: filterNavItemsByEscopo(section.items, escopo),
+    }));
+  }
 
-  return sections.map((section) => ({
-    ...section,
-    items: filterNavItemsByEscopo(section.items, escopo),
-  }));
+  if (accessMode && accessMode !== "full") {
+    result = result.map((section) => ({
+      ...section,
+      items: section.items.filter((item) =>
+        navItemAllowedForAccess(item.id, {
+          mode: accessMode,
+          role: null,
+          permissions: null,
+          areaIds: [],
+          controleIds: [],
+          diagnosticoIds: [],
+          modulos: accessMode === "scoped" ? ["questionario", "kpis"] : [],
+          isGovernancePapel: false,
+        })
+      ),
+    }));
+  }
+
+  return result;
 }
 
 export function getAdminNavSections(): AppNavSection[] {

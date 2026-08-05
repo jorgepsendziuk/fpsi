@@ -128,9 +128,16 @@ export default function AceitarConvitePage() {
 
     setAccepting(true);
     try {
+      const origin =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : (process.env.NEXT_PUBLIC_APP_URL || "https://www.fpsi.com.br").replace(/\/$/, "");
       const { data: signUpData, error: signUpError } = await supabaseBrowserClient.auth.signUp({
         email: invite!.email,
         password,
+        options: {
+          emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/dashboard")}`,
+        },
       });
 
       if (signUpError) {

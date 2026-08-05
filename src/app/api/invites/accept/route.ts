@@ -96,6 +96,70 @@ export async function POST(request: NextRequest) {
       .update({ status: "accepted", accepted_at: new Date().toISOString() })
       .eq("id", invite.id);
 
+    // Áreas + questionário do convite (setor scoped)
+    const areaIds: number[] = Array.isArray(invite.area_ids)
+      ? (invite.area_ids as number[]).map(Number).filter(Number.isFinite)
+      : [];
+
+    if (areaIds.length > 0) {
+      await supabase.from("programa_user_areas").upsert(
+        areaIds.map((area_id) => ({
+          programa_id: invite.programa_id,
+          user_id: user.id,
+          area_id,
+        })),
+        { onConflict: "programa_id,user_id,area_id" }
+      );
+
+      let scope =
+        invite.assignment_scope && typeof invite.assignment_scope === "object"
+          ? (invite.assignment_scope as Record<string, unknown>)
+          : {};
+
+      const { data: escopos } = await supabase
+        .from("programa_area_escopo")
+        .select("diagnostico_ids, controle_ids")
+        .in("area_id", areaIds);
+
+      const controleIds = new Set<number>();
+      const diagnosticoIds = new Set<number>();
+      for (const e of escopos || []) {
+        for (const cid of e.controle_ids || []) controleIds.add(Number(cid));
+        for (const did of e.diagnostico_ids || []) diagnosticoIds.add(Number(did));
+      }
+      if (Array.isArray((scope as { controle_ids?: number[] }).controle_ids)) {
+        for (const cid of (scope as { controle_ids: number[] }).controle_ids) controleIds.add(Number(cid));
+      }
+      if (Array.isArray((scope as { diagnostico_ids?: number[] }).diagnostico_ids)) {
+        for (const did of (scope as { diagnostico_ids: number[] }).diagnostico_ids) {
+          diagnosticoIds.add(Number(did));
+        }
+      }
+
+      if (controleIds.size === 0 && diagnosticoIds.size > 0) {
+        const { data: controles } = await supabase
+          .from("controle")
+          .select("id")
+          .in("diagnostico", Array.from(diagnosticoIds));
+        for (const c of controles || []) controleIds.add(c.id as number);
+      }
+
+      scope = {
+        controle_ids: Array.from(controleIds),
+        diagnostico_ids: Array.from(diagnosticoIds),
+      };
+
+      await supabase.from("questionario_assignment").insert({
+        programa_id: invite.programa_id,
+        assignee_user_id: user.id,
+        area_id: areaIds[0],
+        invite_id: invite.id,
+        scope,
+        due_at: invite.due_at || null,
+        status: "pending",
+      });
+    }
+
     let nome: string | undefined;
     if (invite.message) {
       try {

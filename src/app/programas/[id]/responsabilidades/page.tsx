@@ -267,6 +267,7 @@ export default function ProgramaResponsaveisCRUDPage() {
           email,
           departamento: "",
           cargo: "",
+          user_id: u.user_id || null,
         });
         emailsExistentes.add(email);
       }
@@ -451,9 +452,29 @@ export default function ProgramaResponsaveisCRUDPage() {
       data_designacao: editingResponsavel.data_designacao.trim() || null,
     };
 
+    // Vincula login do programa se o e-mail bater com um membro aceito
+    let linkedUserId: string | null = null;
+    try {
+      const usersRes = await fetch(`/api/users?programaId=${programaId}`);
+      if (usersRes.ok) {
+        const users = await usersRes.json();
+        const emailNorm = row.email.toLowerCase();
+        const linked = (users as Array<{ email?: string; user_id?: string }>).find(
+          (u) => (u.email || "").trim().toLowerCase() === emailNorm
+        );
+        linkedUserId = linked?.user_id || null;
+      }
+    } catch {
+      /* best-effort */
+    }
+    const rowWithUser = {
+      ...row,
+      user_id: linkedUserId,
+    };
+
     setLoading(true);
     if (isEditing && editingResponsavel.id) {
-      await supabaseBrowserClient.from("responsavel").update(row).eq("id", editingResponsavel.id);
+      await supabaseBrowserClient.from("responsavel").update(rowWithUser).eq("id", editingResponsavel.id);
       logActivityFromClient({
         action: "update",
         resourceType: "responsavel",
@@ -464,7 +485,7 @@ export default function ProgramaResponsaveisCRUDPage() {
     } else {
       const { data: inserted } = await supabaseBrowserClient
         .from("responsavel")
-        .insert({ ...row, programa: programaId })
+        .insert({ ...rowWithUser, programa: programaId })
         .select("id")
         .single();
       if (inserted) {

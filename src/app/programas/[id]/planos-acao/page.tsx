@@ -23,6 +23,7 @@ import * as dataService from '../../../../lib/services/dataService';
 import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from '../../../../lib/utils/programaDisplay';
 import { ProgramaLastActivityLine } from '@/components/common/ProgramaLastActivityLine';
 import { PageHeroHeader } from '@/components/common/PageHeroHeader';
+import { PlanoPriorizadoPanel } from '@/components/planos-acao/PlanoPriorizadoPanel';
 
 export default function PlanosAcaoPage() {
   const params = useParams();
@@ -135,6 +136,9 @@ export default function PlanosAcaoPage() {
           </Typography>
         </Alert>
       )}
+
+      {/* Plano priorizado (lacunas × criticidade/esforço/impacto) */}
+      <PlanoPriorizadoPanel programaId={programaId} />
 
       {/* Plano de Trabalho Resumido */}
       <PlanoAcaoResumo 
