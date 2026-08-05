@@ -44,6 +44,7 @@ import type { Programa } from "@/lib/types/types";
 import { resolveProgramaEscopo } from "@/lib/programa/perfilEscopo";
 import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
+import { FirstVisitHints } from "@/components/onboarding/FirstVisitHints";
 import type { AppNavItem } from "@/lib/navigation/appNavigation";
 import {
   getBestMatchingNavPath,
@@ -382,6 +383,13 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         <span>{item.label}</span>
       </Box>
     );
+    const hintAnchor =
+      item.id === "inicio"
+        ? "nav-inicio"
+        : item.id === "lgpd"
+          ? "nav-referencias"
+          : undefined;
+
     return wrapRail(
       <ListItemButton
         key={item.id}
@@ -389,6 +397,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         href={item.path}
         selected={selected}
         onClick={() => setMobileOpen(false)}
+        {...(hintAnchor ? { "data-hint-anchor": hintAnchor } : {})}
         sx={{
           position: "relative",
           borderRadius: 1,
@@ -834,6 +843,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           >
             {!rail && (
               <Box
+                {...(section.id === "geral" ? { "data-hint-anchor": "nav-geral" } : {})}
                 sx={{
                   px: 1.25,
                   py: 0.65,
@@ -1034,6 +1044,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
               component={Link}
               href="/dashboard?novoPrograma=1"
               onClick={() => setMobileOpen(false)}
+              data-hint-anchor="nav-novo-programa"
               sx={{
                 borderRadius: 1.5,
                 mb: 0.35,
@@ -1530,6 +1541,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           {children}
         </Box>
         {userMenus}
+        {user ? <FirstVisitHints /> : null}
       </Box>
     </Box>
   );

@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
   Chip,
-  Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   Stack,
   ToggleButton,
@@ -15,21 +18,15 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   ALL_COMITE_KEYS,
   ALL_DIAGNOSTICO_IDS,
-  ALL_MODULO_KEYS,
   PERFIL_ESCOPO_PRESETS,
-  buildEscopoFromPreset,
   detectPresetFromEscopo,
   escoposEquivalentes,
-  formatModuloLabel,
   isComiteAtivo,
   isDiagnosticoAtivo,
-  isModuloAtivo,
   type ModuloKey,
   type PerfilEscopoPreset,
   type ProgramaEscopoV1,
@@ -37,9 +34,9 @@ import {
 
 const DIAG_SHORT: Record<number, string> = {
   1: "Estrutura",
-  2: "SI",
+  2: "Segurança",
   3: "Privacidade",
-  4: "AIGP",
+  4: "Gov. de IA",
 };
 
 const COMITE_SHORT: Record<string, string> = {
@@ -49,192 +46,155 @@ const COMITE_SHORT: Record<string, string> = {
   ia: "IA",
 };
 
+const chipSx = {
+  height: 22,
+  fontSize: "0.68rem",
+  fontWeight: 600,
+  borderRadius: 1,
+} as const;
+
+function SegmentLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Typography
+      component="span"
+      variant="caption"
+      sx={{
+        fontWeight: 700,
+        color: "text.secondary",
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        fontSize: "0.62rem",
+        flexShrink: 0,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </Typography>
+  );
+}
+
+function SegmentDivider() {
+  return (
+    <Box
+      aria-hidden
+      sx={{
+        // MUI sx: número 0–1 vira % — usar px para traço vertical de 1px
+        width: "1px",
+        alignSelf: "stretch",
+        minHeight: 20,
+        bgcolor: "divider",
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
 type Props = {
   savedPreset: PerfilEscopoPreset;
   savedEscopo: ProgramaEscopoV1;
-  /** Escopo efetivo (preview ou salvo) para exibir detalhes */
+  /** Escopo efetivo para exibir chips (após aplicar = salvo) */
   displayEscopo: ProgramaEscopoV1;
   canEdit: boolean;
   applying?: boolean;
-  onPreviewChange?: (preset: PerfilEscopoPreset, escopo: ProgramaEscopoV1) => void;
   onApply: (preset: PerfilEscopoPreset) => Promise<void>;
-  onDiscardPreview?: () => void;
-  onAtivarModulo?: (key: ModuloKey) => void;
   onAtivarDiagnostico?: (id: 1 | 2 | 3 | 4) => void;
   onToggleComite?: (key: string, ativo: boolean) => void;
+  /** Mantido por compatibilidade — módulos fora do escopo não são mais listados na barra */
+  onAtivarModulo?: (key: ModuloKey) => void;
+  onPreviewChange?: (preset: PerfilEscopoPreset, escopo: ProgramaEscopoV1) => void;
+  onDiscardPreview?: () => void;
 };
 
 export function ProgramaEscopoBar({
   savedPreset,
-  savedEscopo,
   displayEscopo,
   canEdit,
   applying = false,
-  onPreviewChange,
   onApply,
-  onDiscardPreview,
-  onAtivarModulo,
   onAtivarDiagnostico,
   onToggleComite,
 }: Props) {
   const theme = useTheme();
-  const [previewPreset, setPreviewPreset] = useState<PerfilEscopoPreset | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
 
-  const activePreset = previewPreset ?? savedPreset;
-  const previewEscopo = useMemo(() => {
-    if (previewPreset && previewPreset !== "custom") {
-      return buildEscopoFromPreset(previewPreset).escopo;
-    }
-    return savedEscopo;
-  }, [previewPreset, savedEscopo]);
+  const activePreset = savedPreset;
 
-  const hasPreviewDiff =
-    previewPreset != null &&
-    (previewPreset !== savedPreset || !escoposEquivalentes(previewEscopo, savedEscopo));
-
-  const cortadosMod = ALL_MODULO_KEYS.filter(
-    (k) => !["usuarios", "auditoria"].includes(k) && !isModuloAtivo(displayEscopo, k)
-  );
-
-  const handlePresetClick = (_: React.MouseEvent<HTMLElement>, value: PerfilEscopoPreset | null) => {
-    if (!value || value === "custom") return;
-    setPreviewPreset(value);
-    const built = buildEscopoFromPreset(value);
-    onPreviewChange?.(value, built.escopo);
+  const handlePresetClick = async (_: React.MouseEvent<HTMLElement>, value: PerfilEscopoPreset | null) => {
+    if (!value || value === "custom" || !canEdit || applying) return;
+    if (value === savedPreset) return;
+    await onApply(value);
   };
-
-  const handleDiscard = () => {
-    setPreviewPreset(null);
-    onPreviewChange?.(savedPreset, savedEscopo);
-    onDiscardPreview?.();
-  };
-
-  const handleApply = async () => {
-    const target = previewPreset ?? savedPreset;
-    if (target === "custom") return;
-    await onApply(target);
-    setPreviewPreset(null);
-  };
-
-  const presetLabel =
-    activePreset === "custom"
-      ? "Personalizado"
-      : PERFIL_ESCOPO_PRESETS.find((p) => p.id === activePreset)?.shortLabel ?? activePreset;
 
   return (
     <Box
       sx={{
         mb: 1.25,
-        px: 1.25,
-        py: 0.75,
-        borderRadius: 1.5,
-        border: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
-        bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === "dark" ? 0.4 : 0.7),
+        py: 0.65,
+        maxWidth: "100%",
+        minWidth: 0,
+        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.85)}`,
       }}
     >
-      {/* Linha principal */}
       <Stack
         direction="row"
         alignItems="center"
         flexWrap="wrap"
-        gap={0.75}
-        sx={{ minHeight: 32 }}
+        useFlexGap
+        spacing={1}
+        sx={{
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+          rowGap: 0.75,
+        }}
       >
-        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ flexShrink: 0 }}>
-          Escopo
-        </Typography>
-
-        <ToggleButtonGroup
-          exclusive
-          size="small"
-          value={activePreset === "custom" ? false : activePreset}
-          onChange={handlePresetClick}
-          disabled={!canEdit || applying}
-          sx={{
-            flexShrink: 0,
-            "& .MuiToggleButton-root": {
-              py: 0.25,
-              px: 1,
-              fontSize: "0.75rem",
-              textTransform: "none",
-              lineHeight: 1.4,
-            },
-          }}
-        >
-          {PERFIL_ESCOPO_PRESETS.map((p) => (
-            <ToggleButton key={p.id} value={p.id}>
-              {p.shortLabel}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-
-        {activePreset === "custom" && (
-          <Chip label="Personalizado" size="small" sx={{ height: 22, fontSize: "0.7rem" }} />
-        )}
-
-        {!detailsOpen && (
-          <Typography variant="caption" color="text.secondary" sx={{ flex: 1, minWidth: 0 }} noWrap>
-            {ALL_DIAGNOSTICO_IDS.filter((id) => isDiagnosticoAtivo(displayEscopo, id))
-              .map((id) => DIAG_SHORT[id])
-              .join(" · ")}
-            {cortadosMod.length > 0 && ` · +${cortadosMod.length} fora`}
-          </Typography>
-        )}
-
-        <Box sx={{ flex: 1, minWidth: 8 }} />
-
-        {hasPreviewDiff && (
-          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
-            <Typography variant="caption" color="info.main" sx={{ display: { xs: "none", sm: "block" } }}>
-              Preview
-            </Typography>
-            <Button size="small" onClick={handleDiscard} disabled={applying} sx={{ minWidth: 0, py: 0.25, fontSize: "0.75rem" }}>
-              Descartar
-            </Button>
-            <Button
+        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+          <SegmentLabel>Escopo</SegmentLabel>
+          <Tooltip title="O que é cada escopo?">
+            <IconButton
               size="small"
-              variant="contained"
-              onClick={handleApply}
-              disabled={!canEdit || applying}
-              startIcon={<CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
-              sx={{ py: 0.25, fontSize: "0.75rem" }}
+              onClick={() => setHelpOpen(true)}
+              aria-label="Explicar escopos"
+              sx={{ p: 0.25, color: "text.secondary" }}
             >
-              Aplicar
-            </Button>
-          </Stack>
-        )}
-
-        <Tooltip title={detailsOpen ? "Ocultar detalhes" : "Mostrar detalhes"}>
-          <IconButton
+              <InfoOutlinedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          </Tooltip>
+          <ToggleButtonGroup
+            exclusive
             size="small"
-            onClick={() => setDetailsOpen((v) => !v)}
-            aria-label={detailsOpen ? "Ocultar detalhes do escopo" : "Mostrar detalhes do escopo"}
-            sx={{ p: 0.35 }}
+            value={activePreset === "custom" ? false : activePreset}
+            onChange={handlePresetClick}
+            disabled={!canEdit || applying}
+            sx={{
+              "& .MuiToggleButton-root": {
+                py: 0.2,
+                px: 0.9,
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                textTransform: "none",
+                lineHeight: 1.3,
+                borderColor: alpha(theme.palette.divider, 0.9),
+                whiteSpace: "nowrap",
+              },
+            }}
           >
-            <ExpandMoreIcon
-              sx={{
-                fontSize: 20,
-                transform: detailsOpen ? "rotate(180deg)" : "none",
-                transition: "0.2s",
-              }}
-            />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+            {PERFIL_ESCOPO_PRESETS.map((p) => (
+              <ToggleButton key={p.id} value={p.id}>
+                {p.shortLabel}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+          {activePreset === "custom" && (
+            <Chip label="Personalizado" size="small" variant="outlined" sx={chipSx} />
+          )}
+        </Stack>
 
-      {/* Detalhes — aberto por padrão, uma linha densa */}
-      <Collapse in={detailsOpen}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          flexWrap="wrap"
-          gap={0.5}
-          sx={{ pt: 0.75, pb: 0.15 }}
-        >
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mr: 0.25 }}>
-            Score:
-          </Typography>
+        <SegmentDivider />
+
+        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+          <SegmentLabel>Diagnóstico</SegmentLabel>
           {ALL_DIAGNOSTICO_IDS.map((id) => {
             const ativo = isDiagnosticoAtivo(displayEscopo, id);
             return (
@@ -245,27 +205,23 @@ export function ProgramaEscopoBar({
                 color={ativo ? "success" : "default"}
                 variant={ativo ? "filled" : "outlined"}
                 onClick={
-                  canEdit && !ativo && onAtivarDiagnostico
-                    ? () => onAtivarDiagnostico(id)
-                    : undefined
+                  canEdit && !ativo && onAtivarDiagnostico ? () => onAtivarDiagnostico(id) : undefined
                 }
                 sx={{
-                  height: 22,
-                  fontSize: "0.68rem",
+                  ...chipSx,
                   cursor: canEdit && !ativo ? "pointer" : "default",
-                  opacity: ativo ? 1 : 0.75,
+                  opacity: ativo ? 1 : 0.72,
+                  flexShrink: 0,
                 }}
               />
             );
           })}
+        </Stack>
 
-          <Typography variant="caption" color="text.disabled" sx={{ mx: 0.25 }}>
-            |
-          </Typography>
+        <SegmentDivider />
 
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            Comitês:
-          </Typography>
+        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+          <SegmentLabel>Comitês</SegmentLabel>
           {ALL_COMITE_KEYS.map((key) => {
             const ativo = isComiteAtivo(displayEscopo, key);
             return (
@@ -275,67 +231,82 @@ export function ProgramaEscopoBar({
                 size="small"
                 color={ativo ? "primary" : "default"}
                 variant={ativo ? "filled" : "outlined"}
-                onClick={
-                  canEdit && onToggleComite
-                    ? () => onToggleComite(key, !ativo)
-                    : undefined
-                }
+                onClick={canEdit && onToggleComite ? () => onToggleComite(key, !ativo) : undefined}
                 sx={{
-                  height: 22,
-                  fontSize: "0.68rem",
+                  ...chipSx,
                   cursor: canEdit ? "pointer" : "default",
                   opacity: ativo ? 1 : 0.7,
+                  flexShrink: 0,
                 }}
               />
             );
           })}
-
-          {cortadosMod.length > 0 && (
-            <>
-              <Typography variant="caption" color="text.disabled" sx={{ mx: 0.25 }}>
-                |
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                Fora:
-              </Typography>
-              {cortadosMod.map((k) => (
-                <Chip
-                  key={k}
-                  label={formatModuloLabel(k)}
-                  size="small"
-                  variant="outlined"
-                  icon={canEdit && onAtivarModulo ? <AddCircleOutlineIcon sx={{ fontSize: "14px !important" }} /> : undefined}
-                  onClick={canEdit && onAtivarModulo ? () => onAtivarModulo(k) : undefined}
-                  sx={{
-                    height: 22,
-                    fontSize: "0.68rem",
-                    borderStyle: "dashed",
-                    cursor: canEdit ? "pointer" : "default",
-                    "& .MuiChip-icon": { ml: 0.5 },
-                  }}
-                />
-              ))}
-            </>
-          )}
-
-          {displayEscopo.controles_ignorados.length > 0 && (
-            <>
-              <Typography variant="caption" color="text.disabled" sx={{ mx: 0.25 }}>
-                |
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {displayEscopo.controles_ignorados.length} ctrl. ignorados
-              </Typography>
-            </>
-          )}
-
-          {!hasPreviewDiff && activePreset !== savedPreset && (
-            <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
-              Plano: {presetLabel}
-            </Typography>
-          )}
         </Stack>
-      </Collapse>
+      </Stack>
+
+      <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>Escopos do programa</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.55 }}>
+            O escopo define quais <strong>diagnósticos</strong> entram no score de maturidade e quais{" "}
+            <strong>módulos/comitês</strong> ficam ativos. Clique em um plano na barra para aplicar na hora —
+            você pode ampliar depois sem perder o trabalho já feito.
+          </Typography>
+          <Stack spacing={2}>
+            {PERFIL_ESCOPO_PRESETS.map((p) => (
+              <Box
+                key={p.id}
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  border: 1,
+                  borderColor: "divider",
+                  bgcolor: (t) => (t.palette.mode === "dark" ? "grey.900" : "grey.50"),
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.5 }}>
+                  {p.label}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, lineHeight: 1.5 }}>
+                  {p.description}
+                </Typography>
+                <Typography variant="caption" fontWeight={700} color="primary.main" display="block" sx={{ mb: 0.35 }}>
+                  Ideal para: {p.idealFor}
+                </Typography>
+                <Typography variant="caption" fontWeight={700} color="text.secondary" display="block">
+                  Inclui
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 2.25, mb: p.excludes.length ? 0.75 : 0 }}>
+                  {p.includes.map((item) => (
+                    <Typography key={item} component="li" variant="caption" sx={{ lineHeight: 1.45 }}>
+                      {item}
+                    </Typography>
+                  ))}
+                </Box>
+                {p.excludes.length > 0 && (
+                  <>
+                    <Typography variant="caption" fontWeight={700} color="text.secondary" display="block">
+                      Fica de fora (ativável depois)
+                    </Typography>
+                    <Box component="ul" sx={{ m: 0, pl: 2.25 }}>
+                      {p.excludes.map((item) => (
+                        <Typography key={item} component="li" variant="caption" color="text.secondary" sx={{ lineHeight: 1.45 }}>
+                          {item}
+                        </Typography>
+                      ))}
+                    </Box>
+                  </>
+                )}
+              </Box>
+            ))}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 1.5 }}>
+          <Button onClick={() => setHelpOpen(false)} variant="contained">
+            Entendi
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -98,6 +98,7 @@ export function getGlobalNavSections(): AppNavSection[] {
       title: "Geral",
       items: [
         { id: "inicio", label: "Início", path: "/dashboard", icon: <HomeIcon sx={iconSx} /> },
+        { id: "perfil", label: "Perfil", path: "/perfil", icon: <PersonIcon sx={iconSx} /> },
         {
           id: "lgpd",
           label: "LGPD",
@@ -105,12 +106,17 @@ export function getGlobalNavSections(): AppNavSection[] {
           icon: <MenuBookIcon sx={iconSx} />,
         },
         {
+          id: "ppsi",
+          label: "PPSI",
+          path: "/referencias/ppsi",
+          icon: <SecurityIcon sx={iconSx} />,
+        },
+        {
           id: "aigp",
           label: "Governança de IA",
           path: "/referencias/aigp",
           icon: <AssessmentIcon sx={iconSx} />,
         },
-        { id: "perfil", label: "Perfil", path: "/perfil", icon: <PersonIcon sx={iconSx} /> },
         {
           id: "sair",
           label: "Sair",

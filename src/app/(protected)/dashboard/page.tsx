@@ -270,6 +270,7 @@ export default function DashboardPage() {
           >
             <CardContent sx={{ py: 1.25, px: 1.35, "&:last-child": { pb: 1.35 } }}>
               <Box
+                data-hint-anchor="dash-programas"
                 sx={{
                   display: "flex",
                   alignItems: "center",

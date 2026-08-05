@@ -1,19 +1,11 @@
 {
-  "/api/audit/last-activity/route": "app/api/audit/last-activity/route.js",
   "/api/programas/[id]/route": "app/api/programas/[id]/route.js",
-  "/api/programas/[id]/governanca-grupos/route": "app/api/programas/[id]/governanca-grupos/route.js",
-  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/api/audit/last-activity/route": "app/api/audit/last-activity/route.js",
   "/api/programas/[id]/riscos/route": "app/api/programas/[id]/riscos/route.js",
   "/api/programas/[id]/modulos-resumo/route": "app/api/programas/[id]/modulos-resumo/route.js",
-  "/api/programas/[id]/escopo/route": "app/api/programas/[id]/escopo/route.js",
-  "/api/programas/route": "app/api/programas/route.js",
-  "/api/empresas/route": "app/api/empresas/route.js",
-  "/api/admin/check/route": "app/api/admin/check/route.js",
-  "/api/dashboard/resumo/route": "app/api/dashboard/resumo/route.js",
-  "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js",
+  "/demo/login/page": "app/demo/login/page.js",
+  "/programas/[id]/areas/page": "app/programas/[id]/areas/page.js",
   "/programas/[id]/page": "app/programas/[id]/page.js",
-  "/programas/[id]/responsabilidades/page": "app/programas/[id]/responsabilidades/page.js",
-  "/(protected)/admin/page": "app/(protected)/admin/page.js",
-  "/(protected)/referencias/aigp/page": "app/(protected)/referencias/aigp/page.js",
-  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
+  "/programas/[id]/tarefas/page": "app/programas/[id]/tarefas/page.js",
+  "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js"
 }

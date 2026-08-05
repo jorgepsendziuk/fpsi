@@ -35,6 +35,12 @@ type Escopo = {
   modulos?: string[];
 };
 
+type AreaUser = {
+  user_id: string;
+  nome: string | null;
+  email: string | null;
+};
+
 type AreaRow = {
   id: number;
   nome: string;
@@ -42,12 +48,24 @@ type AreaRow = {
   descricao: string | null;
   ativo: boolean;
   programa_area_escopo?: Escopo | Escopo[] | null;
+  users?: AreaUser[];
+};
+
+type ProgramaUser = {
+  user_id: string;
+  nome?: string | null;
+  email?: string | null;
+  role?: string;
 };
 
 function escopoOf(area: AreaRow): Escopo {
   const raw = area.programa_area_escopo;
   if (Array.isArray(raw)) return raw[0] || {};
   return raw || {};
+}
+
+function userLabel(u: { nome?: string | null; email?: string | null; user_id: string }) {
+  return u.nome?.trim() || u.email?.trim() || u.user_id.slice(0, 8);
 }
 
 const DIAG_LABELS: Record<number, string> = {
@@ -64,6 +82,7 @@ export default function AreasPage() {
   const { isFull, loading: accessLoading } = useProgramaAccess(programaId ?? undefined);
 
   const [areas, setAreas] = useState<AreaRow[]>([]);
+  const [users, setUsers] = useState<ProgramaUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [programaNome, setProgramaNome] = useState("");
@@ -75,6 +94,7 @@ export default function AreasPage() {
     diagnostico_ids: [] as number[],
     modulos: ["questionario", "kpis"] as string[],
     ativo: true,
+    user_ids: [] as string[],
   });
   const [saving, setSaving] = useState(false);
 
@@ -83,8 +103,9 @@ export default function AreasPage() {
     setLoading(true);
     setError(null);
     try {
-      const [areasRes, prog] = await Promise.all([
+      const [areasRes, usersRes, prog] = await Promise.all([
         fetch(`/api/programas/${programaId}/areas`),
+        fetch(`/api/users?programaId=${programaId}`),
         dataService.fetchProgramaById(programaId),
       ]);
       if (!areasRes.ok) {
@@ -92,6 +113,11 @@ export default function AreasPage() {
         throw new Error(j.error || "Falha ao carregar áreas");
       }
       setAreas(await areasRes.json());
+      if (usersRes.ok) {
+        setUsers(await usersRes.json());
+      } else {
+        setUsers([]);
+      }
       setProgramaNome(prog?.nome || "");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro");
@@ -111,6 +137,7 @@ export default function AreasPage() {
       diagnostico_ids: [],
       modulos: ["questionario", "kpis"],
       ativo: true,
+      user_ids: [],
     });
     setEdit(null);
     setCreateOpen(true);
@@ -125,6 +152,7 @@ export default function AreasPage() {
       diagnostico_ids: e.diagnostico_ids || [],
       modulos: e.modulos || ["questionario", "kpis"],
       ativo: area.ativo,
+      user_ids: (area.users || []).map((u) => u.user_id),
     });
     setCreateOpen(true);
   };
@@ -145,6 +173,15 @@ export default function AreasPage() {
     }));
   };
 
+  const toggleUser = (userId: string) => {
+    setForm((f) => ({
+      ...f,
+      user_ids: f.user_ids.includes(userId)
+        ? f.user_ids.filter((x) => x !== userId)
+        : [...f.user_ids, userId],
+    }));
+  };
+
   const save = async () => {
     if (!programaId) return;
     setSaving(true);
@@ -161,6 +198,7 @@ export default function AreasPage() {
             diagnostico_ids: form.diagnostico_ids,
             controle_ids: [],
             modulos: form.modulos,
+            user_ids: form.user_ids,
           }),
         });
         if (!res.ok) throw new Error((await res.json()).error || "Erro ao salvar");
@@ -173,6 +211,7 @@ export default function AreasPage() {
             descricao: form.descricao,
             diagnostico_ids: form.diagnostico_ids,
             modulos: form.modulos,
+            user_ids: form.user_ids,
           }),
         });
         if (!res.ok) throw new Error((await res.json()).error || "Erro ao criar");
@@ -236,8 +275,8 @@ export default function AreasPage() {
         title="Áreas e questionários"
         description={
           programaNome
-            ? `${programaNome} — defina setores e o pacote de controles que cada um responde`
-            : "Defina setores e o pacote de controles do questionário"
+            ? `${programaNome} — defina setores, quem responde e o pacote de controles`
+            : "Defina setores, quem responde e o pacote de controles do questionário"
         }
       />
 
@@ -266,6 +305,7 @@ export default function AreasPage() {
         <Stack spacing={1.5}>
           {areas.map((area) => {
             const e = escopoOf(area);
+            const members = area.users || [];
             return (
               <Box
                 key={area.id}
@@ -278,7 +318,7 @@ export default function AreasPage() {
                 }}
               >
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                  <Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography variant="h6">{area.nome}</Typography>
                     <Typography variant="body2" color="text.secondary">
                       {area.descricao || `slug: ${area.slug}`}
@@ -292,6 +332,27 @@ export default function AreasPage() {
                       ))}
                       {!area.ativo && <Chip size="small" color="warning" label="Inativa" />}
                     </Stack>
+                    <Typography variant="subtitle2" sx={{ mt: 1.5, mb: 0.5 }}>
+                      Responsáveis
+                    </Typography>
+                    {members.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        Ninguém atribuído — edite a área para escolher usuários
+                      </Typography>
+                    ) : (
+                      <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                        {members.map((u) => (
+                          <Chip
+                            key={u.user_id}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            label={userLabel(u)}
+                            title={u.email || u.user_id}
+                          />
+                        ))}
+                      </Stack>
+                    )}
                   </Box>
                   <Stack direction="row">
                     <IconButton onClick={() => openEdit(area)} aria-label="Editar">
@@ -354,6 +415,49 @@ export default function AreasPage() {
                 />
               ))}
             </FormGroup>
+            <Typography variant="subtitle2">Usuários desta área</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Quem for marcado passa a responder o questionário desta área (aparece em Minhas tarefas).
+            </Typography>
+            {users.length === 0 ? (
+              <Alert severity="info">
+                Ainda não há usuários no programa. Convide alguém em Responsabilidades / Gestão de usuários.
+              </Alert>
+            ) : (
+              <FormGroup
+                sx={{
+                  maxHeight: 220,
+                  overflow: "auto",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                }}
+              >
+                {users.map((u) => (
+                  <FormControlLabel
+                    key={u.user_id}
+                    control={
+                      <Checkbox
+                        checked={form.user_ids.includes(u.user_id)}
+                        onChange={() => toggleUser(u.user_id)}
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body2">{userLabel(u)}</Typography>
+                        {u.email && u.nome ? (
+                          <Typography variant="caption" color="text.secondary">
+                            {u.email}
+                          </Typography>
+                        ) : null}
+                      </Box>
+                    }
+                  />
+                ))}
+              </FormGroup>
+            )}
             {edit && (
               <FormControlLabel
                 control={

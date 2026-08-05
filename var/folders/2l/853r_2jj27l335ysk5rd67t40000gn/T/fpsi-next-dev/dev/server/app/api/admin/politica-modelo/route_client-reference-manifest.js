@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/admin/politica-modelo/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/Users/jorgepsendziuk/Projetos/fpsi/src/app/api/admin/politica-modelo/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

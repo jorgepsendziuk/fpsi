@@ -395,10 +395,7 @@ export default function ProgramaMainPage() {
   }, [programa]);
 
   const {
-    effectivePreset,
     effectiveEscopo,
-    isPreview,
-    setPreview,
     clearPreview,
   } = useEscopoPreviewState(
     (savedEscopoResolved?.preset ?? "completo") as PerfilEscopoPreset,
@@ -1309,9 +1306,7 @@ export default function ProgramaMainPage() {
         displayEscopo={effectiveEscopo}
         canEdit={canEditProgramaFieldsUi}
         applying={escopoApplying}
-        onPreviewChange={(preset, escopo) => setPreview({ preset, escopo })}
         onApply={handleApplyPreset}
-        onDiscardPreview={clearPreview}
         onAtivarModulo={canEditProgramaFieldsUi && !isDemoMode ? handleAtivarModulo : undefined}
         onAtivarDiagnostico={canEditProgramaFieldsUi && !isDemoMode ? handleAtivarDiagnostico : undefined}
         onToggleComite={

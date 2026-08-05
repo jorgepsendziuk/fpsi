@@ -23,7 +23,7 @@ export async function GET() {
 
     const { data: memberships } = await supabase
       .from("programa_users")
-      .select("programa_id, programa:programa_id(id, nome, slug)")
+      .select("programa_id, programa:programa_id(id, nome, slug, deleted_at)")
       .eq("user_id", user.id)
       .eq("status", "accepted");
 
@@ -36,10 +36,11 @@ export async function GET() {
     for (const m of memberships || []) {
       const rawProg = m.programa as unknown;
       const prog = (Array.isArray(rawProg) ? rawProg[0] : rawProg) as
-        | { id: number; nome: string; slug: string | null }
+        | { id: number; nome: string; slug: string | null; deleted_at?: string | null }
         | null
         | undefined;
-      if (!prog?.id) continue;
+      // Lixeira: não entra nos KPIs nem na lista operacional
+      if (!prog?.id || prog.deleted_at) continue;
       const pid = prog.id;
 
       const [matRes, dsarCount, incCount, repCount, riscoCount] = await Promise.all([

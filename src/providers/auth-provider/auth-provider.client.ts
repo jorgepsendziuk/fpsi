@@ -145,10 +145,31 @@ export const authProviderClient: AuthProvider = {
         };
       }
 
+      // Sem sessão (ex.: confirmação de e-mail ainda ligada): tenta login imediato.
+      // Em fase de testes o projeto usa mailer_autoconfirm — a sessão costuma vir no signUp.
+      if (data && !data.session && email && password) {
+        const { data: loginData, error: loginError } =
+          await supabaseBrowserClient.auth.signInWithPassword({
+            email,
+            password,
+          });
+        if (!loginError && loginData?.session) {
+          await supabaseBrowserClient.auth.setSession(loginData.session);
+        }
+      } else if (data?.session) {
+        await supabaseBrowserClient.auth.setSession(data.session);
+      }
+
       if (data) {
+        fetch("/api/profiles/verify", { method: "POST" }).catch(() => {});
+        try {
+          sessionStorage.setItem("fpsi-just-registered", "1");
+        } catch {
+          /* ignore */
+        }
+        // A página /register controla o feedback + CTA; não redirecionar aqui.
         return {
           success: true,
-          redirectTo: "/dashboard",
         };
       }
     } catch (error: any) {

@@ -21,16 +21,62 @@ export async function GET(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  let list = areas || [];
+
   // Scoped: só suas áreas
   if (auth.access.mode === "scoped") {
     const allowed = new Set(auth.access.areaIds);
-    return NextResponse.json((areas || []).filter((a) => allowed.has(a.id)));
-  }
-  if (auth.access.mode === "minimal") {
+    list = list.filter((a) => allowed.has(a.id));
+  } else if (auth.access.mode === "minimal") {
     return NextResponse.json([]);
   }
 
-  return NextResponse.json(areas || []);
+  const areaIds = list.map((a) => a.id as number);
+  if (areaIds.length === 0) return NextResponse.json([]);
+
+  const { data: links } = await auth.supabase
+    .from("programa_user_areas")
+    .select("area_id, user_id")
+    .eq("programa_id", programaId)
+    .in("area_id", areaIds);
+
+  const userIds = Array.from(new Set((links || []).map((l) => String(l.user_id))));
+  let profileByUserId: Record<string, { nome?: string | null; email?: string | null }> = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await auth.supabase
+      .from("profiles")
+      .select("user_id, nome, email")
+      .in("user_id", userIds);
+    profileByUserId = (profiles || []).reduce(
+      (acc, p) => {
+        acc[p.user_id] = { nome: p.nome, email: p.email };
+        return acc;
+      },
+      {} as Record<string, { nome?: string | null; email?: string | null }>
+    );
+  }
+
+  const membersByArea = new Map<number, { user_id: string; nome: string | null; email: string | null }[]>();
+  for (const link of links || []) {
+    const aid = link.area_id as number;
+    const uid = String(link.user_id);
+    const profile = profileByUserId[uid];
+    const row = {
+      user_id: uid,
+      nome: profile?.nome ?? null,
+      email: profile?.email ?? null,
+    };
+    const arr = membersByArea.get(aid) || [];
+    arr.push(row);
+    membersByArea.set(aid, arr);
+  }
+
+  return NextResponse.json(
+    list.map((a) => ({
+      ...a,
+      users: membersByArea.get(a.id as number) || [],
+    }))
+  );
 }
 
 export async function POST(
@@ -130,6 +176,44 @@ export async function POST(
     modulos,
     kpi_keys: Array.isArray(body.kpi_keys) ? body.kpi_keys.map(String) : [],
   });
+
+  if (Array.isArray(body.user_ids)) {
+    const userIds: string[] = Array.from(
+      new Set(
+        (body.user_ids as unknown[])
+          .map((id) => String(id))
+          .filter((id) => id.length > 0)
+      )
+    );
+    if (userIds.length > 0) {
+      await auth.supabase.from("programa_user_areas").insert(
+        userIds.map((user_id: string) => ({
+          programa_id: programaId,
+          user_id,
+          area_id: area.id,
+        }))
+      );
+
+      let controleIds = [...controle_ids];
+      if (controleIds.length === 0 && diagnostico_ids.length > 0) {
+        const { data: controles } = await auth.supabase
+          .from("controle")
+          .select("id")
+          .in("diagnostico", diagnostico_ids);
+        controleIds = (controles || []).map((c: { id: number }) => c.id as number);
+      }
+      const scope = { diagnostico_ids, controle_ids: controleIds };
+      await auth.supabase.from("questionario_assignment").insert(
+        userIds.map((user_id: string) => ({
+          programa_id: programaId,
+          assignee_user_id: user_id,
+          area_id: area.id,
+          scope,
+          status: "pending",
+        }))
+      );
+    }
+  }
 
   const { data: full } = await auth.supabase
     .from("programa_area")

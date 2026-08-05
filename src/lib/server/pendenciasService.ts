@@ -192,7 +192,7 @@ export async function fetchPendenciasUsuario(
 ): Promise<PendenciasResumo> {
   const { data: memberships } = await supabase
     .from("programa_users")
-    .select("programa_id, programa:programa_id(id, nome, slug)")
+    .select("programa_id, programa:programa_id(id, nome, slug, deleted_at)")
     .eq("user_id", userId)
     .eq("status", "accepted");
 
@@ -200,10 +200,11 @@ export async function fetchPendenciasUsuario(
   for (const m of memberships || []) {
     const rawProg = m.programa as unknown;
     const prog = (Array.isArray(rawProg) ? rawProg[0] : rawProg) as
-      | { id: number; nome: string; slug: string | null }
+      | { id: number; nome: string; slug: string | null; deleted_at?: string | null }
       | null
       | undefined;
-    if (!prog?.id) continue;
+    // Programas na lixeira não entram em pendências nem nos totais da Central operacional
+    if (!prog?.id || prog.deleted_at) continue;
     const resumo = await fetchPendenciasPrograma(
       supabase,
       prog.id,

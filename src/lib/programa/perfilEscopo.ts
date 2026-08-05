@@ -40,6 +40,12 @@ export type PresetDef = {
   label: string;
   shortLabel: string;
   description: string;
+  /** Para quem é indicado */
+  idealFor: string;
+  /** O que entra no score / programa */
+  includes: string[];
+  /** O que fica de fora no início (pode ativar depois) */
+  excludes: string[];
   giAlvo: "G1" | "G2" | "G3" | null;
   escopo: ProgramaEscopoV1;
 };
@@ -120,7 +126,19 @@ export const PRESET_ESSENCIAL: PresetDef = {
   id: "essencial",
   label: "Essencial",
   shortLabel: "Essencial",
-  description: "Programa de privacidade enxuto para PME e consultoria (estrutura + privacidade).",
+  description:
+    "Começo enxuto focado em privacidade e LGPD: estrutura de governança + diagnóstico de privacidade, sem o bloco completo de segurança da informação.",
+  idealFor: "PME, consultoria e primeiros passos em privacidade",
+  includes: [
+    "Diagnósticos: Estrutura e Privacidade",
+    "Módulos LGPD: ROPA, RIPD, incidentes, portal, políticas",
+    "Comitê de privacidade (CPDP)",
+  ],
+  excludes: [
+    "Diagnóstico de Segurança da Informação (SI)",
+    "Governança de IA (AIGP) e inventário de sistemas de IA",
+    "Comitês de SI (CSI), ETIR e IA",
+  ],
   giAlvo: null,
   escopo: baseEscopo({
     diagnosticos: { 1: true, 2: false, 3: true, 4: false },
@@ -147,7 +165,19 @@ export const PRESET_COMPLETO: PresetDef = {
   id: "completo",
   label: "Completo",
   shortLabel: "Completo",
-  description: "PPSI completo: estrutura, segurança da informação e privacidade.",
+  description:
+    "PPSI completo: estrutura, segurança da informação e privacidade — alinhado ao Guia do Framework (órgãos públicos e organizações maduras).",
+  idealFor: "Órgãos públicos (SISP) e empresas com programa SI + privacidade",
+  includes: [
+    "Diagnósticos: Estrutura, SI e Privacidade",
+    "Comitês CSI, CPDP e ETIR",
+    "Todos os módulos operacionais do PPSI (exceto IA)",
+  ],
+  excludes: [
+    "Diagnóstico AIGP / Governança de IA",
+    "Inventário de sistemas de IA",
+    "Comitê de IA",
+  ],
   giAlvo: "G1",
   escopo: baseEscopo({
     diagnosticos: { 1: true, 2: true, 3: true, 4: false },
@@ -174,7 +204,15 @@ export const PRESET_COM_IA: PresetDef = {
   id: "com_ia",
   label: "Com IA",
   shortLabel: "Com IA",
-  description: "PPSI completo + governança de IA (AIGP) e inventário de sistemas.",
+  description:
+    "Tudo do Completo, mais governança de IA (AIGP): diagnóstico, inventário de sistemas e comitê de IA.",
+  idealFor: "Organizações que usam ou desenvolvem sistemas de IA",
+  includes: [
+    "Tudo do escopo Completo (Estrutura, SI, Privacidade)",
+    "Diagnóstico AIGP / Governança de IA",
+    "Inventário de sistemas de IA e comitê de IA",
+  ],
+  excludes: [],
   giAlvo: "G1",
   escopo: baseEscopo({
     diagnosticos: { 1: true, 2: true, 3: true, 4: true },

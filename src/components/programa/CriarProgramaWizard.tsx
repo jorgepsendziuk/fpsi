@@ -209,7 +209,13 @@ export function CriarProgramaWizard({ open, onClose, onCreated, orgaos, empresas
   };
 
   return (
-    <Dialog open={open} onClose={resetAndClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog
+      open={open}
+      onClose={resetAndClose}
+      maxWidth={step === 1 ? "lg" : "md"}
+      fullWidth
+      PaperProps={{ sx: { borderRadius: 3 } }}
+    >
       <DialogTitle sx={{ pb: 1 }}>Novo programa de privacidade</DialogTitle>
       <DialogContent dividers>
         <Stepper activeStep={step} sx={{ mb: 3 }}>
@@ -324,10 +330,14 @@ export function CriarProgramaWizard({ open, onClose, onCreated, orgaos, empresas
 
         {step === 1 && (
           <Stack spacing={2}>
-            <Typography variant="body2" color="text.secondary">
-              Escolha o escopo recomendado. Você pode ativar módulos adicionais depois na home do programa.
-            </Typography>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.55 }}>
+                O escopo define o que conta no <strong>score de maturidade</strong> e quais módulos aparecem
+                ativos no programa. Comece pelo adequado ao seu momento — dá para ampliar depois na home
+                (barra Escopo / Score), sem perder o trabalho já feito.
+              </Typography>
+            </Box>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems="stretch">
               {PERFIL_ESCOPO_PRESETS.map((p) => {
                 const selected = form.perfil_escopo === p.id;
                 const disabled = form.setor === 1 && p.id === "essencial";
@@ -337,7 +347,10 @@ export function CriarProgramaWizard({ open, onClose, onCreated, orgaos, empresas
                     variant="outlined"
                     sx={{
                       flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
                       borderColor: selected ? "primary.main" : "divider",
+                      borderWidth: selected ? 2 : 1,
                       bgcolor: selected ? alpha(theme.palette.primary.main, 0.06) : "transparent",
                       opacity: disabled ? 0.5 : 1,
                     }}
@@ -345,13 +358,93 @@ export function CriarProgramaWizard({ open, onClose, onCreated, orgaos, empresas
                     <CardActionArea
                       disabled={disabled}
                       onClick={() => setForm((f) => ({ ...f, perfil_escopo: p.id }))}
+                      sx={{
+                        flex: 1,
+                        alignItems: "stretch",
+                        height: "100%",
+                        ".MuiCardActionArea-focusHighlight": { opacity: 0 },
+                      }}
                     >
-                      <CardContent>
-                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                      <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1, height: "100%" }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
                           {PRESET_ICONS[p.id]}
-                          <Typography variant="subtitle1" fontWeight={700}>{p.label}</Typography>
+                          <Typography variant="subtitle1" fontWeight={800}>
+                            {p.label}
+                          </Typography>
                         </Stack>
-                        <Typography variant="body2" color="text.secondary">{p.description}</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+                          {p.description}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 700,
+                            color: "primary.main",
+                            letterSpacing: "0.02em",
+                            textTransform: "uppercase",
+                            fontSize: "0.65rem",
+                          }}
+                        >
+                          Ideal para
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: -0.5, lineHeight: 1.45 }}>
+                          {p.idealFor}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 700,
+                            color: "text.secondary",
+                            letterSpacing: "0.02em",
+                            textTransform: "uppercase",
+                            fontSize: "0.65rem",
+                            mt: 0.5,
+                          }}
+                        >
+                          Inclui
+                        </Typography>
+                        <Box component="ul" sx={{ m: 0, pl: 2, "& li": { mb: 0.35 } }}>
+                          {p.includes.map((item) => (
+                            <Typography key={item} component="li" variant="caption" color="text.primary" sx={{ lineHeight: 1.4 }}>
+                              {item}
+                            </Typography>
+                          ))}
+                        </Box>
+                        {p.excludes.length > 0 && (
+                          <>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontWeight: 700,
+                                color: "text.secondary",
+                                letterSpacing: "0.02em",
+                                textTransform: "uppercase",
+                                fontSize: "0.65rem",
+                                mt: 0.25,
+                              }}
+                            >
+                              Fica de fora (ativável depois)
+                            </Typography>
+                            <Box component="ul" sx={{ m: 0, pl: 2, "& li": { mb: 0.35 } }}>
+                              {p.excludes.map((item) => (
+                                <Typography
+                                  key={item}
+                                  component="li"
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ lineHeight: 1.4 }}
+                                >
+                                  {item}
+                                </Typography>
+                              ))}
+                            </Box>
+                          </>
+                        )}
+                        {p.excludes.length === 0 && (
+                          <Typography variant="caption" color="success.main" fontWeight={600} sx={{ mt: "auto", pt: 0.5 }}>
+                            Escopo máximo disponível no FPSI
+                          </Typography>
+                        )}
                       </CardContent>
                     </CardActionArea>
                   </Card>
@@ -359,7 +452,9 @@ export function CriarProgramaWizard({ open, onClose, onCreated, orgaos, empresas
               })}
             </Stack>
             {form.setor === 1 && (
-              <FormHelperText>Órgãos públicos iniciam com escopo Completo (PPSI).</FormHelperText>
+              <FormHelperText sx={{ mx: 0 }}>
+                Órgãos públicos iniciam com escopo Completo (PPSI). O Essencial fica desabilitado neste setor.
+              </FormHelperText>
             )}
           </Stack>
         )}
@@ -368,14 +463,25 @@ export function CriarProgramaWizard({ open, onClose, onCreated, orgaos, empresas
           <Stack spacing={2}>
             <Typography variant="subtitle2" fontWeight={700}>Resumo</Typography>
             <Typography variant="body2"><strong>Nome:</strong> {form.nome}</Typography>
-            <Typography variant="body2">
-              <strong>Escopo:</strong>{" "}
-              {PERFIL_ESCOPO_PRESETS.find((p) => p.id === form.perfil_escopo)?.label ?? form.perfil_escopo}
-            </Typography>
+            {(() => {
+              const preset = PERFIL_ESCOPO_PRESETS.find((p) => p.id === form.perfil_escopo);
+              return (
+                <Box>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    <strong>Escopo:</strong> {preset?.label ?? form.perfil_escopo}
+                  </Typography>
+                  {preset && (
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.5, mb: 1 }}>
+                      {preset.description}
+                    </Typography>
+                  )}
+                </Box>
+              );
+            })()}
             {presetSummary.length > 0 && (
               <Box>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-                  Fica fora do score inicial:
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5, fontWeight: 700 }}>
+                  Fica fora do score inicial (pode ativar depois):
                 </Typography>
                 <Stack direction="row" flexWrap="wrap" gap={0.5}>
                   {presetSummary.slice(0, 8).map((item) => (

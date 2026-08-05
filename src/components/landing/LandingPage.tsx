@@ -499,7 +499,7 @@ export function LandingPage() {
               >
                 {user
                   ? "Continue o diagnóstico, as evidências e o dia a dia do seu programa."
-                  : "O FPSI ajuda a montar e acompanhar esse programa — diagnóstico, evidências e conformidade LGPD — com base no PPSI 2.0, a metodologia pública de maturidade em privacidade e segurança da informação usada no setor público e útil para qualquer organização."}
+                  : "O FPSI ajuda a montar e acompanhar esse programa — diagnóstico, evidências e conformidade LGPD — com base no PPSI 2.0, a metodologia de maturidade em privacidade e segurança da informação usada no setor público e útil para qualquer organização."}
               </Typography>
 
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1.25 }}>
@@ -634,27 +634,27 @@ export function LandingPage() {
         </Grid>
       </Container>
 
-      {/* Rodapé mínimo dentro da face */}
+      {/* Rodapé — faixa única, tipografia alinhada, marca legível no navy */}
       <Box
         component="footer"
         sx={{
           position: "relative",
           zIndex: 2,
           px: { xs: 2, md: 3 },
-          pb: { xs: 1.5, md: 2 },
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
+          pb: { xs: 1.75, md: 2.25 },
+          pt: { xs: 1.25, md: 1.5 },
           animation: heroReady ? "lpFade 1s 0.3s ease both" : "none",
         }}
       >
         <Box
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr auto" },
             alignItems: "center",
-            justifyContent: "space-between",
-            gap: 1.25,
+            columnGap: 3,
+            rowGap: 1.25,
+            pt: 1.5,
+            borderTop: "1px solid rgba(244,248,252,0.12)",
           }}
         >
           <Box
@@ -662,54 +662,67 @@ export function LandingPage() {
               display: "flex",
               flexWrap: "wrap",
               alignItems: "center",
-              gap: { xs: 1, sm: 1.5 },
+              gap: 1,
               minWidth: 0,
             }}
           >
             <Typography
+              component="span"
               sx={{
                 fontFamily: ff,
-                fontWeight: 500,
-                fontSize: "0.72rem",
-                color: "rgba(244,248,252,0.45)",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                color: "rgba(244,248,252,0.62)",
                 letterSpacing: "0.02em",
               }}
             >
-              © {FPSI_AUTHORSHIP.year} FPSI · Código aberto
+              © {FPSI_AUTHORSHIP.year} FPSI
+            </Typography>
+            <Typography
+              component="span"
+              aria-hidden
+              sx={{ color: "rgba(244,248,252,0.28)", fontSize: "0.75rem", lineHeight: 1 }}
+            >
+              ·
+            </Typography>
+            <Typography
+              component="span"
+              sx={{
+                fontFamily: ff,
+                fontWeight: 500,
+                fontSize: "0.75rem",
+                color: "rgba(244,248,252,0.45)",
+              }}
+            >
+              Código aberto
+            </Typography>
+            <Typography
+              component="span"
+              aria-hidden
+              sx={{ color: "rgba(244,248,252,0.28)", fontSize: "0.75rem", lineHeight: 1 }}
+            >
+              ·
             </Typography>
             <Box
               sx={{
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
-                gap: 0.85,
-                pl: { xs: 0, sm: 0.5 },
-                borderLeft: { sm: "1px solid rgba(244,248,252,0.14)" },
-                ml: { sm: 0.25 },
+                gap: 0.75,
+                flexWrap: "wrap",
               }}
             >
-              <Box
-                component="a"
-                href={FPSI_AUTHORSHIP.orgUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="GeoApps"
+              <Typography
+                component="span"
                 sx={{
-                  display: "inline-flex",
-                  lineHeight: 0,
-                  opacity: 0.88,
-                  transition: "opacity 0.2s ease",
-                  "&:hover": { opacity: 1 },
+                  fontFamily: ff,
+                  fontWeight: 500,
+                  fontSize: "0.75rem",
+                  color: "rgba(244,248,252,0.4)",
                 }}
               >
-                <Image
-                  src={FPSI_AUTHORSHIP.logoSrc}
-                  alt="GeoApps"
-                  width={88}
-                  height={40}
-                  style={{ width: 88, height: "auto", display: "block" }}
-                />
-              </Box>
-              <Typography
+                por
+              </Typography>
+              <Box
                 component="a"
                 href={JORGE_PORTFOLIO_URL}
                 target="_blank"
@@ -717,19 +730,69 @@ export function LandingPage() {
                 sx={{
                   fontFamily: ff,
                   fontWeight: 600,
-                  fontSize: "0.68rem",
-                  color: "rgba(244,248,252,0.5)",
+                  fontSize: "0.75rem",
+                  color: "rgba(244,248,252,0.78)",
                   textDecoration: "none",
-                  letterSpacing: "0.01em",
+                  transition: "color 0.2s ease",
                   "&:hover": { color: landing.heroText },
                 }}
               >
                 {FPSI_AUTHORSHIP.authorShort}
-              </Typography>
+              </Box>
+              <Box
+                component="a"
+                href={FPSI_AUTHORSHIP.orgUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="geoapps"
+                title="geoapps"
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  textDecoration: "none",
+                  lineHeight: 1,
+                  letterSpacing: "-0.04em",
+                  transition: "opacity 0.15s ease",
+                  "&:hover": { opacity: 0.88 },
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    fontFamily: ff,
+                    fontWeight: 700,
+                    fontSize: "0.82rem",
+                    color: landing.shield,
+                    textTransform: "lowercase",
+                  }}
+                >
+                  geo
+                </Box>
+                <Box
+                  component="span"
+                  sx={{
+                    fontFamily: ff,
+                    fontWeight: 700,
+                    fontSize: "0.82rem",
+                    color: landing.heroText,
+                    textTransform: "lowercase",
+                  }}
+                >
+                  apps
+                </Box>
+              </Box>
             </Box>
           </Box>
 
-          <Box sx={{ display: "flex", gap: 0.25, flexWrap: "wrap", alignItems: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 0.15,
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: { xs: "flex-start", md: "flex-end" },
+            }}
+          >
             <Button
               size="small"
               onClick={() => setCreditosOpen(true)}
@@ -737,7 +800,7 @@ export function LandingPage() {
                 fontFamily: ff,
                 textTransform: "none",
                 fontWeight: 700,
-                fontSize: "0.72rem",
+                fontSize: "0.75rem",
                 color: "rgba(244,248,252,0.55)",
                 minWidth: 0,
                 px: 1,
@@ -759,7 +822,7 @@ export function LandingPage() {
                   fontFamily: ff,
                   textTransform: "none",
                   fontWeight: 600,
-                  fontSize: "0.72rem",
+                  fontSize: "0.75rem",
                   color: "rgba(244,248,252,0.5)",
                   minWidth: 0,
                   px: 1,
@@ -780,7 +843,7 @@ export function LandingPage() {
                 fontFamily: ff,
                 textTransform: "none",
                 fontWeight: 700,
-                fontSize: "0.72rem",
+                fontSize: "0.75rem",
                 color: "rgba(244,248,252,0.55)",
                 minWidth: 0,
                 px: 1,
@@ -797,7 +860,7 @@ export function LandingPage() {
                 fontFamily: ff,
                 textTransform: "none",
                 fontWeight: 700,
-                fontSize: "0.72rem",
+                fontSize: "0.75rem",
                 color: landing.lock,
                 minWidth: 0,
                 px: 1,

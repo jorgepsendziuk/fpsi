@@ -26,9 +26,11 @@ export default function ProtectedLayout({
     pathname.startsWith("/referencias") ||
     pathname === "/admin" ||
     pathname.startsWith("/admin/");
-  /** Consulta a referências estáticas: LGPD e Governança de IA (sem login). */
+  /** Consulta a referências estáticas: LGPD, PPSI e Governança de IA (sem login). */
   const isPublicReferencia =
-    pathname === "/referencias/lgpd" || pathname === "/referencias/aigp";
+    pathname === "/referencias/lgpd" ||
+    pathname === "/referencias/aigp" ||
+    pathname === "/referencias/ppsi";
 
   useEffect(() => {
     if (isPublicReferencia) return;

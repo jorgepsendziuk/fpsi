@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/admin/stats/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/Users/jorgepsendziuk/Projetos/fpsi/src/app/api/admin/stats/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};
