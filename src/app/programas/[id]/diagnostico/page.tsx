@@ -126,6 +126,7 @@ export default function DiagnosticoPage() {
   const [showLoadedFeedback, setShowLoadedFeedback] = useState(false);
   const wasLoadingRef = useRef(false);
   const loadMedidasForDashboardRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const workAreaRef = useRef<HTMLDivElement | null>(null);
   const [grupoImpleFilter, setGrupoImpleFilter] = useState<GrupoImpleFilter>("all");
 
   const programaEscopo = useMemo(
@@ -393,6 +394,18 @@ export default function DiagnosticoPage() {
     
     setExpandedNodes(newExpanded);
   }, [expandedNodes, loadControles, loadMedidas]);
+
+  // Sempre no topo da área de trabalho ao trocar de nó (medida/controle/diagnóstico)
+  useEffect(() => {
+    if (!selectedNode?.id) return;
+    requestAnimationFrame(() => {
+      workAreaRef.current?.scrollTo({ top: 0, behavior: "auto" });
+      // Mobile: às vezes o scroll está no window, não só no painel
+      if (typeof window !== "undefined" && window.matchMedia("(max-width: 900px)").matches) {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
+    });
+  }, [selectedNode?.id]);
 
   // Manipular seleção de nó (expande os pais para que o item fique visível no menu)
   const handleNodeSelect = useCallback(async (node: TreeNode) => {
@@ -1311,7 +1324,9 @@ export default function DiagnosticoPage() {
       </Drawer>
 
           {/* Conteúdo principal */}
-      <Box sx={{ 
+      <Box
+            ref={workAreaRef}
+            sx={{ 
             flex: 1, 
             overflow: 'auto',
             backgroundColor: theme.palette.background.default
