@@ -137,6 +137,7 @@ export default function PoliticaPage() {
   const [prazoRevisao, setPrazoRevisao] = useState('');
   const [status, setStatus] = useState<'rascunho' | 'publicado'>('rascunho');
   const [publicadoEm, setPublicadoEm] = useState<string | null>(null);
+  const [politicaProgramaDbId, setPoliticaProgramaDbId] = useState<number | null>(null);
   const [versoes, setVersoes] = useState<PoliticaProgramaVersaoRow[]>([]);
   const [versaoDialogOpen, setVersaoDialogOpen] = useState(false);
   const [versaoNota, setVersaoNota] = useState('');
@@ -178,11 +179,13 @@ export default function PoliticaPage() {
 
         setVersoes(vers);
         if (saved) {
+          setPoliticaProgramaDbId(Number(saved.id) || null);
           setInicioVigencia(saved.inicio_vigencia ? String(saved.inicio_vigencia).slice(0, 10) : '');
           setPrazoRevisao(saved.prazo_revisao ? String(saved.prazo_revisao).slice(0, 10) : '');
           setStatus(saved.status === 'publicado' ? 'publicado' : 'rascunho');
           setPublicadoEm(saved.publicado_em);
         } else {
+          setPoliticaProgramaDbId(null);
           setInicioVigencia('');
           setPrazoRevisao('');
           setStatus('rascunho');
@@ -410,6 +413,27 @@ export default function PoliticaPage() {
                     politicaNome={politicaNome}
                     programa={programa}
                   />
+                  {status === "publicado" && programaId && politicaProgramaDbId ? (
+                    <Button
+                      variant="outlined"
+                      onClick={async () => {
+                        const res = await fetch(`/api/programas/${programaId}/governanca`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            acao: "ciencia",
+                            politica_programa_id: politicaProgramaDbId,
+                            documento_titulo: politicaNome,
+                            versao: String(publicadoEm || "1"),
+                          }),
+                        });
+                        if (res.ok) alert("Ciência registrada (IP, data e versão).");
+                        else alert("Não foi possível registrar ciência.");
+                      }}
+                    >
+                      Registrar ciência
+                    </Button>
+                  ) : null}
                 </Stack>
               }
             />

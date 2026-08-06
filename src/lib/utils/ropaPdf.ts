@@ -240,6 +240,18 @@ export async function drawProgramaPoliticaPdfHeader(
         y += LINE_HEADER_META;
       });
     }
+    const dpoNome = typeof p.dpo_nome === "string" ? p.dpo_nome.trim() : "";
+    const dpoEmail = typeof p.dpo_email === "string" ? p.dpo_email.trim() : "";
+    if (dpoNome || dpoEmail) {
+      const dpoLine = dpoNome
+        ? `Encarregado (DPO): ${dpoNome}${dpoEmail ? ` · ${dpoEmail}` : ""}`
+        : `E-mail do encarregado: ${dpoEmail}`;
+      const lines = doc.splitTextToSize(dpoLine, CONTENT_W - (textLeft - MARGIN));
+      lines.forEach((ln: string) => {
+        doc.text(ln, textLeft, y);
+        y += LINE_HEADER_META;
+      });
+    }
   }
 
   const portalUrl = resolvePortalPrivacidadeUrl(programa);

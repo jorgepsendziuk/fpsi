@@ -1515,6 +1515,9 @@ export type MapeamentoDadosRow = {
   categoria_titular: string | null;
   titular_outro: string | null;
   transferencia_internacional: string | null;
+  sistema_id?: number | null;
+  processo_id?: number | null;
+  fornecedor_id?: number | null;
   created_at: string;
   updated_at: string;
 };

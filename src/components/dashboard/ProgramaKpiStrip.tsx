@@ -216,18 +216,74 @@ type DashboardKpisProps = {
     incidentesAbertos: number;
     reportesNovos: number;
     riscosCriticos: number;
+    maturidadeMedia?: number | null;
+    planosVencidos?: number;
+    ropasAtivos?: number;
   };
   /** Pendências com prazo vencido — prioridade operacional. */
   atrasados?: number;
   vencendo7d?: number;
   loading?: boolean;
+  /** Linguagem de diretoria (sem inbox operacional). */
+  executivo?: boolean;
 };
 
 type DashboardKpisStripProps = DashboardKpisProps & { compact?: boolean };
 
-export function DashboardKpiStrip({ kpis, atrasados, vencendo7d, loading, compact }: DashboardKpisStripProps) {
+export function DashboardKpiStrip({
+  kpis,
+  atrasados,
+  vencendo7d,
+  loading,
+  compact,
+  executivo,
+}: DashboardKpisStripProps) {
   const theme = useTheme();
-  const items: KpiDef[] = [
+  const mat =
+    kpis?.maturidadeMedia != null && Number.isFinite(kpis.maturidadeMedia)
+      ? Number(kpis.maturidadeMedia).toFixed(1)
+      : "—";
+
+  const items: KpiDef[] = executivo
+    ? [
+        {
+          label: "Maturidade",
+          value: mat,
+          color: theme.palette.primary.main,
+          hint: "Média dos programas",
+        },
+        {
+          label: "Exposição a risco",
+          value: kpis?.riscosCriticos ?? 0,
+          color: "#B71C1C",
+          hint: "Riscos críticos ativos",
+        },
+        {
+          label: "Planos em atraso",
+          value: kpis?.planosVencidos ?? atrasados ?? 0,
+          color: theme.palette.error.main,
+          hint: "Prazo vencido",
+        },
+        {
+          label: "Incidentes",
+          value: kpis?.incidentesAbertos ?? 0,
+          color: "#C62828",
+          hint: "Em tratamento",
+        },
+        {
+          label: "ROPAs",
+          value: kpis?.ropasAtivos ?? 0,
+          color: theme.palette.info.main,
+          hint: "Registros de tratamento",
+        },
+        {
+          label: "Pedidos de titulares",
+          value: kpis?.dsarAbertos ?? 0,
+          color: theme.palette.warning.main,
+          hint: "Em aberto",
+        },
+      ]
+    : [
     {
       label: "Atrasadas",
       value: atrasados ?? 0,

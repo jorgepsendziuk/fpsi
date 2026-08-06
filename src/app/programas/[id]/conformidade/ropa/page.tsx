@@ -57,6 +57,7 @@ import * as dataService from "@/lib/services/dataService";
 import { buildRopaPayloadFromMapeamento } from "@/lib/utils/mapeamentoParaRopa";
 import { getPoliticaNomeProgramaRotulo } from "@/lib/utils/politicaPlaceholders";
 import { buildRopaPdfDocument } from "@/lib/utils/ropaPdf";
+import { supabaseBrowserClient } from "@utils/supabase/client";
 import { ResourceLastUpdateLine } from "@/components/common/ResourceLastUpdateLine";
 import { formatDateTimePtBr } from "@/components/common/LastUpdateInfo";
 type ProgramaMembroUsuario = {
@@ -352,10 +353,22 @@ export default function ROPAPage() {
         } catch (e) {
           console.error("Erro ao carregar mapeamentos (ROPA continua disponível):", e);
         }
+        // Se o cabeçalho ainda não tem organização/CNPJ, sincroniza automaticamente do cadastro.
+        let registroFinal = reg;
+        let defaultsFinal = empresaDefaults || null;
+        const orgVazia = !String(reg?.organizacao ?? "").trim();
+        if (orgVazia && empresaDefaults?.organizacao) {
+          try {
+            registroFinal = await dataService.syncRegistroRopaFromCadastro(programaIdNum);
+            defaultsFinal = empresaDefaults;
+          } catch (e) {
+            console.error("Auto-sync ROPA do cadastro:", e);
+          }
+        }
         if (!cancelled) {
-          setRegistro(reg);
-          setEmpresaRopaDefaults(empresaDefaults || null);
-          setRegistroForm(registroRowToForm(reg, empresaDefaults || undefined));
+          setRegistro(registroFinal);
+          setEmpresaRopaDefaults(defaultsFinal);
+          setRegistroForm(registroRowToForm(registroFinal, defaultsFinal || undefined));
           setMapeamentos(maps);
           const nomePorId = new Map(maps.map((m) => [m.id, m.nome]));
           setOperacoes(
@@ -388,8 +401,29 @@ export default function ROPAPage() {
     let cancelled = false;
     dataService
       .fetchProgramaById(programaIdNum)
-      .then((p) => {
-        if (!cancelled) setPrograma(p && typeof p === "object" ? (p as Record<string, unknown>) : null);
+      .then(async (p) => {
+        if (cancelled || !p || typeof p !== "object") {
+          if (!cancelled) setPrograma(null);
+          return;
+        }
+        const base = p as Record<string, unknown>;
+        const encId = Number(base.encarregado_dados_pessoais);
+        if (Number.isFinite(encId) && encId > 0) {
+          try {
+            const { data: resp } = await supabaseBrowserClient
+              .from("responsavel")
+              .select("nome, email")
+              .eq("id", encId)
+              .maybeSingle();
+            if (resp) {
+              base.dpo_nome = resp.nome;
+              base.dpo_email = resp.email;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+        if (!cancelled) setPrograma(base);
       })
       .catch(() => {
         if (!cancelled) setPrograma(null);
@@ -823,7 +857,7 @@ export default function ROPAPage() {
           </span>
         </Tooltip>
         <Typography variant="caption" color="text.secondary" sx={{ flex: "1 1 200px" }}>
-          Híbrido: cadastro mestre na página do programa; ROPA pode sincronizar e ainda editar texto. Versões congelam o estado na data.
+          Os dados da empresa/programa alimentam o cabeçalho do ROPA (botão sincronizar). Você ainda pode editar o texto aqui. Versões congelam o estado na data.
         </Typography>
       </Box>
 
@@ -943,21 +977,45 @@ export default function ROPAPage() {
         <DialogTitle>{editingId ? "Editar processo" : "Adicionar processo — Registro das Operações de Tratamento (ROPA)"}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            {/* 1. INFORMAÇÕES DE CONTATO */}
+            {/* 1. INFORMAÇÕES DE CONTATO — vêm do cadastro do programa/empresa */}
             <Grid item xs={12}>
-              <Typography variant="overline" color="text.secondary" fontWeight="bold">1. Informações de contato</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Organização" value={registroForm.organizacao ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, organizacao: e.target.value }))} placeholder={HELPER_ORGANIZACAO} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="CNPJ" value={registroForm.cnpj ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, cnpj: e.target.value }))} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Endereço" value={registroForm.endereco ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, endereco: e.target.value }))} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Principal atividade" value={registroForm.atividade_principal ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, atividade_principal: e.target.value }))} placeholder={HELPER_ATIVIDADE} />
+              <Typography variant="overline" color="text.secondary" fontWeight="bold">
+                1. Informações de contato (cadastro do programa)
+              </Typography>
+              <Alert severity="info" sx={{ mt: 1, mb: 0.5 }}>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  <strong>{registroForm.organizacao || "Organização não cadastrada"}</strong>
+                  {registroForm.cnpj ? ` · CNPJ ${registroForm.cnpj}` : ""}
+                </Typography>
+                {(registroForm.endereco || registroForm.atividade_principal) && (
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    {[registroForm.endereco, registroForm.atividade_principal].filter(Boolean).join(" · ")}
+                  </Typography>
+                )}
+                {(registroForm.email || registroForm.telefone) && (
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    {[registroForm.email, registroForm.telefone].filter(Boolean).join(" · ")}
+                  </Typography>
+                )}
+                <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => void handleSyncCadastro()}
+                    disabled={syncingCadastro}
+                  >
+                    {syncingCadastro ? "Atualizando…" : "Atualizar do cadastro"}
+                  </Button>
+                  <Button
+                    component={NextLink}
+                    href={`/programas/${idOrSlug}`}
+                    size="small"
+                    variant="text"
+                  >
+                    Editar dados do programa
+                  </Button>
+                </Box>
+              </Alert>
             </Grid>
             <Grid item xs={12}>
               <Autocomplete
@@ -978,8 +1036,8 @@ export default function ROPAPage() {
                   <TextField
                     {...params}
                     required
-                    label="Gestor responsável"
-                    helperText="Usuário com acesso aceito a este programa. O papel no sistema (admin, coordenador, etc.) continua o mesmo de Usuários e permissões — aqui você só indica quem responde pelo registro ROPA."
+                    label="Gestor responsável pelo ROPA"
+                    helperText="Quem responde por este registro. Dados da empresa vêm do cadastro do programa."
                   />
                 )}
               />
@@ -993,12 +1051,6 @@ export default function ROPAPage() {
               >
                 Cadastrar ou convidar usuário
               </Button>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="E-mail" type="email" value={registroForm.email ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, email: e.target.value }))} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Telefone" value={registroForm.telefone ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, telefone: e.target.value }))} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Data do registro" type="date" InputLabelProps={{ shrink: true }} value={registroForm.data_registro ?? ""} onChange={(e) => setRegistroForm((f) => ({ ...f, data_registro: e.target.value }))} helperText={HELPER_DATA_REGISTRO} />

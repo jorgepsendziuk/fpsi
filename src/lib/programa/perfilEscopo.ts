@@ -19,6 +19,7 @@ export type ModuloKey =
   | "politicas"
   | "portal-privacidade"
   | "inventario-ia"
+  | "ativos"
   | "usuarios"
   | "auditoria";
 
@@ -66,6 +67,7 @@ export const ALL_MODULO_KEYS: ModuloKey[] = [
   "politicas",
   "portal-privacidade",
   "inventario-ia",
+  "ativos",
   "usuarios",
   "auditoria",
 ];
@@ -156,6 +158,7 @@ export const PRESET_ESSENCIAL: PresetDef = {
       politicas: true,
       "portal-privacidade": true,
       "inventario-ia": false,
+      ativos: true,
     },
     comites: { si: false, priva: true, etir: false, ia: false },
   }),
@@ -195,6 +198,7 @@ export const PRESET_COMPLETO: PresetDef = {
       politicas: true,
       "portal-privacidade": true,
       "inventario-ia": false,
+      ativos: true,
     },
     comites: { si: true, priva: true, etir: true, ia: false },
   }),
@@ -230,6 +234,7 @@ export const PRESET_COM_IA: PresetDef = {
       politicas: true,
       "portal-privacidade": true,
       "inventario-ia": true,
+      ativos: true,
     },
     comites: { si: true, priva: true, etir: true, ia: true },
   }),
@@ -354,6 +359,7 @@ export const NAV_ITEM_MODULO_MAP: Record<string, ModuloKey | null> = {
   "diag-relatorio": "diagnostico",
   "diag-rte": "diagnostico",
   plano: "planos-acao",
+  ativos: "ativos",
   politicas: "politicas",
   "portal-hub": "portal-privacidade",
   "portal-pedidos": "portal-privacidade",
@@ -363,6 +369,7 @@ export const NAV_ITEM_MODULO_MAP: Record<string, ModuloKey | null> = {
   tarefas: "diagnostico",
   usuarios: "usuarios",
   auditoria: "auditoria",
+  governanca: null,
 };
 
 export const HUB_SECTION_MODULO_MAP: Record<string, ModuloKey> = {
@@ -510,6 +517,7 @@ export function formatModuloLabel(key: ModuloKey | string): string {
     politicas: "Políticas",
     "portal-privacidade": "Portal do titular",
     "inventario-ia": "Inventário de IA",
+    ativos: "Cadastro mestre",
     usuarios: "Usuários",
     auditoria: "Auditoria",
   };

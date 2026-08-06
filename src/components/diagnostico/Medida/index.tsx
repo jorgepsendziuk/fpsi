@@ -53,6 +53,7 @@ import { splitMedidaDescricao } from '@/lib/normas/medidaDescricao';
 import { NormasReferenciaSection } from '@/components/normas/NormasReferenciaSection';
 import { ResourceLastUpdateLine } from '@/components/common/ResourceLastUpdateLine';
 import { EvidenciaAssistidaPanel } from '../EvidenciaAssistidaPanel';
+import { EvidenciaAnexosPanel } from '@/components/grc/EvidenciaAnexosPanel';
 import { RequisitoIaLabel } from '@/components/aigp/RequisitoIaLabel';
 import { DIAGNOSTICO_IA_ID } from '@/lib/aigp/aigpVisualTokens';
 import { getDiagnosticoTheme } from '@/lib/utils/diagnosticoThemes';
@@ -242,6 +243,17 @@ const MedidaComponent: React.FC<MedidaProps> = ({
               />
             ) : null}
 
+            <EvidenciaAnexosPanel
+              compact
+              programaId={programaId}
+              alvoTipo={programaMedida?.id ? "programa_medida" : "medida"}
+              alvoId={
+                programaMedida?.id
+                  ? String(programaMedida.id)
+                  : String(medida.id_medida || medida.id)
+              }
+            />
+
             {isAigpMedida && (
               <Box sx={{ mb: 2 }}>
                 <RequisitoIaLabel variant="inline">
@@ -259,7 +271,16 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                   </Typography>
                   <Box sx={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
                     <Select
-                      sx={{ width: '100%' }}
+                      sx={{
+                        width: "100%",
+                        "& .MuiSelect-select": {
+                          whiteSpace: "normal",
+                          lineHeight: 1.35,
+                          py: 1.25,
+                          display: "flex",
+                          alignItems: "flex-start",
+                        },
+                      }}
                       value={programaMedida?.resposta || ""}
                       displayEmpty
                       onChange={(event) =>
@@ -275,9 +296,11 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                           return `Resposta inválida (ID: ${selectedId})`;
                         }
                         return (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selectedId) }} />
-                            <Typography>{resposta.label}</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, pr: 1 }}>
+                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(selectedId), mt: 0.35, flexShrink: 0 }} />
+                            <Typography sx={{ whiteSpace: "normal", lineHeight: 1.35, fontSize: "0.9rem" }}>
+                              {resposta.label}
+                            </Typography>
                           </Box>
                         );
                       }}
@@ -286,10 +309,10 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                         <em>Selecionar resposta…</em>
                       </MenuItem>
                       {respostasArray.map((resposta) => (
-                        <MenuItem key={resposta.id} value={resposta.id}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id) }} />
-                            <Typography>{resposta.label}</Typography>
+                        <MenuItem key={resposta.id} value={resposta.id} sx={{ whiteSpace: "normal", alignItems: "flex-start", py: 1.25 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                            <CircleIcon sx={{ fontSize: 16, color: getRespostaColor(resposta.id), mt: 0.35, flexShrink: 0 }} />
+                            <Typography sx={{ whiteSpace: "normal", lineHeight: 1.35 }}>{resposta.label}</Typography>
                           </Box>
                         </MenuItem>
                       ))}
@@ -363,13 +386,33 @@ const MedidaComponent: React.FC<MedidaProps> = ({
                       onChange={(event) =>
                         handleMedidaChange(medida.id, controle.id, programaId, "responsavel", event.target.value)
                       }
+                      sx={{
+                        "& .MuiSelect-select": {
+                          whiteSpace: "normal",
+                          lineHeight: 1.35,
+                          py: 1.1,
+                        },
+                      }}
+                      renderValue={(selected) => {
+                        if (!selected) return <em>Sem responsável</em>;
+                        const r = responsaveis.find((x) => String(x.id) === String(selected));
+                        if (!r) return String(selected);
+                        return (
+                          <Typography sx={{ whiteSpace: "normal", lineHeight: 1.35, fontSize: "0.875rem" }}>
+                            {formatResponsavelOptionLabel(r.nome, r.departamento)}
+                          </Typography>
+                        );
+                      }}
                     >
                       <MenuItem value="">
                         <em>Sem responsável</em>
                       </MenuItem>
                       {responsaveis.map((responsavel) => (
-                        <MenuItem key={responsavel.id} value={responsavel.id}>
-                          <ListItemText primary={formatResponsavelOptionLabel(responsavel.nome, responsavel.departamento)} />
+                        <MenuItem key={responsavel.id} value={responsavel.id} sx={{ whiteSpace: "normal", py: 1.1 }}>
+                          <ListItemText
+                            primary={formatResponsavelOptionLabel(responsavel.nome, responsavel.departamento)}
+                            primaryTypographyProps={{ whiteSpace: "normal", lineHeight: 1.35 }}
+                          />
                         </MenuItem>
                       ))}
                     </Select>

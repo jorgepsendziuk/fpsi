@@ -51,5 +51,9 @@ export type DashboardResumoApi = {
     incidentesAbertos: number;
     reportesNovos: number;
     riscosCriticos: number;
+    /** Média de maturidade entre programas (0–100 ou escala do sistema) */
+    maturidadeMedia: number | null;
+    planosVencidos: number;
+    ropasAtivos: number;
   };
 };

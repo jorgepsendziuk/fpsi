@@ -302,6 +302,12 @@ export function buildProgramaNavSections(
           path: `${base}/auditoria`,
           icon: <SecurityIcon sx={iconSx} />,
         },
+        {
+          id: "governanca",
+          label: "Decisões e auditor",
+          path: `${base}/governanca`,
+          icon: <GavelIcon sx={iconSx} />,
+        },
       ],
     },
   ];

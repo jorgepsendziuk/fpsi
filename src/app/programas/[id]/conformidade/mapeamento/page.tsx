@@ -78,6 +78,8 @@ type MapeamentoFormState = {
   nome: string;
   descricao: string;
   sistemasOuFontes: string;
+  sistemaId: number | "";
+  fornecedorId: number | "";
   setorArea: string;
   setorOutro: string;
   finalidadeCategoria: string;
@@ -99,6 +101,8 @@ function emptyForm(): MapeamentoFormState {
     nome: "",
     descricao: "",
     sistemasOuFontes: "",
+    sistemaId: "",
+    fornecedorId: "",
     setorArea: "",
     setorOutro: "",
     finalidadeCategoria: "",
@@ -121,6 +125,8 @@ function rowToForm(r: dataService.MapeamentoDadosRow): MapeamentoFormState {
     nome: r.nome ?? "",
     descricao: r.descricao ?? "",
     sistemasOuFontes: r.sistemas_ou_fontes ?? "",
+    sistemaId: r.sistema_id ?? "",
+    fornecedorId: (r as { fornecedor_id?: number | null }).fornecedor_id ?? "",
     setorArea: r.setor_area ?? "",
     setorOutro: r.setor_outro ?? "",
     finalidadeCategoria: r.finalidade_categoria ?? "",
@@ -142,6 +148,9 @@ function formToPayload(f: MapeamentoFormState): Omit<dataService.MapeamentoDados
     nome: f.nome.trim(),
     descricao: f.descricao.trim() || null,
     sistemas_ou_fontes: f.sistemasOuFontes.trim() || null,
+    sistema_id: f.sistemaId === "" ? null : Number(f.sistemaId),
+    processo_id: null,
+    fornecedor_id: f.fornecedorId === "" ? null : Number(f.fornecedorId),
     setor_area: f.setorArea || null,
     setor_outro: f.setorArea === "outro" ? f.setorOutro.trim() || null : null,
     finalidade_categoria: f.finalidadeCategoria || null,
@@ -184,6 +193,8 @@ export default function MapeamentoDadosPage() {
   const [aiDrafts, setAiDrafts] = useState<MapeamentoSugestaoItem[]>([]);
   const [aiSelected, setAiSelected] = useState<Set<number>>(new Set());
   const [aiSaving, setAiSaving] = useState(false);
+  const [sistemasCadastro, setSistemasCadastro] = useState<Array<{ id: number; nome: string }>>([]);
+  const [fornecedoresCadastro, setFornecedoresCadastro] = useState<Array<{ id: number; nome: string }>>([]);
 
   const catalogFiltrado = useMemo(
     () =>
@@ -213,6 +224,18 @@ export default function MapeamentoDadosPage() {
         setList([]);
       })
       .finally(() => setLoading(false));
+
+    fetch(`/api/programas/${programaIdNum}/ativos`)
+      .then((r) => r.json())
+      .then((j) => {
+        setSistemasCadastro((j.sistemas || []).map((s: { id: number; nome: string }) => ({ id: s.id, nome: s.nome })));
+        setFornecedoresCadastro(
+          (j.fornecedores || []).map((s: { id: number; nome: string }) => ({ id: s.id, nome: s.nome }))
+        );
+      })
+      .catch(() => {
+        /* cadastro opcional */
+      });
   };
 
   useEffect(() => {
@@ -823,6 +846,52 @@ export default function MapeamentoDadosPage() {
               value={form.descricao}
               onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
             />
+            <FormControl fullWidth size="small">
+              <InputLabel id="mapa-sistema-label">Sistema (cadastro)</InputLabel>
+              <Select
+                labelId="mapa-sistema-label"
+                label="Sistema (cadastro)"
+                value={form.sistemaId === "" ? "" : String(form.sistemaId)}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    sistemaId: e.target.value === "" ? "" : Number(e.target.value),
+                  }))
+                }
+              >
+                <MenuItem value="">
+                  <em>Nenhum / texto livre abaixo</em>
+                </MenuItem>
+                {sistemasCadastro.map((s) => (
+                  <MenuItem key={s.id} value={String(s.id)}>
+                    {s.nome}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel id="mapa-forn-label">Fornecedor (cadastro)</InputLabel>
+              <Select
+                labelId="mapa-forn-label"
+                label="Fornecedor (cadastro)"
+                value={form.fornecedorId === "" ? "" : String(form.fornecedorId)}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    fornecedorId: e.target.value === "" ? "" : Number(e.target.value),
+                  }))
+                }
+              >
+                <MenuItem value="">
+                  <em>Nenhum</em>
+                </MenuItem>
+                {fornecedoresCadastro.map((s) => (
+                  <MenuItem key={s.id} value={String(s.id)}>
+                    {s.nome}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               fullWidth
               multiline

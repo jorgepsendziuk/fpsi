@@ -24,6 +24,7 @@ import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
 import { useProgramaAccess } from "@/hooks/useProgramaAccess";
 import * as dataService from "@/lib/services/dataService";
 import type { PoliticaProgramaDados } from "@/lib/utils/politicaPlaceholders";
+import { supabaseBrowserClient } from "@utils/supabase/client";
 
 type Snapshot = {
   geradoEm?: string;
@@ -85,6 +86,23 @@ export default function RelatorioExecutivoPage() {
       setNarrativaResumo(data.narrativa_resumo || "");
       setNarrativaImpacto(data.narrativa_impacto || "");
       setPrograma((prog as PoliticaProgramaDados) || null);
+      if (prog && typeof prog === "object") {
+        const encId = Number((prog as { encarregado_dados_pessoais?: number }).encarregado_dados_pessoais);
+        if (Number.isFinite(encId) && encId > 0) {
+          const { data: resp } = await supabaseBrowserClient
+            .from("responsavel")
+            .select("nome, email")
+            .eq("id", encId)
+            .maybeSingle();
+          if (resp) {
+            setPrograma({
+              ...(prog as object),
+              dpo_nome: resp.nome,
+              dpo_email: resp.email,
+            } as PoliticaProgramaDados);
+          }
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro");
     } finally {

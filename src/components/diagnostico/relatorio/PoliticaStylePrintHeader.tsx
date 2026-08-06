@@ -97,6 +97,24 @@ export default function PoliticaStylePrintHeader({ programa, docTitle }: Politic
           {contato ? (
             <Typography sx={{ fontSize: 9, color: "text.secondary", mt: 0.25 }}>{contato}</Typography>
           ) : null}
+          {(() => {
+            const dpoNome =
+              programa && typeof programa === "object"
+                ? String((programa as { dpo_nome?: string }).dpo_nome ?? "").trim()
+                : "";
+            const dpoEmail =
+              programa && typeof programa === "object"
+                ? String((programa as { dpo_email?: string }).dpo_email ?? "").trim()
+                : "";
+            if (!dpoNome && !dpoEmail) return null;
+            return (
+              <Typography sx={{ fontSize: 9, color: "text.secondary", mt: 0.25 }}>
+                {dpoNome
+                  ? `Encarregado (DPO): ${dpoNome}${dpoEmail ? ` · ${dpoEmail}` : ""}`
+                  : `E-mail do encarregado: ${dpoEmail}`}
+              </Typography>
+            );
+          })()}
           {portalUrl ? (
             <Typography sx={{ fontSize: 9, mt: 0.75, wordBreak: "break-all", lineHeight: 1.45 }}>
               <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>
