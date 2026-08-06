@@ -1,11 +1,13 @@
 {
+  "/api/programas/route": "app/api/programas/route.js",
+  "/api/empresas/route": "app/api/empresas/route.js",
+  "/api/admin/check/route": "app/api/admin/check/route.js",
   "/api/programas/[id]/route": "app/api/programas/[id]/route.js",
   "/api/audit/last-activity/route": "app/api/audit/last-activity/route.js",
-  "/api/programas/[id]/riscos/route": "app/api/programas/[id]/riscos/route.js",
-  "/api/programas/[id]/modulos-resumo/route": "app/api/programas/[id]/modulos-resumo/route.js",
-  "/demo/login/page": "app/demo/login/page.js",
-  "/programas/[id]/areas/page": "app/programas/[id]/areas/page.js",
+  "/api/programas/[id]/access/route": "app/api/programas/[id]/access/route.js",
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
   "/programas/[id]/page": "app/programas/[id]/page.js",
-  "/programas/[id]/tarefas/page": "app/programas/[id]/tarefas/page.js",
-  "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js"
+  "/programas/[id]/conformidade/mapeamento/page": "app/programas/[id]/conformidade/mapeamento/page.js",
+  "/programas/[id]/conformidade/ropa/page": "app/programas/[id]/conformidade/ropa/page.js",
+  "/programas/[id]/conformidade/incidentes/page": "app/programas/[id]/conformidade/incidentes/page.js"
 }
