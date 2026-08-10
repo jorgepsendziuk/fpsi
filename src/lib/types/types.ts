@@ -42,6 +42,14 @@ export interface Programa {
   responsavel_gestao_integridade?: number | null;
   gestor_seguranca_informacao?: number | null;
   encarregado_dados_pessoais?: number | null;
+  /** Suplente formal do encarregado (ANPD Res. 18/2024). */
+  encarregado_substituto?: number | null;
+  /** Data do ato formal de designação do DPO. */
+  dpo_ato_designacao_data?: string | Date | null;
+  /** Texto/resumo do ato de designação. */
+  dpo_ato_designacao_texto?: string | null;
+  /** E-mail operacional para alertas do DPO. */
+  dpo_notificacao_email?: string | null;
   gestor_tic?: number | null;
   /** AIGP — accountability formal para sistemas de IA (medida 26.1). */
   responsavel_governanca_ia?: number | null;
@@ -52,6 +60,7 @@ export interface Programa {
   cnpj: number;
   razao_social: string;
   nome_fantasia: string;
+  endereco?: string | null;
   atendimento_fone: string;
   atendimento_email: string;
   atendimento_site: string;

@@ -65,6 +65,8 @@ import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import NextLink from "next/link";
 import { ProgramaOperacionalDashboard } from "@/components/programa/ProgramaOperacionalDashboard";
+import { TermoNomeacaoDpoDialog } from "@/components/programa/TermoNomeacaoDpoDialog";
+import { SeloLgpdWidget } from "@/components/programa/SeloLgpdWidget";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
 import { Programa } from "@/lib/types/types";
 import {
@@ -358,6 +360,7 @@ export default function ProgramaMainPage() {
   const [orgaoSaving, setOrgaoSaving] = useState(false);
   const [dadosProgramaPopoverAnchor, setDadosProgramaPopoverAnchor] = useState<HTMLElement | null>(null);
   const [dadosOrgPopoverAnchor, setDadosOrgPopoverAnchor] = useState<HTMLElement | null>(null);
+  const [termoDpoOpen, setTermoDpoOpen] = useState(false);
   const programaId = programa?.id;
 
   const orgaoNome = useMemo(() => {
@@ -963,6 +966,15 @@ export default function ProgramaMainPage() {
         justifyContent: { xs: "flex-start", sm: "flex-end" },
       }}
     >
+      <SeloLgpdWidget
+        preset={
+          (modulosResumo?.escopo?.perfil_escopo as PerfilEscopoPreset | undefined) ??
+          savedEscopoResolved?.preset ??
+          "completo"
+        }
+        maturidadeMedia={modulosResumo?.postura?.maturidadeMedia ?? null}
+        size={94}
+      />
       <Button
         variant="outlined"
         size="small"
@@ -1129,6 +1141,19 @@ export default function ProgramaMainPage() {
         <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mt: 3, mb: 1 }}>
           Encarregado — formalização (ANPD 18/2024)
         </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          Cadastro do ato não substitui o documento institucional. Gere o Termo de Nomeação com os dados já preenchidos
+          (logo, organização, DPO) e complete o que faltar antes da assinatura.
+        </Typography>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<GavelIcon />}
+          onClick={() => setTermoDpoOpen(true)}
+          sx={{ mb: 2 }}
+        >
+          Gerar Termo de Nomeação do DPO
+        </Button>
         <Grid container spacing={2}>
           {dpoFormalizacaoFields.map((field) => (
             <Grid item xs={12} md={field.fullRow ? 12 : 6} key={field.key}>
@@ -1137,6 +1162,18 @@ export default function ProgramaMainPage() {
           ))}
         </Grid>
       </Popover>
+
+      {programaId != null && (
+        <TermoNomeacaoDpoDialog
+          open={termoDpoOpen}
+          onClose={() => setTermoDpoOpen(false)}
+          programaId={programaId}
+          idOrSlug={idOrSlug}
+          programa={programa}
+          canPersist={canPersistProgramaData}
+          onProgramaUpdated={(next) => setPrograma((prev: any) => ({ ...prev, ...next }))}
+        />
+      )}
 
       <Popover
         open={Boolean(dadosOrgPopoverAnchor)}

@@ -177,6 +177,36 @@ export default function DivulgacaoPage() {
           variant="outlined"
           sx={{
             p: 2,
+            mb: 2,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1.5,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              1º post LinkedIn — Portal / ANPD
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              3 slides 9:16: risco + checklist ANPD → Portal do Titular → programa completo. Print/PDF vertical.
+            </Typography>
+          </Box>
+          <Chip
+            component={LinkNext}
+            href="/divulgacao/first"
+            clickable
+            color="primary"
+            label="Abrir first"
+            sx={{ fontWeight: 700 }}
+          />
+        </Paper>
+
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
             mb: 4,
             display: "flex",
             flexWrap: "wrap",

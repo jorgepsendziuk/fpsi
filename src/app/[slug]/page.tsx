@@ -508,9 +508,6 @@ export default function PortalPrivacidadePage() {
                 Documentos e transparência
               </Typography>
             </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Textos-padrão neste portal; a organização pode substituir por URLs próprias no cadastro do programa.
-            </Typography>
             <List dense disablePadding>
               <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
                 <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>

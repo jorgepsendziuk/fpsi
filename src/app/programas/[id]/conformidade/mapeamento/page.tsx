@@ -474,18 +474,40 @@ export default function MapeamentoDadosPage() {
         </Paper>
       )}
 
-      <Accordion defaultExpanded={false} sx={{ mb: 2 }} variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Processos de referência (modelo LGPD)</Typography>
+      <Accordion defaultExpanded={false} sx={{ mb: 2, borderColor: "primary.light", background: (theme) => theme.palette.background.paper, boxShadow: 2 }} variant="outlined">
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}
+          sx={{
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.07),
+            borderBottom: "1px solid",
+            borderColor: "primary.light",
+            minHeight: 68,
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <MapIcon sx={{ color: "primary.main", fontSize: 28, mr: 1, flexShrink: 0, opacity: 0.85 }} />
+            <Box>
+              <Typography
+                fontWeight={700}
+                color="primary.main"
+                sx={{ fontSize: { xs: "1rem", sm: "1.12rem" }, letterSpacing: ".01em" }}
+              >
+                Processos de referência (modelo LGPD)
+              </Typography>
+              <Typography
+                component="span"
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", mt: -.25, fontSize: { xs: "0.82rem", sm: "0.94rem" } }}
+              >
+                Catálogo para consulta rápida ou uso como base nos seus levantamentos.
+              </Typography>
+            </Box>
+          </Stack>
         </AccordionSummary>
-        <AccordionDetails>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Lista curada a partir da planilha em{" "}
-            <Typography component="span" variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
-              docs/improvements/Padrão Inicial - 01 - LGPD - Data Mapping…
-            </Typography>
-            . Serve para inspirar o preenchimento; adapte ao teu contexto.
-          </Alert>
+        <AccordionDetails sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.03), borderRadius: 1 }}>
+ 
+          
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
             <TextField
               size="small"

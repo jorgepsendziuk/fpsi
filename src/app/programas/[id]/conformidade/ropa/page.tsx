@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import NextLink from "next/link";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
@@ -252,6 +252,47 @@ const emptyRegistroForm = (): RegistroFormState => ({
   observacoes: "",
 });
 
+type RopaCampoFaltante = {
+  key: string;
+  label: string;
+  secao: "cabecalho" | "operacao";
+};
+
+/** Campos que bloqueiam gravar cabeçalho / criar operações. */
+function listRopaCabecalhoGaps(form: RegistroFormState): RopaCampoFaltante[] {
+  const gaps: RopaCampoFaltante[] = [];
+  if (!String(form.gestor_responsavel_user_id ?? "").trim()) {
+    gaps.push({
+      key: "gestor_responsavel_user_id",
+      label: "Gestor responsável pelo ROPA",
+      secao: "cabecalho",
+    });
+  }
+  if (!String(form.organizacao ?? "").trim()) {
+    gaps.push({
+      key: "organizacao",
+      label: "Organização (sincronize com o cadastro do programa)",
+      secao: "cabecalho",
+    });
+  }
+  return gaps;
+}
+
+/** Campos que bloqueiam cadastrar/editar uma operação manual. */
+function listRopaOperacaoGaps(form: OperacaoTratamento): RopaCampoFaltante[] {
+  const gaps: RopaCampoFaltante[] = [];
+  if (!form.nome.trim()) {
+    gaps.push({ key: "nome", label: "Processo", secao: "operacao" });
+  }
+  if (!form.finalidade.trim()) {
+    gaps.push({ key: "finalidade", label: "Finalidade", secao: "operacao" });
+  }
+  if (!form.baseLegal.trim()) {
+    gaps.push({ key: "baseLegal", label: "Hipótese legal", secao: "operacao" });
+  }
+  return gaps;
+}
+
 /** Preenche formulário a partir do registro; se registro for null ou campo vazio, usa defaults da empresa (ROPA). */
 function registroRowToForm(
   r: dataService.RegistroRopaRow | null,
@@ -324,6 +365,7 @@ export default function ROPAPage() {
   const [bulkMapDialogOpen, setBulkMapDialogOpen] = useState(false);
   const [bulkMapSelected, setBulkMapSelected] = useState<Set<number>>(new Set());
   const [bulkMapSaving, setBulkMapSaving] = useState(false);
+  const [bulkCreateError, setBulkCreateError] = useState<string | null>(null);
 
   const loadVersoes = useCallback(async () => {
     if (programaIdNum == null) return;
@@ -451,12 +493,40 @@ export default function ROPAPage() {
     };
   }, [programaIdNum]);
 
-  const handleSyncCadastro = async () => {
+  /** Se só há um membro e o gestor ainda não foi escolhido, pré-seleciona. */
+  useEffect(() => {
+    if (membrosPrograma.length !== 1) return;
+    if (String(registroForm.gestor_responsavel_user_id ?? "").trim()) return;
+    const only = membrosPrograma[0];
+    setRegistroForm((f) => ({
+      ...f,
+      gestor_responsavel_user_id: only.user_id,
+      gestor_responsavel: labelMembroGestor(only),
+    }));
+  }, [membrosPrograma, registroForm.gestor_responsavel_user_id]);
+
+  const cabecalhoGaps = useMemo(() => listRopaCabecalhoGaps(registroForm), [registroForm]);
+  const operacaoGaps = useMemo(() => listRopaOperacaoGaps(form), [form]);
+  const saveGaps = useMemo(
+    () => [...cabecalhoGaps, ...operacaoGaps],
+    [cabecalhoGaps, operacaoGaps]
+  );
+
+  const applyGestor = useCallback((v: ProgramaMembroUsuario | null) => {
+    setRegistroForm((f) => ({
+      ...f,
+      gestor_responsavel_user_id: v?.user_id ?? "",
+      gestor_responsavel: v ? labelMembroGestor(v) : "",
+    }));
+  }, []);
+
+  const handleSyncCadastro = async (opts?: { quiet?: boolean }) => {
     if (programaIdNum == null) return;
     if (
+      !opts?.quiet &&
       typeof window !== "undefined" &&
       !window.confirm(
-        "Atualizar organização, CNPJ, endereço, atividade, gestor, e-mail e telefone do ROPA com os dados do cadastro do programa (e da empresa, se houver)? Os demais campos do cabeçalho (categorias, medidas, etc.) são mantidos."
+        "Atualizar organização, CNPJ, endereço, atividade, e-mail e telefone do ROPA com os dados do cadastro do programa (e da empresa, se houver)? Os demais campos do cabeçalho (categorias, medidas, etc.) são mantidos."
       )
     ) {
       return;
@@ -465,10 +535,26 @@ export default function ROPAPage() {
     try {
       const saved = await dataService.syncRegistroRopaFromCadastro(programaIdNum);
       setRegistro(saved);
-      setRegistroForm(registroRowToForm(saved, empresaRopaDefaults || undefined));
+      setRegistroForm((prev) => {
+        const next = registroRowToForm(saved, empresaRopaDefaults || undefined);
+        // Mantém gestor já escolhido na UI se o cadastro ainda não tiver.
+        if (
+          !String(next.gestor_responsavel_user_id ?? "").trim() &&
+          String(prev.gestor_responsavel_user_id ?? "").trim()
+        ) {
+          return {
+            ...next,
+            gestor_responsavel_user_id: prev.gestor_responsavel_user_id,
+            gestor_responsavel: prev.gestor_responsavel,
+          };
+        }
+        return next;
+      });
     } catch (err) {
       console.error(err);
-      alert("Não foi possível sincronizar com o cadastro. Verifique os dados do programa na página inicial.");
+      if (!opts?.quiet) {
+        alert("Não foi possível sincronizar com o cadastro. Verifique os dados do programa na página inicial.");
+      }
     } finally {
       setSyncingCadastro(false);
     }
@@ -531,13 +617,8 @@ export default function ROPAPage() {
   };
 
   const handleSave = async () => {
-    if (!form.nome.trim() || programaIdNum == null) return;
-    if (!registroForm.gestor_responsavel_user_id?.trim()) {
-      alert(
-        "Selecione o gestor responsável entre os usuários do programa. Se a pessoa ainda não aparece na lista, use \"Cadastrar ou convidar usuário\"."
-      );
-      return;
-    }
+    if (programaIdNum == null) return;
+    if (saveGaps.length > 0) return;
     setSaving(true);
     try {
       const savedRegistro = await dataService.upsertRegistroRopa(programaIdNum, {
@@ -545,7 +626,7 @@ export default function ROPAPage() {
         cnpj: registroForm.cnpj || null,
         endereco: registroForm.endereco || null,
         atividade_principal: registroForm.atividade_principal || null,
-        gestor_responsavel_user_id: registroForm.gestor_responsavel_user_id.trim(),
+        gestor_responsavel_user_id: String(registroForm.gestor_responsavel_user_id ?? "").trim(),
         gestor_responsavel: registroForm.gestor_responsavel || null,
         email: registroForm.email || null,
         telefone: registroForm.telefone || null,
@@ -610,7 +691,32 @@ export default function ROPAPage() {
         .filter((n) => !Number.isNaN(n))
     );
     setBulkMapSelected(new Set(mapeamentos.filter((m) => !linked.has(m.id)).map((m) => m.id)));
+    setBulkCreateError(null);
+    // Alinha ao registro persistido, mas preserva gestor já escolhido na tela (ainda não gravado).
+    setRegistroForm((prev) => {
+      const base = registroRowToForm(registro, empresaRopaDefaults || undefined);
+      if (!String(base.gestor_responsavel_user_id ?? "").trim() && String(prev.gestor_responsavel_user_id ?? "").trim()) {
+        return {
+          ...base,
+          gestor_responsavel_user_id: prev.gestor_responsavel_user_id,
+          gestor_responsavel: prev.gestor_responsavel,
+        };
+      }
+      if (!String(base.gestor_responsavel_user_id ?? "").trim() && membrosPrograma.length === 1) {
+        const only = membrosPrograma[0];
+        return {
+          ...base,
+          gestor_responsavel_user_id: only.user_id,
+          gestor_responsavel: labelMembroGestor(only),
+        };
+      }
+      return base;
+    });
     setBulkMapDialogOpen(true);
+    // Se falta organização, tenta puxar do cadastro sem confirmação extra.
+    if (!String(registro?.organizacao ?? "").trim()) {
+      void handleSyncCadastro({ quiet: true });
+    }
   };
 
   const toggleBulkMap = (id: number) => {
@@ -624,17 +730,11 @@ export default function ROPAPage() {
 
   const handleBulkCreateFromMapeamento = async () => {
     if (programaIdNum == null) return;
-    if (!registroForm.gestor_responsavel_user_id?.trim()) {
-      alert(
-        "Seleciona o gestor responsável no cabeçalho do ROPA. Abre \"Adicionar processo\", preenche o gestor e grava uma operação — ou usa este diálogo depois de o cabeçalho estar completo."
-      );
-      return;
-    }
+    const gaps = listRopaCabecalhoGaps(registroForm);
+    if (gaps.length > 0) return;
     const ids = Array.from(bulkMapSelected);
-    if (ids.length === 0) {
-      alert("Seleciona pelo menos um levantamento de mapeamento.");
-      return;
-    }
+    if (ids.length === 0) return;
+    setBulkCreateError(null);
     setBulkMapSaving(true);
     try {
       const savedRegistro = await dataService.upsertRegistroRopa(programaIdNum, {
@@ -642,7 +742,7 @@ export default function ROPAPage() {
         cnpj: registroForm.cnpj || null,
         endereco: registroForm.endereco || null,
         atividade_principal: registroForm.atividade_principal || null,
-        gestor_responsavel_user_id: registroForm.gestor_responsavel_user_id.trim(),
+        gestor_responsavel_user_id: String(registroForm.gestor_responsavel_user_id ?? "").trim(),
         gestor_responsavel: registroForm.gestor_responsavel || null,
         email: registroForm.email || null,
         telefone: registroForm.telefone || null,
@@ -672,7 +772,9 @@ export default function ROPAPage() {
       setBulkMapSelected(new Set());
     } catch (err) {
       console.error(err);
-      alert("Não foi possível criar todas as operações.");
+      setBulkCreateError(
+        err instanceof Error ? err.message : "Não foi possível criar todas as operações. Tente novamente."
+      );
     } finally {
       setBulkMapSaving(false);
     }
@@ -796,6 +898,30 @@ export default function ROPAPage() {
         }
       />
 
+      {cabecalhoGaps.length > 0 && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setRegistroForm(registroRowToForm(registro, empresaRopaDefaults || undefined));
+                if (mapeamentos.length > 0) handleOpenBulkFromMapeamento();
+                else handleOpenNew();
+              }}
+            >
+              Completar agora
+            </Button>
+          }
+        >
+          <strong>Cabeçalho do ROPA incompleto.</strong> Falta:{" "}
+          {cabecalhoGaps.map((g) => g.label).join("; ")}. Complete no diálogo antes de criar
+          operações (manual ou a partir do mapeamento).
+        </Alert>
+      )}
+
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
         <Button variant="outlined" startIcon={<ExcelIcon />} onClick={exportExcel} disabled={operacoes.length === 0}>
           Exportar Excel (CSV)
@@ -838,7 +964,7 @@ export default function ROPAPage() {
               variant="outlined"
               color="secondary"
               startIcon={<SyncIcon />}
-              onClick={handleSyncCadastro}
+              onClick={() => void handleSyncCadastro()}
               disabled={syncingCadastro}
             >
               {syncingCadastro ? "Sincronizando…" : "Sincronizar com cadastro do programa"}
@@ -977,14 +1103,46 @@ export default function ROPAPage() {
         <DialogTitle>{editingId ? "Editar processo" : "Adicionar processo — Registro das Operações de Tratamento (ROPA)"}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            {saveGaps.length > 0 && (
+              <Grid item xs={12}>
+                <Alert severity="warning">
+                  <strong>Ainda não dá para {editingId ? "salvar" : "cadastrar"}.</strong> Preencha:{" "}
+                  {saveGaps.map((g) => g.label).join("; ")}.
+                  {cabecalhoGaps.some((g) => g.key === "organizacao") && (
+                    <Box sx={{ mt: 1 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => void handleSyncCadastro({ quiet: true })}
+                        disabled={syncingCadastro}
+                      >
+                        {syncingCadastro ? "Sincronizando…" : "Sincronizar organização do cadastro"}
+                      </Button>
+                    </Box>
+                  )}
+                  {membrosPrograma.length === 0 && (
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Nenhum usuário no programa —{" "}
+                      <Link component={NextLink} href={`/programas/${idOrSlug}/usuarios`}>
+                        convide alguém
+                      </Link>{" "}
+                      para poder escolher o gestor.
+                    </Typography>
+                  )}
+                </Alert>
+              </Grid>
+            )}
             {/* 1. INFORMAÇÕES DE CONTATO — vêm do cadastro do programa/empresa */}
             <Grid item xs={12}>
               <Typography variant="overline" color="text.secondary" fontWeight="bold">
                 1. Informações de contato (cadastro do programa)
               </Typography>
-              <Alert severity="info" sx={{ mt: 1, mb: 0.5 }}>
+              <Alert
+                severity={String(registroForm.organizacao ?? "").trim() ? "info" : "error"}
+                sx={{ mt: 1, mb: 0.5 }}
+              >
                 <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  <strong>{registroForm.organizacao || "Organização não cadastrada"}</strong>
+                  <strong>{registroForm.organizacao || "Organização não cadastrada — obrigatório"}</strong>
                   {registroForm.cnpj ? ` · CNPJ ${registroForm.cnpj}` : ""}
                 </Typography>
                 {(registroForm.endereco || registroForm.atividade_principal) && (
@@ -1025,19 +1183,18 @@ export default function ROPAPage() {
                 value={
                   membrosPrograma.find((m) => m.user_id === registroForm.gestor_responsavel_user_id) ?? null
                 }
-                onChange={(_, v) =>
-                  setRegistroForm((f) => ({
-                    ...f,
-                    gestor_responsavel_user_id: v?.user_id ?? "",
-                    gestor_responsavel: v ? labelMembroGestor(v) : "",
-                  }))
-                }
+                onChange={(_, v) => applyGestor(v)}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     required
+                    error={!String(registroForm.gestor_responsavel_user_id ?? "").trim()}
                     label="Gestor responsável pelo ROPA"
-                    helperText="Quem responde por este registro. Dados da empresa vêm do cadastro do programa."
+                    helperText={
+                      !String(registroForm.gestor_responsavel_user_id ?? "").trim()
+                        ? "Obrigatório — escolha um usuário do programa."
+                        : "Quem responde por este registro. Dados da empresa vêm do cadastro do programa."
+                    }
                   />
                 )}
               />
@@ -1132,15 +1289,48 @@ export default function ROPAPage() {
                 </Link>
                 .
               </Typography>
-              <TextField fullWidth label="Processo" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} required placeholder={PLACEHOLDER_PROCESSO} sx={{ mb: 1.5 }} />
-              <TextField fullWidth multiline rows={2} label="Finalidade" value={form.finalidade} onChange={(e) => setForm((f) => ({ ...f, finalidade: e.target.value }))} placeholder={PLACEHOLDER_FINALIDADE} sx={{ mb: 1.5 }} />
-              <FormControl fullWidth>
+              <TextField
+                fullWidth
+                label="Processo"
+                value={form.nome}
+                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                required
+                error={!form.nome.trim()}
+                helperText={!form.nome.trim() ? "Obrigatório" : undefined}
+                placeholder={PLACEHOLDER_PROCESSO}
+                sx={{ mb: 1.5 }}
+              />
+              <TextField
+                fullWidth
+                multiline
+                rows={2}
+                label="Finalidade"
+                value={form.finalidade}
+                onChange={(e) => setForm((f) => ({ ...f, finalidade: e.target.value }))}
+                required
+                error={!form.finalidade.trim()}
+                helperText={!form.finalidade.trim() ? "Obrigatório" : undefined}
+                placeholder={PLACEHOLDER_FINALIDADE}
+                sx={{ mb: 1.5 }}
+              />
+              <FormControl fullWidth required error={!form.baseLegal.trim()}>
                 <InputLabel>Hipótese legal</InputLabel>
-                <Select value={form.baseLegal} label="Hipótese legal" onChange={(e) => setForm((f) => ({ ...f, baseLegal: e.target.value }))} displayEmpty renderValue={(v) => v || PLACEHOLDER_HIPOTESE}>
+                <Select
+                  value={form.baseLegal}
+                  label="Hipótese legal"
+                  onChange={(e) => setForm((f) => ({ ...f, baseLegal: e.target.value }))}
+                  displayEmpty
+                  renderValue={(v) => v || PLACEHOLDER_HIPOTESE}
+                >
                   {HIPOTESES_LEGAIS.map((b) => (
                     <MenuItem key={b} value={b}>{b}</MenuItem>
                   ))}
                 </Select>
+                {!form.baseLegal.trim() && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                    Obrigatório
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
@@ -1151,9 +1341,14 @@ export default function ROPAPage() {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ flexWrap: "wrap", gap: 1, justifyContent: "flex-end" }}>
+          {saveGaps.length > 0 && (
+            <Typography variant="caption" color="error" sx={{ mr: "auto", maxWidth: 420 }}>
+              Falta: {saveGaps.map((g) => g.label).join("; ")}
+            </Typography>
+          )}
           <Button onClick={handleClose} disabled={saving}>Cancelar</Button>
-          <Button variant="contained" onClick={handleSave} disabled={!form.nome.trim() || saving}>
+          <Button variant="contained" onClick={() => void handleSave()} disabled={saveGaps.length > 0 || saving}>
             {saving ? "Salvando…" : editingId ? "Salvar" : "Cadastrar"}
           </Button>
         </DialogActions>
@@ -1193,9 +1388,77 @@ export default function ROPAPage() {
             Serão criadas linhas no ROPA com finalidade e categorias derivadas do levantamento. A hipótese legal fica como
             texto genérico — deve ser revista antes de relatórios ou auditoria.
           </Alert>
+
+          {bulkCreateError && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setBulkCreateError(null)}>
+              {bulkCreateError}
+            </Alert>
+          )}
+
+          {cabecalhoGaps.length > 0 && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <strong>Complete o cabeçalho aqui mesmo</strong> (não precisa abrir &quot;Adicionar processo&quot;). Falta:{" "}
+              {cabecalhoGaps.map((g) => g.label).join("; ")}.
+            </Alert>
+          )}
+
+          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+            Gestor responsável pelo ROPA
+          </Typography>
+          <Autocomplete
+            options={membrosPrograma}
+            getOptionLabel={(o) => labelMembroGestor(o)}
+            isOptionEqualToValue={(a, b) => a.user_id === b.user_id}
+            value={
+              membrosPrograma.find((m) => m.user_id === registroForm.gestor_responsavel_user_id) ?? null
+            }
+            onChange={(_, v) => applyGestor(v)}
+            sx={{ mb: 1 }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                required
+                size="small"
+                error={!String(registroForm.gestor_responsavel_user_id ?? "").trim()}
+                label="Gestor responsável"
+                helperText={
+                  membrosPrograma.length === 0
+                    ? "Nenhum usuário no programa — convide alguém em Usuários."
+                    : !String(registroForm.gestor_responsavel_user_id ?? "").trim()
+                      ? "Obrigatório para criar as operações."
+                      : undefined
+                }
+              />
+            )}
+          />
+          <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
+            <Button
+              component={NextLink}
+              href={`/programas/${idOrSlug}/usuarios`}
+              size="small"
+              startIcon={<PersonAddIcon />}
+              variant="text"
+            >
+              Convidar usuário
+            </Button>
+            {cabecalhoGaps.some((g) => g.key === "organizacao") && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => void handleSyncCadastro({ quiet: true })}
+                disabled={syncingCadastro}
+              >
+                {syncingCadastro ? "Sincronizando…" : "Sincronizar organização"}
+              </Button>
+            )}
+          </Stack>
+
+          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+            Levantamentos a importar
+          </Typography>
           {mapeamentos.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
-              Não há levantamentos. Cadastra primeiro em{" "}
+              Não há levantamentos. Cadastre primeiro em{" "}
               <Link component={NextLink} href={`/programas/${idOrSlug}/conformidade/mapeamento`}>
                 Mapeamento de dados
               </Link>
@@ -1224,14 +1487,26 @@ export default function ROPAPage() {
             </FormGroup>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ flexWrap: "wrap", gap: 1, justifyContent: "flex-end" }}>
+          {(cabecalhoGaps.length > 0 || bulkMapSelected.size === 0) && (
+            <Typography variant="caption" color="error" sx={{ mr: "auto", maxWidth: 360 }}>
+              {cabecalhoGaps.length > 0
+                ? `Falta no cabeçalho: ${cabecalhoGaps.map((g) => g.label).join("; ")}`
+                : "Selecione pelo menos um levantamento."}
+            </Typography>
+          )}
           <Button onClick={() => setBulkMapDialogOpen(false)} disabled={bulkMapSaving}>
             Cancelar
           </Button>
           <Button
             variant="contained"
             onClick={() => void handleBulkCreateFromMapeamento()}
-            disabled={bulkMapSaving || mapeamentos.length === 0 || bulkMapSelected.size === 0}
+            disabled={
+              bulkMapSaving ||
+              mapeamentos.length === 0 ||
+              bulkMapSelected.size === 0 ||
+              cabecalhoGaps.length > 0
+            }
           >
             {bulkMapSaving ? "A criar…" : `Criar ${bulkMapSelected.size} operação(ões)`}
           </Button>
