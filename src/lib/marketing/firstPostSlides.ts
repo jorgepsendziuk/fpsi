@@ -8,8 +8,8 @@ export type FirstPostSlide = {
   eyebrow: string;
   title: string;
   tone: "ink" | "lock" | "shield" | "blue";
-  /** Fundo: 1.png Auto ANPD | 2.jpg Portal | 3.jpg Dashboard */
-  backdrop: "anpd" | "portal" | "diag";
+  /** Fundo: 1 Auto ANPD | 2 Portal | 3 Diagnóstico | 4 Dashboard */
+  backdrop: "anpd" | "portal" | "dash" | "diagnostico";
   bullets?: string[];
   checklist?: string[];
   footer?: string;
@@ -30,9 +30,9 @@ export const FIRST_POST_SLIDES: FirstPostSlide[] = [
       "Multa: até 2% do faturamento, limitada a R$ 50 mi por infração.",
     ],
     checklist: [
-      "Encarregado (DPO) identificado, com contato claro",
-      "Canal fácil para o titular exercer direitos (art. 18)",
-      "Pedidos com prazo, responsável e resposta registrada",
+      "Identificação e contatos da instituição e do encarregado (arts. 9º e 41)",
+      "Canal de comunicação para o exercício dos direitos do titular (arts. 18 e 41)",
+      "Pedidos com prazo, responsável e resposta registrada (art. 18; art. 6º, X)",
     ],
   },
   {
@@ -51,18 +51,29 @@ export const FIRST_POST_SLIDES: FirstPostSlide[] = [
       "Ajuda a cobrir o básico operacional que a ANPD já fiscaliza — canal ativo, não só PDF no site.",
   },
   {
+    id: "diagnostico",
+    eyebrow: "Diagnóstico · PPSI 2.0",
+    title: "Maturidade por controle",
+    tone: "shield",
+    backdrop: "diagnostico",
+    bullets: [
+      "Estrutura, Segurança, Privacidade e Governança de IA",
+      "Resposta por medida, evidências anexadas e plano de trabalho",
+      "Responsável, prazos e normas de referência (LGPD, CIS, ISO…)",
+      "Índices de maturidade atualizados conforme você avança",
+    ],
+    footer: "Do catálogo oficial do PPSI 2.0 — na web, com histórico e colaboração.",
+  },
+  {
     id: "programa",
     eyebrow: "E o programa cresce com você",
     title: "Do canal ao controle completo",
-    tone: "shield",
-    backdrop: "diag",
+    tone: "blue",
+    backdrop: "dash",
     bullets: [
-      "Diagnóstico PPSI 2.0 + Governança de IA",
-      "Mapeamento de dados",
-      "Registro de Operações",
-      "Plano de ação",
-      "Políticas",
-      "Incidentes",
+      "Painel com maturidade, pedidos e riscos",
+      "Mapeamento de dados e Registro de Operações",
+      "Plano de ação, políticas e incidentes",
       "Tudo no mesmo programa — do portal ao relatório executivo",
     ],
     footer: "É grátis. É open source. Precisa de ajuda na implantação? Fala comigo.",

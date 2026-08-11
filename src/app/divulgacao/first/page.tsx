@@ -25,7 +25,10 @@ const TONE_BG: Record<(typeof FIRST_POST_SLIDES)[number]["tone"], string> = {
 const BACKDROP_SRC: Record<(typeof FIRST_POST_SLIDES)[number]["backdrop"], string> = {
   anpd: "/divulgacao/first/1.png",
   portal: "/divulgacao/first/2.jpg",
-  diag: "/divulgacao/first/3.jpg",
+  /** 3 = tela do Diagnóstico (controle + evidências) */
+  diagnostico: "/divulgacao/first/3.jpg",
+  /** 4 = visão geral / dashboard do programa */
+  dash: "/divulgacao/first/4.jpg",
 };
 
 const BACKDROP_OBJECT: Record<(typeof FIRST_POST_SLIDES)[number]["backdrop"], string> = {
@@ -33,8 +36,10 @@ const BACKDROP_OBJECT: Record<(typeof FIRST_POST_SLIDES)[number]["backdrop"], st
   anpd: "center 8%",
   /** Portal: faixa azul + DPO + formulário */
   portal: "center 18%",
+  /** Diagnóstico: controle, evidência, resposta */
+  diagnostico: "center 35%",
   /** Dashboard: maturidade + pedidos + riscos */
-  diag: "left 12%",
+  dash: "left 12%",
 };
 
 function SlideBackdrop({ kind }: { kind: (typeof FIRST_POST_SLIDES)[number]["backdrop"] }) {
@@ -54,32 +59,16 @@ function SlideBackdrop({ kind }: { kind: (typeof FIRST_POST_SLIDES)[number]["bac
           src={BACKDROP_SRC[kind]}
           alt=""
           fill
-          sizes="(max-width: 480px) 100vw, 480px"
+          unoptimized
+          sizes="100vw"
+          quality={95}
           style={{
             objectFit: "cover",
             objectPosition: BACKDROP_OBJECT[kind],
-            filter: "saturate(1) contrast(1.05)",
           }}
           priority={kind === "anpd"}
         />
       </Box>
-
-      {/* Vignette forte nas bordas — centro do print limpo */}
-      <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          background: `
-            radial-gradient(ellipse 72% 68% at 50% 48%,
-              transparent 0%,
-              transparent 38%,
-              rgba(6,21,37,0.45) 68%,
-              rgba(6,21,37,0.82) 88%,
-              rgba(6,21,37,0.94) 100%
-            )
-          `,
-        }}
-      />
     </Box>
   );
 }
