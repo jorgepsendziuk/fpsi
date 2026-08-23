@@ -35,6 +35,9 @@ import {
   useTheme,
   FormControlLabel,
   Checkbox,
+  Chip,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import {
@@ -66,7 +69,7 @@ import { GovernancaGrupoMembrosPicklist } from "@/components/programa/Governanca
 import { GovernancaPapelHintDialog } from "@/components/programa/GovernancaPpsiCartilhaPanel";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { logActivityFromClient } from "@/lib/services/auditClient";
-import type { Programa, Responsavel } from "@/lib/types/types";
+import type { Programa, Responsavel, Empresa } from "@/lib/types/types";
 import {
   getOrientacaoCampo,
   type CampoResponsavelProgramaId,
@@ -79,6 +82,8 @@ import {
 import { AigpSectionDivider } from "@/components/aigp/AigpSectionDivider";
 import { RequisitoIaLabel } from "@/components/aigp/RequisitoIaLabel";
 import { aigpBorderColor, aigpSectionBg } from "@/lib/aigp/aigpVisualTokens";
+import { labelEncarregadoSelect } from "@/lib/governanca/encarregadoIdentidade";
+import { formatCnpjBrasil } from "@/lib/utils/politicaPlaceholders";
 
 type OrgaoRow = { id: number; nome: string };
 
@@ -120,6 +125,12 @@ type EditResponsavelForm = {
   orgCatalogId: number | "";
   orgLivre: string;
   data_designacao: string;
+  tipo_pessoa: "pessoa_natural" | "pessoa_juridica";
+  empresa_id: number | "";
+  cnpj: string;
+  razao_social: string;
+  pessoa_natural_responsavel_nome: string;
+  pessoa_natural_responsavel_email: string;
 };
 
 const emptyForm = (): EditResponsavelForm => ({
@@ -131,6 +142,12 @@ const emptyForm = (): EditResponsavelForm => ({
   orgCatalogId: "",
   orgLivre: "",
   data_designacao: "",
+  tipo_pessoa: "pessoa_natural",
+  empresa_id: "",
+  cnpj: "",
+  razao_social: "",
+  pessoa_natural_responsavel_nome: "",
+  pessoa_natural_responsavel_email: "",
 });
 
 function formatDataBR(iso: string | null | undefined): string {
@@ -165,6 +182,12 @@ function responsavelParaForm(r: Responsavel, programaOrgaoId: number | undefined
     orgCatalogId,
     orgLivre,
     data_designacao: r.data_designacao ? String(r.data_designacao).slice(0, 10) : "",
+    tipo_pessoa: r.tipo_pessoa === "pessoa_juridica" ? "pessoa_juridica" : "pessoa_natural",
+    empresa_id: r.empresa_id && r.empresa_id > 0 ? r.empresa_id : "",
+    cnpj: r.cnpj ? formatCnpjBrasil(r.cnpj) : "",
+    razao_social: r.razao_social || "",
+    pessoa_natural_responsavel_nome: r.pessoa_natural_responsavel_nome || "",
+    pessoa_natural_responsavel_email: r.pessoa_natural_responsavel_email || "",
   };
 }
 
@@ -181,6 +204,7 @@ export default function ProgramaResponsaveisCRUDPage() {
 
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
   const [orgaos, setOrgaos] = useState<OrgaoRow[]>([]);
+  const [empresasUsuario, setEmpresasUsuario] = useState<Empresa[]>([]);
   const [programaData, setProgramaData] = useState<Partial<Programa>>({});
   const [papelResponsavelId, setPapelResponsavelId] = useState<Record<string, string>>({});
   const [gruposMembros, setGruposMembros] = useState<dataService.GovernancaGruposMembros>({
@@ -304,11 +328,25 @@ export default function ProgramaResponsaveisCRUDPage() {
     setOrgaos((list || []) as OrgaoRow[]);
   }, []);
 
+  const loadEmpresasUsuario = useCallback(async () => {
+    try {
+      const res = await fetch("/api/empresas");
+      if (!res.ok) return;
+      const list = await res.json();
+      if (!isMounted.current) return;
+      setEmpresasUsuario(Array.isArray(list) ? list : []);
+    } catch {
+      /* best-effort */
+    }
+  }, []);
+
   useEffect(() => {
     if (!programaId) return;
     isMounted.current = true;
     const load = async () => {
       await loadOrgaos();
+      if (!isMounted.current) return;
+      await loadEmpresasUsuario();
       if (!isMounted.current) return;
       await syncResponsaveisFromUsers();
       if (!isMounted.current) return;
@@ -322,7 +360,7 @@ export default function ProgramaResponsaveisCRUDPage() {
     return () => {
       isMounted.current = false;
     };
-  }, [programaId, syncResponsaveisFromUsers, fetchResponsaveis, fetchProgramaCamposPrincipais, loadGrupos, loadOrgaos]);
+  }, [programaId, syncResponsaveisFromUsers, fetchResponsaveis, fetchProgramaCamposPrincipais, loadGrupos, loadOrgaos, loadEmpresasUsuario]);
 
   const handleSaveResponsavelField = async (field: string, value: string) => {
     setLoading(true);
@@ -369,7 +407,7 @@ export default function ProgramaResponsaveisCRUDPage() {
               </MenuItem>
               {responsaveis.map((r) => (
                 <MenuItem key={r.id} value={String(r.id)}>
-                  {r.nome}
+                  {labelEncarregadoSelect(r)}
                 </MenuItem>
               ))}
             </Select>
@@ -398,6 +436,7 @@ export default function ProgramaResponsaveisCRUDPage() {
     };
 
   const handleAddClick = () => {
+    void loadEmpresasUsuario();
     setEditingResponsavel({
       ...emptyForm(),
       orgMode: programaOrgaoId ? "programa" : "livre",
@@ -407,6 +446,7 @@ export default function ProgramaResponsaveisCRUDPage() {
   };
 
   const handleEditClick = (r: Responsavel) => {
+    void loadEmpresasUsuario();
     setEditingResponsavel(responsavelParaForm(r, programaOrgaoId));
     setIsEditing(true);
     setEditModalOpen(true);
@@ -437,8 +477,21 @@ export default function ProgramaResponsaveisCRUDPage() {
   };
 
   const handleSaveModal = async () => {
+    const pj = editingResponsavel.tipo_pessoa === "pessoa_juridica";
     if (!editingResponsavel.nome.trim() || !editingResponsavel.email.trim()) {
-      setSnackbar({ message: "Nome e e-mail institucional são obrigatórios.", severity: "error" });
+      setSnackbar({
+        message: pj
+          ? "Nome empresarial e e-mail de contato do encarregado são obrigatórios."
+          : "Nome e e-mail institucional são obrigatórios.",
+        severity: "error",
+      });
+      return;
+    }
+    if (pj && !editingResponsavel.pessoa_natural_responsavel_nome.trim()) {
+      setSnackbar({
+        message: "Indique a pessoa natural responsável pela empresa (ANPD Res. 18/2024, art. 12).",
+        severity: "error",
+      });
       return;
     }
     const { orgao_vinculo_id, orgao_texto_livre } = buildOrgaoPayload();
@@ -450,6 +503,14 @@ export default function ProgramaResponsaveisCRUDPage() {
       orgao_vinculo_id,
       orgao_texto_livre,
       data_designacao: editingResponsavel.data_designacao.trim() || null,
+      tipo_pessoa: editingResponsavel.tipo_pessoa,
+      empresa_id: pj && editingResponsavel.empresa_id !== "" ? Number(editingResponsavel.empresa_id) : null,
+      cnpj: pj ? editingResponsavel.cnpj.replace(/\D/g, "") || null : null,
+      razao_social: pj ? editingResponsavel.razao_social.trim() || editingResponsavel.nome.trim() : null,
+      pessoa_natural_responsavel_nome: pj ? editingResponsavel.pessoa_natural_responsavel_nome.trim() : null,
+      pessoa_natural_responsavel_email: pj
+        ? editingResponsavel.pessoa_natural_responsavel_email.trim() || editingResponsavel.email.trim()
+        : null,
     };
 
     // Vincula login do programa se o e-mail bater com um membro aceito
@@ -458,10 +519,12 @@ export default function ProgramaResponsaveisCRUDPage() {
       const usersRes = await fetch(`/api/users?programaId=${programaId}`);
       if (usersRes.ok) {
         const users = await usersRes.json();
-        const emailNorm = row.email.toLowerCase();
-        const linked = (users as Array<{ email?: string; user_id?: string }>).find(
-          (u) => (u.email || "").trim().toLowerCase() === emailNorm
-        );
+        const emailEmpresa = row.email.toLowerCase();
+        const emailPf = (row.pessoa_natural_responsavel_email || "").toLowerCase();
+        const linked = (users as Array<{ email?: string; user_id?: string }>).find((u) => {
+          const em = (u.email || "").trim().toLowerCase();
+          return em === emailPf || em === emailEmpresa;
+        });
         linkedUserId = linked?.user_id || null;
       }
     } catch {
@@ -681,6 +744,9 @@ export default function ProgramaResponsaveisCRUDPage() {
                             primary={
                               <Typography variant="subtitle1" fontWeight={600}>
                                 {responsavel.nome}
+                                {responsavel.tipo_pessoa === "pessoa_juridica" ? (
+                                  <Chip size="small" label="PJ" sx={{ ml: 1 }} color="primary" variant="outlined" />
+                                ) : null}
                                 {responsavel.cargo ? (
                                   <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
                                     — {responsavel.cargo}
@@ -844,9 +910,102 @@ export default function ProgramaResponsaveisCRUDPage() {
       <GovernancaPapelHintDialog campoId={hintCampo} open={hintCampo != null} onClose={() => setHintCampo(null)} />
 
       <Dialog open={editModalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-        <DialogTitle sx={{ pb: 1 }}>{isEditing ? "Editar pessoa" : "Incluir pessoa"}</DialogTitle>
+        <DialogTitle sx={{ pb: 1 }}>{isEditing ? "Editar integrante" : "Incluir pessoa ou empresa"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            <ToggleButtonGroup
+              exclusive
+              fullWidth
+              size="small"
+              value={editingResponsavel.tipo_pessoa}
+              onChange={(_, v) => {
+                if (v) setEditingResponsavel((prev) => ({ ...prev, tipo_pessoa: v }));
+              }}
+            >
+              <ToggleButton value="pessoa_natural">Pessoa natural</ToggleButton>
+              <ToggleButton value="pessoa_juridica">Pessoa jurídica (DPO as a Service)</ToggleButton>
+            </ToggleButtonGroup>
+            {editingResponsavel.tipo_pessoa === "pessoa_juridica" ? (
+              <>
+                <Alert severity="info">
+                  A ANPD admite encarregado pessoa jurídica (Res. 18/2024, art. 12). Use uma empresa do seu cadastro e
+                  informe a pessoa natural responsável perante a ANPD e os titulares.
+                </Alert>
+                <Autocomplete
+                  options={empresasUsuario}
+                  getOptionLabel={(o) =>
+                    [o.nome_fantasia || o.razao_social, o.cnpj ? formatCnpjBrasil(o.cnpj) : ""]
+                      .filter(Boolean)
+                      .join(" · ") || `Empresa #${o.id}`
+                  }
+                  value={empresasUsuario.find((e) => e.id === editingResponsavel.empresa_id) ?? null}
+                  onChange={(_, emp) => {
+                    if (!emp) {
+                      setEditingResponsavel((prev) => ({ ...prev, empresa_id: "" }));
+                      return;
+                    }
+                    setEditingResponsavel((prev) => ({
+                      ...prev,
+                      empresa_id: emp.id,
+                      nome: emp.nome_fantasia || emp.razao_social || prev.nome,
+                      razao_social: emp.razao_social || prev.razao_social,
+                      cnpj: formatCnpjBrasil(emp.cnpj),
+                      email: emp.email || prev.email,
+                    }));
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Empresa do seu cadastro" placeholder="Selecionar GeoApps, etc." />
+                  )}
+                />
+                <TextField
+                  label="Nome empresarial / nome fantasia"
+                  fullWidth
+                  required
+                  value={editingResponsavel.nome}
+                  onChange={(e) => setEditingResponsavel({ ...editingResponsavel, nome: e.target.value })}
+                />
+                <TextField
+                  label="Razão social"
+                  fullWidth
+                  value={editingResponsavel.razao_social}
+                  onChange={(e) => setEditingResponsavel({ ...editingResponsavel, razao_social: e.target.value })}
+                />
+                <TextField
+                  label="CNPJ"
+                  fullWidth
+                  value={editingResponsavel.cnpj}
+                  onChange={(e) => setEditingResponsavel({ ...editingResponsavel, cnpj: e.target.value })}
+                />
+                <TextField
+                  label="E-mail de contato do encarregado (PJ)"
+                  type="email"
+                  fullWidth
+                  required
+                  value={editingResponsavel.email}
+                  onChange={(e) => setEditingResponsavel({ ...editingResponsavel, email: e.target.value })}
+                />
+                <TextField
+                  label="Pessoa natural responsável (ANPD / titulares)"
+                  fullWidth
+                  required
+                  value={editingResponsavel.pessoa_natural_responsavel_nome}
+                  onChange={(e) =>
+                    setEditingResponsavel({ ...editingResponsavel, pessoa_natural_responsavel_nome: e.target.value })
+                  }
+                />
+                <TextField
+                  label="E-mail da pessoa natural (login FPSI, se houver)"
+                  type="email"
+                  fullWidth
+                  value={editingResponsavel.pessoa_natural_responsavel_email}
+                  onChange={(e) =>
+                    setEditingResponsavel({ ...editingResponsavel, pessoa_natural_responsavel_email: e.target.value })
+                  }
+                  helperText="Se coincidir com seu login, o papel de encarregado fica vinculado à sua conta."
+                />
+              </>
+            ) : (
+              <>
             <TextField
               label="Nome"
               fullWidth
@@ -862,6 +1021,8 @@ export default function ProgramaResponsaveisCRUDPage() {
               value={editingResponsavel.email}
               onChange={(e) => setEditingResponsavel({ ...editingResponsavel, email: e.target.value })}
             />
+              </>
+            )}
             <Autocomplete
               freeSolo
               options={CARGO_SUGESTOES}

@@ -122,6 +122,21 @@ describe("ato formal ANPD — Anexo I e II", () => {
     expect(seeded.tipoEncarregado).toBe("pessoa_natural");
   });
 
+  it("pré-preenche Anexo II quando o encarregado cadastrado é pessoa jurídica", () => {
+    const seeded = seedTermoDraftFromPrograma({
+      programa: { razao_social: "Legaliza Brasil Ltda" },
+      dpo: {
+        tipo_pessoa: "pessoa_juridica",
+        nome: "GeoApps",
+        razao_social: "GEOAPPS DESENVOLVIMENTO DE SISTEMAS LTDA",
+        pessoa_natural_responsavel_nome: "Jorge",
+      },
+    });
+    expect(seeded.tipoEncarregado).toBe("pessoa_juridica");
+    expect(seeded.dpoNomeEmpresarial).toContain("GEOAPPS");
+    expect(seeded.dpoPessoaNaturalResponsavel).toBe("Jorge");
+  });
+
   it("resumo do ato distingue Anexo I e II", () => {
     expect(buildAtoDesignacaoResumo(draftNatural())).toContain("Anexo I — pessoa natural");
     expect(buildAtoDesignacaoResumo(draftJuridica())).toContain("Anexo II — pessoa jurídica");

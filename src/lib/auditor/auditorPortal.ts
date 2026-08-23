@@ -15,12 +15,40 @@ export type AuditorKpis = {
   pedidosTitularesAbertos: number;
 };
 
+export type AuditorVinculo = {
+  tipo: string;
+  rotulo: string;
+  contexto?: string;
+  norma?: string;
+};
+
+export type AuditorDiagnostico = {
+  diagnosticoId: number;
+  nome: string;
+  indice: string;
+  score: number | null;
+  nivel: string;
+};
+
+export type AuditorCampo = {
+  rotulo: string;
+  valor: string;
+};
+
 export type AuditorListaItem = {
   id: string | number;
   titulo: string;
   detalhe?: string;
+  descricao?: string;
   status?: string;
   data?: string | null;
+  categoria?: string;
+  tags?: string[];
+  vinculos?: AuditorVinculo[];
+  campos?: AuditorCampo[];
+  /** Auditor pode baixar o arquivo pelo token do portal. */
+  baixavel?: boolean;
+  arquivoTipo?: "arquivo" | "link";
 };
 
 export type AuditorPortalPayload = {
@@ -33,6 +61,7 @@ export type AuditorPortalPayload = {
   };
   expires_at: string;
   resumo: AuditorKpis;
+  diagnosticos: AuditorDiagnostico[];
   evidencias: AuditorListaItem[];
   politicas: AuditorListaItem[];
   ropa: AuditorListaItem[];
@@ -80,6 +109,22 @@ export function sanitizeAuditorRow(row: Record<string, unknown>): Record<string,
     if (BLOQUEADOS.has(k)) continue;
     if (/titular|cpf|rg\b|senha|token|base64/i.test(k)) continue;
     out[k] = v;
+  }
+  return out;
+}
+
+export function pickCampos(
+  row: Record<string, unknown>,
+  pairs: Array<[key: string, rotulo: string]>,
+  max = 600
+): AuditorCampo[] {
+  const out: AuditorCampo[] = [];
+  for (const [key, rotulo] of pairs) {
+    const v = row[key];
+    if (v == null) continue;
+    const t = String(v).replace(/\s+/g, " ").trim();
+    if (!t) continue;
+    out.push({ rotulo, valor: t.length > max ? `${t.slice(0, max - 1)}…` : t });
   }
   return out;
 }

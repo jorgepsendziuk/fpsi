@@ -94,6 +94,9 @@ export function PoliticaPrivacidadeContent({ data }: { data: PortalPublicData })
         </P>
         <P>
           Encarregado de dados (DPO), quando indicado: {dpo || "—"}
+          {data.dpo_tipo_pessoa === "pessoa_juridica" && data.dpo_pessoa_natural_nome
+            ? ` Pessoa natural responsável: ${data.dpo_pessoa_natural_nome}${data.dpo_cnpj ? ` · CNPJ ${data.dpo_cnpj}` : ""}.`
+            : ""}
         </P>
       </Section>
       <Section title="2. Quais dados podemos tratar">

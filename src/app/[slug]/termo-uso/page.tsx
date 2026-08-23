@@ -1,12 +1,10 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { PortalLegalDocShell } from "@/components/portal/PortalLegalDocShell";
-import { TermoUsoContent } from "@/components/portal/PortalLegalContent";
-
-export default function TermoUsoPage() {
-  return (
-    <PortalLegalDocShell documentTitle="Termo de Uso">
-      {(data) => <TermoUsoContent data={data} />}
-    </PortalLegalDocShell>
-  );
+export default async function TermoUsoRedirect({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  redirect(`/${encodeURIComponent(slug)}/termos-de-uso`);
 }

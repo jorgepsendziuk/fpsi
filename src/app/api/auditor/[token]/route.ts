@@ -3,10 +3,19 @@ import { createClient } from "@supabase/supabase-js";
 import {
   emptyAuditorKpis,
   mediaScores,
+  pickCampos,
   toListaItem,
+  type AuditorDiagnostico,
   type AuditorListaItem,
   type AuditorPortalPayload,
 } from "@/lib/auditor/auditorPortal";
+import {
+  completarDiagnosticosEixos,
+  indiceDiagnostico,
+  nomeDiagnostico,
+} from "@/lib/auditor/auditorEvidenciaVinculos";
+import { loadAuditorEvidencias } from "@/lib/auditor/loadAuditorEvidencias";
+import { getPoliticaCatalogMeta } from "@/lib/politicas/politicasCatalog";
 
 function adminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,7 +34,7 @@ async function safeList(
       error?: { message: string } | null;
     };
     if (res?.error) return { rows: [], count: 0 };
-    const rows = ((res?.data || []) as Record<string, unknown>[]);
+    const rows = (res?.data || []) as Record<string, unknown>[];
     return { rows, count: res?.count ?? rows.length };
   } catch {
     return { rows: [], count: 0 };
@@ -92,7 +101,10 @@ export async function GET(
         .eq("id", pid)
         .maybeSingle(),
       safeList(() =>
-        admin.from("programa_diagnostico_maturidade").select("score").eq("programa_id", pid)
+        admin
+          .from("programa_diagnostico_maturidade")
+          .select("diagnostico_id, score, label")
+          .eq("programa_id", pid)
       ),
       safeList(() =>
         admin
@@ -110,7 +122,9 @@ export async function GET(
       safeList(() =>
         admin
           .from("evidencia")
-          .select("id, titulo, categoria, status, created_at")
+          .select(
+            "id, titulo, descricao, categoria, nome_arquivo, mime_type, tamanho_bytes, url_externa, validade, versao, status, created_at"
+          )
           .eq("programa_id", pid)
           .eq("status", "ativo")
           .order("created_at", { ascending: false })
@@ -119,7 +133,9 @@ export async function GET(
       safeList(() =>
         admin
           .from("decision_record")
-          .select("id, titulo, status, data_decisao, created_at")
+          .select(
+            "id, titulo, status, data_decisao, created_at, contexto, problema, decisao, justificativa, alternativas, responsaveis"
+          )
           .eq("programa_id", pid)
           .neq("status", "rascunho")
       ),
@@ -180,7 +196,9 @@ export async function GET(
 
     let dpoNome: string | null = null;
     let dpoEmail: string | null = null;
-    const encId = Number((progRes.data as { encarregado_dados_pessoais?: number } | null)?.encarregado_dados_pessoais);
+    const encId = Number(
+      (progRes.data as { encarregado_dados_pessoais?: number } | null)?.encarregado_dados_pessoais
+    );
     if (Number.isFinite(encId) && encId > 0) {
       const { data: resp } = await admin
         .from("responsavel")
@@ -190,8 +208,33 @@ export async function GET(
       dpoNome = resp?.nome ? String(resp.nome) : null;
       dpoEmail = resp?.email ? String(resp.email) : null;
     }
+
+    const catDiag = await safeList(() => admin.from("diagnostico").select("id, descricao"));
+    const nomeByDiag = new Map(catDiag.rows.map((r) => [Number(r.id), String(r.descricao || "")]));
+    const diagnosticosRaw: AuditorDiagnostico[] = mat.rows
+      .map((r) => {
+        const id = Number(r.diagnostico_id);
+        if (!Number.isFinite(id)) return null;
+        const score = Number.isFinite(Number(r.score)) ? Number(r.score) : null;
+        return {
+          diagnosticoId: id,
+          nome: nomeDiagnostico(id, nomeByDiag.get(id)),
+          indice: indiceDiagnostico(id),
+          score,
+          nivel: String(r.label || "").trim() || "—",
+        } satisfies AuditorDiagnostico;
+      })
+      .filter((x): x is AuditorDiagnostico => Boolean(x))
+      .sort((a, b) => a.diagnosticoId - b.diagnosticoId);
+    const diagnosticos = completarDiagnosticosEixos(diagnosticosRaw, nomeByDiag);
+
     const kpis = emptyAuditorKpis();
-    kpis.maturidadeMedia = mediaScores(mat.rows.map((r) => Number(r.score)));
+    kpis.maturidadeMedia = mediaScores(
+      (diagnosticosRaw.length
+        ? diagnosticosRaw.map((d) => d.score)
+        : mat.rows.map((r) => r.score)
+      ).map((s) => Number(s))
+    );
     kpis.riscosCriticos = riscos.rows.filter((r) => Number(r.score_residual) >= 12).length;
     kpis.incidentesAbertos = inc.count;
     kpis.evidencias = ev.count;
@@ -200,7 +243,9 @@ export async function GET(
     kpis.mapeamentos = map.count;
     kpis.ropaOperacoes = ropa.count;
     kpis.ripds = ripd.count;
-    kpis.planosAbertos = planos.rows.filter((p) => !["concluido", "cancelado"].includes(String(p.status))).length;
+    kpis.planosAbertos = planos.rows.filter(
+      (p) => !["concluido", "cancelado"].includes(String(p.status))
+    ).length;
     kpis.ciencias = cien.count;
     kpis.pedidosTitularesAbertos = pedidos.count;
 
@@ -210,6 +255,138 @@ export async function GET(
       detalhe?: string[],
       status = "status"
     ): AuditorListaItem[] => rows.map((r) => toListaItem(r, titulo, detalhe, status));
+
+    const evidencias = await loadAuditorEvidencias(admin, pid, ev.rows);
+
+    const politicas: AuditorListaItem[] = pol.rows.map((r) => {
+      const tipo = String(r.tipo_politica || "");
+      const meta = getPoliticaCatalogMeta(tipo);
+      const item = toListaItem(r, ["tipo_politica"], undefined, "status");
+      item.titulo = meta?.nome || tipo || item.titulo;
+      item.detalhe = meta?.descricao || "Política publicada no programa (PPSI 0.9–0.12).";
+      item.descricao = meta?.descricao;
+      item.tags = [tipo].filter(Boolean);
+      item.categoria = meta?.grupo;
+      item.campos = [
+        ...pickCampos(r, [["status", "Situação"], ["updated_at", "Atualizado em"]]),
+        ...(meta?.grupo ? [{ rotulo: "Grupo", valor: meta.grupo }] : []),
+        ...(tipo ? [{ rotulo: "Tipo interno", valor: tipo }] : []),
+      ];
+      return item;
+    });
+
+    const ropaRows = ropa.rows.length ? ropa.rows : map.rows;
+    const ropaItems: AuditorListaItem[] = ropaRows.map((r) => {
+      const item = toListaItem(r, ["nome"], ["finalidade", "base_legal", "finalidade_detalhe"]);
+      const tags = [r.base_legal, r.finalidade_categoria]
+        .map((x) => (x != null ? String(x) : ""))
+        .filter(Boolean);
+      item.tags = tags;
+      item.descricao = item.detalhe;
+      item.detalhe = tags.length
+        ? `Base legal / finalidade: ${tags.join(" · ")}`
+        : "Operação de tratamento (LGPD art. 37).";
+      item.campos = pickCampos(r, [
+        ["base_legal", "Base legal"],
+        ["finalidade", "Finalidade"],
+        ["finalidade_detalhe", "Detalhe da finalidade"],
+        ["finalidade_categoria", "Categoria"],
+        ["tipos_dados", "Tipos de dados"],
+        ["fluxo_compartilhamento", "Compartilhamento"],
+      ]);
+      return item;
+    });
+
+    const riscosItems: AuditorListaItem[] = riscos.rows
+      .filter((r) => Number(r.score_residual) >= 12)
+      .map((r) => {
+        const item = toListaItem(r, ["titulo", "nome"]);
+        const score = Number(r.score_residual);
+        item.tags = Number.isFinite(score) ? [`score residual ${score}`] : [];
+        item.detalhe = `Risco residual alto (limiar ≥ 12)${r.status ? ` · ${r.status}` : ""}.`;
+        item.campos = pickCampos(r, [
+          ["nome", "Nome"],
+          ["status", "Situação"],
+          ["score_residual", "Score residual"],
+        ]);
+        return item;
+      });
+
+    const planosItems: AuditorListaItem[] = planos.rows.map((r) => {
+      const item = toListaItem(r, ["titulo"]);
+      const prazo = r.data_fim_prevista ? String(r.data_fim_prevista).slice(0, 10) : "";
+      item.tags = [prazo ? `prazo ${prazo}` : ""].filter(Boolean);
+      item.detalhe = prazo ? `Prazo previsto: ${prazo}` : "Ação do plano de trabalho PPSI.";
+      item.campos = pickCampos(r, [
+        ["status", "Situação"],
+        ["data_fim_prevista", "Prazo previsto"],
+      ]);
+      return item;
+    });
+
+    const ripdsItems = list(ripd.rows, ["titulo"]).map((item, i) => {
+      const row = ripd.rows[i] || {};
+      const st = row.status;
+      item.detalhe = st ? `RIPD (LGPD art. 38) · ${st}` : "Relatório de impacto à proteção de dados (LGPD art. 38).";
+      item.status = st ? String(st) : item.status;
+      item.campos = pickCampos(row, [
+        ["status", "Situação"],
+        ["updated_at", "Atualizado em"],
+      ]);
+      return item;
+    });
+
+    const incidentesItems = list(inc.rows, ["titulo"]).map((item, i) => {
+      const row = inc.rows[i] || {};
+      const st = row.status;
+      item.detalhe = st
+        ? `Incidente em tratamento · ${st}`
+        : "Incidente de segurança ou privacidade em aberto.";
+      item.campos = pickCampos(row, [
+        ["status", "Situação"],
+        ["created_at", "Registrado em"],
+      ]);
+      return item;
+    });
+
+    const decisoesItems = list(dec.rows, ["titulo"], undefined, "status").map((item, i) => {
+      const row = dec.rows[i] || {};
+      item.detalhe = item.detalhe || "Decisão formal da alta administração (accountability).";
+      item.descricao = row.decisao ? String(row.decisao) : undefined;
+      item.campos = pickCampos(row, [
+        ["status", "Situação"],
+        ["data_decisao", "Data da decisão"],
+        ["contexto", "Contexto"],
+        ["problema", "Problema"],
+        ["alternativas", "Alternativas"],
+        ["decisao", "Decisão"],
+        ["justificativa", "Justificativa"],
+        ["responsaveis", "Responsáveis"],
+      ]);
+      return item;
+    });
+
+    const timelineItems = list(timeline.rows, ["titulo"], ["detalhe", "origem"], "tipo").map((item, i) => {
+      const row = timeline.rows[i] || {};
+      item.campos = pickCampos(row, [
+        ["tipo", "Tipo"],
+        ["origem", "Origem"],
+        ["detalhe", "Detalhe"],
+        ["ocorrido_em", "Quando"],
+      ]);
+      return item;
+    });
+    const cienciasItems = list(cien.rows, ["documento_titulo"], ["versao"], "versao").map((item, i) => {
+      const row = cien.rows[i] || {};
+      item.detalhe = item.detalhe
+        ? `Ciência registrada · versão ${item.detalhe}`
+        : "Registro de ciência em documento versionado.";
+      item.campos = pickCampos(row, [
+        ["versao", "Versão"],
+        ["aceito_em", "Ciência em"],
+      ]);
+      return item;
+    });
 
     const prog = (progRes.data || {}) as Record<string, unknown>;
     const payload: AuditorPortalPayload = {
@@ -222,23 +399,17 @@ export async function GET(
       },
       expires_at: acesso.expires_at,
       resumo: kpis,
-      evidencias: list(ev.rows, ["titulo"], ["categoria"]),
-      politicas: list(pol.rows, ["tipo_politica"], undefined, "status"),
-      ropa: list(
-        ropa.rows.length ? ropa.rows : map.rows,
-        ["nome"],
-        ["finalidade", "base_legal", "finalidade_detalhe", "finalidade_categoria"]
-      ),
-      ripds: list(ripd.rows, ["titulo"]),
-      riscos: list(
-        riscos.rows.filter((r) => Number(r.score_residual) >= 12),
-        ["titulo", "nome"]
-      ),
-      incidentes: list(inc.rows, ["titulo"]),
-      decisoes: list(dec.rows, ["titulo"], undefined, "status"),
-      timeline: list(timeline.rows, ["titulo"], ["detalhe", "origem"], "tipo"),
-      planos: list(planos.rows, ["titulo"]),
-      ciencias: list(cien.rows, ["documento_titulo"], ["versao"], "versao"),
+      diagnosticos,
+      evidencias,
+      politicas,
+      ropa: ropaItems,
+      ripds: ripdsItems,
+      riscos: riscosItems,
+      incidentes: incidentesItems,
+      decisoes: decisoesItems,
+      timeline: timelineItems,
+      planos: planosItems,
+      ciencias: cienciasItems,
     };
 
     return NextResponse.json(payload);

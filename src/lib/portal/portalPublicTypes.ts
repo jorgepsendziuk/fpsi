@@ -29,6 +29,10 @@ export type PortalPublicData = {
   atendimento_site: string | null;
   dpo_nome: string | null;
   dpo_email: string | null;
+  /** pessoa_natural | pessoa_juridica */
+  dpo_tipo_pessoa?: string | null;
+  dpo_pessoa_natural_nome?: string | null;
+  dpo_cnpj?: string | null;
   logo_orgao_empresa: string | null;
   logo_programa: string | null;
   link_politica_privacidade: string | null;

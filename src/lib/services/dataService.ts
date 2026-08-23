@@ -485,7 +485,7 @@ export const fetchResponsaveis = async (programaId: number, retries = 3): Promis
     const { data, error } = await supabaseBrowserClient
       .from("responsavel")
       .select(
-        "id, nome, email, departamento, programa, cargo, orgao_vinculo_id, orgao_texto_livre, data_designacao"
+        "id, nome, email, departamento, programa, cargo, orgao_vinculo_id, orgao_texto_livre, data_designacao, user_id, tipo_pessoa, empresa_id, cnpj, razao_social, pessoa_natural_responsavel_nome, pessoa_natural_responsavel_email"
       )
       .eq("programa", programaId)
       .order("nome", { ascending: true });

@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { nomeDownloadEvidencia } from "../auditorArquivoNome";
 import {
   emptyAuditorKpis,
   mediaScores,
   sanitizeAuditorRow,
   toListaItem,
 } from "../auditorPortal";
+import {
+  completarDiagnosticosEixos,
+  vinculoFromMedida,
+} from "../auditorEvidenciaVinculos";
 
 describe("auditorPortal", () => {
   it("não vaza PII nem conteúdo de evidência", () => {
@@ -44,3 +49,36 @@ describe("auditorPortal", () => {
     expect(item.detalhe).toBe("contingência");
   });
 });
+
+describe("vinculos e eixos de maturidade", () => {
+  it("rótulo da evidência traz medida, controle e diagnóstico", () => {
+    const v = vinculoFromMedida({
+      codigo: "1.2.3",
+      texto: "Nomear encarregado de dados",
+      controleNumero: "1.2",
+      controleNome: "Governança",
+      diagnosticoId: 1,
+      diagnosticoNome: "Estrutura de gestão",
+    });
+    expect(v.rotulo).toContain("Medida 1.2.3");
+    expect(v.rotulo).toContain("controle 1.2");
+    expect(v.contexto).toContain("Governança");
+    expect(v.norma).toMatch(/iMC/);
+  });
+
+  it("completa os quatro eixos mesmo sem scores", () => {
+    const eixos = completarDiagnosticosEixos([]);
+    expect(eixos.map((d) => d.diagnosticoId)).toEqual([1, 2, 3, 4]);
+    expect(eixos[0].indice).toMatch(/iMC/);
+    expect(eixos[0].score).toBeNull();
+  });
+});
+
+describe("nome de download da evidência", () => {
+  it("usa o título humano e a extensão do mime, não o nome cru", () => {
+    expect(
+      nomeDownloadEvidencia("Nomeação do DPO", "application/pdf", "SCAN_IMG_9981.pdf")
+    ).toBe("Nomeacao-do-DPO.pdf");
+  });
+});
+

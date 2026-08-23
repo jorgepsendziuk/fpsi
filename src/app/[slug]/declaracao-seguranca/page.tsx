@@ -1,12 +1,10 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { PortalLegalDocShell } from "@/components/portal/PortalLegalDocShell";
-import { DeclaracaoSegurancaContent } from "@/components/portal/PortalLegalContent";
-
-export default function DeclaracaoSegurancaPage() {
-  return (
-    <PortalLegalDocShell documentTitle="Declaração de Segurança">
-      {(data) => <DeclaracaoSegurancaContent data={data} />}
-    </PortalLegalDocShell>
-  );
+export default async function DeclaracaoSegurancaRedirect({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  redirect(`/${encodeURIComponent(slug)}/declaracao-de-seguranca`);
 }

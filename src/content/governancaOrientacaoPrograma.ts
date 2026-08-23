@@ -78,7 +78,7 @@ export const ORIENTACAO_CAMPOS_RESPONSAVEIS: OrientacaoCampoResponsavel[] = [
     id: "encarregado_dados_pessoais",
     rotulo: "Encarregado (dados pessoais)",
     instrucao:
-      "Indicar o encarregado pelo tratamento de dados pessoais (e, quando aplicável, quem o substitui no âmbito deste programa), observando a comunicação à ANPD e requisitos da Lei 13.709/2018.",
+      "Indicar o encarregado pelo tratamento de dados pessoais — pessoa natural ou jurídica (Res. CD/ANPD nº 18/2024, art. 12). Se for pessoa jurídica (DPO as a Service), divulgue o nome empresarial e a pessoa natural responsável perante a ANPD e os titulares. O login de uma pessoa física pode usar empresa do próprio cadastro para exercer o papel.",
     fundamentacao: [
       "Lei 13.709/2018, arts. 23, III e 41 — encarregado e suas atividades.",
       "Resoluções CD/ANPD 15/2024 e 18/2024 — requisitos de designação e atuação.",

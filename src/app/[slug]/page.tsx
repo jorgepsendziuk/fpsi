@@ -39,9 +39,11 @@ import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
 import { resolvePortalDocHref, type PortalLegalDoc } from "@/lib/portal/portalLegalLinks";
+import { portalPdfHref, portalSeloHref } from "@/lib/portal/portalPublicPaths";
 import { landing } from "@/components/landing/landingTokens";
 import { portalHeroBandSx, portalPanelSx } from "@/lib/portal/portalPublicUi";
 import { PortalPublicHeaderSync } from "@/components/portal/PortalPublicHeaderContext";
@@ -50,14 +52,16 @@ function PortalDocLink({
   slug,
   doc,
   external,
+  published,
   children,
 }: {
   slug: string;
   doc: PortalLegalDoc;
   external: string | null;
+  published?: boolean;
   children: React.ReactNode;
 }) {
-  const href = resolvePortalDocHref(slug, external, doc);
+  const href = resolvePortalDocHref(slug, external, doc, { preferInternal: Boolean(published) });
   const isRemote = /^https?:\/\//i.test(href);
   if (isRemote) {
     return (
@@ -428,7 +432,16 @@ export default function PortalPrivacidadePage() {
             <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ letterSpacing: "0.08em" }}>Informações de contato</Typography>
             <Stack spacing={0.5} sx={{ mt: 0.5 }}>
               {(data.dpo_nome || data.dpo_email) && (
-                <Typography variant="body2"><strong>Encarregado/DPO:</strong> {[data.dpo_nome, data.dpo_email].filter(Boolean).join(" — ")}</Typography>
+                <Typography variant="body2">
+                  <strong>Encarregado/DPO:</strong> {[data.dpo_nome, data.dpo_email].filter(Boolean).join(" — ")}
+                  {data.dpo_tipo_pessoa === "pessoa_juridica" && data.dpo_pessoa_natural_nome ? (
+                    <>
+                      <br />
+                      Pessoa natural responsável: {data.dpo_pessoa_natural_nome}
+                      {data.dpo_cnpj ? ` · CNPJ ${data.dpo_cnpj}` : ""}
+                    </>
+                  ) : null}
+                </Typography>
               )}
               {data.atendimento_fone && <Typography variant="body2"><strong>Telefone:</strong> {data.atendimento_fone}</Typography>}
               {data.atendimento_email && (
@@ -515,11 +528,16 @@ export default function PortalPrivacidadePage() {
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <PortalDocLink slug={slug} doc="termo" external={data.link_termo_uso}>
+                    <PortalDocLink slug={slug} doc="termo" external={data.link_termo_uso} published={Boolean(data.documentos_publicados?.termo?.length)}>
                       Termo de Uso do serviço
                     </PortalDocLink>
                   }
-                  secondary="Condições de adesão, direitos e responsabilidades (modelo PPSI)."
+                  secondary={
+                    <>
+                      Condições de adesão, direitos e responsabilidades (modelo PPSI).{" "}
+                      <MuiLink href={portalPdfHref(slug, "termo")}>PDF</MuiLink>
+                    </>
+                  }
                 />
               </ListItem>
               <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
@@ -528,11 +546,16 @@ export default function PortalPrivacidadePage() {
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <PortalDocLink slug={slug} doc="politica" external={data.link_politica_privacidade}>
+                    <PortalDocLink slug={slug} doc="politica" external={data.link_politica_privacidade} published={Boolean(data.documentos_publicados?.politica?.length)}>
                       Política de Privacidade
                     </PortalDocLink>
                   }
-                  secondary="Finalidades, bases legais e direitos do titular."
+                  secondary={
+                    <>
+                      Finalidades, bases legais e direitos do titular.{" "}
+                      <MuiLink href={portalPdfHref(slug, "politica")}>PDF</MuiLink>
+                    </>
+                  }
                 />
               </ListItem>
               <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
@@ -541,11 +564,16 @@ export default function PortalPrivacidadePage() {
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <PortalDocLink slug={slug} doc="aviso" external={data.link_aviso_titular}>
+                    <PortalDocLink slug={slug} doc="aviso" external={data.link_aviso_titular} published={Boolean(data.documentos_publicados?.aviso?.length)}>
                       Aviso do Portal do Titular
                     </PortalDocLink>
                   }
-                  secondary="Como usar este canal e o que esperar do atendimento."
+                  secondary={
+                    <>
+                      Como usar este canal e o que esperar do atendimento.{" "}
+                      <MuiLink href={portalPdfHref(slug, "aviso")}>PDF</MuiLink>
+                    </>
+                  }
                 />
               </ListItem>
               <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
@@ -554,11 +582,16 @@ export default function PortalPrivacidadePage() {
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <PortalDocLink slug={slug} doc="cookies" external={data.link_cookies}>
+                    <PortalDocLink slug={slug} doc="cookies" external={data.link_cookies} published={Boolean(data.documentos_publicados?.cookies?.length)}>
                       Política de Cookies
                     </PortalDocLink>
                   }
-                  secondary="Uso de cookies e tecnologias similares."
+                  secondary={
+                    <>
+                      Uso de cookies e tecnologias similares.{" "}
+                      <MuiLink href={portalPdfHref(slug, "cookies")}>PDF</MuiLink>
+                    </>
+                  }
                 />
               </ListItem>
               <ListItem disablePadding sx={{ alignItems: "flex-start" }}>
@@ -567,14 +600,42 @@ export default function PortalPrivacidadePage() {
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <PortalDocLink slug={slug} doc="declaracao" external={data.link_declaracao_seguranca}>
+                    <PortalDocLink slug={slug} doc="declaracao" external={data.link_declaracao_seguranca} published={Boolean(data.documentos_publicados?.declaracao?.length)}>
                       Declaração de Segurança
                     </PortalDocLink>
                   }
-                  secondary="Compromisso com boas práticas de segurança da informação."
+                  secondary={
+                    <>
+                      Compromisso com boas práticas de segurança da informação.{" "}
+                      <MuiLink href={portalPdfHref(slug, "declaracao")}>PDF</MuiLink>
+                    </>
+                  }
                 />
               </ListItem>
             </List>
+          </Paper>
+
+          <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }), p: 2.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <WorkspacePremiumIcon sx={{ color: landing.blue }} />
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Selo LGPD
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Página pública do selo para divulgação no site da organização.{" "}
+                  <MuiLink component={Link} href={portalSeloHref(slug)}>
+                    Ver selo
+                  </MuiLink>
+                </Typography>
+              </Box>
+              <Box
+                component="img"
+                src={`/api/portal/${encodeURIComponent(slug)}/selo`}
+                alt="Selo LGPD"
+                sx={{ width: 72, height: 80, objectFit: "contain", flexShrink: 0 }}
+              />
+            </Box>
           </Paper>
 
           {/* Segurança: formulários de reportar e contato */}

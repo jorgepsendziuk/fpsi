@@ -1,9 +1,11 @@
 {
   "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/api/auditor/[token]/route": "app/api/auditor/[token]/route.js",
-  "/auditor/[token]/page": "app/auditor/[token]/page.js",
-  "/programas/[id]/page": "app/programas/[id]/page.js",
-  "/programas/[id]/governanca/page": "app/programas/[id]/governanca/page.js",
-  "/programas/[id]/conformidade/page": "app/programas/[id]/conformidade/page.js",
-  "/programas/[id]/conformidade/mapeamento/page": "app/programas/[id]/conformidade/mapeamento/page.js"
+  "/api/portal/[slug]/route": "app/api/portal/[slug]/route.js",
+  "/api/portal/[slug]/selo/route": "app/api/portal/[slug]/selo/route.js",
+  "/[slug]/pdf/[tipo]/route": "app/[slug]/pdf/[tipo]/route.js",
+  "/[slug]/politica-de-privacidade/page": "app/[slug]/politica-de-privacidade/page.js",
+  "/[slug]/declaracao-de-seguranca/page": "app/[slug]/declaracao-de-seguranca/page.js",
+  "/[slug]/page": "app/[slug]/page.js",
+  "/[slug]/selo/page": "app/[slug]/selo/page.js",
+  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
 }

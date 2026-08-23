@@ -13,19 +13,23 @@ import {
   alpha,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { Policy as PrivacyIcon } from "@mui/icons-material";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import { portalPanelSx } from "@/lib/portal/portalPublicUi";
 import { PortalPublicHeaderSync } from "@/components/portal/PortalPublicHeaderContext";
+import type { PortalLegalDoc } from "@/lib/portal/portalLegalLinks";
+import { portalPdfHref } from "@/lib/portal/portalPublicPaths";
 
 type Props = {
   documentTitle: string;
+  pdfDoc?: PortalLegalDoc;
   children: React.ReactNode | ((data: PortalPublicData) => React.ReactNode);
 };
 
-export function PortalLegalDocShell({ documentTitle, children }: Props) {
+export function PortalLegalDocShell({ documentTitle, pdfDoc, children }: Props) {
   const params = useParams();
   const router = useRouter();
   const theme = useTheme();
@@ -86,8 +90,8 @@ export function PortalLegalDocShell({ documentTitle, children }: Props) {
       src={logoUrl}
       alt=""
       sx={{
-        width: 44,
-        height: 44,
+        width: 88,
+        height: 88,
         borderRadius: 1.5,
         objectFit: "contain",
         bgcolor: alpha(theme.palette.primary.main, 0.08),
@@ -98,8 +102,8 @@ export function PortalLegalDocShell({ documentTitle, children }: Props) {
   ) : (
     <Box
       sx={{
-        width: 44,
-        height: 44,
+        width: 88,
+        height: 88,
         borderRadius: 1.5,
         display: "flex",
         alignItems: "center",
@@ -112,21 +116,34 @@ export function PortalLegalDocShell({ documentTitle, children }: Props) {
         boxShadow: `0 2px 10px ${alpha(theme.palette.primary.main, 0.25)}`,
       }}
     >
-      <PrivacyIcon sx={{ fontSize: 24 }} />
+      <PrivacyIcon sx={{ fontSize: 48 }} />
     </Box>
   );
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2.5, md: 3.5 } }}>
       <PortalPublicHeaderSync slug={slug} orgName={nomeExibicao} logoUrl={logoUrl} />
-      <Button
-        size="small"
-        startIcon={<ArrowBackIcon />}
-        onClick={() => router.push(`/${encodeURIComponent(slug)}`)}
-        sx={{ mb: 1.5, fontWeight: 700, textTransform: "none" }}
-      >
-        Voltar ao portal
-      </Button>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1.5 }}>
+        <Button
+          size="small"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => router.push(`/${encodeURIComponent(slug)}`)}
+          sx={{ fontWeight: 700, textTransform: "none" }}
+        >
+          Voltar ao portal
+        </Button>
+        {pdfDoc ? (
+          <Button
+            size="small"
+            component="a"
+            href={portalPdfHref(slug, pdfDoc)}
+            startIcon={<PictureAsPdfIcon />}
+            sx={{ fontWeight: 700, textTransform: "none" }}
+          >
+            Baixar PDF
+          </Button>
+        ) : null}
+      </Box>
 
       <PageHeroHeader
         titleComponent="h1"

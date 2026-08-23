@@ -50,7 +50,15 @@ function trimStr(v: unknown): string {
 
 export type SeedTermoParams = {
   programa: Record<string, unknown> | null | undefined;
-  dpo?: { nome?: string | null; email?: string | null; cargo?: string | null; data_designacao?: string | null } | null;
+  dpo?: {
+    nome?: string | null;
+    email?: string | null;
+    cargo?: string | null;
+    data_designacao?: string | null;
+    tipo_pessoa?: string | null;
+    razao_social?: string | null;
+    pessoa_natural_responsavel_nome?: string | null;
+  } | null;
   suplente?: { nome?: string | null; email?: string | null; cargo?: string | null } | null;
   representante?: { nome?: string | null; email?: string | null; cargo?: string | null } | null;
   gestorResponsavelEmpresa?: string | null;
@@ -72,8 +80,15 @@ export function seedTermoDraftFromPrograma(params: SeedTermoParams): TermoNomeac
 
   if (params.dpo) {
     const nomeDpo = trimStr(params.dpo.nome);
-    draft.dpoNome = nomeDpo;
-    draft.dpoPessoaNaturalResponsavel = nomeDpo;
+    const pj = String(params.dpo.tipo_pessoa ?? "").trim() === "pessoa_juridica";
+    if (pj) {
+      draft.tipoEncarregado = "pessoa_juridica";
+      draft.dpoNomeEmpresarial = trimStr(params.dpo.razao_social) || nomeDpo;
+      draft.dpoPessoaNaturalResponsavel = trimStr(params.dpo.pessoa_natural_responsavel_nome) || nomeDpo;
+    } else {
+      draft.dpoNome = nomeDpo;
+      draft.dpoPessoaNaturalResponsavel = nomeDpo;
+    }
   }
 
   draft.substitutoNome = trimStr(params.suplente?.nome);

@@ -47,7 +47,7 @@ function PortalTopBar() {
           maxWidth: 1200,
           mx: "auto",
           px: { xs: 2, sm: 3 },
-          py: { xs: 1, sm: 1.15 },
+          py: { xs: 1.15, sm: 1.35 },
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -78,8 +78,8 @@ function PortalTopBar() {
               src={header.logoUrl}
               alt=""
               sx={{
-                width: 40,
-                height: 40,
+                width: 80,
+                height: 80,
                 borderRadius: 1.25,
                 objectFit: "contain",
                 bgcolor: alpha("#fff", 0.12),
@@ -91,8 +91,8 @@ function PortalTopBar() {
           ) : (
             <Box
               sx={{
-                width: 40,
-                height: 40,
+                width: 80,
+                height: 80,
                 borderRadius: 1.25,
                 flexShrink: 0,
                 display: "flex",
@@ -102,7 +102,7 @@ function PortalTopBar() {
                 boxShadow: `0 4px 14px ${alpha(landing.navy, 0.45)}`,
               }}
             >
-              <ShieldOutlinedIcon sx={{ fontSize: 22 }} aria-hidden />
+              <ShieldOutlinedIcon sx={{ fontSize: 40 }} aria-hidden />
             </Box>
           )}
           <Box sx={{ minWidth: 0 }}>

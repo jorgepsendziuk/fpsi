@@ -1,12 +1,10 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { PortalLegalDocShell } from "@/components/portal/PortalLegalDocShell";
-import { CookiesContent } from "@/components/portal/PortalLegalContent";
-
-export default function CookiesPage() {
-  return (
-    <PortalLegalDocShell documentTitle="Política de Cookies">
-      {(data) => <CookiesContent data={data} />}
-    </PortalLegalDocShell>
-  );
+export default async function CookiesRedirect({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  redirect(`/${encodeURIComponent(slug)}/politica-de-cookies`);
 }

@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/[slug]/pdf/[tipo]/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/Users/jorgepsendziuk/Projetos/fpsi/src/app/[slug]/pdf/[tipo]/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

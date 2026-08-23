@@ -188,6 +188,14 @@ export interface Responsavel {
   orgao_texto_livre?: string | null;
   /** ISO date (YYYY-MM-DD) */
   data_designacao?: string | null;
+  user_id?: string | null;
+  /** pessoa_natural | pessoa_juridica (ANPD Res. 18/2024 art. 12) */
+  tipo_pessoa?: "pessoa_natural" | "pessoa_juridica" | string | null;
+  empresa_id?: number | null;
+  cnpj?: string | null;
+  razao_social?: string | null;
+  pessoa_natural_responsavel_nome?: string | null;
+  pessoa_natural_responsavel_email?: string | null;
 }
 
 /**

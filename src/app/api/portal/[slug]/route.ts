@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { PORTAL_DOC_TIPO_POLITICA } from "@/lib/politicas/politicasCatalog";
 import type { PortalDocSecaoPublica, PortalDocumentosPublicados } from "@/lib/portal/portalPublicTypes";
+import { formatEncarregadoPublico } from "@/lib/governanca/encarregadoIdentidade";
 
 type ProgramaPortalRow = {
   id: number;
@@ -110,15 +111,24 @@ export async function GET(
 
     let dpo_nome: string | null = null;
     let dpo_email: string | null = null;
+    let dpo_tipo_pessoa: string | null = null;
+    let dpo_pessoa_natural_nome: string | null = null;
+    let dpo_cnpj: string | null = null;
     if (row.encarregado_dados_pessoais) {
       const { data: resp } = await supabase
         .from("responsavel")
-        .select("nome, email")
+        .select(
+          "nome, email, tipo_pessoa, razao_social, cnpj, pessoa_natural_responsavel_nome, pessoa_natural_responsavel_email"
+        )
         .eq("id", row.encarregado_dados_pessoais)
         .maybeSingle();
       if (resp) {
-        dpo_nome = resp.nome ?? null;
-        dpo_email = resp.email ?? null;
+        const pub = formatEncarregadoPublico(resp);
+        dpo_nome = pub?.titulo ?? resp.nome ?? null;
+        dpo_email = pub?.email ?? resp.email ?? null;
+        dpo_tipo_pessoa = resp.tipo_pessoa ?? null;
+        dpo_pessoa_natural_nome = resp.pessoa_natural_responsavel_nome ?? null;
+        dpo_cnpj = resp.cnpj ?? null;
       }
     }
 
@@ -168,6 +178,9 @@ export async function GET(
       atendimento_site: row.atendimento_site ?? null,
       dpo_nome: dpo_nome,
       dpo_email: dpo_email,
+      dpo_tipo_pessoa,
+      dpo_pessoa_natural_nome,
+      dpo_cnpj,
       logo_orgao_empresa: row.logo_orgao_empresa ?? null,
       logo_programa: row.logo_programa ?? null,
       link_politica_privacidade: row.link_politica_privacidade ?? null,
