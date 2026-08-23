@@ -42,6 +42,8 @@ interface DashboardProps {
   getDiagnosticoMaturity: (diagnosticoId: number) => any;
   programaId: number;
   grupoImpleFilter?: GrupoImpleFilter;
+  /** Whitelist id_medida no filtro G1 (Essencial ANPD). */
+  whitelistIdMedida?: ReadonlySet<string> | null;
   onGrupoImpleFilterChange?: (value: GrupoImpleFilter) => void;
   onDiagnosticoClick?: (diagnosticoId: number) => void;
   dataLoading?: boolean;
@@ -74,6 +76,7 @@ function countMedidasForDiagnostico(
   programaMedidas: { [key: string]: any },
   programaId: number,
   grupoImpleFilter: GrupoImpleFilter = "all",
+  whitelistIdMedida?: ReadonlySet<string> | null,
 ) {
   let total = 0;
   let respondidas = 0;
@@ -81,7 +84,10 @@ function countMedidasForDiagnostico(
   diagnosticoControles.forEach((controle) => {
     const controleMedidas = (medidas[controle.id] || []).filter((medida: any) =>
       isDiagnosticoSeguranca(diagnosticoId)
-        ? matchesGrupoFilter(medida.grupo_imple, grupoImpleFilter)
+        ? matchesGrupoFilter(medida.grupo_imple, grupoImpleFilter, {
+            idMedida: medida.id_medida,
+            whitelistIdMedida,
+          })
         : true
     );
     controleMedidas.forEach((medida: any) => {
@@ -149,6 +155,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   getDiagnosticoMaturity,
   programaId,
   grupoImpleFilter = 'all',
+  whitelistIdMedida = null,
   onGrupoImpleFilterChange,
   onDiagnosticoClick,
   dataLoading = false,
@@ -176,6 +183,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         programaMedidas,
         programaId,
         grupoImpleFilter,
+        whitelistIdMedida,
       );
       totalMedidas += total;
       medidasRespondidas += respondidas;
@@ -185,7 +193,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       totalMedidas,
       medidasRespondidas,
     };
-  }, [diagnosticosNoScore, controles, medidas, programaMedidas, programaId, grupoImpleFilter]);
+  }, [diagnosticosNoScore, controles, medidas, programaMedidas, programaId, grupoImpleFilter, whitelistIdMedida]);
 
   return (
     <Box sx={{ p: { xs: 1.25, md: 1.5 } }}>
@@ -221,6 +229,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               programaMedidas,
               programaId,
               grupoImpleFilter,
+              whitelistIdMedida,
             );
 
           const maturityData = getDiagnosticoMaturity(diagnostico.id);

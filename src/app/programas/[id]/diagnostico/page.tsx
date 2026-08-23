@@ -81,9 +81,11 @@ import {
 import {
   isDiagnosticoAtivo,
   isControleAtivo,
+  isMedidaAtiva,
   resolveProgramaEscopo,
   ativarDiagnostico,
   detectPresetFromEscopo,
+  whitelistIdMedidaParaPreset,
 } from "@/lib/programa/perfilEscopo";
 import { sortMedidasByIdMedida } from "../../../../lib/utils/medidaSort";
 
@@ -129,9 +131,24 @@ export default function DiagnosticoPage() {
   const workAreaRef = useRef<HTMLDivElement | null>(null);
   const [grupoImpleFilter, setGrupoImpleFilter] = useState<GrupoImpleFilter>("all");
 
-  const programaEscopo = useMemo(
-    () => (programa ? resolveProgramaEscopo(programa).escopo : null),
-    [programa]
+  const { programaEscopo, giWhitelist } = useMemo(() => {
+    if (!programa) {
+      return { programaEscopo: null, giWhitelist: null as ReadonlySet<string> | null };
+    }
+    const resolved = resolveProgramaEscopo(programa);
+    return {
+      programaEscopo: resolved.escopo,
+      giWhitelist: whitelistIdMedidaParaPreset(resolved.preset),
+    };
+  }, [programa]);
+
+  const matchGiMedida = useCallback(
+    (grupo_imple: string | undefined | null, id_medida?: string | null) =>
+      matchesGrupoFilter(grupo_imple, grupoImpleFilter, {
+        idMedida: id_medida,
+        whitelistIdMedida: giWhitelist,
+      }),
+    [grupoImpleFilter, giWhitelist]
   );
 
   const diagnosticosAtivos = useMemo(() => {
@@ -455,21 +472,25 @@ export default function DiagnosticoPage() {
   }, [controles]);
 
   const medidasParaDashboard = useMemo(() => {
-    if (grupoImpleFilter === "all") return medidasParaCalculo;
     const out: { [key: number]: Array<Medida | dataService.MedidaStructureItem> } = {};
     Object.keys(medidasParaCalculo).forEach((k) => {
       const cid = Number(k);
-      const arr = medidasParaCalculo[cid] || [];
-      if (isDiagnosticoSeguranca(controleDiagnosticoMap[cid])) {
-        out[cid] = arr.filter((m) =>
-          matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
+      const diagId = controleDiagnosticoMap[cid];
+      let arr = medidasParaCalculo[cid] || [];
+      if (programaEscopo) {
+        arr = arr.filter((m) =>
+          isMedidaAtiva(programaEscopo, (m as Medida).id, cid, diagId ?? 0, undefined)
         );
-      } else {
-        out[cid] = arr;
       }
+      if (grupoImpleFilter !== "all" && isDiagnosticoSeguranca(diagId)) {
+        arr = arr.filter((m) =>
+          matchGiMedida((m as Medida).grupo_imple, (m as Medida).id_medida)
+        );
+      }
+      out[cid] = arr;
     });
     return out;
-  }, [medidasParaCalculo, grupoImpleFilter, controleDiagnosticoMap]);
+  }, [medidasParaCalculo, grupoImpleFilter, controleDiagnosticoMap, programaEscopo, matchGiMedida]);
 
   // Construir árvore de navegação
   const treeData = useMemo((): TreeNode[] => {
@@ -512,7 +533,8 @@ export default function DiagnosticoPage() {
         const controleMedidas = medidas[controle.id] || [];
         if (grupoImpleFilter !== "all" && medidasControle.length > 0 && isDiagnosticoSeguranca(diagnostico.id)) {
           const hasAny = medidasControle.some((m) =>
-            matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
+            matchGiMedida((m as Medida).grupo_imple, (m as Medida).id_medida) &&
+            (!programaEscopo || isMedidaAtiva(programaEscopo, (m as Medida).id, controle.id, diagnostico.id))
           );
           if (!hasAny) continue;
         }
@@ -541,7 +563,13 @@ export default function DiagnosticoPage() {
         sortMedidasByIdMedida(controleMedidas).forEach((medida) => {
           const hasFullMedida = typeof (medida as Medida).medida === "string";
           if (!hasFullMedida) return;
-          if (isDiagnosticoSeguranca(diagnostico.id) && !matchesGrupoFilter(medida.grupo_imple, grupoImpleFilter)) {
+          if (
+            programaEscopo &&
+            !isMedidaAtiva(programaEscopo, medida.id, controle.id, diagnostico.id)
+          ) {
+            return;
+          }
+          if (isDiagnosticoSeguranca(diagnostico.id) && !matchGiMedida(medida.grupo_imple, medida.id_medida)) {
             return;
           }
 
@@ -604,6 +632,8 @@ export default function DiagnosticoPage() {
     getDiagnosticoMaturity,
     getControleMaturity,
     grupoImpleFilter,
+    programaEscopo,
+    matchGiMedida,
   ]);
 
   // Funções de navegação
@@ -625,7 +655,12 @@ export default function DiagnosticoPage() {
             : diagnosticoControles.filter((controle) => {
                 const cm = medidasParaCalculo[controle.id] || [];
                 if (cm.length === 0) return true;
-                return cm.some((m) => matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter));
+                return cm.some(
+                  (m) =>
+                    matchGiMedida((m as Medida).grupo_imple, (m as Medida).id_medida) &&
+                    (!programaEscopo ||
+                      isMedidaAtiva(programaEscopo, (m as Medida).id, controle.id, currentDiagnostico.id))
+                );
               });
         allItems = filtrados.map(controle => ({
           id: `controle-${controle.id}`,
@@ -641,8 +676,17 @@ export default function DiagnosticoPage() {
       const controleMedidas = medidas[controle.id] || [];
       const filtradas =
         grupoImpleFilter === "all" || !isDiagnosticoSeguranca(controle.diagnostico)
-          ? controleMedidas
-          : controleMedidas.filter((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
+          ? controleMedidas.filter(
+              (m) =>
+                !programaEscopo ||
+                isMedidaAtiva(programaEscopo, m.id, controle.id, controle.diagnostico)
+            )
+          : controleMedidas.filter(
+              (m) =>
+                matchGiMedida(m.grupo_imple, m.id_medida) &&
+                (!programaEscopo ||
+                  isMedidaAtiva(programaEscopo, m.id, controle.id, controle.diagnostico))
+            );
       allItems = sortMedidasByIdMedida(filtradas).map((medida) => ({
         id: `medida-${medida.id}`,
         type: 'medida' as const,
@@ -662,14 +706,14 @@ export default function DiagnosticoPage() {
       currentIndex: currentIndex + 1, // 1-based index for display
       total: allItems.length 
     };
-  }, [treeData, diagnosticos, controles, medidas, medidasParaCalculo, programaMedidas, programaId, grupoImpleFilter]);
+  }, [treeData, diagnosticos, controles, medidas, medidasParaCalculo, programaMedidas, programaId, grupoImpleFilter, matchGiMedida, programaEscopo]);
 
   useEffect(() => {
     if (grupoImpleFilter === "all") return;
     setSelectedNode((cur) => {
       if (!cur || cur.type !== "medida") return cur;
       if (!isDiagnosticoSeguranca(cur.data.controle?.diagnostico)) return cur;
-      if (matchesGrupoFilter(cur.data.medida.grupo_imple, grupoImpleFilter)) return cur;
+      if (matchGiMedida(cur.data.medida.grupo_imple, cur.data.medida.id_medida)) return cur;
       const c = cur.data.controle;
       const controleNode = treeData
         .flatMap((n) => n.children || [])
@@ -677,7 +721,7 @@ export default function DiagnosticoPage() {
       const dashboardNode = treeData.find((n) => n.type === "dashboard");
       return controleNode ?? dashboardNode ?? cur;
     });
-  }, [grupoImpleFilter, treeData]);
+  }, [grupoImpleFilter, treeData, matchGiMedida]);
 
   // Função para lidar com mudanças nas medidas (callback para MedidaContainer)
   const handleMedidaChange = useCallback(async (
@@ -786,6 +830,7 @@ export default function DiagnosticoPage() {
           programaMedidas={programaMedidas}
           getControleMaturity={getControleMaturity}
           grupoImpleFilter={grupoImpleFilter}
+          whitelistIdMedida={giWhitelist}
           onGrupoImpleFilterChange={setGrupoImpleFilter}
           dataLoading={isBackgroundLoading}
           getDiagnosticoMaturity={(id) => {
@@ -817,11 +862,22 @@ export default function DiagnosticoPage() {
 
       const diagnosticoControlesVisiveis =
         grupoImpleFilter === "all" || !isDiagnosticoSeguranca(selectedNode.data.id)
-          ? diagnosticoControles
+          ? diagnosticoControles.filter(
+              (controle) =>
+                !programaEscopo || isControleAtivo(programaEscopo, controle.id, selectedNode.data.id)
+            )
           : diagnosticoControles.filter((controle) => {
+              if (programaEscopo && !isControleAtivo(programaEscopo, controle.id, selectedNode.data.id)) {
+                return false;
+              }
               const cm = medidasParaCalculo[controle.id] || [];
               if (cm.length === 0) return false;
-              return cm.some((m) => matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter));
+              return cm.some(
+                (m) =>
+                  matchGiMedida((m as Medida).grupo_imple, (m as Medida).id_medida) &&
+                  (!programaEscopo ||
+                    isMedidaAtiva(programaEscopo, (m as Medida).id, controle.id, selectedNode.data.id))
+              );
             });
       const { prevItem, nextItem, currentIndex, total } = findNextPrevItems(selectedNode, 'diagnostico');
       
@@ -929,12 +985,18 @@ export default function DiagnosticoPage() {
                   <Grid container spacing={2}>
                     {diagnosticoControlesVisiveis.map((controle) => {
                       const controleMedidasAll = medidasParaCalculo[controle.id] || [];
-                      const controleMedidasVisiveis =
-                        grupoImpleFilter === "all" || !isDiagnosticoSeguranca(selectedNode.data.id)
-                          ? controleMedidasAll
-                          : controleMedidasAll.filter((m) =>
-                              matchesGrupoFilter((m as Medida).grupo_imple, grupoImpleFilter)
-                            );
+                      const controleMedidasVisiveis = controleMedidasAll.filter((m) => {
+                        if (
+                          programaEscopo &&
+                          !isMedidaAtiva(programaEscopo, (m as Medida).id, controle.id, selectedNode.data.id)
+                        ) {
+                          return false;
+                        }
+                        if (grupoImpleFilter === "all" || !isDiagnosticoSeguranca(selectedNode.data.id)) {
+                          return true;
+                        }
+                        return matchGiMedida((m as Medida).grupo_imple, (m as Medida).id_medida);
+                      });
                       const programaControle = {
                         id: controle.programa_controle_id || 0,
                         programa: programaId,
@@ -1180,6 +1242,8 @@ export default function DiagnosticoPage() {
               programaMedidas={programaMedidas}
               getControleMaturity={getControleMaturity}
               grupoImpleFilter={grupoImpleFilter}
+              whitelistIdMedida={giWhitelist}
+              programaEscopo={programaEscopo}
             />
           </LocalizationProvider>
         </Box>

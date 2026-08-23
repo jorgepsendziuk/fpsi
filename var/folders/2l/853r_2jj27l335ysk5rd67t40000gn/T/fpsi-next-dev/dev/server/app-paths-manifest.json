@@ -1,8 +1,9 @@
 {
   "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/api/programas/[id]/route": "app/api/programas/[id]/route.js",
+  "/api/auditor/[token]/route": "app/api/auditor/[token]/route.js",
+  "/auditor/[token]/page": "app/auditor/[token]/page.js",
   "/programas/[id]/page": "app/programas/[id]/page.js",
-  "/programas/[id]/diagnostico/page": "app/programas/[id]/diagnostico/page.js",
-  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js",
-  "/divulgacao/first/page": "app/divulgacao/first/page.js"
+  "/programas/[id]/governanca/page": "app/programas/[id]/governanca/page.js",
+  "/programas/[id]/conformidade/page": "app/programas/[id]/conformidade/page.js",
+  "/programas/[id]/conformidade/mapeamento/page": "app/programas/[id]/conformidade/mapeamento/page.js"
 }

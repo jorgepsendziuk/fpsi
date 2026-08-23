@@ -1142,8 +1142,9 @@ export default function ProgramaMainPage() {
           Encarregado — formalização (ANPD 18/2024)
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          Cadastro do ato não substitui o documento institucional. Gere o Termo de Nomeação com os dados já preenchidos
-          (logo, organização, DPO) e complete o que faltar antes da assinatura.
+          Cadastro do ato não substitui o documento institucional. Gere o ato formal no modelo da ANPD
+          (Anexo I — pessoa natural ou Anexo II — pessoa jurídica, Resolução CD/ANPD nº 18/2024)
+          com os dados já preenchidos e complete o que faltar antes da assinatura.
         </Typography>
         <Button
           variant="outlined"
@@ -1152,7 +1153,7 @@ export default function ProgramaMainPage() {
           onClick={() => setTermoDpoOpen(true)}
           sx={{ mb: 2 }}
         >
-          Gerar Termo de Nomeação do DPO
+          Gerar ato formal de indicação
         </Button>
         <Grid container spacing={2}>
           {dpoFormalizacaoFields.map((field) => (

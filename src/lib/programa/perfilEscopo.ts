@@ -3,7 +3,15 @@
  * Só itens ativos entram no score e na navegação principal.
  */
 
+import {
+  ANPD_ATPP_WHITELIST_SET,
+  ESSENCIAL_MEDIDAS_IGNORADAS_IDS,
+} from "@/lib/programa/anpdAtpp";
+
 export type PerfilEscopoPreset = "essencial" | "completo" | "com_ia" | "custom";
+
+/** Whitelist GI2/GI3 do Essencial (checklist ANPD ATPP) — reexport para o filtro do diagnóstico. */
+export { ANPD_ATPP_WHITELIST_SET };
 
 export type ModuloKey =
   | "escritorio-governanca"
@@ -129,21 +137,23 @@ export const PRESET_ESSENCIAL: PresetDef = {
   label: "Essencial",
   shortLabel: "Essencial",
   description:
-    "Começo enxuto focado em privacidade e LGPD: estrutura de governança + diagnóstico de privacidade, sem o bloco completo de segurança da informação.",
-  idealFor: "PME, consultoria e primeiros passos em privacidade",
+    "Recorte para agentes de tratamento de pequeno porte (ANPD): estrutura, privacidade/LGPD e higiene de segurança da informação (GI1 + medidas do checklist ANPD).",
+  idealFor: "PME, startups e agentes de tratamento de pequeno porte (ANPD)",
   includes: [
-    "Diagnósticos: Estrutura e Privacidade",
+    "Diagnósticos: Estrutura, SI enxuto (GI1 + whitelist ANPD) e Privacidade",
+    "Checklist ANPD ATPP: PSI, acesso, senhas/MFA, backup, malware, contratos",
     "Módulos LGPD: ROPA, RIPD, incidentes, portal, políticas",
     "Comitê de privacidade (CPDP)",
   ],
   excludes: [
-    "Diagnóstico de Segurança da Informação (SI)",
+    "SI avançado (monitoramento de rede, appsec, testes de intrusão, GI2/GI3 além do checklist ANPD)",
+    "Papéis e processos tipicamente APF/SISP no Controle 0 (CSI, ETIR, PGSI…)",
     "Governança de IA (AIGP) e inventário de sistemas de IA",
     "Comitês de SI (CSI), ETIR e IA",
   ],
-  giAlvo: null,
+  giAlvo: "G1",
   escopo: baseEscopo({
-    diagnosticos: { 1: true, 2: false, 3: true, 4: false },
+    diagnosticos: { 1: true, 2: true, 3: true, 4: false },
     modulos: {
       "escritorio-governanca": true,
       responsabilidades: true,
@@ -161,6 +171,7 @@ export const PRESET_ESSENCIAL: PresetDef = {
       ativos: true,
     },
     comites: { si: false, priva: true, etir: false, ia: false },
+    medidas_ignoradas: [...ESSENCIAL_MEDIDAS_IGNORADAS_IDS],
   }),
 };
 
@@ -294,11 +305,16 @@ export function resolveProgramaEscopo(programa: {
   const giAlvo =
     giRaw === "G1" || giRaw === "G2" || giRaw === "G3"
       ? giRaw
-      : preset === "essencial"
-        ? null
-        : "G1";
+      : "G1";
 
   return { preset, giAlvo, escopo };
+}
+
+/** Whitelist de id_medida extras quando o preset Essencial filtra por GI1. */
+export function whitelistIdMedidaParaPreset(
+  preset: PerfilEscopoPreset | string | null | undefined
+): ReadonlySet<string> | null {
+  return preset === "essencial" ? ANPD_ATPP_WHITELIST_SET : null;
 }
 
 export function buildEscopoFromPreset(presetId: Exclude<PerfilEscopoPreset, "custom">): {

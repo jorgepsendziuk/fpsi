@@ -10,6 +10,7 @@ import ControleComponent from '../Controle';
 // Utils
 import { calculateMaturityIndexForControle } from '../../../lib/utils/calculations';
 import { GrupoImpleFilter, isDiagnosticoSeguranca, matchesGrupoFilter } from '../../../lib/utils/grupoImplementacao';
+import { isMedidaAtiva, type ProgramaEscopoV1 } from '@/lib/programa/perfilEscopo';
 import { respostas, respostasimnao, incc } from '../../../lib/utils/utils';
 
 /**
@@ -49,6 +50,10 @@ export interface ControleContainerProps {
   ) => { score: number; label: string };
   /** Filtro global GI cumulativo: GI2 lista GI1+GI2; GI3 lista GI1+GI2+GI3 (maturidade do controle continua com todas). */
   grupoImpleFilter?: GrupoImpleFilter;
+  /** Whitelist id_medida (Essencial ANPD) para o filtro G1. */
+  whitelistIdMedida?: ReadonlySet<string> | null;
+  /** Escopo do programa — filtra medidas_ignoradas. */
+  programaEscopo?: ProgramaEscopoV1 | null;
   /** Segmento de URL do programa (link «Histórico completo» na linha de atualização do controle). */
   programaPathSegment?: string;
 }
@@ -69,6 +74,8 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   programaMedidas: programaMedidasFromPage,
   getControleMaturity,
   grupoImpleFilter = 'all',
+  whitelistIdMedida = null,
+  programaEscopo = null,
   programaPathSegment,
 }) => {
   // Store measures locally
@@ -105,9 +112,27 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
   }, [medidas, programaMedidasFromPage, controle.id, programaId]);
 
   const medidasParaLista = useMemo(() => {
-    if (grupoImpleFilter === 'all' || !isDiagnosticoSeguranca(diagnostico.id)) return medidasParaExibir;
-    return medidasParaExibir.filter((m) => matchesGrupoFilter(m.grupo_imple, grupoImpleFilter));
-  }, [medidasParaExibir, grupoImpleFilter, diagnostico.id]);
+    let list = medidasParaExibir;
+    if (programaEscopo) {
+      list = list.filter((m) =>
+        isMedidaAtiva(programaEscopo, m.id, controle.id, diagnostico.id, m.resposta)
+      );
+    }
+    if (grupoImpleFilter === 'all' || !isDiagnosticoSeguranca(diagnostico.id)) return list;
+    return list.filter((m) =>
+      matchesGrupoFilter(m.grupo_imple, grupoImpleFilter, {
+        idMedida: m.id_medida,
+        whitelistIdMedida,
+      })
+    );
+  }, [
+    medidasParaExibir,
+    grupoImpleFilter,
+    diagnostico.id,
+    controle.id,
+    whitelistIdMedida,
+    programaEscopo,
+  ]);
 
   // Load measures when the component mounts
   useEffect(() => {

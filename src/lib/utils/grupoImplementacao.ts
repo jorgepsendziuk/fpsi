@@ -52,15 +52,38 @@ export function subheaderGrupoFiltro(filter: GrupoImpleFilter): string {
   return "Indicadores considerando medidas GI1, GI2 e GI3 (nível GI3 cumulativo).";
 }
 
+export type MatchesGrupoFilterOptions = {
+  /** id_medida do catálogo (ex.: "4.11") — usado com whitelist do Essencial/ATPP */
+  idMedida?: string | null;
+  /** Medidas GI2/GI3 extras que passam quando o filtro é G1 (Essencial ANPD) */
+  whitelistIdMedida?: ReadonlySet<string> | readonly string[] | null;
+};
+
+function idMedidaNaWhitelist(
+  idMedida: string | null | undefined,
+  whitelist: MatchesGrupoFilterOptions["whitelistIdMedida"]
+): boolean {
+  if (!idMedida || !whitelist) return false;
+  const key = idMedida.trim();
+  if (!key) return false;
+  if (whitelist instanceof Set) return whitelist.has(key);
+  return (whitelist as readonly string[]).includes(key);
+}
+
 /**
  * Filtro cumulativo alinhado à metodologia CIS / PPSI: GI2 inclui o escopo do GI1; GI3 inclui GI1 e GI2.
  * Medidas sem GI (segmento base ou privacidade) não entram ao filtrar por GI1/GI2/GI3.
+ * Com `whitelistIdMedida` + filtro G1, medidas GI2/GI3 listadas também passam (recorte ANPD/ATPP).
  */
 export function matchesGrupoFilter(
   grupo_imple: string | undefined | null,
-  filter: GrupoImpleFilter
+  filter: GrupoImpleFilter,
+  options?: MatchesGrupoFilterOptions
 ): boolean {
   if (filter === "all") return true;
+  if (filter === "G1" && idMedidaNaWhitelist(options?.idMedida, options?.whitelistIdMedida)) {
+    return true;
+  }
   const g = normalizeGrupoImpleCode(grupo_imple);
   if (!g) return false;
   if (filter === "G1") return g === "G1";

@@ -34,7 +34,7 @@ export const SELO_PLANOS: SeloPlanoDef[] = [
     label: "Essencial",
     shortLabel: "Essencial",
     description:
-      "Programa focado em privacidade e LGPD: diagnósticos de Estrutura e Privacidade no escopo ativo.",
+      "Programa ATPP (ANPD): Estrutura, SI enxuto (GI1 + checklist) e Privacidade no escopo ativo.",
     presets: ["essencial"],
   },
   {

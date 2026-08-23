@@ -17,8 +17,11 @@ import {
   Grid,
   InputLabel,
   MenuItem,
+  Paper,
   Select,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -26,11 +29,13 @@ import GavelIcon from "@mui/icons-material/Gavel";
 import * as dataService from "@/lib/services/dataService";
 import {
   analyzeTermoGaps,
+  atoFormalAnexoId,
   buildAtoDesignacaoResumo,
+  buildAtoFormalParagrafos,
   createEmptyTermoDraft,
   seedTermoDraftFromPrograma,
-  type PessoaTermoFields,
   type TermoNomeacaoDpoDraft,
+  type TipoEncarregadoAto,
 } from "@/lib/utils/termoNomeacaoDpo";
 import { buildTermoNomeacaoDpoPdf, safeTermoPdfFileName } from "@/lib/utils/termoNomeacaoDpoPdf";
 
@@ -44,105 +49,7 @@ type Props = {
   onProgramaUpdated?: (programa: Record<string, unknown>) => void;
 };
 
-function PessoaFieldsBlock({
-  title,
-  value,
-  onChange,
-  prefix,
-}: {
-  title: string;
-  value: PessoaTermoFields;
-  onChange: (next: PessoaTermoFields) => void;
-  prefix: string;
-}) {
-  const set = (key: keyof PessoaTermoFields, v: string) => onChange({ ...value, [key]: v });
-  return (
-    <Box sx={{ mb: 2 }}>
-      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
-        {title}
-      </Typography>
-      <Grid container spacing={1.5}>
-        <Grid item xs={12} md={8}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Nome completo"
-            value={value.nome}
-            onChange={(e) => set("nome", e.target.value)}
-            inputProps={{ "aria-label": `${prefix}-nome` }}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Cargo"
-            value={value.cargo}
-            onChange={(e) => set("cargo", e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Nacionalidade"
-            value={value.nacionalidade}
-            onChange={(e) => set("nacionalidade", e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Estado civil"
-            value={value.estadoCivil}
-            onChange={(e) => set("estadoCivil", e.target.value)}
-            placeholder="casado(a), solteiro(a)…"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="E-mail"
-            value={value.email}
-            onChange={(e) => set("email", e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="RG"
-            value={value.rg}
-            onChange={(e) => set("rg", e.target.value)}
-            helperText="Só no PDF — não é salvo"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Órgão emissor RG"
-            value={value.rgOrgao}
-            onChange={(e) => set("rgOrgao", e.target.value)}
-            placeholder="SSP SP"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="CPF"
-            value={value.cpf}
-            onChange={(e) => set("cpf", e.target.value)}
-            helperText="Só no PDF — não é salvo"
-          />
-        </Grid>
-      </Grid>
-    </Box>
-  );
-}
+type ResponsavelOpt = { id: number; nome?: string | null; email?: string | null; cargo?: string | null };
 
 export function TermoNomeacaoDpoDialog({
   open,
@@ -158,23 +65,7 @@ export function TermoNomeacaoDpoDialog({
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [persistAto, setPersistAto] = useState(true);
-  const [responsaveis, setResponsaveis] = useState<
-    Array<{ id: number; nome?: string | null; email?: string | null; cargo?: string | null }>
-  >([]);
-
-  const applyResponsavelToPessoa = (
-    person: PessoaTermoFields,
-    r: { nome?: string | null; email?: string | null; cargo?: string | null } | null,
-    defaultCargo: string
-  ): PessoaTermoFields => {
-    if (!r) return person;
-    return {
-      ...person,
-      nome: String(r.nome ?? "").trim() || person.nome,
-      email: String(r.email ?? "").trim() || person.email,
-      cargo: String(r.cargo ?? "").trim() || person.cargo || defaultCargo,
-    };
-  };
+  const [responsaveis, setResponsaveis] = useState<ResponsavelOpt[]>([]);
 
   const load = useCallback(async () => {
     if (!programaId) return;
@@ -196,14 +87,8 @@ export function TermoNomeacaoDpoDialog({
         try {
           const emp = await dataService.fetchEmpresaById(empresaId);
           gestorEmpresa = emp?.gestor_responsavel ?? null;
-          if (!String(prog.endereco ?? "").trim() && emp?.endereco) {
-            prog = { ...prog, endereco: emp.endereco };
-          }
           if (!String(prog.razao_social ?? "").trim() && emp?.razao_social) {
             prog = { ...prog, razao_social: emp.razao_social };
-          }
-          if (!String(prog.cnpj ?? "").trim() && emp?.cnpj) {
-            prog = { ...prog, cnpj: emp.cnpj };
           }
           if (!String(prog.nome_fantasia ?? "").trim() && emp?.nome_fantasia) {
             prog = { ...prog, nome_fantasia: emp.nome_fantasia };
@@ -223,7 +108,7 @@ export function TermoNomeacaoDpoDialog({
       setDraft(seeded);
     } catch (e) {
       console.error(e);
-      setError("Não foi possível carregar os dados para o termo.");
+      setError("Não foi possível carregar os dados para o ato formal.");
     } finally {
       setLoading(false);
     }
@@ -236,9 +121,17 @@ export function TermoNomeacaoDpoDialog({
   const gaps = useMemo(() => analyzeTermoGaps(draft), [draft]);
   const obrigatorios = gaps.filter((g) => g.severity === "obrigatorio");
   const recomendados = gaps.filter((g) => g.severity === "recomendado");
+  const preview = useMemo(() => buildAtoFormalParagrafos(draft), [draft]);
+  const anexo = atoFormalAnexoId(draft.tipoEncarregado);
+  const pj = draft.tipoEncarregado === "pessoa_juridica";
 
   const patch = <K extends keyof TermoNomeacaoDpoDraft>(key: K, value: TermoNomeacaoDpoDraft[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const pickResponsavelNome = (id: unknown): string => {
+    const r = responsaveis.find((x) => x.id === Number(id));
+    return r ? String(r.nome ?? "").trim() : "";
   };
 
   const handleGenerate = async () => {
@@ -251,15 +144,14 @@ export function TermoNomeacaoDpoDialog({
     try {
       const enrichedPrograma = {
         ...(programa ?? {}),
-        dpo_nome: draft.dpo.nome,
-        dpo_email: draft.dpo.email,
+        dpo_nome: pj ? draft.dpoPessoaNaturalResponsavel : draft.dpoNome,
       };
       const doc = await buildTermoNomeacaoDpoPdf({
         programa: enrichedPrograma,
         idOrSlug,
         draft,
       });
-      doc.save(safeTermoPdfFileName(draft.organizacaoNome));
+      doc.save(safeTermoPdfFileName(draft.organizacaoNome, draft.tipoEncarregado));
 
       if (canPersist && persistAto) {
         const resumo = buildAtoDesignacaoResumo(draft);
@@ -284,12 +176,14 @@ export function TermoNomeacaoDpoDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <GavelIcon color="primary" />
-        Termo de Nomeação do DPO
+        Ato formal de indicação do encarregado
       </DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Gera um rascunho do ato formal de designação do Encarregado (art. 41 LGPD e Resolução CD/ANPD nº 18/2024),
-          usando logo, organização e papéis já cadastrados. CPF/RG entram só neste PDF e não são persistidos.
+          Gera o documento no modelo da ANPD (Resolução CD/ANPD nº 18/2024):{" "}
+          <strong>Anexo I</strong> para encarregado pessoa natural e <strong>Anexo II</strong> para
+          pessoa jurídica. O PDF usa logo e dados já cadastrados; complete o que faltar antes da
+          assinatura.
         </Typography>
 
         {loading ? (
@@ -300,8 +194,7 @@ export function TermoNomeacaoDpoDialog({
           <>
             {obrigatorios.length > 0 && (
               <Alert severity="error" sx={{ mb: 1.5 }}>
-                <strong>Falta para gerar:</strong>{" "}
-                {obrigatorios.map((g) => g.label).join("; ")}
+                <strong>Falta para gerar:</strong> {obrigatorios.map((g) => g.label).join("; ")}
               </Alert>
             )}
             {recomendados.length > 0 && (
@@ -329,14 +222,35 @@ export function TermoNomeacaoDpoDialog({
             )}
 
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
-              Organização (controlador)
+              Tipo de encarregado (Anexo {anexo})
+            </Typography>
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={draft.tipoEncarregado}
+              onChange={(_, value: TipoEncarregadoAto | null) => {
+                if (!value) return;
+                patch("tipoEncarregado", value);
+              }}
+              sx={{ mb: 2, flexWrap: "wrap" }}
+            >
+              <ToggleButton value="pessoa_natural" sx={{ textTransform: "none", px: 1.5 }}>
+                Pessoa natural — Anexo I
+              </ToggleButton>
+              <ToggleButton value="pessoa_juridica" sx={{ textTransform: "none", px: 1.5 }}>
+                Pessoa jurídica — Anexo II
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+              Controlador
             </Typography>
             <Grid container spacing={1.5} sx={{ mb: 2 }}>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Razão social / nome"
+                  label="Nome do controlador"
                   value={draft.organizacaoNome}
                   onChange={(e) => patch("organizacaoNome", e.target.value)}
                 />
@@ -345,18 +259,11 @@ export function TermoNomeacaoDpoDialog({
                 <TextField
                   fullWidth
                   size="small"
-                  label="CNPJ"
-                  value={draft.cnpj}
-                  onChange={(e) => patch("cnpj", e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="CCM (opcional)"
-                  value={draft.ccm}
-                  onChange={(e) => patch("ccm", e.target.value)}
+                  label="Data da indicação"
+                  type="date"
+                  value={draft.dataNomeacao}
+                  onChange={(e) => patch("dataNomeacao", e.target.value)}
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -368,75 +275,35 @@ export function TermoNomeacaoDpoDialog({
                   onChange={(e) => patch("cidadeAssinatura", e.target.value)}
                 />
               </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Endereço"
-                  value={draft.endereco}
-                  onChange={(e) => patch("endereco", e.target.value)}
-                />
-              </Grid>
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Data da nomeação"
-                  type="date"
-                  value={draft.dataNomeacao}
-                  onChange={(e) => patch("dataNomeacao", e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Telefone"
-                  value={draft.telefone}
-                  onChange={(e) => patch("telefone", e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="E-mail da organização"
-                  value={draft.emailOrg}
-                  onChange={(e) => patch("emailOrg", e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Site"
-                  value={draft.site}
-                  onChange={(e) => patch("site", e.target.value)}
+                  label="Cargo na assinatura"
+                  value={draft.representanteLegalCargo}
+                  onChange={(e) => patch("representanteLegalCargo", e.target.value)}
                 />
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 1.5 }} />
-
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
-              Representante legal
+              Representante legal do controlador
             </Typography>
             {responsaveis.length > 0 && (
               <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-                <InputLabel id="termo-rep-select">Preencher a partir de Papéis e equipe</InputLabel>
+                <InputLabel id="ato-rep-select">Preencher a partir de Papéis e equipe</InputLabel>
                 <Select
-                  labelId="termo-rep-select"
+                  labelId="ato-rep-select"
                   label="Preencher a partir de Papéis e equipe"
                   value=""
                   onChange={(e) => {
                     const r = responsaveis.find((x) => x.id === Number(e.target.value));
                     if (!r) return;
-                    const next = applyResponsavelToPessoa(draft.representanteLegal, r, "Representante Legal");
-                    patch("representanteLegal", {
-                      ...next,
-                      cargoAssinatura: next.cargo || "Representante Legal",
-                    });
+                    setDraft((prev) => ({
+                      ...prev,
+                      representanteLegalNome: String(r.nome ?? "").trim(),
+                      representanteLegalCargo: String(r.cargo ?? "").trim() || prev.representanteLegalCargo,
+                    }));
                   }}
                 >
                   {responsaveis.map((r) => (
@@ -447,94 +314,41 @@ export function TermoNomeacaoDpoDialog({
                 </Select>
               </FormControl>
             )}
-            <Grid container spacing={1.5} sx={{ mb: 2 }}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Nome"
-                  value={draft.representanteLegal.nome}
-                  onChange={(e) =>
-                    patch("representanteLegal", { ...draft.representanteLegal, nome: e.target.value })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Cargo na assinatura"
-                  value={draft.representanteLegal.cargoAssinatura}
-                  onChange={(e) =>
-                    patch("representanteLegal", {
-                      ...draft.representanteLegal,
-                      cargoAssinatura: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Nome do representante legal"
+              value={draft.representanteLegalNome}
+              onChange={(e) => patch("representanteLegalNome", e.target.value)}
+              sx={{ mb: 2 }}
+            />
 
             <Divider sx={{ my: 1.5 }} />
 
-            {responsaveis.length > 0 && (
-              <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-                <InputLabel id="termo-dpo-select">Preencher DPO a partir de Papéis e equipe</InputLabel>
-                <Select
-                  labelId="termo-dpo-select"
-                  label="Preencher DPO a partir de Papéis e equipe"
-                  value=""
-                  onChange={(e) => {
-                    const r = responsaveis.find((x) => x.id === Number(e.target.value));
-                    if (!r) return;
-                    patch(
-                      "dpo",
-                      applyResponsavelToPessoa(
-                        draft.dpo,
-                        r,
-                        "Encarregado pelo Tratamento de Dados Pessoais (DPO)"
-                      )
-                    );
-                  }}
-                >
-                  {responsaveis.map((r) => (
-                    <MenuItem key={r.id} value={r.id}>
-                      {r.nome}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-            <PessoaFieldsBlock
-              title="Encarregado (DPO)"
-              prefix="dpo"
-              value={draft.dpo}
-              onChange={(dpo) => patch("dpo", dpo)}
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={draft.incluirSuplente}
-                  onChange={(e) => patch("incluirSuplente", e.target.checked)}
-                />
-              }
-              label="Incluir suplente de DPO no termo"
-            />
-            {draft.incluirSuplente && (
+            {pj ? (
               <>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                  Encarregado — pessoa jurídica
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Nome empresarial ou título do estabelecimento"
+                  value={draft.dpoNomeEmpresarial}
+                  onChange={(e) => patch("dpoNomeEmpresarial", e.target.value)}
+                  sx={{ mb: 1.5 }}
+                  helperText="Quem é indicado como encarregado (pessoa jurídica)."
+                />
                 {responsaveis.length > 0 && (
                   <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-                    <InputLabel id="termo-sup-select">Preencher suplente a partir de Papéis e equipe</InputLabel>
+                    <InputLabel id="ato-pn-select">
+                      Pessoa natural responsável (Papéis e equipe)
+                    </InputLabel>
                     <Select
-                      labelId="termo-sup-select"
-                      label="Preencher suplente a partir de Papéis e equipe"
+                      labelId="ato-pn-select"
+                      label="Pessoa natural responsável (Papéis e equipe)"
                       value=""
-                      onChange={(e) => {
-                        const r = responsaveis.find((x) => x.id === Number(e.target.value));
-                        if (!r) return;
-                        patch("suplente", applyResponsavelToPessoa(draft.suplente, r, "Suplente de DPO"));
-                      }}
+                      onChange={(e) => patch("dpoPessoaNaturalResponsavel", pickResponsavelNome(e.target.value))}
                     >
                       {responsaveis.map((r) => (
                         <MenuItem key={r.id} value={r.id}>
@@ -544,18 +358,92 @@ export function TermoNomeacaoDpoDialog({
                     </Select>
                   </FormControl>
                 )}
-                <PessoaFieldsBlock
-                  title="Suplente de DPO"
-                  prefix="suplente"
-                  value={draft.suplente}
-                  onChange={(suplente) => patch("suplente", suplente)}
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Nome completo da pessoa natural responsável"
+                  value={draft.dpoPessoaNaturalResponsavel}
+                  onChange={(e) => patch("dpoPessoaNaturalResponsavel", e.target.value)}
+                  helperText="Representará a pessoa jurídica nas interações junto à ANPD e aos titulares."
+                  sx={{ mb: 2 }}
+                />
+              </>
+            ) : (
+              <>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                  Encarregado — pessoa natural
+                </Typography>
+                {responsaveis.length > 0 && (
+                  <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+                    <InputLabel id="ato-dpo-select">Preencher a partir de Papéis e equipe</InputLabel>
+                    <Select
+                      labelId="ato-dpo-select"
+                      label="Preencher a partir de Papéis e equipe"
+                      value=""
+                      onChange={(e) => patch("dpoNome", pickResponsavelNome(e.target.value))}
+                    >
+                      {responsaveis.map((r) => (
+                        <MenuItem key={r.id} value={r.id}>
+                          {r.nome}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Nome completo do encarregado"
+                  value={draft.dpoNome}
+                  onChange={(e) => patch("dpoNome", e.target.value)}
+                  sx={{ mb: 2 }}
                 />
               </>
             )}
 
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+              Substituto(a)
+            </Typography>
+            {responsaveis.length > 0 && (
+              <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+                <InputLabel id="ato-sup-select">Preencher substituto a partir de Papéis e equipe</InputLabel>
+                <Select
+                  labelId="ato-sup-select"
+                  label="Preencher substituto a partir de Papéis e equipe"
+                  value=""
+                  onChange={(e) => patch("substitutoNome", pickResponsavelNome(e.target.value))}
+                >
+                  {responsaveis.map((r) => (
+                    <MenuItem key={r.id} value={r.id}>
+                      {r.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+            <TextField
+              fullWidth
+              size="small"
+              label="Nome completo do substituto(a)"
+              value={draft.substitutoNome}
+              onChange={(e) => patch("substitutoNome", e.target.value)}
+              helperText="Ausências, impedimentos e vacâncias — Anexos I e II da ANPD."
+              sx={{ mb: 2 }}
+            />
+
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+              Prévia do texto (modelo ANPD)
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: "action.hover" }}>
+              {preview.map((paragrafo, i) => (
+                <Typography key={i} variant="body2" sx={{ mb: i === preview.length - 1 ? 0 : 1.5, textAlign: "justify" }}>
+                  {paragrafo}
+                </Typography>
+              ))}
+            </Paper>
+
             {canPersist && (
               <FormControlLabel
-                sx={{ mt: 1 }}
                 control={
                   <Checkbox checked={persistAto} onChange={(e) => setPersistAto(e.target.checked)} />
                 }

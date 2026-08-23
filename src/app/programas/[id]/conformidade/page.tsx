@@ -54,10 +54,6 @@ export default function ConformidadeTratamentoHubPage() {
   return (
     <Box
       sx={{
-        height: { md: "calc(100dvh - 64px)" },
-        minHeight: 0,
-        display: "flex",
-        flexDirection: "column",
         px: { xs: 2, sm: 3 },
         py: { xs: 1.5, md: 2 },
         maxWidth: 1100,
@@ -73,7 +69,7 @@ export default function ConformidadeTratamentoHubPage() {
         sx={{ mb: 1.25 }}
       />
 
-      <Grid container spacing={1.5} sx={{ flex: 1, minHeight: 0, alignContent: "flex-start" }}>
+      <Grid container spacing={1.5} sx={{ alignContent: "flex-start" }}>
         {tratamentoSections.map(({ section, outOfScope }) => (
           <ConformidadeHubCard
             key={section.key}

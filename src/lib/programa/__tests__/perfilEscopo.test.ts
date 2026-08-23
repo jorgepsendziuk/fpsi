@@ -6,22 +6,40 @@ import {
   isDiagnosticoAtivo,
   isModuloAtivo,
   isControleAtivo,
+  isMedidaAtiva,
   ativarDiagnostico,
   ativarModulo,
   filterMaturidadeByEscopo,
   mediaMaturidadeEscopo,
   normalizeEscopo,
   detectPresetFromEscopo,
+  whitelistIdMedidaParaPreset,
 } from "../perfilEscopo";
+import { ESSENCIAL_MEDIDAS_IGNORADAS_IDS } from "../anpdAtpp";
 
 describe("perfilEscopo", () => {
-  it("essencial desliga SI e AIGP", () => {
-    const { escopo } = buildEscopoFromPreset("essencial");
+  it("essencial liga Estrutura, SI e Privacidade; desliga AIGP", () => {
+    const { escopo, gi_alvo } = buildEscopoFromPreset("essencial");
     expect(isDiagnosticoAtivo(escopo, 1)).toBe(true);
-    expect(isDiagnosticoAtivo(escopo, 2)).toBe(false);
+    expect(isDiagnosticoAtivo(escopo, 2)).toBe(true);
     expect(isDiagnosticoAtivo(escopo, 3)).toBe(true);
     expect(isDiagnosticoAtivo(escopo, 4)).toBe(false);
     expect(isModuloAtivo(escopo, "inventario-ia")).toBe(false);
+    expect(gi_alvo).toBe("G1");
+    expect(escopo.medidas_ignoradas).toEqual([...ESSENCIAL_MEDIDAS_IGNORADAS_IDS]);
+  });
+
+  it("essencial ignora medidas APF do Controle 0", () => {
+    const { escopo } = buildEscopoFromPreset("essencial");
+    expect(isMedidaAtiva(escopo, 2, 1, 1)).toBe(false); // 0.2 gestor TIC
+    expect(isMedidaAtiva(escopo, 4, 1, 1)).toBe(true); // 0.4 encarregado
+    expect(isMedidaAtiva(escopo, 11, 2, 1)).toBe(true); // 0.11 POSIN
+  });
+
+  it("whitelist ANPD só no preset essencial", () => {
+    expect(whitelistIdMedidaParaPreset("essencial")?.has("4.11")).toBe(true);
+    expect(whitelistIdMedidaParaPreset("completo")).toBeNull();
+    expect(whitelistIdMedidaParaPreset("com_ia")).toBeNull();
   });
 
   it("completo liga SI e desliga AIGP", () => {
@@ -45,10 +63,10 @@ describe("perfilEscopo", () => {
     expect(isControleAtivo(escopo, 1, 2)).toBe(true);
   });
 
-  it("ativar diagnóstico SI reativa eixo", () => {
+  it("ativar diagnóstico AIGP a partir do essencial", () => {
     const base = PRESET_ESSENCIAL.escopo;
-    const next = ativarDiagnostico(base, 2);
-    expect(isDiagnosticoAtivo(next, 2)).toBe(true);
+    const next = ativarDiagnostico(base, 4);
+    expect(isDiagnosticoAtivo(next, 4)).toBe(true);
     expect(isModuloAtivo(next, "diagnostico")).toBe(true);
   });
 
@@ -66,14 +84,14 @@ describe("perfilEscopo", () => {
       { diagnostico_id: 3, score: 60 },
     ];
     const { ativos, cortados } = filterMaturidadeByEscopo(rows, PRESET_ESSENCIAL.escopo);
-    expect(ativos.map((r) => r.diagnostico_id)).toEqual([1, 3]);
-    expect(cortados.map((r) => r.diagnostico_id)).toEqual([2]);
-    expect(mediaMaturidadeEscopo(rows, PRESET_ESSENCIAL.escopo)).toBe(70);
+    expect(ativos.map((r) => r.diagnostico_id)).toEqual([1, 2, 3]);
+    expect(cortados.map((r) => r.diagnostico_id)).toEqual([]);
+    expect(mediaMaturidadeEscopo(rows, PRESET_ESSENCIAL.escopo)).toBeCloseTo(160 / 3);
   });
 
   it("detecta preset a partir do escopo", () => {
     expect(detectPresetFromEscopo(PRESET_ESSENCIAL.escopo)).toBe("essencial");
-    const custom = ativarDiagnostico(PRESET_ESSENCIAL.escopo, 2);
+    const custom = ativarDiagnostico(PRESET_ESSENCIAL.escopo, 4);
     expect(detectPresetFromEscopo(custom)).toBe("custom");
   });
 });
