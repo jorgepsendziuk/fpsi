@@ -386,6 +386,8 @@ export const NAV_ITEM_MODULO_MAP: Record<string, ModuloKey | null> = {
   usuarios: "usuarios",
   auditoria: "auditoria",
   governanca: null,
+  fornecedores: "ativos",
+  cultura: "politicas",
 };
 
 export const HUB_SECTION_MODULO_MAP: Record<string, ModuloKey> = {

@@ -152,3 +152,39 @@ export async function POST(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const programaId = parseInt(id, 10);
+    if (Number.isNaN(programaId)) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+    const auth = await requireMember(programaId);
+    if ("error" in auth && auth.error) return auth.error;
+    const { supabase } = auth;
+    const body = await request.json();
+    const auditorId = Number(body.id);
+    if (Number.isNaN(auditorId)) {
+      return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
+    }
+    const { data, error } = await supabase
+      .from("programa_auditor_acesso")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("programa_id", programaId)
+      .eq("id", auditorId)
+      .is("revoked_at", null)
+      .select("id, email, revoked_at")
+      .single();
+    if (error) throw error;
+    return NextResponse.json({ auditor: data });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Erro" },
+      { status: 500 }
+    );
+  }
+}

@@ -250,6 +250,18 @@ export function buildProgramaNavSections(
           path: `${base}/politicas`,
           icon: <PolicyIcon sx={iconSx} />,
         },
+        {
+          id: "fornecedores",
+          label: "Mapa de fornecedores",
+          path: `${base}/fornecedores`,
+          icon: <BusinessIcon sx={iconSx} />,
+        },
+        {
+          id: "cultura",
+          label: "Cultura e conscientização",
+          path: `${base}/cultura`,
+          icon: <MenuBookIcon sx={iconSx} />,
+        },
 
         {
           id: "portal-hub",
@@ -304,7 +316,7 @@ export function buildProgramaNavSections(
         },
         {
           id: "governanca",
-          label: "Decisões e auditor",
+          label: "Governança avançada",
           path: `${base}/governanca`,
           icon: <GavelIcon sx={iconSx} />,
         },

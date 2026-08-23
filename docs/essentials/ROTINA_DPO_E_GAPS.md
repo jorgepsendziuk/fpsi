@@ -73,37 +73,20 @@ Resumo: o FPSI cobre bem o **diagnóstico de maturidade** (framework PPSI), o **
 
 ---
 
-## 4. O que falta para uma experiência completa
+## 4. O que o FPSI já cobre na rotina do DPO (atualizado)
 
-Itens que um DPO costuma precisar e que o FPSI ainda não cobre (ou cobre só em parte), com prioridade sugerida.
+Já existem no produto (não tratar como gap): ROPA / mapeamento, RIPD, incidentes, canal e pedidos de titulares, políticas, diagnóstico PPSI, plano de trabalho, evidências, mapa de fornecedores, governança avançada (decisões + portal do auditor) e kits de cultura.
 
-### Prioridade alta
+### Ainda fora do escopo (consultoria)
 
-| Item | O que é / por que importa | Sugestão de implementação |
-|------|---------------------------|----------------------------|
-| **ROPA (Registro das Operações de Tratamento)** | Obrigação do art. 37 da LGPD. Registro de cada operação de tratamento: finalidade, base legal, categorias de dados, compartilhamento, retenção, medidas de segurança. Central para o dia a dia do DPO. | Módulo “Operações de Tratamento” ou “ROPA”: cadastro de operações por programa, com campos alinhados ao art. 37; listagem, filtros e exportação (PDF/Excel). |
-| **Gestão de direitos dos titulares** | LGPD art. 18: titulares têm direito a acesso, correção, exclusão, portabilidade, oposição, revogação do consentimento etc. O DPO precisa de um canal e de prazos para atendimento. | Módulo “Pedidos dos titulares”: registro de pedidos (tipo, titular, data, prazo, status, resposta); fluxo de atendimento e alertas de prazo. |
-| **RIPD/AIPD (Relatório de Impacto)** | Relatório de Impacto à Proteção de Dados Pessoais para tratamentos de alto risco (LGPD). O DPO orienta ou elabora. | Cadastro/modelo de RIPD por operação ou por programa; vinculação com ROPA e com itens do plano de trabalho. |
-| **Gestão de incidentes** | Incidentes de segurança que afetam dados pessoais devem ser tratados e, quando aplicável, comunicados à ANPD e aos titulares, com prazos e evidências. | Módulo “Incidentes”: registro de incidentes (descrição, severidade, dados afetados, comunicação ANPD/titulares, status); prazos e checklist de comunicação. |
-
-### Prioridade média
-
-| Item | O que é / por que importa | Sugestão de implementação |
-|------|---------------------------|----------------------------|
-| **Workflow de aprovação** | Em órgãos públicos (e em alguns clientes), diagnósticos e planos precisam ser aprovados por gestores antes de serem considerados oficiais. | Fluxo de aprovação para conclusões do diagnóstico e/ou do plano de trabalho; histórico de aprovações e justificativas. |
-| **Relatórios executivos e exportação** | O consultor precisa apresentar ao cliente ou à alta administração um resumo do diagnóstico e do plano (PDF/Excel). | Relatório de conformidade (resumo do diagnóstico + plano); exportação em PDF/Excel para apresentação. |
-| **Base de conhecimento / treinamento** | Materiais de conscientização, links para LGPD/ANPD e orientações por controle ajudam o DPO e o cliente. | Área de documentos/links (LGPD, ANPD, guias); orientações por controle ou por diagnóstico; espaço para materiais de treinamento. |
-
-### Prioridade baixa
-
-| Item | O que é / por que importa | Sugestão de implementação |
-|------|---------------------------|----------------------------|
-| **Múltiplos clientes/contratos** | O conceito de “programa” já permite um programa por cliente. Refinamentos podem facilitar a organização. | Etiquetas ou filtros por cliente/contrato; campos opcionais de vigência de contrato ou escopo. |
+| Item | Situação |
+|------|----------|
+| Timesheet / faturamento | Fora de propósito — o cockpit cobre prazos, não horas cobráveis |
+| LMS com certificado por colaborador | Kits imprimíveis em `/cultura`; registro de treino ainda é evidência manual |
+| Busca com IA em processos/mapeamento | Backlog (TO-DO) |
 
 ---
 
 ## 5. Conclusão
 
-A ferramenta FPSI **já cobre bem** o diagnóstico de maturidade (framework PPSI), o plano de trabalho, as políticas e os responsáveis. Para quem usa o framework PPSI — órgãos públicos, empresas e consultores que adotam o framework —, ela oferece roteiro de diagnóstico, maturidade e plano em um só lugar, multi-usuário e sem planilha.
-
-Para uma **gestão de privacidade completa** (atuar como DPO de ponta a ponta), os próximos passos mais impactantes são: **ROPA**, **gestão de direitos dos titulares**, **RIPD** e **gestão de incidentes**. Enquanto esses módulos não existirem no FPSI, o DPO pode complementar com outros processos ou ferramentas específicas (planilhas, sistemas de tickets, etc.) e usar o FPSI como núcleo do diagnóstico e do plano alinhados ao PPSI.
+O FPSI cobre o ciclo do DPO consultor: um **programa = um cliente**, com diagnóstico, ROPA, RIPD, incidentes, canal do titular, políticas, fornecedores e evidências. O dashboard agrega pendências de todos os programas; o quadro em Plano de trabalho organiza as ações. Não substitui CRM nem certificação ISO — organiza o trabalho e a prova de conformidade.

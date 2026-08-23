@@ -50,6 +50,8 @@ import {
   Event as EventIcon,
   MeetingRoom as MeetingRoomIcon,
   WarningAmber as WarningAmberIcon,
+  Handshake as HandshakeIcon,
+  School as SchoolIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -95,6 +97,7 @@ const sections: Array<{
   gradient: string;
   featured?: boolean;
   badge?: string;
+  alwaysVisible?: boolean;
 }> = [
   {
     key: "escritorio-governanca",
@@ -160,6 +163,34 @@ const sections: Array<{
     path: "politicas",
     color: "#00897B",
     gradient: "linear-gradient(135deg, #004D40 0%, #00897B 100%)",
+  },
+  {
+    key: "fornecedores",
+    title: "Mapa de fornecedores",
+    icon: <HandshakeIcon fontSize="large" />,
+    description: "Inventário, criticidade, cláusulas e revisão (PPSI 15 / ISO 5.19)",
+    path: "fornecedores",
+    color: "#6A1B9A",
+    gradient: "linear-gradient(135deg, #4A148C 0%, #8E24AA 100%)",
+  },
+  {
+    key: "cultura",
+    title: "Cultura e conscientização",
+    icon: <SchoolIcon fontSize="large" />,
+    description: "Kits educacionais com dados do programa (PPSI 14)",
+    path: "cultura",
+    color: "#00838F",
+    gradient: "linear-gradient(135deg, #006064 0%, #00ACC1 100%)",
+  },
+  {
+    key: "governanca-avancada",
+    title: "Governança avançada",
+    icon: <GavelIcon fontSize="large" />,
+    description: "Decisões, timeline e acesso temporário de auditor",
+    path: "governanca",
+    color: "#37474F",
+    gradient: "linear-gradient(135deg, #263238 0%, #546E7A 100%)",
+    alwaysVisible: true,
   },
   {
     key: "portal-privacidade",
@@ -409,7 +440,13 @@ export default function ProgramaMainPage() {
     () =>
       sections.map((s) => ({
         ...s,
-        outOfScope: !isModuloAtivo(effectiveEscopo, s.key as ModuloKey),
+        outOfScope: s.alwaysVisible
+          ? false
+          : s.key === "fornecedores"
+            ? !isModuloAtivo(effectiveEscopo, "ativos")
+            : s.key === "cultura"
+              ? !isModuloAtivo(effectiveEscopo, "politicas")
+              : !isModuloAtivo(effectiveEscopo, s.key as ModuloKey),
       })),
     [effectiveEscopo]
   );

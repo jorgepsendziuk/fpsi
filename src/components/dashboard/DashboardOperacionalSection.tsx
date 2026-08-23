@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import * as dataService from "@/lib/services/dataService";
 import type { DashboardProgramaResumo, DashboardResumoApi, PendenciasResumo } from "@/lib/types/pendencias";
 import { DashboardKpiStrip } from "@/components/dashboard/ProgramaKpiStrip";
+import { ConsultorCockpit } from "@/components/dashboard/ConsultorCockpit";
 import { PendenciasPanel } from "@/components/dashboard/PendenciasPanel";
 import { PendenciasCalendar } from "@/components/dashboard/PendenciasCalendar";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
@@ -171,6 +172,10 @@ export function DashboardOperacionalSection({ left }: Props) {
         compact
         executivo={executivo}
       />
+
+      {!loading && resumo?.programas?.length ? (
+        <ConsultorCockpit programas={resumo.programas} />
+      ) : null}
 
       {executivo ? (
         <Card elevation={0} sx={{ ...cardShellSx, p: 2 }}>

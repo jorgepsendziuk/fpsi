@@ -56,6 +56,7 @@ import {
 import { getPoliticaCatalogMeta } from '@/lib/politicas/politicasCatalog';
 import { PoliticaTipoIcon } from '@/lib/politicas/PoliticaTipoIcon';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { PoliticaSugestoesPanel } from "@/components/politicas/PoliticaSugestoesPanel";
 
 type Section = PoliticaSecao;
 
@@ -471,6 +472,16 @@ export default function PoliticaPage() {
             </Stack>
           </Stack>
         </Paper>
+
+        {programaId ? (
+          <PoliticaSugestoesPanel
+            programaId={programaId}
+            tipoPolitica={politicaId}
+            canEdit={canEdit}
+            sections={sections}
+            onApply={handleSectionTextChange}
+          />
+        ) : null}
 
         <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
           {loadingModel ? (

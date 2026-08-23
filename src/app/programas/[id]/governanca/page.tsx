@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import NextLink from "next/link";
 import {
   Alert,
   Box,
@@ -13,6 +14,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  Link,
+  MenuItem,
+  Select,
   Stack,
   Tab,
   Tabs,
@@ -22,25 +28,75 @@ import {
 import GavelIcon from "@mui/icons-material/Gavel";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import BlockIcon from "@mui/icons-material/Block";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
+import {
+  ABA_AUDITOR,
+  ABA_DECISOES,
+  ABA_TIMELINE,
+  GOVERNANCA_AVANCADA_INTRO,
+} from "@/content/governancaAvancadaOrientacao";
 
-export default function GovernancaExtrasPage() {
+type Decisao = {
+  id: number;
+  titulo: string;
+  contexto?: string;
+  problema?: string;
+  alternativas?: string;
+  decisao?: string;
+  justificativa?: string;
+  responsaveis?: string;
+  data_decisao?: string | null;
+  status?: string;
+};
+
+type Evento = {
+  id: string;
+  ocorrido_em?: string;
+  origem?: string;
+  tipo?: string;
+  titulo?: string;
+  detalhe?: string;
+};
+
+type Auditor = {
+  id: number;
+  email: string;
+  expires_at?: string;
+  revoked_at?: string | null;
+  token?: string;
+  last_access_at?: string | null;
+};
+
+const emptyForm = {
+  titulo: "",
+  contexto: "",
+  problema: "",
+  alternativas: "",
+  decisao: "",
+  justificativa: "",
+  responsaveis: "",
+  status: "aprovado",
+};
+
+export default function GovernancaAvancadaPage() {
   const params = useParams();
   const idOrSlug = String(params?.id || "");
-  const { programaId, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
+  const { programaId, loading: idLoading, error: idError } = useProgramaIdFromParam(idOrSlug);
   const [tab, setTab] = useState(0);
-  const [decisoes, setDecisoes] = useState<Array<Record<string, unknown>>>([]);
-  const [eventos, setEventos] = useState<Array<Record<string, unknown>>>([]);
-  const [auditores, setAuditores] = useState<Array<Record<string, unknown>>>([]);
+  const [decisoes, setDecisoes] = useState<Decisao[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [auditores, setAuditores] = useState<Auditor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDec, setOpenDec] = useState(false);
-  const [titulo, setTitulo] = useState("");
-  const [decisao, setDecisao] = useState("");
-  const [justificativa, setJustificativa] = useState("");
+  const [form, setForm] = useState(emptyForm);
   const [emailAuditor, setEmailAuditor] = useState("");
+  const [diasAuditor, setDiasAuditor] = useState(14);
   const [linkCriado, setLinkCriado] = useState<string | null>(null);
+  const [filtroOrigem, setFiltroOrigem] = useState("todas");
 
   const load = useCallback(async () => {
     if (!programaId) return;
@@ -68,25 +124,33 @@ export default function GovernancaExtrasPage() {
   }, [load]);
 
   const salvarDecisao = async () => {
-    if (!programaId || !titulo.trim()) return;
+    if (!programaId || !form.titulo.trim()) return;
     const res = await fetch(`/api/programas/${programaId}/decisoes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        titulo,
-        decisao,
-        justificativa,
-        status: "aprovado",
+        ...form,
         data_decisao: new Date().toISOString().slice(0, 10),
       }),
     });
-    if (res.ok) {
-      setOpenDec(false);
-      setTitulo("");
-      setDecisao("");
-      setJustificativa("");
-      await load();
+    const json = await res.json();
+    if (!res.ok) {
+      setError(json.error || "Erro ao salvar decisão");
+      return;
     }
+    setOpenDec(false);
+    setForm(emptyForm);
+    await load();
+  };
+
+  const arquivarDecisao = async (id: number) => {
+    if (!programaId) return;
+    await fetch(`/api/programas/${programaId}/decisoes`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: "arquivado" }),
+    });
+    await load();
   };
 
   const criarAuditor = async () => {
@@ -94,7 +158,7 @@ export default function GovernancaExtrasPage() {
     const res = await fetch(`/api/programas/${programaId}/governanca`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ acao: "auditor", email: emailAuditor, dias: 14 }),
+      body: JSON.stringify({ acao: "auditor", email: emailAuditor, dias: diasAuditor }),
     });
     const json = await res.json();
     if (!res.ok) {
@@ -108,11 +172,41 @@ export default function GovernancaExtrasPage() {
     await load();
   };
 
-  if (idLoading || !programaId) {
+  const revogarAuditor = async (id: number) => {
+    if (!programaId) return;
+    await fetch(`/api/programas/${programaId}/governanca`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, acao: "revogar" }),
+    });
+    await load();
+  };
+
+  const copiar = async (texto: string) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      setError("Não foi possível copiar");
+    }
+  };
+
+  const eventosFiltrados = useMemo(() => {
+    if (filtroOrigem === "todas") return eventos;
+    return eventos.filter((e) => String(e.origem) === filtroOrigem);
+  }, [eventos, filtroOrigem]);
+
+  if (idLoading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
         <CircularProgress />
       </Box>
+    );
+  }
+  if (!programaId) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 4 }}>
+        <Alert severity="error">{idError || "Programa não encontrado."}</Alert>
+      </Container>
     );
   }
 
@@ -121,24 +215,49 @@ export default function GovernancaExtrasPage() {
       <PageHeroHeader
         icon={<GavelIcon />}
         title="Governança avançada"
-        description="Decisões, timeline e acesso temporário de auditor (somente leitura)."
+        description={GOVERNANCA_AVANCADA_INTRO.lead}
       />
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          {GOVERNANCA_AVANCADA_INTRO.normas.join(" · ")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Não confundir com{" "}
+          {GOVERNANCA_AVANCADA_INTRO.naoConfundir.map((n, i) => (
+            <React.Fragment key={n.rota}>
+              {i > 0 ? " e " : ""}
+              <Link component={NextLink} href={`/programas/${idOrSlug}/${n.rota}`}>
+                {n.nome}
+              </Link>
+              {` (${n.texto})`}
+            </React.Fragment>
+          ))}
+        </Typography>
+      </Alert>
+
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }} variant="scrollable">
         <Tab icon={<GavelIcon />} iconPosition="start" label="Decisões" />
         <Tab icon={<TimelineIcon />} iconPosition="start" label="Timeline" />
         <Tab icon={<PersonSearchIcon />} iconPosition="start" label="Portal do auditor" />
       </Tabs>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
+
       {loading ? (
         <CircularProgress />
       ) : tab === 0 ? (
         <Box>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <strong>{ABA_DECISOES.titulo}.</strong> {ABA_DECISOES.oQueE}{" "}
+            <Typography component="span" variant="caption" color="text.secondary">
+              {ABA_DECISOES.normas}
+            </Typography>
+          </Alert>
           <Button variant="contained" sx={{ mb: 2 }} onClick={() => setOpenDec(true)}>
             Registrar decisão
           </Button>
@@ -148,28 +267,65 @@ export default function GovernancaExtrasPage() {
             )}
             {decisoes.map((d) => (
               <Box
-                key={String(d.id)}
+                key={d.id}
                 sx={{ p: 1.5, border: "1px solid", borderColor: "divider", borderRadius: 1 }}
               >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                  <Typography fontWeight={700}>{String(d.titulo)}</Typography>
-                  <Chip size="small" label={String(d.status)} />
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }} flexWrap="wrap">
+                  <Typography fontWeight={700}>{d.titulo}</Typography>
+                  <Chip size="small" label={d.status || "—"} />
+                  {d.data_decisao ? (
+                    <Typography variant="caption" color="text.secondary">
+                      {d.data_decisao}
+                    </Typography>
+                  ) : null}
+                  {d.status !== "arquivado" ? (
+                    <Button size="small" onClick={() => void arquivarDecisao(d.id)}>
+                      Arquivar
+                    </Button>
+                  ) : null}
                 </Stack>
-                <Typography variant="body2" color="text.secondary">
-                  {String(d.decisao || d.justificativa || "").slice(0, 240)}
-                </Typography>
+                {d.problema ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Problema: {d.problema}
+                  </Typography>
+                ) : null}
+                <Typography variant="body2">{(d.decisao || d.justificativa || "").slice(0, 400)}</Typography>
+                {d.responsaveis ? (
+                  <Typography variant="caption" color="text.secondary">
+                    Responsáveis: {d.responsaveis}
+                  </Typography>
+                ) : null}
               </Box>
             ))}
           </Stack>
         </Box>
       ) : tab === 1 ? (
         <Stack spacing={1}>
-          {eventos.length === 0 && (
+          <Alert severity="info">
+            <strong>{ABA_TIMELINE.titulo}.</strong> {ABA_TIMELINE.oQueE}{" "}
+            <Typography component="span" variant="caption" color="text.secondary">
+              {ABA_TIMELINE.normas}
+            </Typography>
+          </Alert>
+          <FormControl size="small" sx={{ maxWidth: 240 }}>
+            <InputLabel>Origem</InputLabel>
+            <Select
+              label="Origem"
+              value={filtroOrigem}
+              onChange={(e) => setFiltroOrigem(String(e.target.value))}
+            >
+              <MenuItem value="todas">Todas</MenuItem>
+              <MenuItem value="decisao">Decisões</MenuItem>
+              <MenuItem value="workflow">Workflow</MenuItem>
+              <MenuItem value="ciencia">Ciência</MenuItem>
+            </Select>
+          </FormControl>
+          {eventosFiltrados.length === 0 && (
             <Typography color="text.secondary">
               Timeline vazia — eventos aparecem ao aprovar decisões, mudar workflow ou registrar ciência.
             </Typography>
           )}
-          {eventos.map((ev) => (
+          {eventosFiltrados.map((ev) => (
             <Box
               key={String(ev.id)}
               sx={{ p: 1.25, borderLeft: "3px solid", borderColor: "primary.main", pl: 1.5 }}
@@ -192,7 +348,10 @@ export default function GovernancaExtrasPage() {
       ) : (
         <Box>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Gere um link temporário (14 dias). O auditor acessa só leitura via URL — sem alterar dados.
+            <strong>{ABA_AUDITOR.titulo}.</strong> {ABA_AUDITOR.oQueE}{" "}
+            <Typography component="span" variant="caption" color="text.secondary">
+              {ABA_AUDITOR.normas}
+            </Typography>
           </Alert>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 2 }}>
             <TextField
@@ -201,6 +360,15 @@ export default function GovernancaExtrasPage() {
               label="E-mail do auditor"
               value={emailAuditor}
               onChange={(e) => setEmailAuditor(e.target.value)}
+            />
+            <TextField
+              size="small"
+              type="number"
+              label="Dias"
+              value={diasAuditor}
+              onChange={(e) => setDiasAuditor(Math.min(90, Math.max(1, Number(e.target.value) || 14)))}
+              sx={{ width: 100 }}
+              inputProps={{ min: 1, max: 90 }}
             />
             <Button variant="contained" onClick={() => void criarAuditor()}>
               Gerar link
@@ -212,21 +380,48 @@ export default function GovernancaExtrasPage() {
               <Typography component="span" sx={{ wordBreak: "break-all", fontSize: 13 }}>
                 {linkCriado}
               </Typography>
+              <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => void copiar(linkCriado)}>
+                Copiar
+              </Button>
             </Alert>
           )}
           <Stack spacing={1}>
-            {auditores.map((a) => (
-              <Box
-                key={String(a.id)}
-                sx={{ p: 1.25, border: "1px solid", borderColor: "divider", borderRadius: 1 }}
-              >
-                <Typography fontWeight={600}>{String(a.email)}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Expira: {a.expires_at ? new Date(String(a.expires_at)).toLocaleString("pt-BR") : "—"}
-                  {a.revoked_at ? " · revogado" : ""}
-                </Typography>
-              </Box>
-            ))}
+            {auditores.map((a) => {
+              const origin = typeof window !== "undefined" ? window.location.origin : "";
+              const url = a.token ? `${origin}/auditor/${a.token}` : "";
+              return (
+                <Box
+                  key={a.id}
+                  sx={{ p: 1.25, border: "1px solid", borderColor: "divider", borderRadius: 1 }}
+                >
+                  <Typography fontWeight={600}>{a.email}</Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Expira: {a.expires_at ? new Date(a.expires_at).toLocaleString("pt-BR") : "—"}
+                    {a.revoked_at ? " · revogado" : ""}
+                    {a.last_access_at
+                      ? ` · último acesso ${new Date(a.last_access_at).toLocaleString("pt-BR")}`
+                      : ""}
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                    {url && !a.revoked_at ? (
+                      <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => void copiar(url)}>
+                        Copiar link
+                      </Button>
+                    ) : null}
+                    {!a.revoked_at ? (
+                      <Button
+                        size="small"
+                        color="warning"
+                        startIcon={<BlockIcon />}
+                        onClick={() => void revogarAuditor(a.id)}
+                      >
+                        Revogar
+                      </Button>
+                    ) : null}
+                  </Stack>
+                </Box>
+              );
+            })}
           </Stack>
         </Box>
       )}
@@ -235,28 +430,75 @@ export default function GovernancaExtrasPage() {
         <DialogTitle>Registro de decisão</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="Título" value={titulo} onChange={(e) => setTitulo(e.target.value)} fullWidth />
+            <TextField
+              label="Título"
+              value={form.titulo}
+              onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Contexto"
+              value={form.contexto}
+              onChange={(e) => setForm((f) => ({ ...f, contexto: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={2}
+            />
+            <TextField
+              label="Problema"
+              value={form.problema}
+              onChange={(e) => setForm((f) => ({ ...f, problema: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={2}
+            />
+            <TextField
+              label="Alternativas consideradas"
+              value={form.alternativas}
+              onChange={(e) => setForm((f) => ({ ...f, alternativas: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={2}
+            />
             <TextField
               label="Decisão"
-              value={decisao}
-              onChange={(e) => setDecisao(e.target.value)}
+              value={form.decisao}
+              onChange={(e) => setForm((f) => ({ ...f, decisao: e.target.value }))}
               fullWidth
               multiline
               minRows={2}
             />
             <TextField
               label="Justificativa"
-              value={justificativa}
-              onChange={(e) => setJustificativa(e.target.value)}
+              value={form.justificativa}
+              onChange={(e) => setForm((f) => ({ ...f, justificativa: e.target.value }))}
               fullWidth
               multiline
               minRows={2}
             />
+            <TextField
+              label="Responsáveis"
+              value={form.responsaveis}
+              onChange={(e) => setForm((f) => ({ ...f, responsaveis: e.target.value }))}
+              fullWidth
+            />
+            <FormControl size="small">
+              <InputLabel>Status</InputLabel>
+              <Select
+                label="Status"
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: String(e.target.value) }))}
+              >
+                <MenuItem value="rascunho">Rascunho</MenuItem>
+                <MenuItem value="aprovado">Aprovado</MenuItem>
+              </Select>
+            </FormControl>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDec(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={() => void salvarDecisao()} disabled={!titulo.trim()}>
+          <Button variant="contained" onClick={() => void salvarDecisao()} disabled={!form.titulo.trim()}>
             Salvar
           </Button>
         </DialogActions>

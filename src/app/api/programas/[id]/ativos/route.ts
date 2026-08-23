@@ -136,6 +136,12 @@ export async function POST(
       if (body.contato) base.contato = body.contato;
       if (body.avaliacao_status) base.avaliacao_status = body.avaliacao_status;
       if (body.observacoes) base.observacoes = body.observacoes;
+      if (body.criticidade) base.criticidade = body.criticidade;
+      if (body.data_ultima_avaliacao !== undefined) base.data_ultima_avaliacao = body.data_ultima_avaliacao;
+      if (body.data_proxima_revisao !== undefined) base.data_proxima_revisao = body.data_proxima_revisao;
+      if (body.possui_clausulas_lgpd != null) base.possui_clausulas_lgpd = Boolean(body.possui_clausulas_lgpd);
+      if (body.encerrado_em !== undefined) base.encerrado_em = body.encerrado_em;
+      if (body.due_diligence !== undefined) base.due_diligence = body.due_diligence;
     }
 
     const { data, error } = await supabase
@@ -191,6 +197,12 @@ export async function PATCH(
       "contato",
       "avaliacao_status",
       "observacoes",
+      "criticidade",
+      "data_ultima_avaliacao",
+      "data_proxima_revisao",
+      "possui_clausulas_lgpd",
+      "encerrado_em",
+      "due_diligence",
     ]) {
       if (body[k] !== undefined) patch[k] = body[k];
     }

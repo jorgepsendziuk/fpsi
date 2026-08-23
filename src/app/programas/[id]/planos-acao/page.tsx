@@ -25,6 +25,7 @@ import { ProgramaLastActivityLine } from '@/components/common/ProgramaLastActivi
 import { PageHeroHeader } from '@/components/common/PageHeroHeader';
 import { PlanoPriorizadoPanel } from '@/components/planos-acao/PlanoPriorizadoPanel';
 import { PlanosAcaoEntidadePanel } from '@/components/planos-acao/PlanosAcaoEntidadePanel';
+import { PlanoQuadroKanban } from '@/components/planos-acao/PlanoQuadroKanban';
 
 export default function PlanosAcaoPage() {
   const params = useParams();
@@ -140,6 +141,8 @@ export default function PlanosAcaoPage() {
 
       {/* Plano priorizado (lacunas × criticidade/esforço/impacto) */}
       <PlanoPriorizadoPanel programaId={programaId} />
+
+      <PlanoQuadroKanban programaId={programaId} />
 
       <PlanosAcaoEntidadePanel programaId={programaId} />
 
