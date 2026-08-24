@@ -1,11 +1,8 @@
 {
-  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
   "/api/portal/[slug]/route": "app/api/portal/[slug]/route.js",
-  "/api/portal/[slug]/selo/route": "app/api/portal/[slug]/selo/route.js",
-  "/[slug]/pdf/[tipo]/route": "app/[slug]/pdf/[tipo]/route.js",
   "/[slug]/politica-de-privacidade/page": "app/[slug]/politica-de-privacidade/page.js",
-  "/[slug]/declaracao-de-seguranca/page": "app/[slug]/declaracao-de-seguranca/page.js",
   "/[slug]/page": "app/[slug]/page.js",
   "/[slug]/selo/page": "app/[slug]/selo/page.js",
+  "/[slug]/termos-de-uso/page": "app/[slug]/termos-de-uso/page.js",
   "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
 }
