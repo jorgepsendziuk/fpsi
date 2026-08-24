@@ -25,7 +25,7 @@ function idsOf(rows: Record<string, unknown>[], tipo: string): number[] {
     const n = Number(r.alvo_id);
     if (Number.isFinite(n)) out.push(n);
   }
-  return [...new Set(out)];
+  return Array.from(new Set(out));
 }
 
 /** Completa evidências com medida/controle/diagnóstico — sem bytes nem PII. */
@@ -61,9 +61,9 @@ export async function loadAuditorEvidencias(
     : [];
   const pmById = new Map(pms.map((p) => [Number(p.id), p]));
 
-  const medidaIds = [
-    ...new Set([...medidaDirect, ...pms.map((p) => Number(p.medida)).filter(Number.isFinite)]),
-  ];
+  const medidaIds = Array.from(
+    new Set([...medidaDirect, ...pms.map((p) => Number(p.medida)).filter(Number.isFinite)])
+  );
   const medidas = medidaIds.length
     ? await q<{ id: number; id_medida?: string; medida?: string; id_controle?: number }>(
         admin.from("medida").select("id, id_medida, medida, id_controle").in("id", medidaIds)
@@ -71,15 +71,15 @@ export async function loadAuditorEvidencias(
     : [];
   const medidaById = new Map(medidas.map((m) => [Number(m.id), m]));
 
-  const controleIds = [
-    ...new Set(
+  const controleIds = Array.from(
+    new Set(
       [
         ...controleDirect,
         ...pms.map((p) => Number(p.controle)),
         ...medidas.map((m) => Number(m.id_controle)),
       ].filter(Number.isFinite)
-    ),
-  ];
+    )
+  );
   const controles = controleIds.length
     ? await q<{ id: number; numero?: number | string; nome?: string; diagnostico?: number }>(
         admin.from("controle").select("id, numero, nome, diagnostico").in("id", controleIds)
@@ -87,7 +87,9 @@ export async function loadAuditorEvidencias(
     : [];
   const controleById = new Map(controles.map((c) => [Number(c.id), c]));
 
-  const diagIds = [...new Set(controles.map((c) => Number(c.diagnostico)).filter(Number.isFinite))];
+  const diagIds = Array.from(
+    new Set(controles.map((c) => Number(c.diagnostico)).filter(Number.isFinite))
+  );
   const diags = diagIds.length
     ? await q<{ id: number; descricao?: string }>(
         admin.from("diagnostico").select("id, descricao").in("id", diagIds)

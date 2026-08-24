@@ -106,7 +106,7 @@ export function completarDiagnosticosEixos(
 ): AuditorDiagnostico[] {
   const byId = new Map(rows.map((d) => [d.diagnosticoId, d]));
   const ids = new Set([...EIXOS_PPSI, ...rows.map((d) => d.diagnosticoId)]);
-  return [...ids]
+  return Array.from(ids)
     .sort((a, b) => a - b)
     .map(
       (id) =>
