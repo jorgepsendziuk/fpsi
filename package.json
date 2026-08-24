@@ -17,7 +17,7 @@
     "clean:cache": "npm cache clean --force",
     "build": "cross-env NEXT_TELEMETRY_DISABLED=1 next build --webpack",
     "start": "refine start",
-    "lint": "next lint",
+    "lint": "eslint src",
     "db:dump": "supabase db dump -f database/supabase_dump_$(date +%Y%m%d_%H%M).sql",
     "db:debug": "node --env-file=.env.local scripts/debug-maturidade.mjs",
     "db:debug:keys": "node --env-file=.env.local scripts/debug-maturidade.mjs keys",
