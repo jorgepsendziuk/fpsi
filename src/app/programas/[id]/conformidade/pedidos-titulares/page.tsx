@@ -605,6 +605,38 @@ export default function PedidosTitularesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, descricao_pedido: e.target.value }))}
               />
             </Grid>
+            {editingId != null && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.75 }}>
+                  Detalhes adicionados pelo titular
+                </Typography>
+                {(() => {
+                  const comps = pedidos.find((p) => p.id === editingId)?.complementos;
+                  if (!comps?.length) {
+                    return (
+                      <Typography variant="body2" color="text.secondary">
+                        Nenhum complemento no portal.
+                      </Typography>
+                    );
+                  }
+                  return (
+                    <Stack spacing={1}>
+                      {comps.map((c, i) => (
+                        <Paper key={i} variant="outlined" sx={{ p: 1.25 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {c.created_at ? dayjs(c.created_at).format("DD/MM/YYYY HH:mm") : "—"}
+                            {c.prazo_resposta ? ` · prazo atualizado para ${dayjs(c.prazo_resposta).format("DD/MM/YYYY")}` : ""}
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
+                            {c.texto}
+                          </Typography>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  );
+                })()}
+              </Grid>
+            )}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth

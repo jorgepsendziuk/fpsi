@@ -27,7 +27,13 @@ import {
   ListItemText,
   useTheme,
   alpha,
-  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  IconButton,
+  Chip,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Send as SendIcon, Search as SearchIcon } from "@mui/icons-material";
@@ -36,17 +42,21 @@ import SecurityIcon from "@mui/icons-material/Security";
 import LinkIcon from "@mui/icons-material/Link";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CheckIcon from "@mui/icons-material/Check";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CloseIcon from "@mui/icons-material/Close";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import type { PortalPublicData } from "@/lib/portal/portalPublicTypes";
 import { resolvePortalDocHref, type PortalLegalDoc } from "@/lib/portal/portalLegalLinks";
-import { portalPdfHref, portalSeloHref } from "@/lib/portal/portalPublicPaths";
+import { portalPdfHref } from "@/lib/portal/portalPublicPaths";
 import { landing } from "@/components/landing/landingTokens";
-import { portalHeroBandSx, portalPanelSx } from "@/lib/portal/portalPublicUi";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { portalPanelSx, portalPanelBodySx } from "@/lib/portal/portalPublicUi";
 import { PortalPublicHeaderSync } from "@/components/portal/PortalPublicHeaderContext";
+import { PortalSectionHeader } from "@/components/portal/PortalSectionHeader";
 
 function PortalDocLink({
   slug,
@@ -99,6 +109,89 @@ const STATUS_PEDIDO: Record<string, string> = {
   parcial: "Parcial",
 };
 
+type PedidoComplemento = {
+  texto: string;
+  created_at: string;
+  prazo_resposta?: string | null;
+};
+
+type PedidoConsulta = {
+  protocolo: string | null;
+  tipo: string;
+  status: string;
+  data_prazo_resposta: string | null;
+  data_resposta: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  nome_titular?: string;
+  email_titular?: string;
+  documento_titular?: string | null;
+  descricao_pedido?: string | null;
+  complementos?: PedidoComplemento[];
+};
+
+type PedidoConfirmacao = {
+  protocolo: string;
+  tipo: string;
+  nome_titular: string;
+  email_titular: string;
+  documento_titular: string;
+  descricao_pedido: string;
+  registradoEm: string;
+  data_prazo_resposta: string | null;
+};
+
+function formatDatePt(iso: string | null | undefined) {
+  if (!iso) return "—";
+  const d = new Date(iso.includes("T") ? iso : `${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return iso.includes("T") ? d.toLocaleString("pt-BR") : d.toLocaleDateString("pt-BR");
+}
+
+function prazoResumo(iso: string | null | undefined) {
+  if (!iso) return { texto: "Não definido", vencido: false };
+  const target = new Date(iso.includes("T") ? iso : `${iso}T12:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  const dias = Math.round((target.getTime() - today.getTime()) / 86400000);
+  const data = formatDatePt(iso);
+  if (dias > 1) return { texto: `${data} · ${dias} dias restantes`, vencido: false };
+  if (dias === 1) return { texto: `${data} · 1 dia restante`, vencido: false };
+  if (dias === 0) return { texto: `${data} · vence hoje`, vencido: false };
+  return { texto: `${data} · vencido há ${Math.abs(dias)} dia(s)`, vencido: true };
+}
+
+function chipStatusColor(status: string): "default" | "info" | "warning" | "success" | "error" {
+  if (status === "recebido") return "info";
+  if (status === "em_analise" || status === "parcial") return "warning";
+  if (status === "atendido") return "success";
+  if (status === "recusado") return "error";
+  return "default";
+}
+
+function ConfirmacaoLinha({ label, value }: { label: string; value: string }) {
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", sm: "140px 1fr" },
+        gap: { xs: 0.25, sm: 1.5 },
+        py: 0.65,
+        borderBottom: 1,
+        borderColor: "divider",
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" fontWeight={600}>
+        {label}
+      </Typography>
+      <Typography variant="body2" sx={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function PortalPrivacidadePage() {
   const params = useParams();
   const router = useRouter();
@@ -116,7 +209,8 @@ export default function PortalPrivacidadePage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [protocolo, setProtocolo] = useState<string | null>(null);
+  const [confirmacao, setConfirmacao] = useState<PedidoConfirmacao | null>(null);
+  const [protocoloCopiado, setProtocoloCopiado] = useState(false);
 
   const [formReportar, setFormReportar] = useState({ tipo: "vulnerabilidade" as "vulnerabilidade" | "incidente", nome: "", email: "", descricao: "" });
   const [submittingReportar, setSubmittingReportar] = useState(false);
@@ -130,9 +224,16 @@ export default function PortalPrivacidadePage() {
 
   const [consultaForm, setConsultaForm] = useState({ protocolo: "", email: "", documento: "" });
   const [consultaLoading, setConsultaLoading] = useState(false);
-  const [consultaPedidos, setConsultaPedidos] = useState<Array<{ protocolo: string | null; tipo: string; status: string; data_prazo_resposta: string | null; created_at: string }>>([]);
+  const [consultaPedidos, setConsultaPedidos] = useState<PedidoConsulta[]>([]);
   const [consultaError, setConsultaError] = useState<string | null>(null);
   const [consultaFezBusca, setConsultaFezBusca] = useState(false);
+  const [pedidoAberto, setPedidoAberto] = useState<PedidoConsulta | null>(null);
+  const [complementoTexto, setComplementoTexto] = useState("");
+  const [complementoEmail, setComplementoEmail] = useState("");
+  const [complementoDocumento, setComplementoDocumento] = useState("");
+  const [complementoSending, setComplementoSending] = useState(false);
+  const [complementoError, setComplementoError] = useState<string | null>(null);
+  const [complementoOk, setComplementoOk] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) {
@@ -187,13 +288,49 @@ export default function PortalPrivacidadePage() {
         setSubmitError(json.error ?? "Não foi possível enviar. Tente novamente.");
         return;
       }
-      setProtocolo(json.protocolo ?? null);
+      setConfirmacao({
+        protocolo: json.protocolo ?? "",
+        tipo: form.tipo,
+        nome_titular: form.nome_titular.trim(),
+        email_titular: form.email_titular.trim(),
+        documento_titular: form.documento_titular.trim(),
+        descricao_pedido: form.descricao_pedido.trim(),
+        registradoEm: new Date().toLocaleString("pt-BR"),
+        data_prazo_resposta: json.data_prazo_resposta ?? null,
+      });
+      setProtocoloCopiado(false);
       setForm({ tipo: "acesso", nome_titular: "", email_titular: "", documento_titular: "", descricao_pedido: "" });
     } catch (err) {
       setSubmitError("Erro de conexão. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const fecharConfirmacao = () => {
+    setConfirmacao(null);
+    setProtocoloCopiado(false);
+  };
+
+  const copiarProtocolo = async () => {
+    if (!confirmacao?.protocolo) return;
+    try {
+      await navigator.clipboard.writeText(confirmacao.protocolo);
+      setProtocoloCopiado(true);
+      window.setTimeout(() => setProtocoloCopiado(false), 2500);
+    } catch {
+      setProtocoloCopiado(false);
+    }
+  };
+
+  const voltarEAcompanhar = () => {
+    if (confirmacao?.protocolo) {
+      setConsultaForm((f) => ({ ...f, protocolo: confirmacao.protocolo }));
+    }
+    fecharConfirmacao();
+    window.requestAnimationFrame(() => {
+      document.getElementById("acompanhar")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const handleReportar = async (e: React.FormEvent) => {
@@ -281,15 +418,75 @@ export default function PortalPrivacidadePage() {
       const json = await res.json();
       if (!res.ok) {
         setConsultaPedidos([]);
+        setPedidoAberto(null);
         setConsultaError(json.error ?? "Não foi possível consultar.");
         return;
       }
-      setConsultaPedidos(json.pedidos ?? []);
+      const lista = (json.pedidos ?? []) as PedidoConsulta[];
+      setConsultaPedidos(lista);
+      setPedidoAberto(lista.length === 1 ? lista[0] : null);
+      setComplementoTexto("");
+      setComplementoError(null);
+      setComplementoOk(null);
     } catch (err) {
       setConsultaPedidos([]);
+      setPedidoAberto(null);
       setConsultaError("Erro de conexão. Tente novamente.");
     } finally {
       setConsultaLoading(false);
+    }
+  };
+
+  const fecharPedidoAberto = () => {
+    setPedidoAberto(null);
+    setComplementoTexto("");
+    setComplementoError(null);
+    setComplementoOk(null);
+  };
+
+  const handleComplementar = async () => {
+    if (!slug || !pedidoAberto?.protocolo) return;
+    const texto = complementoTexto.trim();
+    const emailId = consultaForm.email.trim() || complementoEmail.trim();
+    const docId = consultaForm.documento.trim() || complementoDocumento.trim();
+    if (!emailId && !docId) {
+      setComplementoError("Informe o e-mail ou o CPF do pedido para confirmar a identidade.");
+      return;
+    }
+    if (texto.length < 8) {
+      setComplementoError("Descreva o detalhe (mínimo 8 caracteres).");
+      return;
+    }
+    setComplementoSending(true);
+    setComplementoError(null);
+    setComplementoOk(null);
+    try {
+      const res = await fetch(`/api/solicitar-dados/${encodeURIComponent(slug)}/complementar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          protocolo: pedidoAberto.protocolo,
+          email: emailId || null,
+          documento: docId || null,
+          texto,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setComplementoError(json.error ?? "Não foi possível registrar o detalhe.");
+        return;
+      }
+      const atualizado = json.pedido as PedidoConsulta;
+      setPedidoAberto(atualizado);
+      setConsultaPedidos((prev) =>
+        prev.map((p) => (p.protocolo === atualizado.protocolo ? atualizado : p))
+      );
+      setComplementoTexto("");
+      setComplementoOk(json.mensagem ?? "Detalhe registrado.");
+    } catch {
+      setComplementoError("Erro de conexão. Tente novamente.");
+    } finally {
+      setComplementoSending(false);
     }
   };
 
@@ -325,204 +522,54 @@ export default function PortalPrivacidadePage() {
     );
   }
 
-  if (protocolo) {
-    const portalLogoUrl = getProgramaLogoDisplayUrl(data);
-    return (
-      <>
-        <PortalPublicHeaderSync slug={slug} orgName={nomeExibicao} logoUrl={portalLogoUrl} />
-      <Container maxWidth="sm" sx={{ py: { xs: 3, md: 5 } }}>
-        <Paper
-          elevation={0}
-          sx={{
-            ...portalPanelSx(theme, { accentTop: true, tint: "primary" }),
-            p: 4,
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-            Pedido registrado
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Seu pedido foi recebido e será analisado conforme os prazos previstos na LGPD.
-          </Typography>
-          <Box sx={{ py: 2.5, px: 3, bgcolor: alpha(theme.palette.primary.main, 0.08), borderRadius: 2, display: "inline-block" }}>
-            <Typography variant="overline" color="text.secondary" fontWeight="600">Protocolo</Typography>
-            <Typography variant="h5" fontFamily="monospace" fontWeight="bold" sx={{ mt: 0.5 }}>
-              {protocolo}
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
-            Guarde este número para acompanhamento. Em caso de dúvidas, entre em contato pelos canais informados nesta página.
-          </Typography>
-        </Paper>
-      </Container>
-      </>
-    );
-  }
-
   const portalLogoUrl = getProgramaLogoDisplayUrl(data);
+  const tipoConfirmacaoLabel = confirmacao
+    ? TIPOS_DSAR.find((t) => t.value === confirmacao.tipo)?.label ?? confirmacao.tipo
+    : "";
 
   return (
     <>
-      <PortalPublicHeaderSync slug={slug} orgName={nomeExibicao} logoUrl={portalLogoUrl} />
-    <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2 } }}>
-      <Box
-        component="h1"
-        sx={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          p: 0,
-          m: -1,
-          overflow: "hidden",
-          clip: "rect(0,0,0,0)",
-          whiteSpace: "nowrap",
-          border: 0,
+      <PortalPublicHeaderSync
+        slug={slug}
+        orgName={nomeExibicao}
+        logoUrl={portalLogoUrl}
+        orgDetails={{
+          razao_social: data.razao_social,
+          cnpj: data.cnpj,
+          dpo_nome: data.dpo_nome,
+          dpo_email: data.dpo_email,
+          dpo_tipo_pessoa: data.dpo_tipo_pessoa,
+          dpo_pessoa_natural_nome: data.dpo_pessoa_natural_nome,
+          dpo_cnpj: data.dpo_cnpj,
+          atendimento_fone: data.atendimento_fone,
+          atendimento_email: data.atendimento_email,
+          atendimento_site: data.atendimento_site,
         }}
-      >
-        {nomeExibicao} — Portal de Privacidade
-      </Box>
+      />
+    <Container maxWidth={false} sx={{ maxWidth: 1440, py: { xs: 1.5, md: 2 }, px: { xs: 2, sm: 3, lg: 4 } }}>
 
-      <Box
-        sx={{
-          ...portalHeroBandSx,
-          mb: 2,
-          px: { xs: 1.5, sm: 2 },
-          py: { xs: 1, sm: 1.15 },
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <Typography
-          variant="body2"
-          sx={{
-            color: landing.heroText,
-            fontWeight: 600,
-            fontSize: { xs: "0.8125rem", sm: "0.875rem" },
-            lineHeight: 1.35,
-            whiteSpace: { md: "nowrap" },
-          }}
-        >
-          <Box component="span" fontWeight={800}>
-            Transparência e direitos do titular
-          </Box>
-          <Box component="span" sx={{ color: alpha(landing.heroText, 0.9), mx: { xs: 0.5, sm: 1 } }}>
-            ·
-          </Box>
-          <Box component="span" sx={{ color: alpha(landing.heroText, 0.92) }}>
-            LGPD, documentos do programa, pedidos e contato com o encarregado.
-          </Box>
-        </Typography>
-      </Box>
-
-      <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }), p: 2.5, mb: 2.5 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ letterSpacing: "0.08em" }}>Informações básicas</Typography>
-            <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-              {data.razao_social && <Typography variant="body2"><strong>Razão social:</strong> {data.razao_social}</Typography>}
-              {data.nome_fantasia && <Typography variant="body2"><strong>Nome fantasia:</strong> {data.nome_fantasia}</Typography>}
-              {data.cnpj != null && data.cnpj !== "" && <Typography variant="body2"><strong>CNPJ:</strong> {String(data.cnpj)}</Typography>}
-              {!data.razao_social && !data.nome_fantasia && (data.cnpj == null || data.cnpj === "") && (
-                <Typography variant="body2" color="text.secondary">—</Typography>
-              )}
-            </Stack>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ letterSpacing: "0.08em" }}>Informações de contato</Typography>
-            <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-              {(data.dpo_nome || data.dpo_email) && (
-                <Typography variant="body2">
-                  <strong>Encarregado/DPO:</strong> {[data.dpo_nome, data.dpo_email].filter(Boolean).join(" — ")}
-                  {data.dpo_tipo_pessoa === "pessoa_juridica" && data.dpo_pessoa_natural_nome ? (
-                    <>
-                      <br />
-                      Pessoa natural responsável: {data.dpo_pessoa_natural_nome}
-                      {data.dpo_cnpj ? ` · CNPJ ${data.dpo_cnpj}` : ""}
-                    </>
-                  ) : null}
-                </Typography>
-              )}
-              {data.atendimento_fone && <Typography variant="body2"><strong>Telefone:</strong> {data.atendimento_fone}</Typography>}
-              {data.atendimento_email && (
-                <Typography variant="body2"><strong>E-mail:</strong> <MuiLink href={`mailto:${data.atendimento_email}`}>{data.atendimento_email}</MuiLink></Typography>
-              )}
-              {data.atendimento_site && (
-                <Typography variant="body2"><strong>Site:</strong> <MuiLink href={data.atendimento_site} target="_blank" rel="noopener noreferrer">{data.atendimento_site}</MuiLink></Typography>
-              )}
-              {!data.dpo_nome && !data.dpo_email && !data.atendimento_fone && !data.atendimento_email && !data.atendimento_site && (
-                <Typography variant="body2" color="text.secondary">—</Typography>
-              )}
-            </Stack>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Duas colunas: direitos + documentos (esquerda) | formulário DSAR (direita) */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) 400px" }, gap: 4, alignItems: "start" }}>
+      {/* 50/50: documentos + segurança | direitos + requisição */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 3, alignItems: "start" }}>
         <Stack spacing={2.5}>
-          {/* Destaque: direitos do titular → aponta para o formulário */}
-          <Paper
-            elevation={0}
-            sx={{
-              ...portalPanelSx(theme, { accentTop: true, tint: "primary" }),
-              p: 2.5,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 1.5,
-                  background: `linear-gradient(135deg, ${landing.blue} 0%, ${landing.blueBright} 100%)`,
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  boxShadow: `0 4px 14px ${alpha(landing.blue, 0.35)}`,
-                }}
-              >
-                <GavelIcon />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="overline" color="primary" fontWeight="700" sx={{ letterSpacing: "0.06em" }}>
-                  Seus direitos (LGPD)
-                </Typography>
-                <Typography variant="h6" component="h2" fontWeight="bold" sx={{ mt: 0.5, mb: 1 }}>
-                  Exerça seus direitos do art. 18
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Use o formulário ao lado para solicitar acesso, correção, exclusão, portabilidade, revogação de consentimento,
-                  informação sobre compartilhamento ou oposição. Quando aplicável, a organização responde em até{" "}
-                  <strong>15 dias</strong>. Guarde o <strong>protocolo</strong> para acompanhar o pedido abaixo do
-                  formulário.
-                </Typography>
-                <Button
-                  component={Link}
-                  href="#solicitar"
-                  variant="contained"
-                  size="medium"
-                  endIcon={<ArrowForwardIcon />}
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                >
-                  Preencher requisição de direitos
-                </Button>
-              </Box>
-            </Box>
-          </Paper>
-
           {/* Documentos hospedados no portal (ou links externos configurados no cadastro) */}
-          <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }), p: 2.5 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-              <MenuBookIcon sx={{ color: landing.blue }} fontSize="small" />
-              <Typography variant="subtitle1" fontWeight="bold">
-                Documentos e transparência
-              </Typography>
-            </Box>
+          <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }) }}>
+            <Box sx={portalPanelBodySx}>
+            <PortalSectionHeader
+              icon={<MenuBookIcon />}
+              title="Documentos e transparência"
+              subtitle="Políticas e avisos publicados pela organização"
+              tone="neutral"
+            />
             <List dense disablePadding>
-              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+              <ListItem
+                disablePadding
+                sx={{ mb: 1, alignItems: "flex-start", pr: 5 }}
+                secondaryAction={
+                  <IconButton component={Link} href={portalPdfHref(slug, "termo")} size="small" aria-label="Baixar PDF do Termo de Uso" sx={{ mt: 0.15 }}>
+                    <PictureAsPdfIcon fontSize="small" color="primary" />
+                  </IconButton>
+                }
+              >
                 <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
                   <LinkIcon fontSize="small" color="action" />
                 </ListItemIcon>
@@ -532,15 +579,18 @@ export default function PortalPrivacidadePage() {
                       Termo de Uso do serviço
                     </PortalDocLink>
                   }
-                  secondary={
-                    <>
-                      Condições de adesão, direitos e responsabilidades (modelo PPSI).{" "}
-                      <MuiLink href={portalPdfHref(slug, "termo")}>PDF</MuiLink>
-                    </>
-                  }
+                  secondary="Condições de adesão, direitos e responsabilidades (modelo PPSI)."
                 />
               </ListItem>
-              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+              <ListItem
+                disablePadding
+                sx={{ mb: 1, alignItems: "flex-start", pr: 5 }}
+                secondaryAction={
+                  <IconButton component={Link} href={portalPdfHref(slug, "politica")} size="small" aria-label="Baixar PDF da Política de Privacidade" sx={{ mt: 0.15 }}>
+                    <PictureAsPdfIcon fontSize="small" color="primary" />
+                  </IconButton>
+                }
+              >
                 <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
                   <LinkIcon fontSize="small" color="action" />
                 </ListItemIcon>
@@ -550,15 +600,18 @@ export default function PortalPrivacidadePage() {
                       Política de Privacidade
                     </PortalDocLink>
                   }
-                  secondary={
-                    <>
-                      Finalidades, bases legais e direitos do titular.{" "}
-                      <MuiLink href={portalPdfHref(slug, "politica")}>PDF</MuiLink>
-                    </>
-                  }
+                  secondary="Finalidades, bases legais e direitos do titular."
                 />
               </ListItem>
-              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+              <ListItem
+                disablePadding
+                sx={{ mb: 1, alignItems: "flex-start", pr: 5 }}
+                secondaryAction={
+                  <IconButton component={Link} href={portalPdfHref(slug, "aviso")} size="small" aria-label="Baixar PDF do Aviso do Portal" sx={{ mt: 0.15 }}>
+                    <PictureAsPdfIcon fontSize="small" color="primary" />
+                  </IconButton>
+                }
+              >
                 <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
                   <LinkIcon fontSize="small" color="action" />
                 </ListItemIcon>
@@ -568,15 +621,18 @@ export default function PortalPrivacidadePage() {
                       Aviso do Portal do Titular
                     </PortalDocLink>
                   }
-                  secondary={
-                    <>
-                      Como usar este canal e o que esperar do atendimento.{" "}
-                      <MuiLink href={portalPdfHref(slug, "aviso")}>PDF</MuiLink>
-                    </>
-                  }
+                  secondary="Como usar este canal e o que esperar do atendimento."
                 />
               </ListItem>
-              <ListItem disablePadding sx={{ mb: 1, alignItems: "flex-start" }}>
+              <ListItem
+                disablePadding
+                sx={{ mb: 1, alignItems: "flex-start", pr: 5 }}
+                secondaryAction={
+                  <IconButton component={Link} href={portalPdfHref(slug, "cookies")} size="small" aria-label="Baixar PDF da Política de Cookies" sx={{ mt: 0.15 }}>
+                    <PictureAsPdfIcon fontSize="small" color="primary" />
+                  </IconButton>
+                }
+              >
                 <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
                   <LinkIcon fontSize="small" color="action" />
                 </ListItemIcon>
@@ -586,15 +642,18 @@ export default function PortalPrivacidadePage() {
                       Política de Cookies
                     </PortalDocLink>
                   }
-                  secondary={
-                    <>
-                      Uso de cookies e tecnologias similares.{" "}
-                      <MuiLink href={portalPdfHref(slug, "cookies")}>PDF</MuiLink>
-                    </>
-                  }
+                  secondary="Uso de cookies e tecnologias similares."
                 />
               </ListItem>
-              <ListItem disablePadding sx={{ alignItems: "flex-start" }}>
+              <ListItem
+                disablePadding
+                sx={{ alignItems: "flex-start", pr: 5 }}
+                secondaryAction={
+                  <IconButton component={Link} href={portalPdfHref(slug, "declaracao")} size="small" aria-label="Baixar PDF da Declaração de Segurança" sx={{ mt: 0.15 }}>
+                    <PictureAsPdfIcon fontSize="small" color="primary" />
+                  </IconButton>
+                }
+              >
                 <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
                   <LinkIcon fontSize="small" color="action" />
                 </ListItemIcon>
@@ -604,37 +663,10 @@ export default function PortalPrivacidadePage() {
                       Declaração de Segurança
                     </PortalDocLink>
                   }
-                  secondary={
-                    <>
-                      Compromisso com boas práticas de segurança da informação.{" "}
-                      <MuiLink href={portalPdfHref(slug, "declaracao")}>PDF</MuiLink>
-                    </>
-                  }
+                  secondary="Compromisso com boas práticas de segurança da informação."
                 />
               </ListItem>
             </List>
-          </Paper>
-
-          <Paper elevation={0} sx={{ ...portalPanelSx(theme, { accentTop: true }), p: 2.5 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <WorkspacePremiumIcon sx={{ color: landing.blue }} />
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Selo LGPD
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Página pública do selo para divulgação no site da organização.{" "}
-                  <MuiLink component={Link} href={portalSeloHref(slug)}>
-                    Ver selo
-                  </MuiLink>
-                </Typography>
-              </Box>
-              <Box
-                component="img"
-                src={`/api/portal/${encodeURIComponent(slug)}/selo`}
-                alt="Selo LGPD"
-                sx={{ width: 72, height: 80, objectFit: "contain", flexShrink: 0 }}
-              />
             </Box>
           </Paper>
 
@@ -646,18 +678,22 @@ export default function PortalPrivacidadePage() {
               ...portalPanelSx(theme, { accentTop: true, tint: "shield" }),
               "&:before": { display: "none" },
               borderRadius: "12px !important",
+              overflow: "hidden",
             }}
           >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
-              sx={{ bgcolor: alpha(landing.shield, theme.palette.mode === "dark" ? 0.12 : 0.06) }}
+              sx={{ px: { xs: 2, sm: 2.5 }, py: 1, bgcolor: alpha(landing.shield, theme.palette.mode === "dark" ? 0.12 : 0.06) }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <SecurityIcon sx={{ color: landing.shield }} />
-                <Typography variant="subtitle1" fontWeight="bold">Segurança</Typography>
-              </Box>
+              <PortalSectionHeader
+                icon={<SecurityIcon />}
+                title="Segurança"
+                subtitle="Reporte incidentes ou envie mensagem"
+                tone="shield"
+                mb={0}
+              />
             </AccordionSummary>
-            <AccordionDetails sx={{ pt: 0 }}>
+            <AccordionDetails sx={{ pt: 0, px: { xs: 2, sm: 2.5 }, pb: { xs: 2, sm: 2.5 } }}>
               {data.link_reportar_vulnerabilidade && /^https?:\/\//i.test(data.link_reportar_vulnerabilidade.trim()) && (
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                   Canal adicional de reporte:{" "}
@@ -724,21 +760,28 @@ export default function PortalPrivacidadePage() {
           </Accordion>
         </Stack>
 
-        {/* Coluna direita: formulário DSAR */}
+        {/* Coluna direita: direitos + formulário DSAR */}
         <Paper
           elevation={0}
           sx={{
             ...portalPanelSx(theme, { accentTop: true, tint: "primary" }),
-            p: 3,
-            position: { md: "sticky" },
-            top: { md: 72 },
-            scrollMarginTop: { xs: 96, md: 100 },
+            scrollMarginTop: { xs: 96, md: 108 },
           }}
           id="solicitar"
         >
-          <Typography variant="h6" fontWeight="bold" gutterBottom>Requisição de Direitos</Typography>
+          <Box sx={portalPanelBodySx}>
+          <PortalSectionHeader
+            icon={<GavelIcon />}
+            title="Seus direitos (LGPD)"
+            subtitle="Art. 18 — acesso, correção, exclusão e demais direitos do titular"
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+            Envie sua requisição abaixo. A organização responde em até <strong>15 dias</strong> quando aplicável.
+            Guarde o <strong>protocolo</strong> para acompanhar o andamento.
+          </Typography>
+          <Divider sx={{ mb: 2.5 }} />
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Os dados informados serão utilizados apenas para atendimento do seu pedido e cumprimento de obrigações legais.
+            Os dados informados serão usados somente para atendimento do pedido.
           </Typography>
           <form onSubmit={handleSubmit}>
             <Stack spacing={2}>
@@ -759,10 +802,10 @@ export default function PortalPrivacidadePage() {
             </Stack>
           </form>
 
-          <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: "divider" }}>
+          <Box id="acompanhar" sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: "divider", scrollMarginTop: { xs: 96, md: 108 } }}>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Acompanhar sua requisição</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Informe o protocolo recebido e/ou e-mail e/ou documento (CPF) para consultar o status.
+              Consulte o status com o número de protocolo, o CPF ou o e-mail informados no pedido.
             </Typography>
             <form onSubmit={handleConsultar}>
               <Stack spacing={1.5}>
@@ -781,27 +824,319 @@ export default function PortalPrivacidadePage() {
                   <Typography variant="body2" color="text.secondary">Nenhuma requisição encontrada com os dados informados.</Typography>
                 ) : (
                   <Stack spacing={1}>
-                    {consultaPedidos.map((ped, i) => (
-                      <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
+                    {consultaPedidos.map((ped, i) => {
+                      const prazo = prazoResumo(ped.data_prazo_resposta);
+                      return (
+                      <Paper
+                        key={ped.protocolo ?? i}
+                        variant="outlined"
+                        sx={{ p: 1.5, cursor: "pointer", "&:hover": { borderColor: "primary.main" } }}
+                        onClick={() => {
+                          setPedidoAberto(ped);
+                          setComplementoTexto("");
+                          setComplementoError(null);
+                          setComplementoOk(null);
+                        }}
+                      >
                         <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={0.5}>
                           <Typography variant="body2" fontWeight="bold">{ped.protocolo ?? "—"}</Typography>
-                          <Typography variant="caption" color="text.secondary">{STATUS_PEDIDO[ped.status] ?? ped.status}</Typography>
+                          <Chip size="small" label={STATUS_PEDIDO[ped.status] ?? ped.status} color={chipStatusColor(ped.status)} />
                         </Stack>
                         <Typography variant="body2" color="text.secondary">{TIPOS_DSAR.find((t) => t.value === ped.tipo)?.label ?? ped.tipo}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Aberto em {new Date(ped.created_at).toLocaleDateString("pt-BR")}
-                          {ped.data_prazo_resposta && ` · Prazo para resposta: ${new Date(ped.data_prazo_resposta).toLocaleDateString("pt-BR")}`}
+                        <Typography variant="caption" color={prazo.vencido ? "error" : "text.secondary"}>
+                          Aberto em {formatDatePt(ped.created_at)}
+                          {ped.data_prazo_resposta ? ` · Prazo: ${prazo.texto}` : ""}
+                        </Typography>
+                        <Typography variant="caption" color="primary" sx={{ display: "block", mt: 0.5, fontWeight: 700 }}>
+                          Ver detalhes
                         </Typography>
                       </Paper>
-                    ))}
+                      );
+                    })}
                   </Stack>
                 )}
               </Box>
             )}
           </Box>
+          </Box>
         </Paper>
       </Box>
     </Container>
+
+      <Dialog
+        open={Boolean(confirmacao)}
+        onClose={fecharConfirmacao}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="pedido-registrado-titulo"
+      >
+        {confirmacao && (
+          <>
+            <DialogTitle id="pedido-registrado-titulo" sx={{ position: "relative", pr: 6, pb: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25 }}>
+                <CheckCircleOutlineIcon color="success" sx={{ mt: 0.35 }} />
+                <Box>
+                  <Typography variant="h6" fontWeight={800} component="span">
+                    Pedido registrado
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 400 }}>
+                    Recebemos sua requisição. Ela será analisada conforme os prazos da LGPD.
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton
+                aria-label="Fechar"
+                onClick={fecharConfirmacao}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ pt: 1 }}>
+              <Box
+                sx={{
+                  mt: 1,
+                  mb: 2,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
+                }}
+              >
+                <Typography variant="overline" color="text.secondary" fontWeight={700}>
+                  Protocolo
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mt: 0.5 }}>
+                  <Typography variant="h6" fontFamily="monospace" fontWeight={800} sx={{ wordBreak: "break-all" }}>
+                    {confirmacao.protocolo || "—"}
+                  </Typography>
+                  {confirmacao.protocolo ? (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={protocoloCopiado ? <CheckIcon /> : <ContentCopyIcon />}
+                      onClick={() => void copiarProtocolo()}
+                      sx={{ textTransform: "none", fontWeight: 700, flexShrink: 0 }}
+                    >
+                      {protocoloCopiado ? "Copiado" : "Copiar protocolo"}
+                    </Button>
+                  ) : null}
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+                  Guarde este número. Depois você pode acompanhar o pedido nesta mesma página usando o
+                  protocolo ou o CPF (se informado). O e-mail também pode ser usado na consulta.
+                </Typography>
+              </Box>
+
+              <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.5 }}>
+                Confirme os dados da requisição
+              </Typography>
+              <ConfirmacaoLinha label="Tipo" value={tipoConfirmacaoLabel} />
+              <ConfirmacaoLinha label="Nome" value={confirmacao.nome_titular} />
+              <ConfirmacaoLinha label="E-mail" value={confirmacao.email_titular} />
+              <ConfirmacaoLinha
+                label="CPF"
+                value={confirmacao.documento_titular || "Não informado"}
+              />
+              <ConfirmacaoLinha
+                label="Descrição"
+                value={confirmacao.descricao_pedido || "Não informada"}
+              />
+              <ConfirmacaoLinha label="Registrado em" value={confirmacao.registradoEm} />
+              <ConfirmacaoLinha label="Status" value="Recebido" />
+              <ConfirmacaoLinha
+                label="Prazo de resposta"
+                value={confirmacao.data_prazo_resposta ? prazoResumo(confirmacao.data_prazo_resposta).texto : "15 dias (LGPD)"}
+              />
+            </DialogContent>
+            <Divider />
+            <DialogActions sx={{ px: 3, py: 2, gap: 1, flexWrap: "wrap", justifyContent: "space-between" }}>
+              <Button
+                onClick={voltarEAcompanhar}
+                sx={{ textTransform: "none", fontWeight: 700 }}
+              >
+                Acompanhar pedido
+              </Button>
+              <Button
+                variant="contained"
+                onClick={fecharConfirmacao}
+                sx={{ textTransform: "none", fontWeight: 700 }}
+              >
+                Voltar ao portal
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pedidoAberto)}
+        onClose={fecharPedidoAberto}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="pedido-acompanhar-titulo"
+      >
+        {pedidoAberto && (
+          <>
+            <DialogTitle id="pedido-acompanhar-titulo" sx={{ position: "relative", pr: 6, pb: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25 }}>
+                <CheckCircleOutlineIcon color="primary" sx={{ mt: 0.35 }} />
+                <Box>
+                  <Typography variant="h6" fontWeight={800} component="span">
+                    Acompanhar requisição
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 400 }}>
+                    Confira o status, os prazos e, se precisar, acrescente detalhes ao pedido.
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton
+                aria-label="Fechar"
+                onClick={fecharPedidoAberto}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ pt: 1 }}>
+              <Box
+                sx={{
+                  mt: 1,
+                  mb: 2,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
+                }}
+              >
+                <Typography variant="overline" color="text.secondary" fontWeight={700}>
+                  Protocolo
+                </Typography>
+                <Typography variant="h6" fontFamily="monospace" fontWeight={800} sx={{ wordBreak: "break-all", mt: 0.5 }}>
+                  {pedidoAberto.protocolo || "—"}
+                </Typography>
+                <Chip
+                  size="small"
+                  sx={{ mt: 1 }}
+                  label={STATUS_PEDIDO[pedidoAberto.status] ?? pedidoAberto.status}
+                  color={chipStatusColor(pedidoAberto.status)}
+                />
+              </Box>
+
+              <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.5 }}>
+                Dados da requisição
+              </Typography>
+              <ConfirmacaoLinha label="Tipo" value={TIPOS_DSAR.find((t) => t.value === pedidoAberto.tipo)?.label ?? pedidoAberto.tipo} />
+              <ConfirmacaoLinha label="Nome" value={pedidoAberto.nome_titular || "—"} />
+              <ConfirmacaoLinha label="E-mail" value={pedidoAberto.email_titular || "—"} />
+              <ConfirmacaoLinha label="CPF" value={pedidoAberto.documento_titular || "Não informado"} />
+              <ConfirmacaoLinha label="Descrição" value={pedidoAberto.descricao_pedido || "Não informada"} />
+              <ConfirmacaoLinha label="Aberto em" value={formatDatePt(pedidoAberto.created_at)} />
+              <ConfirmacaoLinha
+                label="Prazo de resposta"
+                value={prazoResumo(pedidoAberto.data_prazo_resposta).texto}
+              />
+              {pedidoAberto.data_resposta ? (
+                <ConfirmacaoLinha label="Respondido em" value={formatDatePt(pedidoAberto.data_resposta)} />
+              ) : null}
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.25, mb: 0.5 }}>
+                O prazo legal é de 15 dias, prorrogável por mais 15 mediante justificativa (LGPD, art. 18, § 3º).
+                Novos detalhes renovam o prazo em 15 dias enquanto o pedido estiver em andamento.
+              </Typography>
+
+              {(pedidoAberto.complementos?.length ?? 0) > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>
+                    Detalhes acrescentados
+                  </Typography>
+                  <Stack spacing={1}>
+                    {(pedidoAberto.complementos ?? []).map((c, i) => (
+                      <Paper key={i} variant="outlined" sx={{ p: 1.25 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDatePt(c.created_at)}
+                          {c.prazo_resposta ? ` · prazo: ${formatDatePt(c.prazo_resposta)}` : ""}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
+                          {c.texto}
+                        </Typography>
+                      </Paper>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+
+              {pedidoAberto.status !== "atendido" && pedidoAberto.status !== "recusado" ? (
+                <Box sx={{ mt: 2.5 }}>
+                  <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.75 }}>
+                    Acrescentar detalhes
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    Inclua informações que ajudem no atendimento. O prazo de resposta será atualizado para 15 dias a
+                    partir de hoje.
+                  </Typography>
+                  {complementoError && (
+                    <Alert severity="error" sx={{ mb: 1.5 }} onClose={() => setComplementoError(null)}>
+                      {complementoError}
+                    </Alert>
+                  )}
+                  {complementoOk && (
+                    <Alert severity="success" sx={{ mb: 1.5 }} onClose={() => setComplementoOk(null)}>
+                      {complementoOk}
+                    </Alert>
+                  )}
+                  {!consultaForm.email.trim() && !consultaForm.documento.trim() && (
+                    <Stack spacing={1.5} sx={{ mb: 1.5 }}>
+                      <TextField
+                        size="small"
+                        fullWidth
+                        type="email"
+                        label="E-mail do pedido"
+                        value={complementoEmail}
+                        onChange={(e) => setComplementoEmail(e.target.value)}
+                      />
+                      <TextField
+                        size="small"
+                        fullWidth
+                        label="CPF do pedido"
+                        value={complementoDocumento}
+                        onChange={(e) => setComplementoDocumento(e.target.value)}
+                      />
+                    </Stack>
+                  )}
+                  <TextField
+                    size="small"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Novo detalhe"
+                    value={complementoTexto}
+                    onChange={(e) => setComplementoTexto(e.target.value)}
+                    placeholder="Ex.: complemento de dados, documentos, esclarecimento do pedido…"
+                  />
+                  <Button
+                    variant="contained"
+                    sx={{ mt: 1.5, textTransform: "none", fontWeight: 700 }}
+                    disabled={complementoSending || complementoTexto.trim().length < 8}
+                    onClick={() => void handleComplementar()}
+                  >
+                    {complementoSending ? "Enviando…" : "Registrar detalhe e atualizar prazo"}
+                  </Button>
+                </Box>
+              ) : (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  Este pedido já foi encerrado. Para novas informações, abra outra requisição ou use o contato do portal.
+                </Alert>
+              )}
+            </DialogContent>
+            <Divider />
+            <DialogActions sx={{ px: 3, py: 2 }}>
+              <Button variant="contained" onClick={fecharPedidoAberto} sx={{ textTransform: "none", fontWeight: 700 }}>
+                Voltar ao portal
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </>
   );
 }

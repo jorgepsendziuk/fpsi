@@ -1893,6 +1893,12 @@ export const deleteRipd = async (id: number, programaId?: number): Promise<void>
 
 // ========== Pedidos dos Titulares (art. 18 LGPD) ==========
 
+export type PedidoTitularComplemento = {
+  texto: string;
+  created_at: string;
+  prazo_resposta?: string | null;
+};
+
 export type PedidoTitularRow = {
   id: number;
   programa_id: number;
@@ -1907,6 +1913,7 @@ export type PedidoTitularRow = {
   data_resposta: string | null;
   observacoes_internas: string | null;
   origem: string;
+  complementos?: PedidoTitularComplemento[] | null;
   created_at: string;
   updated_at: string;
 };

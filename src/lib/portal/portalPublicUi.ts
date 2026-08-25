@@ -29,10 +29,20 @@ export function portalPanelSx(theme: Theme, opts?: { accentTop?: boolean; tint?:
     backdropFilter: "blur(10px)",
     boxShadow: isDark ? `0 8px 28px ${alpha("#000", 0.25)}` : `0 8px 24px ${alpha(landing.navy, 0.06)}`,
     ...(opts?.accentTop && {
-      "&::before": portalAccentBefore,
+      "&::before": {
+        ...portalAccentBefore,
+        marginBottom: 1.25,
+      },
     }),
   };
 }
+
+/** Padding interno padrão dos painéis com faixa superior. */
+export const portalPanelBodySx: SxProps<Theme> = {
+  px: { xs: 2, sm: 2.5 },
+  pb: { xs: 2, sm: 2.5 },
+  pt: 0.25,
+};
 
 export const portalHeroBandSx: SxProps<Theme> = {
   borderRadius: 1.5,

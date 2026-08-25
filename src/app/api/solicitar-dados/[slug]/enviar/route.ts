@@ -92,7 +92,7 @@ export async function POST(
     const { data, error } = await admin
       .from("pedido_titular")
       .insert(payload)
-      .select("id, protocolo, created_at")
+      .select("id, protocolo, created_at, data_prazo_resposta")
       .single();
 
     if (error) {
@@ -129,6 +129,8 @@ export async function POST(
       protocolo: data.protocolo || "",
       mensagem: "Pedido registrado. Guarde o número do protocolo para acompanhamento.",
       id: data.id,
+      created_at: data.created_at,
+      data_prazo_resposta: data.data_prazo_resposta ?? null,
     });
   } catch (error) {
     console.error("Erro POST solicitar-dados enviar:", error);

@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 
+export type PedidoComplementoPublico = {
+  texto: string;
+  created_at: string;
+  prazo_resposta: string | null;
+};
+
 /**
  * GET /api/solicitar-dados/[slug]/consultar
  * Consulta pedidos do titular por protocolo e/ou e-mail e/ou documento (CPF).
- * Retorna apenas dados necessários para acompanhamento (sem PII sensível).
+ * Quem identifica o pedido vê os dados da própria requisição (não inclui observações internas).
  */
 export async function GET(
   request: NextRequest,
@@ -19,7 +25,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const protocolo = searchParams.get("protocolo")?.trim() || null;
     const email = searchParams.get("email")?.trim().toLowerCase() || null;
-    const documento = searchParams.get("documento")?.trim().replace(/\D/g, "") || null; // só dígitos para CPF
+    const documento = searchParams.get("documento")?.trim().replace(/\D/g, "") || null;
 
     if (!protocolo && !email && !documento) {
       return NextResponse.json(
@@ -50,7 +56,9 @@ export async function GET(
 
     let query = admin
       .from("pedido_titular")
-      .select("protocolo, tipo, status, data_prazo_resposta, created_at")
+      .select(
+        "protocolo, tipo, status, data_prazo_resposta, data_resposta, created_at, updated_at, nome_titular, email_titular, documento_titular, descricao_pedido, complementos"
+      )
       .eq("programa_id", programaId);
 
     if (protocolo) {
@@ -79,7 +87,14 @@ export async function GET(
         tipo: p.tipo,
         status: p.status,
         data_prazo_resposta: p.data_prazo_resposta,
+        data_resposta: p.data_resposta ?? null,
         created_at: p.created_at,
+        updated_at: p.updated_at ?? null,
+        nome_titular: p.nome_titular,
+        email_titular: p.email_titular,
+        documento_titular: p.documento_titular,
+        descricao_pedido: p.descricao_pedido,
+        complementos: Array.isArray(p.complementos) ? p.complementos : [],
       })),
     });
   } catch (err) {
