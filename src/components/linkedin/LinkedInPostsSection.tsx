@@ -17,8 +17,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { Montserrat } from "next/font/google";
-import { landing } from "@/components/landing/landingTokens";
+import { brandFontFamily, landing } from "@/components/landing/landingTokens";
 import {
   LINKEDIN_POSTS,
   LINKEDIN_POST_BACKLOG,
@@ -26,13 +25,7 @@ import {
 } from "./linkedinPostsContent";
 import { LinkedInShowcase } from "./showcase/LinkedInShowcase";
 
-const brandFont = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const ff = brandFont.style.fontFamily;
+const ff = brandFontFamily;
 
 function LiveShowcaseSlot({
   label,

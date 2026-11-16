@@ -2,21 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Box, Container, Typography, Divider, Link, useTheme } from "@mui/material";
-import { Montserrat } from "next/font/google";
 import { LinkedInArticleCover, LINKEDIN_COVER_HEIGHT, LINKEDIN_COVER_WIDTH } from "./LinkedInArticleCover";
 import { LINKEDIN_ARTICLE, LINKEDIN_ARTICLE_BODY } from "./linkedinArticleContent";
 import { LinkedInPostsSection } from "./LinkedInPostsSection";
-import { landing } from "@/components/landing/landingTokens";
+import { brandFontFamily, landing } from "@/components/landing/landingTokens";
 import { LinkedInExploreHub } from "./showcase/LinkedInExploreHub";
 import { LinkedInShowcase } from "./showcase/LinkedInShowcase";
 
-const brandFont = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const ff = brandFont.style.fontFamily;
+const ff = brandFontFamily;
 
 function useCoverScale(containerRef: React.RefObject<HTMLDivElement | null>) {
   const [scale, setScale] = useState(1);

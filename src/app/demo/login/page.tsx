@@ -7,19 +7,12 @@ import { useRouter } from 'next/navigation';
 import { Box, Button, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckIcon from '@mui/icons-material/Check';
-import { Montserrat } from 'next/font/google';
 import { supabaseBrowserClient } from '@utils/supabase/client';
 import { FPSI_PRIVACY_NOTICE_VERSION } from '@/lib/privacy/constants';
 import { HeroAtmosphere } from '@/components/landing/HeroAtmosphere';
-import { landing } from '@/components/landing/landingTokens';
+import { brandFontFamily, landing } from '@/components/landing/landingTokens';
 
-const brandFont = Montserrat({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  display: 'swap',
-});
-
-const ff = brandFont.style.fontFamily;
+const ff = brandFontFamily;
 
 const DEMO_EMAIL = 'demo@fpsi.com.br';
 const DEMO_PASSWORD = 'FPSI@D3m0';
@@ -128,7 +121,6 @@ export default function DemoLoginPage() {
 
   return (
     <Box
-      className={brandFont.className}
       sx={{
         position: 'relative',
         minHeight: '100vh',

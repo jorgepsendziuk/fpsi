@@ -2,17 +2,10 @@
 
 import { Box, Typography } from "@mui/material";
 import Image from "next/image";
-import { Montserrat } from "next/font/google";
-import { landing } from "@/components/landing/landingTokens";
+import { brandFontFamily, landing } from "@/components/landing/landingTokens";
 import { COVER_MODULES, LINKEDIN_ARTICLE } from "./linkedinArticleContent";
 
-const brandFont = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  display: "swap",
-});
-
-const ff = brandFont.style.fontFamily;
+const ff = brandFontFamily;
 
 const muted = "rgba(244, 248, 252, 0.82)";
 const faint = "rgba(244, 248, 252, 0.55)";

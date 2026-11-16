@@ -2,12 +2,51 @@ import { updateSession } from "@/utils/supabase/middleware";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+const SKIP_SESSION_PREFIXES = [
+  "/demo",
+  "/api",
+  "/auth",
+  "/setup",
+  "/linkedin",
+  "/divulgacao",
+  "/educacao",
+  "/auditor",
+  "/_next",
+] as const;
+
+const SKIP_SESSION_EXACT = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/setup",
+  "/linkedin",
+  "/programas/demo",
+  "/programas/1",
+  "/privacidade",
+  "/sobre",
+  "/gestao",
+  "/artigo",
+  "/offline",
+  "/sw.js",
+  "/manifest.webmanifest",
+  "/robots.txt",
+  "/sitemap.xml",
+]);
+
+function shouldSkipSession(path: string): boolean {
+  if (SKIP_SESSION_EXACT.has(path)) return true;
+  return SKIP_SESSION_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
+function hasSupabaseAuthCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some((cookie) => cookie.name.includes("-auth-token"));
+}
+
 export async function middleware(request: NextRequest) {
-  // Skip auth para rotas que não precisam
   const path = request.nextUrl.pathname;
 
   // Confirmação de e-mail / magic link do Supabase cai em Site URL (?code=...).
-  // Encaminha para a rota que troca o code por sessão.
   const authCode = request.nextUrl.searchParams.get("code");
   if (authCode && !path.startsWith("/auth/callback") && !path.startsWith("/api")) {
     const callback = request.nextUrl.clone();
@@ -15,13 +54,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(callback);
   }
 
-  if (path.startsWith('/demo') || path.startsWith('/api') || path.startsWith('/auth') ||
-      path === '/login' || path === '/register' || path === '/forgot-password' ||
-      path === '/setup' || path.startsWith('/setup/') ||
-      path === '/linkedin' || path.startsWith('/linkedin/')) {
-    return NextResponse.next();
-  }
-  if (path === '/programas/demo' || path === '/programas/1') {
+  // Página pública ou visitante sem sessão: não chama o Auth (evita 504 se o Supabase falhar).
+  if (shouldSkipSession(path) || !hasSupabaseAuthCookie(request)) {
     return NextResponse.next();
   }
 
@@ -37,6 +71,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|ico_p|logo_p|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|ico_p|logo_p|sw\\.js|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

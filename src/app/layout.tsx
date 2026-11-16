@@ -15,6 +15,7 @@ import { dataProvider } from "@providers/data-provider";
 import { BetaRibbon } from "@/components/BetaRibbon";
 import { AppPrivacyChrome } from "@/components/privacy/AppPrivacyChrome";
 import { ConditionalAnalytics } from "@/components/privacy/ConditionalAnalytics";
+import { rootSiteMetadata } from "@/lib/siteMetadata";
 
 /** Mesma família da landing / wordmark FPSI. */
 const brandFont = Montserrat({
@@ -24,24 +25,7 @@ const brandFont = Montserrat({
   variable: "--font-brand",
 });
 
-export const metadata: Metadata = {
-  title: "FPSI - Framework de Privacidade e Segurança da Informação",
-  description: "Sistema de diagnóstico de privacidade e segurança da informação para organizações",
-  applicationName: "FPSI",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "FPSI",
-  },
-  icons: {
-    icon: [
-      { url: "/ico_p.png", sizes: "any" },
-      { url: "/ico_p.png", type: "image/png" },
-    ],
-    shortcut: "/ico_p.png",
-    apple: "/ico_p.png",
-  },
-};
+export const metadata: Metadata = rootSiteMetadata;
 
 export const viewport: Viewport = {
   themeColor: "#1565C0",

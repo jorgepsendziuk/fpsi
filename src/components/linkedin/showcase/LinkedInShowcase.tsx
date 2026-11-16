@@ -1,6 +1,6 @@
 "use client";
 
-import { Montserrat } from "next/font/google";
+import { brandFontFamily } from "@/components/landing/landingTokens";
 import { LandingDeckScenePreview } from "@/components/landing/LandingDeckHero";
 import { WhatsappProductPreview } from "@/components/marketing/WhatsappProductScenes";
 import type { WhatsappVisualKind } from "@/components/marketing/WhatsappProductScenes";
@@ -16,13 +16,7 @@ import {
 } from "./LinkedInCustomShowcases";
 import { getShowcaseMeta, type LinkedInShowcaseId } from "./types";
 
-const brandFont = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const ff = brandFont.style.fontFamily;
+const ff = brandFontFamily;
 
 type Props = {
   id: LinkedInShowcaseId;

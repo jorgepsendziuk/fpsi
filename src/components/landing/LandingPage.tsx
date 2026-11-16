@@ -28,7 +28,6 @@ import {
   People as PeopleIcon,
 } from "@mui/icons-material";
 import Image from "next/image";
-import { Montserrat } from "next/font/google";
 import { ColorModeContext } from "@contexts/color-mode";
 import { LgpdReferenciaDrawer } from "@/components/normas/LgpdReferenciaDrawer";
 import { AigpReferenciaDrawer } from "@/components/normas/AigpReferenciaDrawer";
@@ -39,17 +38,10 @@ import { HeroAtmosphere } from "./HeroAtmosphere";
 import { LandingDeckHero } from "./LandingDeckHero";
 import { LandingNav } from "./LandingNav";
 import { FeaturesExplorer } from "./FeaturesExplorer";
-import { landing, featureAccents } from "./landingTokens";
+import { brandFontFamily, landing, featureAccents } from "./landingTokens";
 import { resolveDemoCta } from "@/lib/marketing/demoCtaOptions";
 
-/** Mesma família geométrica do wordmark FPSI no logo — pesos 400–900. */
-const brandFont = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  display: "swap",
-});
-
-const ff = brandFont.style.fontFamily;
+const ff = brandFontFamily;
 
 /** Catálogo alinhado aos módulos da home do programa (`sections` em programas/[id]). */
 const features = [
@@ -315,7 +307,6 @@ export function LandingPage() {
   if (userLoading) {
     return (
       <Box
-        className={brandFont.className}
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -333,7 +324,6 @@ export function LandingPage() {
 
   return (
     <Box
-      className={brandFont.className}
       sx={{
         minHeight: "100svh",
         height: { xs: "auto", md: "100svh" },
@@ -811,6 +801,7 @@ export function LandingPage() {
             </Button>
             {[
               { label: "Sobre", href: "/sobre" },
+              { label: "Gestão", href: "/gestao" },
               { label: "Artigo", href: "/artigo" },
               { label: "Privacidade", href: "/privacidade" },
             ].map((item) => (

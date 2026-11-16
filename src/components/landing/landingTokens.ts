@@ -18,6 +18,9 @@ export const landing = {
   heroMuted: "rgba(244, 248, 252, 0.88)",
 } as const;
 
+/** Fonte da marca (definida em `layout.tsx` via `--font-brand`). Não use `next/font` em Client Components. */
+export const brandFontFamily = "var(--font-brand), Montserrat, system-ui, sans-serif";
+
 export const featureAccents: Record<string, string> = {
   "escritorio-governanca": "linear-gradient(145deg, #5d4037 0%, #8d6e63 100%)",
   responsabilidades: "linear-gradient(145deg, #455A64 0%, #78909C 100%)",

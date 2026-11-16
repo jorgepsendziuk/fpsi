@@ -50,6 +50,10 @@ export async function updateSession(request: NextRequest) {
           });
         },
       },
+      global: {
+        fetch: (url, options) =>
+          fetch(url, { ...options, signal: AbortSignal.timeout(2500) }),
+      },
     });
 
     await supabase.auth.getUser();

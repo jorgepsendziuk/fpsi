@@ -2,19 +2,12 @@
 
 import { useCallback, useState } from "react";
 import { Box, Chip, Typography, alpha, useTheme } from "@mui/material";
-import { Montserrat } from "next/font/google";
-import { landing } from "@/components/landing/landingTokens";
+import { brandFontFamily, landing } from "@/components/landing/landingTokens";
 import { LinkedInShowcase } from "./LinkedInShowcase";
 import { LINKEDIN_SHOWCASE_CATALOG, type LinkedInShowcaseId } from "./types";
 import { LINKEDIN_ARTICLE } from "../linkedinArticleContent";
 
-const brandFont = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const ff = brandFont.style.fontFamily;
+const ff = brandFontFamily;
 
 /** Destaques interativos — vitrine publicável do FPSI. */
 export function LinkedInExploreHub() {
