@@ -69,6 +69,7 @@ import NextLink from "next/link";
 import { ProgramaOperacionalDashboard } from "@/components/programa/ProgramaOperacionalDashboard";
 import { TermoNomeacaoDpoDialog } from "@/components/programa/TermoNomeacaoDpoDialog";
 import { SeloLgpdWidget } from "@/components/programa/SeloLgpdWidget";
+import { ProgramaSlugEditor } from "@/components/programa/ProgramaSlugEditor";
 import type { ModulosResumoApi } from "@/lib/services/dataService";
 import { Programa } from "@/lib/types/types";
 import {
@@ -175,10 +176,10 @@ const sections: Array<{
   },
   {
     key: "cultura",
-    title: "Cultura e conscientização",
+    title: "Educação e treinamento",
     icon: <SchoolIcon fontSize="large" />,
-    description: "Kits educacionais com dados do programa (PPSI 14)",
-    path: "cultura",
+    description: "Minicurso, trilhas com certificado e kits de cultura (PPSI 14)",
+    path: "educacao",
     color: "#00838F",
     gradient: "linear-gradient(135deg, #006064 0%, #00ACC1 100%)",
   },
@@ -587,8 +588,9 @@ export default function ProgramaMainPage() {
   const formatCnpjDisplay = (v: string | number | null | undefined): string => {
     if (v == null || v === "") return "";
     const s = String(v).replace(/\D/g, "");
-    if (s.length !== 14) return String(v);
-    return s.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+    if (!s) return "";
+    const padded = s.padStart(14, "0").slice(-14);
+    return padded.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
   };
 
   const handleEdit = (field: string, value: unknown) => {
@@ -1293,6 +1295,24 @@ export default function ProgramaMainPage() {
                   {renderEditableField(field, programa[field.key] ?? "", canEditProgramaFieldsUi)}
                 </Grid>
               ))}
+            {programaId != null && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1, mb: 0.5 }}>
+                  Slug do portal público
+                </Typography>
+                <ProgramaSlugEditor
+                  programaId={programaId}
+                  slugAtual={programa.slug}
+                  canEdit={canEditProgramaFieldsUi && !isDemoMode}
+                  onSaved={(slug) => {
+                    setPrograma((prev: Programa) => ({ ...prev, slug }));
+                    if (slug && idOrSlug !== slug && !/^\d+$/.test(idOrSlug)) {
+                      router.replace(`/programas/${encodeURIComponent(slug)}`);
+                    }
+                  }}
+                />
+              </Grid>
+            )}
             <Grid item xs={12}>
               <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1 }}>
                 Links do portal (opcional)

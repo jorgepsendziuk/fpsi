@@ -29,6 +29,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import HubIcon from "@mui/icons-material/Hub";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { filterNavItemsByEscopo, type ProgramaEscopoV1 } from "@/lib/programa/perfilEscopo";
 import {
   navItemAllowedForAccess,
@@ -103,6 +104,12 @@ export function getGlobalNavSections(): AppNavSection[] {
           id: "lgpd",
           label: "LGPD",
           path: "/referencias/lgpd",
+          icon: <MenuBookIcon sx={iconSx} />,
+        },
+        {
+          id: "educacao",
+          label: "Academia LGPD",
+          path: "/educacao",
           icon: <MenuBookIcon sx={iconSx} />,
         },
         {
@@ -230,6 +237,14 @@ export function buildProgramaNavSections(
           collapseGroup: "diagnostico",
         },
         {
+          id: "diag-panorama",
+          label: "Panorama inicial",
+          path: `${base}/diagnostico/panorama`,
+          icon: <VisibilityIcon sx={subIcon} />,
+          isSubItem: true,
+          collapseGroup: "diagnostico",
+        },
+        {
           id: "diag-rte",
           label: "Relatório Técnico Executivo",
           path: `${base}/diagnostico/relatorio-executivo`,
@@ -258,8 +273,8 @@ export function buildProgramaNavSections(
         },
         {
           id: "cultura",
-          label: "Cultura e conscientização",
-          path: `${base}/cultura`,
+          label: "Educação",
+          path: `${base}/educacao`,
           icon: <MenuBookIcon sx={iconSx} />,
         },
 

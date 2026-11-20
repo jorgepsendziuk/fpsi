@@ -6,6 +6,8 @@ import { Box, Grid } from "@mui/material";
 import { Public as PublicIcon } from "@mui/icons-material";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
+import { useProgramaAccess } from "@/hooks/useProgramaAccess";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { ConformidadeHubCard, PORTAL_SECTIONS } from "../ConformidadeHubCard";
 import { PortalPrivacidadePublicLinkCard } from "@/components/conformidade/PortalPrivacidadePublicLinkCard";
 
@@ -13,7 +15,12 @@ export default function PortalPrivacidadeHubPage() {
   const params = useParams();
   const router = useRouter();
   const idOrSlug = params.id as string;
-  useProgramaIdFromParam(idOrSlug);
+  const { programaId } = useProgramaIdFromParam(idOrSlug);
+  const { access, loading: accessLoading } = useProgramaAccess(programaId ?? undefined);
+  const { hasPermission } = useUserPermissions();
+  const canEditSlug =
+    !accessLoading &&
+    (access?.mode === "full" || Boolean(access?.permissions?.can_edit_programa) || hasPermission("can_edit_programa"));
 
   return (
     <Box
@@ -38,7 +45,11 @@ export default function PortalPrivacidadeHubPage() {
       />
 
       <Box sx={{ mb: 1.25, flexShrink: 0 }}>
-        <PortalPrivacidadePublicLinkCard idOrSlug={idOrSlug} />
+        <PortalPrivacidadePublicLinkCard
+          idOrSlug={idOrSlug}
+          configurarHref={programaId ? `/programas/${idOrSlug}` : "/programas"}
+          canEditSlug={canEditSlug}
+        />
       </Box>
 
       <Grid container spacing={1.5} sx={{ flex: 1, minHeight: 0, alignContent: "flex-start" }}>
