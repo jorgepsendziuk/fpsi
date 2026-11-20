@@ -23,18 +23,24 @@ import {
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import * as dataService from "@/lib/services/dataService";
+import { ProgramaSlugEditor } from "@/components/programa/ProgramaSlugEditor";
 
 type Props = {
   /** Segmento da URL do programa (id numérico ou slug), como em `programas/[id]`. */
   idOrSlug: string;
   /** Rota para onde o botão de ajuda leva quando não há slug (ex.: painel ou página do programa). */
   configurarHref?: string;
+  canEditSlug?: boolean;
 };
 
-export function PortalPrivacidadePublicLinkCard({ idOrSlug, configurarHref = "/dashboard" }: Props) {
+export function PortalPrivacidadePublicLinkCard({
+  idOrSlug,
+  configurarHref = "/dashboard",
+  canEditSlug = false,
+}: Props) {
   const theme = useTheme();
   const primary = theme.palette.primary.main;
-  const [programa, setPrograma] = useState<{ nome?: string; slug?: string } | null>(null);
+  const [programa, setPrograma] = useState<{ id?: number; nome?: string; slug?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [copyOpen, setCopyOpen] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
@@ -118,19 +124,30 @@ export function PortalPrivacidadePublicLinkCard({ idOrSlug, configurarHref = "/d
 
   if (!programa?.slug) {
     return (
-      <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }} variant="outlined">
+      <Paper elevation={0} sx={{ mb: 3, p: { xs: 2, sm: 2.5 }, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
         <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-          Portal público sem URL fixa
+          Defina o slug do portal público
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Para titulares acessarem pedidos, reportes e contato na web, o programa precisa de um{" "}
-          <strong>slug</strong> (endereço curto, ex.: <code>meu-orgao</code>). No painel, em{" "}
-          <strong>Programas</strong>, use a opção para definir ou ajustar o slug.
-        </Typography>
-        <Button component={Link} href={configurarHref} size="small" variant="outlined">
-          Ir ao painel (programas)
-        </Button>
-      </Alert>
+        {programa?.id && canEditSlug ? (
+          <ProgramaSlugEditor
+            programaId={programa.id}
+            slugAtual={null}
+            canEdit
+            onSaved={(slug) => setPrograma((p) => (p ? { ...p, slug } : p))}
+          />
+        ) : (
+          <>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              É preciso um slug (endereço curto) para abrir o portal em{" "}
+              <code>/{`{slug}`}</code>. Quem pode editar o programa define o slug na página inicial do programa ou aqui,
+              quando tiver permissão.
+            </Typography>
+            <Button component={Link} href={configurarHref} size="small" variant="outlined">
+              Ir à página do programa
+            </Button>
+          </>
+        )}
+      </Paper>
     );
   }
 
@@ -194,6 +211,18 @@ export function PortalPrivacidadePublicLinkCard({ idOrSlug, configurarHref = "/d
                 Compartilhe este endereço em avisos de privacidade, sites e materiais oficiais. O mesmo portal
                 concentra os formulários abertos ao público.
               </Typography>
+
+              {programa?.id && canEditSlug && (
+                <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: "divider" }}>
+                  <ProgramaSlugEditor
+                    programaId={programa.id}
+                    slugAtual={programa.slug}
+                    canEdit
+                    compact
+                    onSaved={(slug) => setPrograma((p) => (p ? { ...p, slug } : p))}
+                  />
+                </Box>
+              )}
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ xs: "stretch", sm: "center" }} sx={{ mb: 0 }}>
                 <TextField
