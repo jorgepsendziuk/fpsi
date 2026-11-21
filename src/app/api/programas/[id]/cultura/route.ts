@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { loadCadastroSnapshot } from "@/lib/programa/loadCadastroSnapshot";
-import { buildCulturaKits, CULTURA_TRILHAS } from "@/lib/cultura/culturaKits";
+import { buildCulturaKits, CULTURA_TRILHAS, culturaLmsHref } from "@/lib/cultura/culturaKits";
 
 async function requireMember(programaId: number) {
   const supabase = await createSupabaseServerClient();
@@ -39,8 +39,13 @@ export async function GET(
     if ("error" in auth && auth.error) return auth.error;
     const trilha = request.nextUrl.searchParams.get("trilha") || "onboarding";
     const snap = await loadCadastroSnapshot(auth.supabase, programaId);
-    const kits = buildCulturaKits(snap, trilha);
-    return NextResponse.json({ kits, trilhas: CULTURA_TRILHAS, orgao: snap.orgao });
+    const kits = buildCulturaKits(snap, trilha, { lmsHref: culturaLmsHref(programaId, trilha) });
+    return NextResponse.json({
+      kits,
+      trilhas: CULTURA_TRILHAS,
+      orgao: snap.orgao,
+      lmsHref: culturaLmsHref(programaId, trilha),
+    });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Erro" },

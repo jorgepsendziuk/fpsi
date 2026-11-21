@@ -3,6 +3,7 @@
 import { Box } from "@mui/material";
 import { usePathname } from "next/navigation";
 import { MainAppShell } from "@/components/layout/MainAppShell";
+import { PanoramaPageChrome } from "@/components/diagnostico/panorama/PanoramaPageChrome";
 
 export default function AuthenticatedLayout({
   children,
@@ -13,27 +14,27 @@ export default function AuthenticatedLayout({
   const isPanoramaDocument = pathname.includes("/diagnostico/panorama");
 
   const content = (
-      <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "auto",
-          overscrollBehavior: "contain",
-          bgcolor: "background.default",
-          "@media print": {
-            overflow: "visible",
-            height: "auto",
-          },
-        }}
-      >
-        {children}
-      </Box>
+    <Box
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "auto",
+        overscrollBehavior: "contain",
+        bgcolor: "background.default",
+        "@media print": {
+          overflow: "visible",
+          height: "auto",
+        },
+      }}
+    >
+      {children}
+    </Box>
   );
 
   if (isPanoramaDocument) {
-    return content;
+    return <PanoramaPageChrome>{children}</PanoramaPageChrome>;
   }
 
   return <MainAppShell>{content}</MainAppShell>;

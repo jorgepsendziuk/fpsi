@@ -186,6 +186,9 @@ export function LandingNav({
                 Módulos
               </Button>
             )}
+            <Button sx={linkSx(fontFamily)} onClick={() => onNavigate("/educacao")}>
+              Educação
+            </Button>
             <Button sx={linkSx(fontFamily)} onClick={() => onNavigate("/artigo")}>
               Artigo
             </Button>
@@ -246,6 +249,7 @@ export function LandingNav({
                     highlight: true,
                   },
                   ...(onOpenFeatures ? [{ label: "Módulos", action: onOpenFeatures }] : []),
+                  { label: "Educação", action: () => onNavigate("/educacao") },
                   { label: "Artigo", action: () => onNavigate("/artigo") },
                   { label: "Referência LGPD", action: onOpenLgpd },
                   ...(onOpenAigp ? [{ label: "Governança de IA", action: onOpenAigp }] : []),

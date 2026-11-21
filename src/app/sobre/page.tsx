@@ -341,6 +341,12 @@ export default function SobrePage() {
           </Button>
           <Button
             variant="outlined"
+            onClick={() => router.push("/gestao")}
+          >
+            Gestão do projeto
+          </Button>
+          <Button
+            variant="outlined"
             onClick={() => router.push("/artigo")}
           >
             Ver artigo para o livro Inovações Digitais

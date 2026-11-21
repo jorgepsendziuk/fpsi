@@ -57,6 +57,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { portalPanelSx, portalPanelBodySx } from "@/lib/portal/portalPublicUi";
 import { PortalPublicHeaderSync } from "@/components/portal/PortalPublicHeaderContext";
 import { PortalSectionHeader } from "@/components/portal/PortalSectionHeader";
+import { PROGRAMA_SLUG_RESERVED } from "@/lib/programa/programaSlug";
 
 function PortalDocLink({
   slug,
@@ -87,9 +88,7 @@ function PortalDocLink({
   );
 }
 
-const RESERVED_SLUGS = new Set([
-  "programas", "login", "sobre", "perfil", "api", "auth", "register", "forgot-password", "artigo", "favicon.ico",
-]);
+const RESERVED_SLUGS = PROGRAMA_SLUG_RESERVED;
 
 const TIPOS_DSAR = [
   { value: "acesso", label: "Acesso aos dados" },

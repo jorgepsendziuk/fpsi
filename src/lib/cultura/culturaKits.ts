@@ -18,14 +18,30 @@ function esc(s: string): string {
 }
 
 export const CULTURA_TRILHAS = [
-  { id: "onboarding", label: "Onboarding LGPD" },
-  { id: "phishing", label: "Phishing e senhas" },
-  { id: "direitos", label: "Direitos do titular" },
-  { id: "incidente", label: "Como reportar incidente" },
-  { id: "fornecedores", label: "Terceiros e operadores" },
+  { id: "onboarding", label: "Onboarding LGPD", lmsTrilhaId: "onboarding" },
+  { id: "phishing", label: "Phishing e senhas", lmsCartilhaId: "phishing" },
+  { id: "direitos", label: "Direitos do titular", lmsTrilhaId: "atendimento" },
+  { id: "incidente", label: "Como reportar incidente", lmsTrilhaId: "onboarding", lmsModuloId: "incidentes" },
+  { id: "fornecedores", label: "Terceiros e operadores", lmsTrilhaId: "gestores" },
 ] as const;
 
-export function buildCulturaKits(snap: CadastroSnapshot, trilha = "onboarding"): CulturaKit[] {
+export function culturaLmsHref(programaId: number, trilhaCulturaId: string): string {
+  const meta = CULTURA_TRILHAS.find((t) => t.id === trilhaCulturaId);
+  if (meta && "lmsTrilhaId" in meta && meta.lmsTrilhaId) {
+    const modulo = "lmsModuloId" in meta && meta.lmsModuloId ? `?modulo=${meta.lmsModuloId}` : "";
+    return `/programas/${programaId}/educacao/trilha/${meta.lmsTrilhaId}${modulo}`;
+  }
+  if (meta && "lmsCartilhaId" in meta && meta.lmsCartilhaId) {
+    return `/programas/${programaId}/educacao?aba=aprender&cartilha=${meta.lmsCartilhaId}`;
+  }
+  return `/programas/${programaId}/educacao`;
+}
+
+export function buildCulturaKits(
+  snap: CadastroSnapshot,
+  trilha = "onboarding",
+  opts?: { lmsHref?: string }
+): CulturaKit[] {
   const org = esc(snap.orgao || "a organização");
   const dpo = esc(snap.dpoNome || "o Encarregado (DPO)");
   const canal = esc(snap.canalTitular || "o Portal do Titular do programa");
@@ -33,6 +49,9 @@ export function buildCulturaKits(snap: CadastroSnapshot, trilha = "onboarding"):
   const processos = snap.processos.slice(0, 6);
   const politicasHint = "políticas publicadas no programa";
   const fornecedores = snap.fornecedores.slice(0, 5).map((f) => f.nome);
+  const lms = opts?.lmsHref
+    ? `<p>Continuar no treinamento do programa: <a href="${esc(opts.lmsHref)}">${esc(opts.lmsHref)}</a></p>`
+    : "";
 
   const slidesHtml = `
 <article class="kit-slides">
@@ -40,7 +59,7 @@ export function buildCulturaKits(snap: CadastroSnapshot, trilha = "onboarding"):
   <section><h2>Quem é o Encarregado?</h2><p>${dpo}${snap.dpoEmail ? ` · ${esc(snap.dpoEmail)}` : ""}</p><p>Canal do titular: ${canal}</p></section>
   <section><h2>O que tratamos aqui</h2><ul>${processos.map((p) => `<li>${esc(p)}</li>`).join("") || "<li>Complete o mapeamento de dados.</li>"}</ul></section>
   <section><h2>Riscos desta casa</h2><ul>${riscos.map((r) => `<li>${esc(r)}</li>`).join("") || "<li>Ainda não há riscos altos cadastrados.</li>"}</ul></section>
-  <section><h2>O que fazer se algo der errado</h2><p>Não tente “resolver sozinho”: registre o incidente no programa e avise ${dpo}.</p></section>
+  <section><h2>O que fazer se algo der errado</h2><p>Não tente “resolver sozinho”: registre o incidente no programa e avise ${dpo}.</p>${lms}</section>
 </article>`;
 
   const cartazHtml = `
@@ -93,6 +112,7 @@ export function buildCulturaKits(snap: CadastroSnapshot, trilha = "onboarding"):
   ${riscos.length ? `<p>Atenção especial nesta semana:</p><ul>${riscos.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
   ${fornecedores.length ? `<p>Fornecedores no radar: ${esc(fornecedores.join(", "))}.</p>` : ""}
   <p>Consulte as ${esc(politicasHint)} e, em dúvida, fale com o Encarregado antes de compartilhar dados.</p>
+  ${lms}
 </div>`;
 
   return [

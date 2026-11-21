@@ -17,6 +17,7 @@ Visão pública do produto: [README do repositório](../README.md) · PRD: [esse
 - **[PRD](essentials/requirements/PRD.md)** - Product Requirements Document
 - **[FRD](essentials/requirements/FRD.md)** - Functional Requirements Document  
 - **[TRD](essentials/requirements/TRD.md)** - Technical Reference Document
+- **[Gestão do projeto aplicado](essentials/GESTAO_PROJETO_APLICADO.md)** - Canvas, CSD, personas, backlog e direcionamento (também em `/gestao`)
 
 #### 🔧 **[Setup](essentials/setup/)**
 - **[Como Rodar Localmente](essentials/setup/COMO_RODAR_LOCALMENTE.md)** - Guia completo de setup

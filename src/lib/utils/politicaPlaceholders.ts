@@ -100,14 +100,13 @@ function wrapPlaceholderValue(value: string): string {
   return `<strong>${escapeHtmlForPoliticaPlaceholder(value)}</strong>`;
 }
 
-/** Formata CNPJ quando vier como número ou string só dígitos. */
+/** Formata CNPJ quando vier como número ou string só dígitos. Número no banco perde o zero à esquerda. */
 export function formatCnpjBrasil(raw: unknown): string {
   if (raw == null || raw === "") return "";
   const digits = String(raw).replace(/\D/g, "");
-  if (digits.length !== 14) {
-    return typeof raw === "string" ? raw.trim() : String(raw);
-  }
-  return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+  if (!digits) return typeof raw === "string" ? raw.trim() : String(raw);
+  const padded = digits.padStart(14, "0").slice(-14);
+  return padded.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
 }
 
 /**

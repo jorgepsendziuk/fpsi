@@ -175,12 +175,17 @@ export default function PanoramaInicialPage() {
     void load();
   }, [load]);
 
-  const panoramaOnlineUrl = useMemo(() => {
+  const [panoramaOnlineUrl, setPanoramaOnlineUrl] = useState<string | null>(null);
+
+  useEffect(() => {
     const slugFromPrograma =
       programa && typeof programa.slug === "string" ? programa.slug.trim() : "";
     const slug = slugFromPrograma || idOrSlug;
-    if (!slug) return null;
-    return buildPanoramaPublicUrl(slug);
+    if (!slug) {
+      setPanoramaOnlineUrl(null);
+      return;
+    }
+    setPanoramaOnlineUrl(buildPanoramaPublicUrl(slug));
   }, [idOrSlug, programa]);
 
   const riscosHeatmap: ProgramaRiscoRow[] = useMemo(() => {

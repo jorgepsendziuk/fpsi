@@ -12,6 +12,8 @@
 # next.js
 /.next/
 /out/
+# cache Next acidental no repo (não versionar)
+/var/
 
 # production
 /build

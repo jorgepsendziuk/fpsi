@@ -1280,9 +1280,23 @@ export default function DiagnosticoPage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-      <Container maxWidth={false} disableGutters>
+      <Container
+        maxWidth={false}
+        disableGutters
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          "@media print": {
+            height: "auto",
+            overflow: "visible",
+          },
+        }}
+      >
         {/* Header */}
-        <Paper elevation={1} sx={{ borderRadius: 0, mb: 0 }}>
+        <Paper elevation={1} sx={{ borderRadius: 0, mb: 0, flexShrink: 0 }}>
           <Box sx={{ px: 3, py: 2 }}>
             <PageHeroHeader
               title="Diagnóstico"
@@ -1312,6 +1326,7 @@ export default function DiagnosticoPage() {
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
+              flexShrink: 0,
               borderRadius: 0,
               borderBottom: `1px solid ${theme.palette.divider}`,
               backgroundColor: showLoadedFeedback
@@ -1340,8 +1355,21 @@ export default function DiagnosticoPage() {
           </Paper>
         )}
 
-        {/* Layout principal */}
-        <Box sx={{ display: 'flex', height: 'calc(100vh - 140px)' }}>
+        {/* Lista e pergunta dividem a altura que sobra; cada uma rola só no próprio quadro. */}
+        <Box
+          sx={{
+            display: "flex",
+            flex: 1,
+            minHeight: 0,
+            overflow: "hidden",
+            alignItems: "stretch",
+            "@media print": {
+              height: "auto",
+              overflow: "visible",
+              display: "block",
+            },
+          }}
+        >
           {/* Drawer de navegação */}
       <Drawer
             variant={isMobile ? 'temporary' : 'persistent'}
@@ -1350,11 +1378,15 @@ export default function DiagnosticoPage() {
         sx={{
               width: DRAWER_WIDTH,
           flexShrink: 0,
+          height: "100%",
           '& .MuiDrawer-paper': {
             width: DRAWER_WIDTH,
             boxSizing: 'border-box',
                 position: 'relative',
                 height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
             borderRight: `1px solid ${theme.palette.divider}`,
             bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.92 : 0.96),
           },
@@ -1373,7 +1405,7 @@ export default function DiagnosticoPage() {
             </IconButton>
         </Box>
             )}
-            <Box sx={{ flex: 1, overflow: 'auto' }}>
+            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", overscrollBehavior: "contain" }}>
               <DiagnosticoTreeNav
                 nodes={treeData}
                 selectedNodeId={selectedNode?.id ?? null}
@@ -1390,10 +1422,14 @@ export default function DiagnosticoPage() {
           {/* Conteúdo principal */}
       <Box
             ref={workAreaRef}
-            sx={{ 
-            flex: 1, 
-            overflow: 'auto',
-            backgroundColor: theme.palette.background.default
+            sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
+            overflow: "auto",
+            overscrollBehavior: "contain",
+            backgroundColor: theme.palette.background.default,
+            "@media print": { overflow: "visible" },
           }}>
             {renderMainContent()}
           </Box>

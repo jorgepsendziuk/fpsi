@@ -1398,7 +1398,22 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <Box sx={{ display: "flex", alignItems: "stretch", minHeight: "100vh", bgcolor: "transparent", position: "relative" }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "stretch",
+        height: "100dvh",
+        maxHeight: "100dvh",
+        overflow: "hidden",
+        bgcolor: "transparent",
+        position: "relative",
+        "@media print": {
+          height: "auto",
+          maxHeight: "none",
+          overflow: "visible",
+        },
+      }}
+    >
       <SkipToMainLink />
       <AppAtmosphere />
       <Drawer
@@ -1431,6 +1446,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           display: { xs: "none", md: "flex" },
           width: effectiveDrawerWidth,
           flexShrink: 0,
+          height: "100%",
+          minHeight: 0,
           transition: theme.transitions.create("width", { duration: theme.transitions.duration.shorter }),
           overflow: "hidden",
           position: "relative",
@@ -1442,7 +1459,8 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         <Box
           sx={{
             width: effectiveDrawerWidth,
-            minHeight: "100vh",
+            height: "100%",
+            minHeight: 0,
             alignSelf: "stretch",
             display: "flex",
             flexDirection: "column",
@@ -1477,11 +1495,17 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         sx={{
           flex: 1,
           minWidth: 0,
-          minHeight: "100vh",
+          minHeight: 0,
+          height: "100%",
           display: "flex",
           flexDirection: "column",
+          overflow: "hidden",
           position: "relative",
           zIndex: 1,
+          "@media print": {
+            height: "auto",
+            overflow: "visible",
+          },
         }}
       >
         {/* Mobile only: barra compacta (não branca) */}
@@ -1533,9 +1557,15 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
+            minHeight: 0,
             width: "100%",
+            overflow: "auto",
+            overscrollBehavior: "contain",
             position: "relative",
             zIndex: 1,
+            "@media print": {
+              overflow: "visible",
+            },
           }}
         >
           {children}

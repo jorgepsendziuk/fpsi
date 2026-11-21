@@ -186,6 +186,7 @@ export function navItemAllowedForAccess(itemId: string, access: ProgramaAccess):
     "diag",
     "diag-relatorio",
     "plano",
+    "cultura",
   ]);
 
   if (access.mode === "minimal") {

@@ -49,7 +49,7 @@ Não se limita a um questionário de conformidade: cobre diagnóstico de maturid
 | Auth (`/login`, `/register`, convites) | Conta e onboarding |
 | Área autenticada | Dashboard, programas, admin de catálogo, referências |
 | Portal público (`/[slug]`) | Titulares: pedidos, reportes, contato, docs legais |
-| Institucional | `/sobre`, `/divulgacao`, `/artigo`, `/privacidade` |
+| Institucional | `/sobre`, `/gestao`, `/divulgacao`, `/artigo`, `/privacidade` |
 
 ---
 
