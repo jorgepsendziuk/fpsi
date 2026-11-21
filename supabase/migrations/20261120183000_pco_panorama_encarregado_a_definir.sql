@@ -70,7 +70,7 @@ BEGIN
 
   UPDATE public.plano_acao
   SET
-    responsavel = NULL,
+    responsavel = 'A definir (pendente de indicação pelo titular)',
     descricao = $j$Encarregado de dados ainda não definido neste programa (pendência do titular). Nas páginas do site lidas em 19/11/2026 a identidade pública não aparecia. Falta ato no modelo da Resolução CD/ANPD nº 18/2024, substituto, avaliação de conflito de interesses e publicação no site do partido. Prazo proposto para o que falta: 19/12/2026. Requisito: art. 41 da LGPD.$j$
   WHERE programa_id = pid
     AND titulo ILIKE '%encarregado%'
