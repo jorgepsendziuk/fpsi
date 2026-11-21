@@ -60,6 +60,7 @@ import type { ProgramaRiscoRow } from "@/lib/services/dataService";
 import type { PanoramaSnapshot } from "@/lib/panorama/buildPanoramaSnapshot";
 import type { PoliticaProgramaDados } from "@/lib/utils/politicaPlaceholders";
 import { getDiagnosticoTheme } from "@/lib/utils/diagnosticoThemes";
+import { SITE_ORIGIN } from "@/lib/siteMetadata";
 
 const DOC_TITLE = "Panorama inicial de privacidade";
 
@@ -139,6 +140,12 @@ export default function PanoramaInicialPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const panoramaOnlineUrl = useMemo(() => {
+    if (!idOrSlug) return null;
+    const base = (process.env.NEXT_PUBLIC_APP_URL || SITE_ORIGIN).replace(/\/$/, "");
+    return `${base}/programas/${encodeURIComponent(idOrSlug)}/diagnostico/panorama`;
+  }, [idOrSlug]);
 
   const riscosHeatmap: ProgramaRiscoRow[] = useMemo(() => {
     if (!snapshot || !programaId) return [];
@@ -371,6 +378,7 @@ export default function PanoramaInicialPage() {
             programa={programa}
             docTitle={DOC_TITLE}
             geradoEm={snapshot?.geradoEm}
+            onlineHref={panoramaOnlineUrl}
           />
 
           <PanoramaIntroducao />

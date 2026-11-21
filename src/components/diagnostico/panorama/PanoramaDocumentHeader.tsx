@@ -19,6 +19,8 @@ export type PanoramaDocumentHeaderProps = {
   programa: PoliticaProgramaDados | null;
   docTitle: string;
   geradoEm?: string | null;
+  /** URL absoluta deste panorama (tela + impressão/PDF). */
+  onlineHref?: string | null;
 };
 
 function formatDataBr(iso?: string | null): string {
@@ -102,7 +104,7 @@ function PanoramaFpsiBrand() {
   );
 }
 
-export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm }: PanoramaDocumentHeaderProps) {
+export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm, onlineHref }: PanoramaDocumentHeaderProps) {
   const nome =
     getPoliticaPdfCabecalhoTitulo(programa) ||
     (typeof programa === "object" && programa && String((programa as { nome_fantasia?: string }).nome_fantasia ?? "").trim()) ||
@@ -245,6 +247,26 @@ export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm }:
         >
           {docTitle}
         </Typography>
+        {onlineHref ? (
+          <MuiLink
+            href={onlineHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="panorama-text-center panorama-doc-online-link"
+            sx={{
+              display: "inline-block",
+              mt: { xs: 0.5, print: 0.25 },
+              fontSize: { xs: "0.9rem", print: "8pt" },
+              fontWeight: 600,
+              color: "primary.main",
+              textAlign: "center",
+              wordBreak: "break-all",
+              "@media print": { color: PANORAMA_BRAND_INK },
+            }}
+          >
+            Veja online
+          </MuiLink>
+        ) : null}
         {geradoEm ? (
           <Typography
             className="panorama-text-center"
