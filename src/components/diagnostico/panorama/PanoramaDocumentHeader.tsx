@@ -61,25 +61,9 @@ function PanoramaFpsiBrand() {
           height: "auto",
           objectFit: "contain",
           flexShrink: 0,
-          filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.12))",
-          "@media print": { filter: "none" },
         }}
       />
       <Box sx={{ minWidth: 0, flex: "1 1 auto" }}>
-        <Typography
-          component="span"
-          sx={{
-            fontFamily: PANORAMA_BRAND_FF,
-            fontWeight: 900,
-            fontSize: { xs: "1.35rem", md: "1.55rem", print: "11pt" },
-            lineHeight: 0.92,
-            letterSpacing: "-0.045em",
-            color: PANORAMA_BRAND_INK,
-            display: "block",
-          }}
-        >
-          {FPSI_AUTHORSHIP.projectName}
-        </Typography>
         <Typography
           component="p"
           sx={{
@@ -87,11 +71,11 @@ function PanoramaFpsiBrand() {
             fontWeight: 600,
             fontSize: { xs: "0.78rem", md: "0.88rem", print: "7pt" },
             letterSpacing: "0.02em",
-            color: PANORAMA_BRAND_INK,
+            color: "grey.800",
             lineHeight: 1.35,
-            mt: 0.2,
             mb: { xs: 0.35, print: 0.25 },
             wordBreak: "break-word",
+            "@media print": { color: "#333" },
           }}
         >
           {FPSI_AUTHORSHIP.projectFullName}
@@ -161,18 +145,15 @@ export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm }:
       <Box
         className="panorama-doc-header-identity panorama-text-left"
         sx={{
-          borderRadius: 1.5,
-          border: "1px solid",
-          borderColor: "grey.200",
-          bgcolor: "background.paper",
           width: "100%",
-          overflow: "hidden",
+          minWidth: 0,
+          bgcolor: "#fff",
           textAlign: "left",
           "& .MuiTypography-root, & .MuiLink-root": {
             textAlign: "left",
           },
           "@media print": {
-            borderColor: "#bbb",
+            bgcolor: "#fff",
           },
         }}
       >

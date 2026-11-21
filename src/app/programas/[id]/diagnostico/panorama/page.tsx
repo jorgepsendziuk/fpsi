@@ -32,9 +32,17 @@ import { sanitizePanoramaResponsavelNome } from "@/lib/panorama/sanitizePanorama
 import ComputerOutlinedIcon from "@mui/icons-material/ComputerOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import RouteOutlinedIcon from "@mui/icons-material/RouteOutlined";
+import { PanoramaAccordionSection } from "@/components/diagnostico/panorama/PanoramaAccordionSection";
+import type { PanoramaSectionAccent } from "@/components/diagnostico/panorama/panoramaSectionAccent";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import PanoramaDocumentHeader from "@/components/diagnostico/panorama/PanoramaDocumentHeader";
 import PanoramaIntroducao from "@/components/diagnostico/panorama/PanoramaIntroducao";
+import PanoramaProgramaPrivacidadeChecklist from "@/components/diagnostico/panorama/PanoramaProgramaPrivacidadeChecklist";
 import {
   PANORAMA_CELULA_ESTREITA,
   PanoramaNivelCelulaComIcone,
@@ -211,6 +219,10 @@ export default function PanoramaInicialPage() {
             {
               textAlign: "left !important",
             },
+          "#panorama-print-root.panorama-document-root .panorama-checklist-programa, #panorama-print-root.panorama-document-root .panorama-checklist-programa .MuiTypography-root":
+            {
+              textAlign: "left !important",
+            },
           "#panorama-print-root.panorama-document-root .MuiTableCell-alignCenter": {
             textAlign: "center !important",
           },
@@ -302,6 +314,26 @@ export default function PanoramaInicialPage() {
             "#panorama-print-root .panorama-indice-lista": {
               fontSize: "8pt !important",
             },
+            "#panorama-print-root .panorama-checklist-programa": {
+              padding: "8px 10px !important",
+            },
+            "#panorama-print-root .panorama-checklist-item": {
+              padding: "4px 6px !important",
+              marginBottom: "3px !important",
+            },
+            "#panorama-print-root .panorama-checklist-grupos": {
+              gap: "6px !important",
+            },
+            ".panorama-section-accordion .MuiCollapse-root": {
+              height: "auto !important",
+              visibility: "visible !important",
+            },
+            ".panorama-section-accordion .MuiCollapse-wrapper, .panorama-section-accordion .MuiCollapse-wrapperInner": {
+              height: "auto !important",
+            },
+            ".panorama-section-accordion .MuiAccordionSummary-root": {
+              minHeight: "unset !important",
+            },
           },
         }}
       />
@@ -344,7 +376,12 @@ export default function PanoramaInicialPage() {
           <PanoramaIntroducao />
 
           {b && (
-            <Section title="Resumo do diagnóstico (perguntas do PPSI)" className="panorama-resumo-section">
+            <Section
+              title="Resumo do diagnóstico (perguntas do PPSI)"
+              className="panorama-resumo-section"
+              accent="diagnostico"
+              titleIcon={<FactCheckOutlinedIcon fontSize="inherit" />}
+            >
             <Typography variant="body1" paragraph className="panorama-resumo-lead" sx={{ lineHeight: { xs: 1.6, print: 1.4 }, mb: { print: 0.75 } }}>
               O diagnóstico deste programa tem <strong>{totalMedidas} perguntas</strong> do framework (governança,
               segurança, privacidade e, quando ativo, IA). Cada pergunta recebe uma nota ou fica em branco. Os números
@@ -406,6 +443,7 @@ export default function PanoramaInicialPage() {
           title="O que já existe"
           sectionId="panorama-sec-entregas"
           className="panorama-indice-section"
+          accent="entregas"
           titleIcon={<PlaylistAddCheckOutlinedIcon fontSize="inherit" />}
         >
           {indiceEntregas.length === 0 ? (
@@ -494,6 +532,7 @@ export default function PanoramaInicialPage() {
             title="Inventário de sistemas"
             sectionId="panorama-sec-sistemas"
             className="panorama-sistemas-section"
+            accent="sistemas"
             titleIcon={<StorageOutlinedIcon fontSize="inherit" />}
           >
             <Typography variant="body2" color="text.secondary" paragraph sx={{ lineHeight: 1.55, fontSize: "0.95rem" }}>
@@ -617,7 +656,12 @@ export default function PanoramaInicialPage() {
         )}
 
         {snapshot && (snapshot.lacunas.length > 0 || snapshot.atencoes.length > 0) && (
-          <Section title="O que precisa de decisão" sectionId="panorama-sec-decisao">
+          <Section
+            title="O que precisa de decisão"
+            sectionId="panorama-sec-decisao"
+            accent="decisao"
+            titleIcon={<GavelOutlinedIcon fontSize="inherit" />}
+          >
             {snapshot.lacunas.length > 0 && (
               <>
                 <Typography variant="subtitle1" fontWeight={700} gutterBottom sx={{ fontSize: "1rem" }}>
@@ -638,7 +682,12 @@ export default function PanoramaInicialPage() {
         )}
 
         {snapshot && snapshot.riscos.length > 0 && (
-          <Section title="Matriz de risco" sectionId="panorama-sec-riscos">
+          <Section
+            title="Matriz de risco"
+            sectionId="panorama-sec-riscos"
+            accent="riscos"
+            titleIcon={<WarningAmberOutlinedIcon fontSize="inherit" />}
+          >
             <Box sx={{ maxWidth: 520, mx: { xs: 0, md: "auto" }, mb: 2 }}>
               <RiscoHeatmap riscos={riscosHeatmap} embedded relaxed hideChrome />
             </Box>
@@ -740,7 +789,12 @@ export default function PanoramaInicialPage() {
         )}
 
         {snapshot && snapshot.exposicao.length > 0 && (
-          <Section title="Se continuar assim" sectionId="panorama-sec-exposicao">
+          <Section
+            title="Se continuar assim"
+            sectionId="panorama-sec-exposicao"
+            accent="exposicao"
+            titleIcon={<ReportProblemOutlinedIcon fontSize="inherit" />}
+          >
             <Typography variant="body2" color="text.secondary" paragraph sx={{ fontSize: "0.95rem" }}>
               Cenários com base nos riscos de maior prioridade já cadastrados.
             </Typography>
@@ -770,7 +824,12 @@ export default function PanoramaInicialPage() {
         )}
 
         {snapshot && snapshot.planos.length > 0 && (
-          <Section title="Por onde começar" sectionId="panorama-sec-planos">
+          <Section
+            title="Por onde começar"
+            sectionId="panorama-sec-planos"
+            accent="planos"
+            titleIcon={<RouteOutlinedIcon fontSize="inherit" />}
+          >
             <Stack spacing={{ xs: 1.5, print: 1 }} className="panorama-planos-lista">
               {snapshot.planos.map((p) => {
                 const nivel = panoramaNivelFromPlano(p.prioridade);
@@ -852,6 +911,8 @@ export default function PanoramaInicialPage() {
             </Stack>
           </Section>
         )}
+
+        <PanoramaProgramaPrivacidadeChecklist />
       </Box>
     </>
   );
@@ -863,67 +924,25 @@ function Section({
   className,
   sectionId,
   titleIcon,
+  accent,
 }: {
   title: string;
   children: React.ReactNode;
   className?: string;
   sectionId?: string;
   titleIcon?: React.ReactNode;
+  accent?: PanoramaSectionAccent;
 }) {
-  const titleSx = {
-    fontSize: { xs: "1.15rem", md: "1.22rem", print: "13pt" },
-    fontWeight: 800,
-    mb: 0,
-    lineHeight: 1.2,
-  } as const;
-
   return (
-    <Paper
-      id={sectionId}
-      variant="outlined"
+    <PanoramaAccordionSection
+      title={title}
       className={className}
-      sx={{
-        p: { xs: 2, md: 2.75, print: 1.25 },
-        mb: { xs: 2.5, print: 2 },
-        breakInside: "avoid",
-        scrollMarginTop: { xs: 72, md: 80 },
-      }}
+      sectionId={sectionId}
+      titleIcon={titleIcon}
+      accent={accent}
     >
-      {titleIcon ? (
-        <Stack
-          direction="row"
-          spacing={{ xs: 1.25, print: 0.75 }}
-          alignItems="center"
-          sx={{ mb: { xs: 1.5, print: 0.75 } }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: { xs: 40, print: 28 },
-              height: { xs: 40, print: 28 },
-              borderRadius: 1.25,
-              flexShrink: 0,
-              bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
-              color: "primary.main",
-              fontSize: { xs: 22, print: 16 },
-              "@media print": { bgcolor: "transparent", border: "1px solid #ccc" },
-            }}
-          >
-            {titleIcon}
-          </Box>
-          <Typography variant="h6" sx={titleSx}>
-            {title}
-          </Typography>
-        </Stack>
-      ) : (
-        <Typography variant="h6" gutterBottom sx={{ ...titleSx, mb: { print: 0.75 } }}>
-          {title}
-        </Typography>
-      )}
       {children}
-    </Paper>
+    </PanoramaAccordionSection>
   );
 }
 

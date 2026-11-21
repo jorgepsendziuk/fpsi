@@ -7,24 +7,40 @@ import BalanceOutlinedIcon from "@mui/icons-material/BalanceOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
-import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
+
+const GLOSSARIO_PRIVACIDADE: { termo: string; definicao: string }[] = [
+  { termo: "Titular", definicao: "Pessoa a quem os dados se referem." },
+  { termo: "Dado pessoal", definicao: "Informação que identifica ou pode identificar uma pessoa." },
+  {
+    termo: "Dado sensível",
+    definicao:
+      "Origem racial, saúde, religião, opinião política, biométricos etc. — proteção reforçada (art. 11).",
+  },
+  { termo: "Controlador", definicao: "Quem define finalidade e meios do tratamento." },
+  { termo: "Operador", definicao: "Quem trata dados por conta do controlador." },
+  { termo: "Encarregado (DPO)", definicao: "Canal com titulares e ANPD (art. 41)." },
+  { termo: "Tratamento", definicao: "Qualquer uso de dado pessoal (coletar, usar, guardar…)." },
+  { termo: "Base legal", definicao: "Hipótese da LGPD que autoriza o tratamento." },
+  { termo: "Direitos do titular", definicao: "Pedidos do art. 18 (acesso, correção, eliminação, etc.)." },
+];
 
 const BLOCOS = [
   {
     Icon: ShieldOutlinedIcon,
     titulo: "O que é",
-    texto: "Retrato objetivo de como o programa trata dados pessoais, alinhado à LGPD e ao PPSI.",
+    texto: "Retrato do programa de privacidade e segurança de dados.",
   },
   {
     Icon: BalanceOutlinedIcon,
     titulo: "Por que importa",
-    texto: "Sem clareza sobre o quê, o para quê e quem responde, o risco sobe e a confiança do titular cai.",
+    texto: "Sem papéis e finalidades claros, sobe o risco e cai a confiança do titular.",
   },
   {
     Icon: SummarizeOutlinedIcon,
-    titulo: "O que você ganha com esta entrega",
-    texto: "Leitura executiva do que existe, do que decide e por onde começar — apoio à direção, não parecer jurídico.",
+    titulo: "Penalidades",
+    texto: "Multas, sanções administrativas, interrupção da atividade de tratamento.",
   },
 ] as const;
 
@@ -32,17 +48,17 @@ const REFERENCIAS = [
   {
     Icon: GavelOutlinedIcon,
     titulo: "LGPD",
-    texto: "Lei 13.709/2018: direitos dos titulares e deveres de quem trata dados no Brasil.",
+    texto: "Lei 13.709/2018: direitos e deveres no tratamento de dados.",
   },
   {
     Icon: SecurityOutlinedIcon,
     titulo: "PPSI 2.0",
-    texto: "Marco para diagnosticar governança, controles e privacidade neste diagnóstico.",
+    texto: "Diretrizes federais de segurança e privacidade de dados.",
   },
   {
-    Icon: PublicOutlinedIcon,
-    titulo: "GovBR",
-    texto: "Referências federais em privacidade e serviços digitais como pano de fundo.",
+    Icon: ShieldOutlinedIcon,
+    titulo: "FPSI",
+    texto: "Framework open source de Privacidade e Segurança da Informação.",
   },
 ] as const;
 
@@ -57,17 +73,19 @@ function IntroBloco({
   texto: string;
   compact?: boolean;
 }) {
-  const iconBox = compact ? { xs: 30, print: 20 } : { xs: 36, print: 22 };
-  const iconSize = compact ? { xs: 18, print: 14 } : { xs: 22, print: 15 };
+  const iconBox = compact ? { xs: 28, print: 16 } : { xs: 32, print: 18 };
+  const iconSize = compact ? { xs: 16, print: 11 } : { xs: 18, print: 12 };
   const titleSize = compact
-    ? { xs: "0.82rem", print: "7.5pt" }
-    : { xs: "0.9rem", print: "8pt" };
-  const bodySize = compact ? { print: "7pt" } : { print: "7.5pt" };
+    ? { xs: "0.8rem", print: "6.5pt" }
+    : { xs: "0.85rem", print: "7pt" };
+  const bodySize = compact
+    ? { xs: "0.78rem", print: "6pt" }
+    : { xs: "0.8rem", print: "6.5pt" };
 
   return (
     <Stack
       direction="row"
-      spacing={{ xs: 1, print: 0.5 }}
+      spacing={{ xs: 0.85, print: 0.35 }}
       alignItems="flex-start"
       sx={{ flex: 1, minWidth: 0 }}
     >
@@ -78,11 +96,11 @@ function IntroBloco({
           justifyContent: "center",
           width: iconBox,
           height: iconBox,
-          borderRadius: 1,
+          borderRadius: 0.75,
           flexShrink: 0,
           bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
           color: "primary.main",
-          mt: { print: 0.1 },
+          "@media print": { bgcolor: "transparent", border: "1px solid #ccc" },
         }}
       >
         <Icon sx={{ fontSize: iconSize }} aria-hidden />
@@ -93,8 +111,8 @@ function IntroBloco({
           fontWeight={800}
           sx={{
             fontSize: titleSize,
-            lineHeight: { xs: 1.25, print: 1.15 },
-            mb: { xs: 0.35, print: 0.05 },
+            lineHeight: { xs: 1.2, print: 1.1 },
+            mb: { xs: 0.2, print: 0 },
           }}
         >
           {titulo}
@@ -103,7 +121,7 @@ function IntroBloco({
           variant="body2"
           color="text.secondary"
           sx={{
-            lineHeight: { xs: 1.5, print: 1.22 },
+            lineHeight: { xs: 1.4, print: 1.15 },
             fontSize: bodySize,
           }}
         >
@@ -120,21 +138,24 @@ export default function PanoramaIntroducao() {
       variant="outlined"
       className="panorama-intro panorama-text-left"
       sx={{
-        p: { xs: 1.75, md: 2, print: 0.65 },
-        mb: { xs: 2.5, print: 0.4 },
+        p: { xs: 1.5, md: 1.75, print: 0.4 },
+        mb: { xs: 2, print: 0.25 },
         bgcolor: (t) => alpha(t.palette.primary.main, 0.03),
         borderColor: (t) => alpha(t.palette.primary.main, 0.18),
         breakInside: "avoid",
         textAlign: "left",
+        "@media print": {
+          borderColor: "#ccc",
+        },
       }}
     >
       <Stack
-        spacing={{ xs: 1.5, print: 0.5 }}
+        spacing={{ xs: 1.25, print: 0.35 }}
         direction={{ xs: "column", md: "row" }}
         sx={{
           "@media print": {
             flexDirection: "row",
-            gap: "6px",
+            gap: "4px",
             "& > *": { flex: "1 1 0", minWidth: 0 },
           },
         }}
@@ -146,10 +167,11 @@ export default function PanoramaIntroducao() {
 
       <Box
         sx={{
-          mt: { xs: 1.75, print: 0.4 },
-          pt: { xs: 1.5, print: 0.4 },
+          mt: { xs: 1.25, print: 0.25 },
+          pt: { xs: 1, print: 0.25 },
           borderTop: 1,
           borderColor: (t) => alpha(t.palette.primary.main, 0.12),
+          "@media print": { borderColor: "#ddd" },
         }}
       >
         <Typography
@@ -160,20 +182,20 @@ export default function PanoramaIntroducao() {
           sx={{
             textTransform: "uppercase",
             letterSpacing: "0.04em",
-            mb: { xs: 1, print: 0.25 },
-            fontSize: { xs: "0.72rem", print: "6.5pt" },
+            mb: { xs: 0.75, print: 0.15 },
+            fontSize: { xs: "0.7rem", print: "6pt" },
           }}
         >
           Contexto normativo e de referência
         </Typography>
         <Stack
-          spacing={{ xs: 1.25, print: 0.35 }}
+          spacing={{ xs: 1, print: 0.2 }}
           direction={{ xs: "column", md: "row" }}
           className="panorama-intro-referencias"
           sx={{
             "@media print": {
               flexDirection: "row",
-              gap: "4px",
+              gap: "3px",
               "& > *": { flex: "1 1 0", minWidth: 0 },
             },
           }}
@@ -182,6 +204,83 @@ export default function PanoramaIntroducao() {
             <IntroBloco key={ref.titulo} {...ref} compact />
           ))}
         </Stack>
+      </Box>
+
+      <Box
+        className="panorama-intro-glossario"
+        sx={{
+          mt: { xs: 1.25, print: 0.25 },
+          pt: { xs: 1, print: 0.25 },
+          borderTop: 1,
+          borderColor: (t) => alpha(t.palette.primary.main, 0.12),
+          "@media print": { borderColor: "#ddd" },
+        }}
+      >
+        <Stack
+          direction="row"
+          spacing={{ xs: 0.5, print: 0.35 }}
+          alignItems="center"
+          sx={{ mb: { xs: 0.75, print: 0.15 } }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: { xs: 22, print: 16 },
+              height: { xs: 22, print: 16 },
+              borderRadius: 0.5,
+              flexShrink: 0,
+              bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+              color: "primary.main",
+              "@media print": { bgcolor: "transparent", border: "1px solid #ccc" },
+            }}
+          >
+            <MenuBookOutlinedIcon sx={{ fontSize: { xs: 14, print: 11 } }} aria-hidden />
+          </Box>
+          <Typography
+            variant="caption"
+            fontWeight={800}
+            color="text.secondary"
+            sx={{
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              fontSize: { xs: "0.7rem", print: "6pt" },
+            }}
+          >
+            Glossário simplificado
+          </Typography>
+        </Stack>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "1fr 1fr",
+              print: "1fr 1fr 1fr",
+            },
+            columnGap: { xs: 0, md: 1.5, print: 0.75 },
+            rowGap: { xs: 0.45, print: 0.15 },
+          }}
+        >
+          {GLOSSARIO_PRIVACIDADE.map((item) => (
+            <Typography
+              key={item.termo}
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                lineHeight: { xs: 1.35, print: 1.1 },
+                fontSize: { xs: "0.76rem", print: "6pt" },
+              }}
+            >
+              <Box component="span" fontWeight={700} color="text.primary">
+                {item.termo}
+              </Box>
+              {" — "}
+              {item.definicao}
+            </Typography>
+          ))}
+        </Box>
       </Box>
     </Paper>
   );
