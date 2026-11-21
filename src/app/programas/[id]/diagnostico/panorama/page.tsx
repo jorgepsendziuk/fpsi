@@ -60,7 +60,7 @@ import type { ProgramaRiscoRow } from "@/lib/services/dataService";
 import type { PanoramaSnapshot } from "@/lib/panorama/buildPanoramaSnapshot";
 import type { PoliticaProgramaDados } from "@/lib/utils/politicaPlaceholders";
 import { getDiagnosticoTheme } from "@/lib/utils/diagnosticoThemes";
-import { SITE_ORIGIN } from "@/lib/siteMetadata";
+import { buildPanoramaPublicUrl } from "@/lib/panorama/panoramaPublicUrl";
 
 const DOC_TITLE = "Panorama inicial de privacidade";
 
@@ -102,14 +102,18 @@ function IndiceItemIcon({ chave }: { chave: string }) {
 
 export default function PanoramaInicialPage() {
   const params = useParams();
-  const idOrSlug = params.id as string;
-  const { programaId, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
-  const { isFull, loading: accessLoading } = useProgramaAccess(programaId ?? undefined);
+  const idOrSlug = String(params.id ?? params.slug ?? "");
+  const { programaId: programaIdFromRoute, loading: idLoading } = useProgramaIdFromParam(idOrSlug);
+  const { isFull, loading: accessLoading } = useProgramaAccess(programaIdFromRoute ?? undefined);
 
   const [snapshot, setSnapshot] = useState<PanoramaSnapshot | null>(null);
   const [programa, setPrograma] = useState<PoliticaProgramaDados | null>(null);
+  const [resolvedProgramaId, setResolvedProgramaId] = useState<number | null>(null);
+  const [publicView, setPublicView] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const programaId = programaIdFromRoute ?? resolvedProgramaId;
 
   /** Oculta a fita global “Beta” (layout) neste relatório — tela e impressão. */
   useEffect(() => {
@@ -118,34 +122,66 @@ export default function PanoramaInicialPage() {
   }, []);
 
   const load = useCallback(async () => {
-    if (!programaId) return;
+    if (!idOrSlug) return;
     setLoading(true);
     setError(null);
     try {
-      const [res, prog] = await Promise.all([
-        fetch(`/api/programas/${programaId}/panorama`),
-        dataService.fetchProgramaById(programaId),
-      ]);
-      if (!res.ok) throw new Error((await res.json()).error || "Erro ao carregar panorama");
-      const data = (await res.json()) as ApiResponse;
+      const privateRes = await fetch(`/api/programas/${encodeURIComponent(idOrSlug)}/panorama`, {
+        credentials: "include",
+      });
+
+      let res = privateRes;
+      let isPublic = false;
+
+      if (privateRes.status === 401 || privateRes.status === 403) {
+        res = await fetch(`/api/public/panorama/${encodeURIComponent(idOrSlug)}`);
+        isPublic = true;
+      } else if (!privateRes.ok && programaIdFromRoute == null) {
+        res = await fetch(`/api/public/panorama/${encodeURIComponent(idOrSlug)}`);
+        isPublic = res.ok;
+      }
+
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error || "Erro ao carregar panorama");
+      }
+
+      const data = (await res.json()) as ApiResponse & {
+        programa?: PoliticaProgramaDados;
+      };
+
+      setPublicView(isPublic);
       setSnapshot(data.snapshot);
-      setPrograma((prog as PoliticaProgramaDados) || null);
+      const progFromApi = data.programa ?? null;
+      if (progFromApi && typeof progFromApi === "object" && "id" in progFromApi) {
+        const pid = Number((progFromApi as { id: unknown }).id);
+        if (Number.isFinite(pid)) setResolvedProgramaId(pid);
+        setPrograma(progFromApi);
+      } else if (!isPublic && programaIdFromRoute != null) {
+        const prog = await dataService.fetchProgramaById(programaIdFromRoute);
+        setPrograma((prog as PoliticaProgramaDados) || null);
+        setResolvedProgramaId(programaIdFromRoute);
+      } else {
+        setPrograma(progFromApi);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro");
     } finally {
       setLoading(false);
     }
-  }, [programaId]);
+  }, [idOrSlug, programaIdFromRoute]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   const panoramaOnlineUrl = useMemo(() => {
-    if (!idOrSlug) return null;
-    const base = (process.env.NEXT_PUBLIC_APP_URL || SITE_ORIGIN).replace(/\/$/, "");
-    return `${base}/programas/${encodeURIComponent(idOrSlug)}/diagnostico/panorama`;
-  }, [idOrSlug]);
+    const slugFromPrograma =
+      programa && typeof programa.slug === "string" ? programa.slug.trim() : "";
+    const slug = slugFromPrograma || idOrSlug;
+    if (!slug) return null;
+    return buildPanoramaPublicUrl(slug);
+  }, [idOrSlug, programa]);
 
   const riscosHeatmap: ProgramaRiscoRow[] = useMemo(() => {
     if (!snapshot || !programaId) return [];
@@ -172,7 +208,9 @@ export default function PanoramaInicialPage() {
 
   const indiceEntregas = snapshot?.indiceEntregas ?? [];
 
-  if (idLoading || accessLoading || loading) {
+  const waitingForMemberGate = !publicView && (idLoading || accessLoading);
+
+  if (loading || waitingForMemberGate) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
         <CircularProgress />
@@ -180,10 +218,26 @@ export default function PanoramaInicialPage() {
     );
   }
 
-  if (!isFull) {
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
+
+  if (!publicView && !isFull) {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="warning">O Panorama inicial está disponível para gestores do programa.</Alert>
+      </Box>
+    );
+  }
+
+  if (!snapshot) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">Não foi possível carregar o panorama.</Alert>
       </Box>
     );
   }

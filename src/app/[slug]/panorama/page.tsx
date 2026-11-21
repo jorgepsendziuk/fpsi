@@ -1,0 +1,1 @@
+export { default } from "@/app/programas/[id]/diagnostico/panorama/page";

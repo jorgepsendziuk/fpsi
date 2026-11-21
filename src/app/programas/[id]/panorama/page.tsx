@@ -1,11 +1,25 @@
 import { redirect } from "next/navigation";
+import { createSupabaseAdminClient } from "@/utils/supabase/admin";
+import { resolveProgramaIdByIdOrSlug } from "@/lib/panorama/resolveProgramaIdPublic";
 
-/** Atalho: /programas/{id}/panorama → documento em Diagnóstico */
+/** Atalho interno: /programas/{id|slug}/panorama → URL pública curta /{slug}/panorama */
 export default async function ProgramaPanoramaRedirectPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  redirect(`/programas/${encodeURIComponent(id)}/diagnostico/panorama`);
+  const trimmed = String(id || "").trim();
+  const admin = createSupabaseAdminClient();
+  if (admin) {
+    const programaId = await resolveProgramaIdByIdOrSlug(admin, trimmed);
+    if (programaId) {
+      const { data } = await admin.from("programa").select("slug").eq("id", programaId).maybeSingle();
+      const slug = typeof data?.slug === "string" ? data.slug.trim() : "";
+      if (slug) {
+        redirect(`/${encodeURIComponent(slug)}/panorama`);
+      }
+    }
+  }
+  redirect(`/programas/${encodeURIComponent(trimmed)}/diagnostico/panorama`);
 }

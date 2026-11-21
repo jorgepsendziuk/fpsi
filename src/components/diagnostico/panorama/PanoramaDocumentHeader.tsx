@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Box, Link as MuiLink, Stack, Typography } from "@mui/material";
+import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import {
   formatCnpjBrasil,
   getPoliticaPdfCabecalhoLinhasMetadados,
@@ -248,24 +249,57 @@ export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm, o
           {docTitle}
         </Typography>
         {onlineHref ? (
-          <MuiLink
-            href={onlineHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="panorama-text-center panorama-doc-online-link"
+          <Box
+            className="panorama-doc-online-link panorama-text-center"
             sx={{
-              display: "inline-block",
               mt: { xs: 0.5, print: 0.25 },
-              fontSize: { xs: "0.9rem", print: "8pt" },
-              fontWeight: 600,
-              color: "primary.main",
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              alignItems: "center",
+              columnGap: 0.5,
+              rowGap: 0.25,
               textAlign: "center",
-              wordBreak: "break-all",
-              "@media print": { color: PANORAMA_BRAND_INK },
             }}
           >
-            Veja online
-          </MuiLink>
+            <Typography
+              component="span"
+              sx={{
+                fontSize: { xs: "0.9rem", print: "8pt" },
+                color: "text.secondary",
+                lineHeight: 1.35,
+              }}
+            >
+              Veja online em:
+            </Typography>
+            <MuiLink
+              href={onlineHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.35,
+                fontSize: { xs: "0.9rem", print: "8pt" },
+                fontWeight: 600,
+                color: "primary.main",
+                wordBreak: "break-all",
+                maxWidth: "100%",
+                "@media print": { color: PANORAMA_BRAND_INK },
+              }}
+            >
+              <LinkOutlinedIcon
+                aria-hidden
+                sx={{
+                  fontSize: { xs: 18, print: 14 },
+                  flexShrink: 0,
+                  "@media print": { fontSize: 12 },
+                }}
+              />
+              {onlineHref}
+            </MuiLink>
+          </Box>
         ) : null}
         {geradoEm ? (
           <Typography
