@@ -35,6 +35,8 @@ export type ComiteKey = "si" | "priva" | "etir" | "ia";
 
 export type DiagnosticoId = 1 | 2 | 3 | 4;
 
+export type ProgramaOperationalPackId = "ppsi-2.0" | "framework";
+
 export type ProgramaEscopoV1 = {
   v: 1;
   diagnosticos: Record<string, boolean>;
@@ -42,6 +44,8 @@ export type ProgramaEscopoV1 = {
   comites: Record<string, boolean>;
   controles_ignorados: number[];
   medidas_ignoradas: number[];
+  /** Empresa privada: catálogo operacional (default implícito = framework). */
+  operational_pack_id?: ProgramaOperationalPackId;
 };
 
 export type PresetDef = {
@@ -286,6 +290,10 @@ export function normalizeEscopo(raw: unknown): ProgramaEscopoV1 {
     medidas_ignoradas: Array.isArray(presetBase.medidas_ignoradas)
       ? presetBase.medidas_ignoradas.filter((n) => Number.isFinite(n))
       : [],
+    operational_pack_id:
+      presetBase.operational_pack_id === "ppsi-2.0" || presetBase.operational_pack_id === "framework"
+        ? presetBase.operational_pack_id
+        : undefined,
   };
 }
 

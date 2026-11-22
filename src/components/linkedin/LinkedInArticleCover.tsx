@@ -130,7 +130,7 @@ export function LinkedInArticleCover({ scale = 1 }: LinkedInArticleCoverProps) {
                 lineHeight: 1.35,
               }}
             >
-              Framework de Privacidade e Segurança da Informação
+              Ferramenta de Privacidade e Segurança da Informação
             </Typography>
             <Typography sx={{ fontFamily: ff, fontWeight: 500, fontSize: "20px", color: faint, mt: "6px" }}>
               open source · PPSI 2.0

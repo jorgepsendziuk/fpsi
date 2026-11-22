@@ -123,13 +123,9 @@ describe('DiagnosticoContainer', () => {
     });
   });
 
-  it('should handle INCC change', () => {
+  it('renderiza sem seletor INCC (PPSI 2.0 usa NAC calculado)', () => {
     render(<DiagnosticoContainer {...mockProps} />);
-    
-    const inccInput = screen.getByLabelText('INCC');
-    fireEvent.change(inccInput, { target: { value: '75' } });
-    
-    expect(mockProps.handleINCCChange).toHaveBeenCalledWith(1, 1, 75);
+    expect(screen.queryByLabelText('INCC')).not.toBeInTheDocument();
   });
 
   it('should handle medida fetch', async () => {

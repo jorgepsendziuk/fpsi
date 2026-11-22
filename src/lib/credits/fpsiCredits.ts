@@ -24,9 +24,20 @@ export const JORGE_PORTFOLIO_URL = "https://geoapps.com.br/jorge";
 export const JORGE_GITHUB_URL = "https://github.com/jorgepsendziuk";
 export const JORGE_LINKEDIN_URL = "https://www.linkedin.com/in/jorge-psendziuk";
 
+/** Frase-âncora de posicionamento do produto (uso em metadata, landing, sobre, créditos). */
+export const FPSI_POSITIONING_ANCHOR =
+  "O FPSI integra, em uma única plataforma, diferentes referenciais de privacidade, segurança da informação e governança de IA, incluindo LGPD, PPSI 2.0, ISO/IEC 27701, NIST AI RMF e ISO/IEC 42001.";
+
+/** Licenciamento: código do repositório vs. textos do Guia/planilha PPSI (terceiros). */
+export const CREDIT_LICENSING = [
+  "Código-fonte e documentação técnica deste repositório: licença MIT (ver arquivo LICENSE no GitHub).",
+  "Textos e catálogo de controles e medidas derivados do Guia e da planilha PPSI 2.0 (SGD/MGI): conteúdo de terceiros sob Creative Commons Atribuição–NãoComercial–SemDerivações 4.0 Internacional (CC BY-NC-ND 4.0), com a devida atribuição ao governo federal. O software MIT não redistribui esses textos sob licença mais permissiva.",
+  "LGPD, ISO, NIST, CIS, ANPD e demais normas citadas aparecem apenas como referência metodológica; marcas e textos oficiais pertencem aos titulares, sem endosso.",
+] as const;
+
 export const FPSI_AUTHORSHIP = {
   projectName: "FPSI",
-  projectFullName: "Framework de Privacidade e Segurança da Informação",
+  projectFullName: "Ferramenta de Privacidade e Segurança da Informação",
   authorName: "Jorge Felipe Roman Psendziuk",
   authorShort: "Jorge Psendziuk",
   orgName: "GeoApps",
@@ -55,7 +66,7 @@ export const CREDIT_FONTES_LEGAIS: CreditSource[] = [
     id: "ppsi",
     title: "PPSI 2.0 — Programa e Guia do Framework",
     role: "Programa de Privacidade e Segurança da Informação (MGI / Governo Digital).",
-    note: "O FPSI é implementação open source alinhada ao Guia e ao catálogo oficiais — não é software oficial do governo.",
+    note: "O FPSI incorpora o catálogo e a metodologia do Guia como referencial; não é software oficial do governo. Textos do Guia/planilha seguem CC BY-NC-ND 4.0 (atribuição SGD/MGI).",
     links: [
       {
         label: "Governo Digital — PPSI 2.0",
@@ -102,6 +113,13 @@ export const CREDIT_FRAMEWORKS: CreditSource[] = [
     role: "Sistema de gestão de segurança da informação — referência normativa internacional.",
     note: "Norma comercial da ISO; o FPSI aponta o catálogo oficial, sem reproduzir o texto normativo.",
     links: [{ label: "ISO — ISO/IEC 27001", url: "https://www.iso.org/standard/27001" }],
+  },
+  {
+    id: "iso27701",
+    title: "ISO/IEC 27701",
+    role: "Extensão de privacidade para ISO/IEC 27001 e ISO/IEC 27002 — referência de governança de dados pessoais.",
+    note: "Norma comercial da ISO; citação referencial, sem reprodução do texto normativo.",
+    links: [{ label: "ISO — ISO/IEC 27701", url: "https://www.iso.org/standard/71670.html" }],
   },
   {
     id: "aigp",
@@ -169,4 +187,4 @@ export const CREDIT_FRAMEWORKS: CreditSource[] = [
 ];
 
 export const CREDIT_DISCLAIMER =
-  "O FPSI é software livre de referência, mantido de forma independente. Não é produto oficial do Governo Federal, da ANPD, da IAPP, do CIS, do NIST, da ISO ou de quaisquer outros órgãos e entidades citados. Os nomes e marcas pertencem aos respectivos titulares e são mencionados apenas para atribuição de fontes e alinhamento metodológico.";
+  "O FPSI é a Ferramenta de Privacidade e Segurança da Informação (fpsi.com.br), mantida de forma independente. Não é produto oficial do Governo Federal, da ANPD, da IAPP, do CIS, do NIST, da ISO ou de quaisquer outros órgãos e entidades citados. Os nomes e marcas pertencem aos respectivos titulares e são mencionados apenas para atribuição de fontes e alinhamento metodológico.";

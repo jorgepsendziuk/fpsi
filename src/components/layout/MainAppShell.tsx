@@ -45,6 +45,10 @@ import { resolveProgramaEscopo } from "@/lib/programa/perfilEscopo";
 import { getProgramaTituloOrganizacao, getProgramaTituloPrincipal } from "@/lib/utils/programaDisplay";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
 import { FirstVisitHints } from "@/components/onboarding/FirstVisitHints";
+import {
+  OnboardingHelpIconButton,
+  OnboardingHintsProvider,
+} from "@/components/onboarding/onboardingHintsContext";
 import type { AppNavItem } from "@/lib/navigation/appNavigation";
 import {
   getBestMatchingNavPath,
@@ -665,64 +669,78 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
           `,
         }}
       >
-        <Link href="/dashboard" style={{ textDecoration: "none", color: "inherit" }} onClick={() => setMobileOpen(false)}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: rail ? "center" : "flex-start" }}>
-            <Box
-              sx={{
-                borderRadius: 1,
-                p: 0.45,
-                background: alpha("#fff", 0.1),
-                border: `1px solid ${alpha("#fff", 0.12)}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                lineHeight: 0,
-              }}
-            >
-              <Image src="/logo_p.png" alt="FPSI" width={26} height={26} />
-            </Box>
-            {!rail && (
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight={900}
-                  letterSpacing="-0.02em"
-                  sx={{ lineHeight: 1.05, color: landing.heroText }}
-                >
-                  FPSI
-                </Typography>
-                {programaContextLabel ? (
-                  <Typography
-                    variant="caption"
-                    noWrap
-                    sx={{
-                      display: "block",
-                      maxWidth: 170,
-                      color: landing.heroMuted,
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {programaContextLabel}
-                  </Typography>
-                ) : (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: "block",
-                      color: landing.heroMuted,
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    Privacidade & SI
-                  </Typography>
-                )}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            justifyContent: rail ? "center" : "space-between",
+          }}
+        >
+          <Link
+            href="/dashboard"
+            style={{ textDecoration: "none", color: "inherit", minWidth: 0, flex: rail ? undefined : 1 }}
+            onClick={() => setMobileOpen(false)}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: rail ? "center" : "flex-start" }}>
+              <Box
+                sx={{
+                  borderRadius: 1,
+                  p: 0.45,
+                  background: alpha("#fff", 0.1),
+                  border: `1px solid ${alpha("#fff", 0.12)}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  lineHeight: 0,
+                }}
+              >
+                <Image src="/logo_p.png" alt="FPSI" width={26} height={26} />
               </Box>
-            )}
-          </Box>
-        </Link>
+              {!rail && (
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={900}
+                    letterSpacing="-0.02em"
+                    sx={{ lineHeight: 1.05, color: landing.heroText }}
+                  >
+                    FPSI
+                  </Typography>
+                  {programaContextLabel ? (
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{
+                        display: "block",
+                        maxWidth: 170,
+                        color: landing.heroMuted,
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {programaContextLabel}
+                    </Typography>
+                  ) : (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: landing.heroMuted,
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      Privacidade & SI
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </Box>
+          </Link>
+          {user ? <OnboardingHelpIconButton onDark size="small" /> : null}
+        </Box>
       </Box>
 
       {/* Controles: recolher, tema e conta — abaixo do logo */}
@@ -1398,6 +1416,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
+    <OnboardingHintsProvider>
     <Box
       sx={{
         display: "flex",
@@ -1535,6 +1554,7 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
                 {programaContextLabel || "FPSI"}
               </Typography>
             </Box>
+            {user ? <OnboardingHelpIconButton onDark size="small" /> : null}
             <IconButton color="inherit" size="small" onClick={() => setMode()} aria-label="Alternar tema">
               {mode === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}
             </IconButton>
@@ -1574,5 +1594,6 @@ export function MainAppShell({ children }: { children: React.ReactNode }) {
         {user ? <FirstVisitHints /> : null}
       </Box>
     </Box>
+    </OnboardingHintsProvider>
   );
 }

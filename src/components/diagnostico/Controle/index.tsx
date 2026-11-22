@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   Typography,
-  Select,
-  MenuItem,
   Box,
   Chip,
   IconButton,
@@ -20,7 +18,8 @@ import { Controle, Medida, Diagnostico, Responsavel, ProgramaControle } from '..
 import MaturityChip from '../MaturityChip';
 import { ResourceLastUpdateLine } from '@/components/common/ResourceLastUpdateLine';
 import { formatDateTimePtBr } from '@/components/common/LastUpdateInfo';
-import { incc } from '../../../lib/utils/utils';
+import { getNacAdoptionLabel } from '@/lib/utils/ppsiScoring';
+import { getRespostaColor, getRespostaLabel } from '@/lib/utils/ppsiScoring';
 import { getDiagnosticoTheme } from '@/lib/utils/diagnosticoThemes';
 import {
   diagnosticoGlassPanel,
@@ -38,7 +37,7 @@ export interface ControleProps {
   programaId: number;
   programaPathSegment?: string;
   responsaveis: Responsavel[];
-  handleINCCChange: (controleId: number, value: number) => void;
+  handleINCCChange?: (controleId: number, value: number) => void;
   handleMedidaChange: (medidaId: number, controleId: number, programaId: number, field: string, value: any) => void;
   calculateMaturityIndex: (controle: Controle) => number;
   onMedidaNavigate?: (medidaId: number, controleId: number) => void;
@@ -77,30 +76,12 @@ const tabIcons: Record<InfoType, React.ReactElement> = {
 
 function getStatusColor(diagnosticoId: number, respostaNum: number | undefined, hasResponse: boolean): string {
   if (!hasResponse || respostaNum === undefined || Number.isNaN(respostaNum)) return '#9E9E9E';
-  if (diagnosticoId === 1) return respostaNum === 1 ? '#4CAF50' : '#FF5252';
-  switch (respostaNum) {
-    case 1: return '#4CAF50';
-    case 2: return '#8BC34A';
-    case 3: return '#FFC107';
-    case 4: return '#FF9800';
-    case 5: return '#FF5252';
-    case 6: return '#9E9E9E';
-    default: return '#9E9E9E';
-  }
+  return getRespostaColor(respostaNum, diagnosticoId);
 }
 
 function getStatusLabel(diagnosticoId: number, respostaNum: number | undefined, hasResponse: boolean): string {
   if (!hasResponse || respostaNum === undefined || Number.isNaN(respostaNum)) return 'Não respondida';
-  if (diagnosticoId === 1) return respostaNum === 1 ? 'Sim' : 'Não';
-  switch (respostaNum) {
-    case 1: return 'Adota totalmente';
-    case 2: return 'Adota em menor parte';
-    case 3: return 'Adota parcialmente';
-    case 4: return 'Há plano aprovado';
-    case 5: return 'Não adota';
-    case 6: return 'Não se aplica';
-    default: return 'Não respondida';
-  }
+  return getRespostaLabel(respostaNum, diagnosticoId);
 }
 
 const ControleComponent: React.FC<ControleProps> = ({
@@ -110,13 +91,13 @@ const ControleComponent: React.FC<ControleProps> = ({
   medidas,
   programaId,
   programaPathSegment,
-  handleINCCChange,
   onMedidaNavigate,
   calculateMaturityIndex,
 }) => {
   const theme = useTheme();
   const diagTheme = getDiagnosticoTheme(diagnostico.id);
-  const maturityScore = calculateMaturityIndex(controle);
+  const nacScore = calculateMaturityIndex(controle);
+  const nacAdocaoLabel = getNacAdoptionLabel(nacScore);
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -166,52 +147,17 @@ const ControleComponent: React.FC<ControleProps> = ({
             }}
           >
             <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.9, letterSpacing: 0.5 }}>
-              Índice de maturidade
+              NAC (adoção do controle)
             </Typography>
             <Typography sx={{ fontWeight: 800, fontSize: '1.75rem', lineHeight: 1.2, my: 0.5 }}>
-              {maturityScore.toFixed(2)}
+              {nacScore.toFixed(2)}
             </Typography>
-            <MaturityChip
-              score={maturityScore}
-              size="small"
-              showLabel
-              controleId={controle.id}
-              controleNome={controle.nome}
-            />
+            <Typography variant="caption" sx={{ display: 'block', opacity: 0.92, fontWeight: 600, mb: 0.5 }}>
+              {nacAdocaoLabel}
+            </Typography>
+            <MaturityChip score={nacScore} size="small" showLabel controleId={controle.id} controleNome={controle.nome} />
           </Box>
         </Box>
-      </Box>
-
-      {/* INCC */}
-      <Box sx={{ ...diagnosticoGlassPanel(theme, diagTheme.color), p: 2, mt: 2 }}>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.25 }}>
-          Nível de Capacidade do Controle (INCC)
-        </Typography>
-        <Select
-          fullWidth
-          size="small"
-          value={programaControle?.nivel || ''}
-          onChange={(event) => {
-            handleINCCChange(controle.id, parseInt(event.target.value.toString(), 10));
-          }}
-          sx={{
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.background.paper, 0.7),
-          }}
-        >
-          {incc.map((item) => (
-            <MenuItem key={item.id} value={item.id}>
-              <Box sx={{ py: 0.25 }}>
-                <Typography variant="body2" fontWeight={700}>
-                  Nível {item.nivel} — {item.indice}%
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'normal', display: 'block' }}>
-                  {item.label}
-                </Typography>
-              </Box>
-            </MenuItem>
-          ))}
-        </Select>
       </Box>
 
       {/* Orientações do controle */}

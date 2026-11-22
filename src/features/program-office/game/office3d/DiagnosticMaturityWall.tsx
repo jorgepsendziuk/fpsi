@@ -96,7 +96,7 @@ export function DiagnosticMaturityWall() {
                 {m.label || `${pct}%`}
               </Text>
               <Text position={[0, -0.12, 0.04]} fontSize={0.048} anchorX="center" color="#455a64">
-                iMC {score.toFixed(2)}
+                iBase {score.toFixed(2)}
               </Text>
             </group>
           </Clickable3D>

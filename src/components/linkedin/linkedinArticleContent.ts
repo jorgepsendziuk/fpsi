@@ -26,7 +26,7 @@ export const LINKEDIN_ARTICLE_BODY: ArticleBlock[] = [
         type: "paragraphs",
         paragraphs: [
           "A ferramenta oficial do PPSI em Excel funciona bem metodologicamente. Mas quem conduz programas de privacidade no dia a dia sabe onde ela trava: trabalho colaborativo, acesso remoto, trilha de auditoria, portal do titular, gestão de riscos — tudo isso fica fora da planilha ou exige outras soluções.",
-          "O FPSI é reimplementação open source do Framework de Privacidade e Segurança da Informação (PPSI 2.0) — base técnica colaborativa para DPOs, gestores de SI e consultores.",
+          "O FPSI é a Ferramenta de Privacidade e Segurança da Informação — plataforma open source (MIT) que integra LGPD, PPSI 2.0 e outros referenciais para DPOs, gestores de SI e consultores.",
           "Abaixo, quatro telas do repositório em funcionamento, para ilustrar como o ciclo do programa se organiza num único ambiente.",
         ],
       },

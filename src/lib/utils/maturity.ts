@@ -6,15 +6,17 @@
  */
 
 import { State } from '../types/types';
+import { calculateNacFromMedidas } from './ppsiScoring';
 
-// Definição das faixas de maturidade
-export const MATURITY_LEVELS = [
-  { id: 1, min: 0, max: 0.29, label: "Inicial" },
-  { id: 2, min: 0.3, max: 0.49, label: "Básico" },
-  { id: 3, min: 0.5, max: 0.69, label: "Intermediário" },
-  { id: 4, min: 0.7, max: 0.89, label: "Em Aprimoramento" },
-  { id: 5, min: 0.9, max: 1, label: "Aprimorado" },
-];
+import { INDICADOR_MATURIDADE_FAIXAS } from "./ppsiScoring";
+
+// Faixas iBase / iSeg / iPriv (IN 4/2026, Tabela 6)
+export const MATURITY_LEVELS = INDICADOR_MATURIDADE_FAIXAS.map((f, i) => ({
+  id: i + 1,
+  min: f.min,
+  max: f.max,
+  label: f.label,
+}));
 
 /**
  * Converte um score numérico para um label de maturidade
@@ -44,13 +46,12 @@ export function getMaturityLevelId(score: number): number {
 export function getMaturityColorHex(score: number): string {
   const s = normalizeMaturityScore(score);
   if (s >= 0.9) return "#2E7D32";
-  if (s >= 0.7) return "#388E3C";
-  if (s >= 0.5) return "#F9A825";
-  if (s >= 0.3) return "#EF6C00";
+  if (s >= 0.6) return "#388E3C";
+  if (s >= 0.3) return "#F9A825";
   return "#C62828";
 }
 
-/** Índice iMC (0–1), nível 1–5 e rótulo — sem percentual. */
+/** Índice do indicador (0–1), nível e rótulo — sem percentual. */
 export function formatMaturityIndex(raw: number | null | undefined): {
   score: number;
   indexText: string;
@@ -84,27 +85,9 @@ export const calculateMedidaMaturity = (resposta: number): number => {
  * @param inccLevel Nível INCC do controle (1-5)
  * @returns Score normalizado (0-1)
  */
-export const calculateControleMaturity = (medidas: any[], inccLevel: number = 1): number => {
+export const calculateControleMaturity = (medidas: any[], diagnosticoId: number = 2): number => {
   if (!medidas || medidas.length === 0) return 0;
-
-  // Filtrar apenas medidas com respostas válidas
-  const validMedidas = medidas.filter(m => 
-    m.resposta !== null && 
-    m.resposta !== undefined && 
-    typeof m.resposta === 'number'
-  );
-
-  if (validMedidas.length === 0) return 0;
-
-  // Calcular média das respostas
-  const mediaSemPeso = validMedidas.reduce((sum, medida) => 
-    sum + calculateMedidaMaturity(medida.resposta), 0
-  ) / validMedidas.length;
-
-  // Aplicar fator INCC (quanto maior o INCC, maior o peso)
-  const fatorINCC = 1 + (inccLevel - 1) * 0.1; // 1.0 a 1.4
-  
-  return Math.min(1, mediaSemPeso * fatorINCC);
+  return calculateNacFromMedidas(medidas, diagnosticoId, (m) => m.resposta).nac;
 };
 
 /**
@@ -135,11 +118,9 @@ export const calculateDiagnosticoMaturity = (
 
   controlesDoPrograma.forEach((controle: any) => {
     const medidas = state.medidas?.[controle.id] || [];
-    const controleScore = calculateControleMaturity(medidas, controle.incc || 1);
-    const peso = controle.incc || 1;
-    
-    totalScore += controleScore * peso;
-    totalWeight += peso;
+    const controleScore = calculateControleMaturity(medidas, diagnosticoId);
+    totalScore += controleScore;
+    totalWeight += 1;
   });
 
   const finalScore = totalWeight > 0 ? totalScore / totalWeight : 0;

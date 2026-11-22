@@ -11,7 +11,7 @@ import ControleComponent from '../Controle';
 import { calculateMaturityIndexForControle } from '../../../lib/utils/calculations';
 import { GrupoImpleFilter, isDiagnosticoSeguranca, matchesGrupoFilter } from '../../../lib/utils/grupoImplementacao';
 import { isMedidaAtiva, type ProgramaEscopoV1 } from '@/lib/programa/perfilEscopo';
-import { respostas, respostasimnao, incc } from '../../../lib/utils/utils';
+import { calculateNacFromMedidas } from '../../../lib/utils/ppsiScoring';
 
 /**
  * Props for the ControleContainer component
@@ -170,27 +170,7 @@ const ControleContainer: React.FC<ControleContainerProps> = ({
       return parseFloat(result);
     }
 
-    let totalResponses = 0;
-    let totalMedidas = 0;
-    medidas.forEach((medida: any) => {
-      if (medida.resposta === 6) return;
-      totalMedidas++;
-      if (medida.resposta && typeof medida.resposta === 'number') {
-        let resposta: any;
-        if (controle.diagnostico === 1) {
-          resposta = respostasimnao.find((r) => r.id === medida.resposta);
-        } else {
-          resposta = respostas.find((r) => r.id === medida.resposta);
-        }
-        if (resposta && resposta.peso !== null) {
-          totalResponses += resposta.peso;
-        }
-      }
-    });
-    const baseScore = totalMedidas > 0 ? totalResponses / totalMedidas : 0;
-    const inccLevel = incc.find((i) => i.id === programaControle.nivel);
-    const inccMultiplier = 1 + ((inccLevel?.nivel || 0) * 1 / 5);
-    return (baseScore / 2) * inccMultiplier;
+    return calculateNacFromMedidas(medidas, controle.diagnostico, (m: any) => m.resposta).nac;
   };
 
   return (

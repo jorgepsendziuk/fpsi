@@ -8,7 +8,7 @@ export const GOVERNANCA_AVANCADA_INTRO = {
   lead:
     "Registro institucional de decisões, linha do tempo de eventos de GRC e acesso temporário somente leitura para auditoria. Não substitui a estrutura de papéis e comitês nem o log de atividades dos usuários.",
   normas: [
-    "PPSI 2.0 — decisão formal da alta administração (critério de maturidade INCC)",
+    "PPSI 2.0 — decisão formal da alta administração (nível NIM nas medidas do segmento base)",
     "LGPD — accountability e demonstração de conformidade (arts. 37, 41 e 50)",
     "ISO/IEC 27001:2022 — cl. 5 (liderança), 9.2 (auditoria interna) e 9.3 (análise crítica pela direção)",
   ],
@@ -53,7 +53,7 @@ export const PORTAL_AUDITOR_INTRO = {
     "Visão somente leitura do programa de privacidade e segurança da informação, para auditoria interna, certificação ou due diligence. Os números e listas abaixo correspondem a evidências e registros que PPSI, LGPD e ISO 27001 pedem para demonstrar o SGSI/programa — não constituem certificado ISO nem selo da ANPD.",
   secoesNorma: [
     { secao: "Identificação e DPO", norma: "LGPD art. 41 · Res. CD/ANPD nº 18/2024" },
-    { secao: "Maturidade", norma: "PPSI 2.0 (iMC / iPriv)" },
+    { secao: "Maturidade", norma: "PPSI 2.0 (iBase / iSeg / iPriv)" },
     { secao: "Evidências", norma: "ISO 27001 9.2 · PPSI anexos de medida" },
     { secao: "Políticas publicadas", norma: "PPSI medidas 0.9–0.12" },
     { secao: "ROPA e mapeamento", norma: "LGPD art. 37" },

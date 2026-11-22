@@ -10,7 +10,8 @@ export type PanoramaSectionAccent =
   | "riscos"
   | "exposicao"
   | "planos"
-  | "checklist";
+  | "checklist"
+  | "glossario";
 
 function accentMain(theme: Theme, accent: PanoramaSectionAccent): string {
   switch (accent) {
@@ -30,6 +31,8 @@ function accentMain(theme: Theme, accent: PanoramaSectionAccent): string {
       return theme.palette.secondary?.main ?? "#5e35b1";
     case "checklist":
       return theme.palette.primary.dark;
+    case "glossario":
+      return theme.palette.info.dark;
     default:
       return theme.palette.primary.main;
   }

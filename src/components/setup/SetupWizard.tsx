@@ -39,8 +39,20 @@ function StatusChip({ status }: { status: "complete" | "pending" | "warning" }) 
   return <Chip size="small" color="default" label="Pendente" />;
 }
 
+type InstalledPackagesResponse = {
+  packages: Array<{
+    id: string;
+    enabled: boolean;
+    nome: string;
+    origem?: string;
+    licenca?: string;
+    tipo: string;
+  }>;
+};
+
 export function SetupWizard() {
   const [status, setStatus] = useState<SetupStatus | null>(null);
+  const [installedPackages, setInstalledPackages] = useState<InstalledPackagesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
   const [testLoading, setTestLoading] = useState(false);
@@ -68,6 +80,13 @@ export function SetupWizard() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    void fetch("/api/packages/installed")
+      .then((r) => r.json())
+      .then((data) => setInstalledPackages(data as InstalledPackagesResponse))
+      .catch(() => setInstalledPackages(null));
+  }, []);
 
   const envFileContent = useMemo(
     () =>
@@ -326,6 +345,25 @@ export function SetupWizard() {
             <Typography variant="body2" paragraph>
               Com o app rodando e o banco migrado, crie sua conta e o primeiro programa pela interface.
             </Typography>
+            {installedPackages?.packages?.length ? (
+              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                  Pacotes instalados (leitura)
+                </Typography>
+                {installedPackages.packages.map((p) => (
+                  <Box key={p.id} sx={{ mb: 0.75 }}>
+                    <Typography variant="body2">
+                      {p.nome} ({p.id}) — {p.enabled ? "ativo" : "omitido"} — {p.tipo}
+                      {p.licenca ? ` · ${p.licenca}` : ""}
+                    </Typography>
+                  </Box>
+                ))}
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+                  Ajuste com <code>npm run install:fpsi</code> (padrão = todos). Flags:{" "}
+                  <code>-public</code>, <code>-ia</code>, <code>-framework</code>, <code>-ppsi</code>.
+                </Typography>
+              </Paper>
+            ) : null}
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               <Button variant="contained" href="/register">
                 Cadastrar

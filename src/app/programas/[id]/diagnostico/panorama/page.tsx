@@ -39,9 +39,15 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import RouteOutlinedIcon from "@mui/icons-material/RouteOutlined";
 import { PanoramaAccordionSection } from "@/components/diagnostico/panorama/PanoramaAccordionSection";
 import type { PanoramaSectionAccent } from "@/components/diagnostico/panorama/panoramaSectionAccent";
+import { PanoramaSectionFormalSubtitle } from "@/components/diagnostico/panorama/PanoramaSectionFormalSubtitle";
+import { getPanoramaSectionMeta } from "@/lib/panorama/panoramaSectionMeta";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import PanoramaDocumentHeader from "@/components/diagnostico/panorama/PanoramaDocumentHeader";
 import PanoramaIntroducao from "@/components/diagnostico/panorama/PanoramaIntroducao";
+import PanoramaResumoExecutivo from "@/components/diagnostico/panorama/PanoramaResumoExecutivo";
+import PanoramaIndiceTopicos from "@/components/diagnostico/panorama/PanoramaIndiceTopicos";
+import PanoramaGlossario from "@/components/diagnostico/panorama/PanoramaGlossario";
+import { buildPanoramaTopicosIndice } from "@/lib/panorama/panoramaIndiceTopicos";
 import PanoramaProgramaPrivacidadeChecklist from "@/components/diagnostico/panorama/PanoramaProgramaPrivacidadeChecklist";
 import {
   PANORAMA_CELULA_ESTREITA,
@@ -60,6 +66,8 @@ import type { ProgramaRiscoRow } from "@/lib/services/dataService";
 import type { PanoramaSnapshot } from "@/lib/panorama/buildPanoramaSnapshot";
 import type { PoliticaProgramaDados } from "@/lib/utils/politicaPlaceholders";
 import { getDiagnosticoTheme } from "@/lib/utils/diagnosticoThemes";
+import { getDiagnosticoTreeLabel } from "@/lib/utils/diagnosticoTreeLabels";
+import { buildPanoramaDocumentTitle } from "@/lib/panorama/panoramaDocumentTitle";
 import { buildPanoramaPublicUrl } from "@/lib/panorama/panoramaPublicUrl";
 
 const DOC_TITLE = "Panorama inicial de privacidade";
@@ -120,6 +128,14 @@ export default function PanoramaInicialPage() {
     document.body.classList.add("panorama-document");
     return () => document.body.classList.remove("panorama-document");
   }, []);
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = buildPanoramaDocumentTitle(programa);
+    return () => {
+      document.title = prev;
+    };
+  }, [programa]);
 
   const load = useCallback(async () => {
     if (!idOrSlug) return;
@@ -213,6 +229,8 @@ export default function PanoramaInicialPage() {
 
   const indiceEntregas = snapshot?.indiceEntregas ?? [];
 
+  const topicosIndice = useMemo(() => buildPanoramaTopicosIndice(snapshot), [snapshot]);
+
   const waitingForMemberGate = !publicView && (idLoading || accessLoading);
 
   if (loading || waitingForMemberGate) {
@@ -253,6 +271,23 @@ export default function PanoramaInicialPage() {
 
   return (
     <>
+      <style
+        media="print"
+        dangerouslySetInnerHTML={{
+          __html: `
+            @page {
+              size: A4;
+              margin: 10mm 12mm 14mm 12mm;
+              @bottom-right {
+                content: "Página " counter(page);
+                font-size: 8pt;
+                color: #555;
+                font-family: system-ui, sans-serif;
+              }
+            }
+          `,
+        }}
+      />
       <GlobalStyles
         styles={{
           "body.panorama-document > div:has(> span[style*='vertical-rl'])": {
@@ -306,7 +341,7 @@ export default function PanoramaInicialPage() {
             ".MuiAppBar-root": { display: "none !important" },
             ".no-print": { display: "none !important" },
             ".panorama-screen-only": { display: "none !important" },
-            body: { background: "#fff !important", fontSize: "11pt" },
+            body: { background: "#fff !important", fontSize: "11pt", backgroundImage: "none !important" },
             "#panorama-print-root": {
               maxWidth: "100% !important",
               padding: "0 !important",
@@ -326,6 +361,9 @@ export default function PanoramaInicialPage() {
               border: "1px solid #ccc !important",
               boxShadow: "none !important",
             },
+            "#panorama-fold-one .MuiPaper-outlined.panorama-fold-one-card": {
+              boxShadow: "none !important",
+            },
             "#panorama-print-root .MuiTableCell-root": {
               whiteSpace: "normal !important",
               wordBreak: "break-word",
@@ -333,7 +371,100 @@ export default function PanoramaInicialPage() {
               textOverflow: "clip !important",
             },
             "#panorama-fold-one": {
-              fontSize: "9.5pt",
+              fontSize: "10pt",
+              display: "flex !important",
+              flexDirection: "column !important",
+              gap: "6px !important",
+              background: "#fff !important",
+              padding: "0 !important",
+            },
+            "#panorama-fold-one .panorama-doc-header": {
+              marginBottom: "0 !important",
+              display: "flex !important",
+              flexDirection: "column !important",
+              gap: "6px !important",
+            },
+            "#panorama-fold-one .panorama-fold-one-card": {
+              margin: "0 !important",
+              boxShadow: "none !important",
+              breakInside: "avoid !important",
+              WebkitPrintColorAdjust: "exact",
+              printColorAdjust: "exact",
+            },
+            "#panorama-fold-one .panorama-fold-one-card--identity": {
+              padding: "7px 9px !important",
+            },
+            "#panorama-fold-one .panorama-fold-one-card--title": {
+              padding: "7px 10px !important",
+            },
+            "#panorama-fold-one .panorama-fold-one-card--intro": {
+              padding: "7px 9px !important",
+            },
+            "#panorama-fold-one .panorama-fold-one-card--executive": {
+              padding: "7px 10px !important",
+            },
+            "#panorama-fold-one .panorama-indice-duo": {
+              display: "grid !important",
+              gridTemplateColumns: "1fr 1fr !important",
+              gap: "8px !important",
+              alignItems: "stretch !important",
+            },
+            "#panorama-fold-one .panorama-fold-one-card--indice, #panorama-fold-one .panorama-fold-one-card--consultor":
+              {
+                padding: "7px 9px !important",
+                height: "100% !important",
+              },
+            "#panorama-fold-one .panorama-fold-one-card--indice": {
+              breakInside: "auto !important",
+              pageBreakInside: "auto !important",
+            },
+            "#panorama-fold-one .panorama-indice-lista": {
+              display: "block !important",
+              paddingLeft: "1.45rem !important",
+              fontSize: "9pt !important",
+              lineHeight: "1.28 !important",
+            },
+            "#panorama-fold-one .panorama-indice-lista li": {
+              margin: "0 !important",
+              padding: "0 !important",
+            },
+            "#panorama-fold-one .panorama-indice-header": {
+              marginBottom: "5px !important",
+            },
+            "#panorama-fold-one .panorama-consultor-dados": {
+              gap: "4px !important",
+            },
+            "#panorama-fold-one .panorama-resumo-executivo .panorama-exec-item": {
+              gap: "5px !important",
+              padding: "3px 5px !important",
+              marginBottom: "2px !important",
+            },
+            "#panorama-fold-one .panorama-intro .panorama-intro-blocos, #panorama-fold-one .panorama-intro .panorama-intro-referencias":
+              {
+                gap: "4px !important",
+              },
+            "#panorama-fold-one .panorama-doc-header-cols": {
+              paddingTop: "0 !important",
+              paddingBottom: "0 !important",
+            },
+            "#panorama-fold-one .panorama-doc-header-title": {
+              marginTop: "0 !important",
+            },
+            "#panorama-print-root .panorama-doc-qr-svg": {
+              width: "72px !important",
+              height: "72px !important",
+            },
+            "#panorama-fold-one .panorama-doc-qr": {
+              padding: "4px !important",
+              borderRadius: "4px !important",
+              background: "#fff !important",
+              border: "1px solid #e0e0e0 !important",
+            },
+            "#panorama-fold-one .panorama-intro .panorama-intro-bloco-interno": {
+              padding: "4px 5px !important",
+              borderRadius: "4px !important",
+              background: "rgba(255,255,255,0.72) !important",
+              border: "1px solid rgba(0,0,0,0.06) !important",
             },
             "#panorama-fold-one .panorama-resumo-section": {
               padding: "6px 10px !important",
@@ -373,6 +504,16 @@ export default function PanoramaInicialPage() {
               fontSize: "8pt !important",
               lineHeight: "1.3 !important",
             },
+            "#panorama-fold-two": {
+              breakBefore: "page",
+              pageBreakBefore: "always",
+            },
+            "#panorama-fold-two .panorama-resumo-section": {
+              padding: "10px 12px !important",
+            },
+            "#panorama-fold-two .panorama-glossario": {
+              marginTop: "0 !important",
+            },
             "#panorama-print-root .panorama-indice-section": {
               padding: "8px 10px !important",
               marginBottom: "8px !important",
@@ -411,6 +552,7 @@ export default function PanoramaInicialPage() {
           p: { xs: 2, md: 3 },
           maxWidth: 980,
           mx: "auto",
+          bgcolor: "#fff",
           fontSize: { xs: "0.95rem", md: "1rem", print: "11pt" },
         }}
       >
@@ -432,7 +574,16 @@ export default function PanoramaInicialPage() {
           </Alert>
         )}
 
-        <Box id="panorama-fold-one" sx={{ breakInside: "avoid" }}>
+        <Box
+          id="panorama-fold-one"
+          sx={{
+            breakInside: "avoid",
+            bgcolor: "#fff",
+            display: "flex",
+            flexDirection: "column",
+            gap: { xs: 2, md: 2.25, print: 0.85 },
+          }}
+        >
           <PanoramaDocumentHeader
             programa={programa}
             docTitle={DOC_TITLE}
@@ -441,10 +592,14 @@ export default function PanoramaInicialPage() {
           />
 
           <PanoramaIntroducao />
+          <PanoramaResumoExecutivo />
+          <PanoramaIndiceTopicos topicos={topicosIndice} consultor={snapshot?.consultorPrograma ?? null} />
+        </Box>
 
+        <Box id="panorama-fold-two" className="panorama-print-page-two">
           {b && (
             <Section
-              title="Resumo do diagnóstico (perguntas do PPSI)"
+              sectionId="panorama-sec-resumo-diagnostico"
               className="panorama-resumo-section"
               accent="diagnostico"
               titleIcon={<FactCheckOutlinedIcon fontSize="inherit" />}
@@ -504,10 +659,10 @@ export default function PanoramaInicialPage() {
             </Box>
           </Section>
           )}
+          {snapshot ? <PanoramaGlossario /> : null}
         </Box>
 
         <Section
-          title="O que já existe"
           sectionId="panorama-sec-entregas"
           className="panorama-indice-section"
           accent="entregas"
@@ -596,7 +751,6 @@ export default function PanoramaInicialPage() {
 
         {snapshot && snapshot.sistemasInventario.length > 0 && (
           <Section
-            title="Inventário de sistemas"
             sectionId="panorama-sec-sistemas"
             className="panorama-sistemas-section"
             accent="sistemas"
@@ -724,7 +878,6 @@ export default function PanoramaInicialPage() {
 
         {snapshot && (snapshot.lacunas.length > 0 || snapshot.atencoes.length > 0) && (
           <Section
-            title="O que precisa de decisão"
             sectionId="panorama-sec-decisao"
             accent="decisao"
             titleIcon={<GavelOutlinedIcon fontSize="inherit" />}
@@ -750,7 +903,6 @@ export default function PanoramaInicialPage() {
 
         {snapshot && snapshot.riscos.length > 0 && (
           <Section
-            title="Matriz de risco"
             sectionId="panorama-sec-riscos"
             accent="riscos"
             titleIcon={<WarningAmberOutlinedIcon fontSize="inherit" />}
@@ -857,7 +1009,6 @@ export default function PanoramaInicialPage() {
 
         {snapshot && snapshot.exposicao.length > 0 && (
           <Section
-            title="Se continuar assim"
             sectionId="panorama-sec-exposicao"
             accent="exposicao"
             titleIcon={<ReportProblemOutlinedIcon fontSize="inherit" />}
@@ -892,7 +1043,6 @@ export default function PanoramaInicialPage() {
 
         {snapshot && snapshot.planos.length > 0 && (
           <Section
-            title="Por onde começar"
             sectionId="panorama-sec-planos"
             accent="planos"
             titleIcon={<RouteOutlinedIcon fontSize="inherit" />}
@@ -993,16 +1143,24 @@ function Section({
   titleIcon,
   accent,
 }: {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   className?: string;
   sectionId?: string;
   titleIcon?: React.ReactNode;
   accent?: PanoramaSectionAccent;
 }) {
+  const meta = getPanoramaSectionMeta(sectionId);
+  const resolvedTitle = title ?? meta?.titulo ?? "";
+  const subtitle =
+    meta != null ? (
+      <PanoramaSectionFormalSubtitle subtitulo={meta.subtitulo} />
+    ) : undefined;
+
   return (
     <PanoramaAccordionSection
-      title={title}
+      title={resolvedTitle}
+      subtitle={subtitle}
       className={className}
       sectionId={sectionId}
       titleIcon={titleIcon}
@@ -1019,28 +1177,29 @@ function DiagnosticoBadge({ row }: { row: GapRow }) {
   const dId = row.diagnosticoId;
   if (dId == null) return <Typography variant="caption">—</Typography>;
   const theme = getDiagnosticoTheme(dId);
+  const eixoLabel = getDiagnosticoTreeLabel(dId, row.diagnosticoNome);
   return (
-    <Stack spacing={0.25} alignItems="flex-start">
+    <Stack spacing={0.25} alignItems="flex-start" sx={{ width: "100%" }}>
       <Chip
         size="small"
-        label={row.diagnosticoIndice || `D${dId}`}
+        label={eixoLabel}
         sx={{
           fontWeight: 800,
           fontSize: "0.75rem",
+          maxWidth: "100%",
+          height: "auto",
+          "& .MuiChip-label": { whiteSpace: "normal", lineHeight: 1.25, py: 0.35 },
           bgcolor: theme.softBg,
           color: theme.color,
           border: `1px solid ${alpha(theme.color, 0.35)}`,
         }}
       />
-      <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.35, whiteSpace: "normal", wordBreak: "break-word" }}>
-        {row.diagnosticoNome}
-      </Typography>
       {row.controleNome ? (
         <Typography
           variant="caption"
           display="block"
           color="text.secondary"
-          sx={{ lineHeight: 1.35, whiteSpace: "normal", wordBreak: "break-word" }}
+          sx={{ lineHeight: 1.35, whiteSpace: "normal", wordBreak: "break-word", textAlign: "left" }}
         >
           {row.controleNome}
         </Typography>
@@ -1107,22 +1266,33 @@ function GapTable({ rows, variant }: { rows: GapRow[]; variant: "lacuna" | "aten
               gridTemplateColumns: { xs: "1fr", sm: "minmax(140px, 1.1fr) minmax(72px, 0.65fr) minmax(0, 1.4fr)" },
               columnGap: { xs: 1, print: 1.25 },
               rowGap: { xs: 1, print: 0.5 },
-              alignItems: "start",
+              alignItems: "end",
             }}
           >
-            <Box className={PANORAMA_CELULA_ESTREITA} sx={{ minWidth: 0, textAlign: "left" }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                fontWeight={700}
-                display="block"
-                sx={{ mb: 0.35 }}
-              >
-                Eixo
-              </Typography>
+            <Box
+              className={[PANORAMA_CELULA_ESTREITA, "panorama-text-left"].join(" ")}
+              sx={{
+                minWidth: 0,
+                textAlign: "left !important",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                alignItems: "flex-start",
+              }}
+            >
               <DiagnosticoBadge row={row} />
             </Box>
-            <Box className={PANORAMA_CELULA_ESTREITA} sx={{ minWidth: 0, textAlign: "left" }}>
+            <Box
+              className={PANORAMA_CELULA_ESTREITA}
+              sx={{
+                minWidth: 0,
+                textAlign: "left",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                alignItems: "flex-start",
+              }}
+            >
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -1139,7 +1309,15 @@ function GapTable({ rows, variant }: { rows: GapRow[]; variant: "lacuna" | "aten
                 sx={{ fontWeight: 700 }}
               />
             </Box>
-            <Box sx={{ minWidth: 0, textAlign: "left" }}>
+            <Box
+              sx={{
+                minWidth: 0,
+                textAlign: "left",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+              }}
+            >
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -1151,7 +1329,7 @@ function GapTable({ rows, variant }: { rows: GapRow[]; variant: "lacuna" | "aten
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ fontSize: "0.92rem", lineHeight: 1.45, whiteSpace: "normal", wordBreak: "break-word" }}
+                sx={{ fontSize: "0.92rem", lineHeight: 1.45, whiteSpace: "normal", wordBreak: "break-word", textAlign: "left" }}
               >
                 {row.titulo}
               </Typography>

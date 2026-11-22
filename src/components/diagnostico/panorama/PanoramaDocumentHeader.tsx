@@ -3,6 +3,7 @@
 import React from "react";
 import { Box, Link as MuiLink, Stack, Typography } from "@mui/material";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
+import { QRCodeSVG } from "qrcode.react";
 import {
   formatCnpjBrasil,
   getPoliticaPdfCabecalhoLinhasMetadados,
@@ -12,6 +13,10 @@ import {
 import { FPSI_AUTHORSHIP } from "@/lib/credits/fpsiCredits";
 import { SITE_ORIGIN } from "@/lib/siteMetadata";
 import { getProgramaLogoDisplayUrl } from "@/lib/utils/programaDemoLogo";
+import {
+  panoramaFoldOneCardClass,
+  panoramaFoldOneCardSx,
+} from "@/lib/panorama/panoramaFoldOneCards";
 
 /** Tipografia da landing (hero) — cópia local para o panorama; a landing não é importada. */
 const PANORAMA_BRAND_FF = "var(--font-brand), Montserrat, system-ui, sans-serif";
@@ -141,24 +146,26 @@ export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm, o
     <Box
       className="panorama-doc-header"
       sx={{
-        mb: 3,
-        "@media print": { mb: 0.5 },
+        mb: { xs: 3, print: 0 },
+        bgcolor: "transparent",
+        display: "flex",
+        flexDirection: "column",
+        gap: { xs: 2, md: 2.25, print: 0 },
       }}
     >
       <Box
-        className="panorama-doc-header-identity panorama-text-left"
-        sx={{
-          width: "100%",
-          minWidth: 0,
-          bgcolor: "#fff",
-          textAlign: "left",
-          "& .MuiTypography-root, & .MuiLink-root": {
+        className={`panorama-doc-header-identity panorama-text-left ${panoramaFoldOneCardClass("identity")}`}
+        sx={[
+          panoramaFoldOneCardSx("identity"),
+          {
+            width: "100%",
+            minWidth: 0,
             textAlign: "left",
+            "& .MuiTypography-root, & .MuiLink-root": {
+              textAlign: "left",
+            },
           },
-          "@media print": {
-            bgcolor: "#fff",
-          },
-        }}
+        ]}
       >
         <Box
           className="panorama-doc-header-cols"
@@ -170,8 +177,8 @@ export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm, o
             maxWidth: "100%",
             minWidth: 0,
             boxSizing: "border-box",
-            py: { xs: 1.5, md: 2.25, print: 1 },
-            px: { xs: 1, md: 2, print: 1 },
+            py: { xs: 1.25, md: 1.75, print: 0 },
+            px: { xs: 1.25, md: 1.75, print: 0 },
             gap: 0,
             "@media print": {
               display: "grid",
@@ -227,93 +234,132 @@ export default function PanoramaDocumentHeader({ programa, docTitle, geradoEm, o
       </Box>
 
       <Box
-        className="panorama-doc-header-title panorama-text-center"
-        sx={{
-          mt: { xs: 2.75, md: 3, print: 1.25 },
-          px: { xs: 0.5, md: 2 },
-          textAlign: "center",
-          maxWidth: "100%",
-        }}
+        className={`panorama-doc-header-title ${panoramaFoldOneCardClass("title")}`}
+        sx={[
+          panoramaFoldOneCardSx("title"),
+          {
+            mt: 0,
+            px: { xs: 1.25, md: 1.75, print: 0 },
+            py: { xs: 1.25, md: 1.5, print: 0 },
+            maxWidth: "100%",
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: onlineHref ? "minmax(0, 1fr) auto" : "1fr" },
+            gap: { xs: 1.5, md: 2, print: 0.65 },
+            alignItems: { xs: "center", sm: "start" },
+            "@media print": {
+              gridTemplateColumns: onlineHref ? "minmax(0, 1fr) auto" : "1fr",
+              alignItems: "start",
+            },
+          },
+        ]}
       >
-        <Typography
-          component="h1"
-          className="panorama-text-center"
-          sx={{
-            fontSize: { xs: "1.35rem", md: "1.5rem", print: "11pt" },
-            fontWeight: 800,
-            color: "text.primary",
-            lineHeight: { xs: 1.2, print: 1.15 },
-            textAlign: "center",
-          }}
+        <Stack
+          spacing={{ xs: 0.35, print: 0.2 }}
+          className="panorama-doc-title-col panorama-text-center"
+          sx={{ minWidth: 0, width: "100%", alignItems: "center", textAlign: "center", alignSelf: "start" }}
         >
-          {docTitle}
-        </Typography>
-        {onlineHref ? (
-          <Box
-            className="panorama-doc-online-link panorama-text-center"
-            sx={{
-              mt: { xs: 0.5, print: 0.25 },
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              alignItems: "center",
-              columnGap: 0.5,
-              rowGap: 0.25,
-              textAlign: "center",
-            }}
-          >
-            <Typography
-              component="span"
-              sx={{
-                fontSize: { xs: "0.9rem", print: "8pt" },
-                color: "text.secondary",
-                lineHeight: 1.35,
-              }}
-            >
-              Veja online em:
-            </Typography>
-            <MuiLink
-              href={onlineHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              underline="hover"
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 0.35,
-                fontSize: { xs: "0.9rem", print: "8pt" },
-                fontWeight: 600,
-                color: "primary.main",
-                wordBreak: "break-all",
-                maxWidth: "100%",
-                "@media print": { color: PANORAMA_BRAND_INK },
-              }}
-            >
-              <LinkOutlinedIcon
-                aria-hidden
-                sx={{
-                  fontSize: { xs: 18, print: 14 },
-                  flexShrink: 0,
-                  "@media print": { fontSize: 12 },
-                }}
-              />
-              {onlineHref}
-            </MuiLink>
-          </Box>
-        ) : null}
-        {geradoEm ? (
           <Typography
+            component="h1"
             className="panorama-text-center"
             sx={{
-              mt: { xs: 0.75, print: 0.35 },
-              fontSize: { xs: "0.9rem", print: "7.5pt" },
-              color: "text.secondary",
-              lineHeight: { print: 1.2 },
+              fontSize: { xs: "1.35rem", md: "1.5rem", print: "11pt" },
+              fontWeight: 800,
+              color: "text.primary",
+              lineHeight: { xs: 1.2, print: 1.15 },
               textAlign: "center",
+              width: "100%",
             }}
           >
-            Data da leitura: {formatDataBr(geradoEm)}
+            {docTitle}
           </Typography>
+          {onlineHref ? (
+            <Box
+              className="panorama-doc-online-link"
+              sx={{
+                minWidth: 0,
+                width: "100%",
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "center",
+                columnGap: 0.5,
+                rowGap: 0.25,
+              }}
+            >
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: { xs: "0.9rem", print: "7.5pt" },
+                  color: "text.secondary",
+                  lineHeight: 1.35,
+                  flexShrink: 0,
+                }}
+              >
+                Online em:
+              </Typography>
+              <MuiLink
+                href={onlineHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.35,
+                  fontSize: { xs: "0.9rem", print: "7.5pt" },
+                  fontWeight: 600,
+                  color: "primary.main",
+                  wordBreak: "break-all",
+                  maxWidth: "100%",
+                  "@media print": { color: PANORAMA_BRAND_INK },
+                }}
+              >
+                <LinkOutlinedIcon
+                  aria-hidden
+                  sx={{
+                    fontSize: { xs: 16, print: 11 },
+                    flexShrink: 0,
+                  }}
+                />
+                {onlineHref}
+              </MuiLink>
+            </Box>
+          ) : null}
+          {geradoEm ? (
+            <Typography className="panorama-text-center" sx={{
+                fontSize: { xs: "0.9rem", print: "7.5pt" },
+                color: "text.secondary",
+                lineHeight: { print: 1.2 },
+                textAlign: "center",
+                width: "100%",
+              }}
+            >
+              Data da leitura: {formatDataBr(geradoEm)}
+            </Typography>
+          ) : null}
+        </Stack>
+        {onlineHref ? (
+          <Box
+            className="panorama-doc-qr"
+            sx={{
+              justifySelf: { xs: "center", sm: "end" },
+              alignSelf: "start",
+              textAlign: "center",
+              lineHeight: 0,
+              flexShrink: 0,
+              bgcolor: "transparent",
+              "@media print": { justifySelf: "end" },
+            }}
+          >
+            <QRCodeSVG
+              value={onlineHref}
+              size={88}
+              level="M"
+              className="panorama-doc-qr-svg"
+              style={{ display: "block" }}
+            />
+          </Box>
         ) : null}
       </Box>
     </Box>

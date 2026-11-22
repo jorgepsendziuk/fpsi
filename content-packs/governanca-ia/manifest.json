@@ -1,0 +1,14 @@
+{
+  "id": "governanca-ia",
+  "nome": "Governança de IA",
+  "versao": "1.0",
+  "descricao": "Domínio complementar de governança de inteligência artificial (FPSI)",
+  "origem": "proprio",
+  "titular": "FPSI",
+  "licenca": "MIT",
+  "url_fonte": null,
+  "scoring_profile": "ppsi-nim-nac-v1",
+  "ferramenta_min": "0.1.0",
+  "schema_versao": "1",
+  "pack_tipo": "conteudo"
+}

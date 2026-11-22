@@ -456,7 +456,7 @@ export function LandingPage() {
                   lineHeight: 1.35,
                 }}
               >
-                Framework de Privacidade e Segurança da Informação
+                Ferramenta de Privacidade e Segurança da Informação
               </Typography>
 
               <Typography
@@ -489,7 +489,7 @@ export function LandingPage() {
               >
                 {user
                   ? "Continue o diagnóstico, as evidências e o dia a dia do seu programa."
-                  : "O FPSI ajuda a montar e acompanhar esse programa — diagnóstico, evidências e conformidade LGPD — com base no PPSI 2.0, a metodologia de maturidade em privacidade e segurança da informação usada no setor público e útil para qualquer organização."}
+                  : "O FPSI integra diagnóstico de maturidade, evidências e conformidade LGPD com referenciais como PPSI 2.0, ISO/IEC 27701, NIST AI RMF e ISO/IEC 42001 — metodologias usadas no setor público e aplicáveis a qualquer organização."}
               </Typography>
 
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1.25 }}>

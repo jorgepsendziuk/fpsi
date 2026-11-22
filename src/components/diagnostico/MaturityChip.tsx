@@ -18,7 +18,11 @@ interface MaturityChipProps {
       naoSeAplica: number;
       somaRespostas: number;
     };
-    incc: {
+    nac?: {
+      valor: number;
+      nivelAdocao: string;
+    };
+    incc?: {
       nivel: number;
       multiplicador: number;
     };

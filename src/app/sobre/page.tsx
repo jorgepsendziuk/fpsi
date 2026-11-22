@@ -35,8 +35,10 @@ import { useContext, useState } from "react";
 import { ColorModeContext } from "@contexts/color-mode";
 import { CreditosDialog } from "@/components/credits/CreditosDialog";
 import {
+  CREDIT_LICENSING,
   FPSI_AUTHORSHIP,
   FPSI_GITHUB_URL,
+  FPSI_POSITIONING_ANCHOR,
   JORGE_PORTFOLIO_URL,
 } from "@/lib/credits/fpsiCredits";
 
@@ -76,6 +78,9 @@ export default function SobrePage() {
         <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: "bold" }}>
           Sobre o projeto
         </Typography>
+        <Typography variant="body1" paragraph sx={{ color: "text.secondary", maxWidth: 720 }}>
+          {FPSI_POSITIONING_ANCHOR}
+        </Typography>
 
         {/* Contexto regulatório */}
         <Paper variant="outlined" sx={{ p: 3, mt: 4 }}>
@@ -89,7 +94,7 @@ export default function SobrePage() {
             A <strong>Lei Geral de Proteção de Dados Pessoais (LGPD)</strong>, sancionada em agosto de 2018 e em vigor desde setembro de 2020, estabelece diretrizes rigorosas para a coleta, armazenamento, tratamento e compartilhamento de dados pessoais. Inspirada no GDPR europeu, impõe obrigações às organizações que lidam com essas informações.
           </Typography>
           <Typography variant="body1" paragraph>
-            Em março de 2023, o Ministério da Gestão e da Inovação em Serviços Públicos publicou a portaria que institui o <strong>Programa de Privacidade e Segurança da Informação (PPSI)</strong> e o <strong>Framework de Privacidade e Segurança da Informação (FPSI)</strong>. O programa evoluiu para a linha <strong>PPSI 2.0</strong>, com <strong>Guia do Framework</strong> atualizado pela Secretaria de Governo Digital, alinhado ao <strong>CIS Controls v8</strong>, aos referenciais NIST e ISO/IEC e à LGPD. Na estrutura vigente do guia há <strong>27 controles</strong> (dois eixos no Controle 0 — estruturação e instrumentos; Controles 1 a 18 de segurança da informação; Controles 19 a 25 de privacidade) e <strong>210 medidas</strong> de avaliação no catálogo alinhado ao PPSI 2.0. A <strong>ANPD</strong> utiliza essas diretrizes como referência; o setor privado também pode adotá-las em processos de adequação.
+            Em março de 2023, o Ministério da Gestão e da Inovação em Serviços Públicos publicou a portaria que institui o <strong>Programa de Privacidade e Segurança da Informação (PPSI)</strong> e o <strong>Framework de Privacidade e Segurança da Informação</strong> (publicação oficial do governo, distinta desta ferramenta fpsi.com.br). O programa evoluiu para a linha <strong>PPSI 2.0</strong>, com <strong>Guia do Framework</strong> atualizado pela Secretaria de Governo Digital, alinhado ao <strong>CIS Controls v8</strong>, aos referenciais NIST e ISO/IEC e à LGPD. Na estrutura vigente do guia há <strong>27 controles</strong> (dois eixos no Controle 0 — estruturação e instrumentos; Controles 1 a 18 de segurança da informação; Controles 19 a 25 de privacidade) e <strong>210 medidas</strong> de avaliação no catálogo alinhado ao PPSI 2.0. A <strong>ANPD</strong> utiliza essas diretrizes como referência; o setor privado também pode adotá-las em processos de adequação.
           </Typography>
         </Paper>
 
@@ -108,7 +113,7 @@ export default function SobrePage() {
           >
             <Box sx={{ flex: { md: "1 1 auto" }, minWidth: 0 }}>
               <Typography variant="body1" paragraph sx={{ mb: 1.5 }}>
-                Na adequação, <strong>governança</strong>, <strong>inventário e ROPA</strong>, <strong>diagnóstico do programa</strong> (PPSI 2.0), <strong>RIPD</strong> quando couber, <strong>plano de ação</strong> e <strong>canais com titulares e ANPD</strong> trabalham em conjunto — muitas vezes em paralelo. A figura ao lado condensa isso em um <strong>encadeamento de referência</strong>, para comunicar com clareza a gestores e ao encarregado (DPO) como o <strong>Framework FPSI</strong> organiza a jornada.
+                Na adequação, <strong>governança</strong>, <strong>inventário e ROPA</strong>, <strong>diagnóstico do programa</strong> (PPSI 2.0), <strong>RIPD</strong> quando couber, <strong>plano de ação</strong> e <strong>canais com titulares e ANPD</strong> trabalham em conjunto — muitas vezes em paralelo. A figura ao lado condensa isso em um <strong>encadeamento de referência</strong>, para comunicar com clareza a gestores e ao encarregado (DPO) como a <strong>ferramenta FPSI</strong> organiza a jornada.
               </Typography>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                 Etapas em foco
@@ -219,11 +224,11 @@ export default function SobrePage() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
             <CodeIcon color="primary" />
             <Typography variant="h6" component="h2" sx={{ fontWeight: "bold" }}>
-              Proposta: implementação open source (PPSI 2.0)
+              A ferramenta FPSI (software livre)
             </Typography>
           </Box>
           <Typography variant="body1" paragraph>
-            Esta aplicação é uma <strong>reimplementação web</strong> da lógica do <strong>Guia e catálogo PPSI 2.0</strong> (controles, medidas, maturidade e priorização alinhada ao CIS Controls v8 onde o guia assim prevê), com <strong>Next.js</strong>, <strong>React</strong> e <strong>Supabase</strong> — dados centralizados, multiusuário, trilha de auditoria e acesso por perfil. O objetivo é servir como <strong>software de referência open source</strong> complementar à planilha oficial, não substituto normativo do Guia ou dos atos do órgão gestor.
+            O <strong>fpsi.com.br</strong> é a <strong>Ferramenta de Privacidade e Segurança da Informação</strong> — plataforma web em <strong>Next.js</strong>, <strong>React</strong> e <strong>Supabase</strong> que apoia diagnóstico, governança e conformidade integrando o catálogo e a metodologia do <strong>PPSI 2.0</strong> (entre outros referenciais), com dados centralizados, multiusuário, trilha de auditoria e acesso por perfil. Código aberto sob <strong>MIT</strong>; textos do Guia/planilha permanecem sob licença do governo (CC BY-NC-ND). Não substitui o Guia oficial nem os atos do órgão gestor.
           </Typography>
           <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
             O que a plataforma cobre hoje (além do diagnóstico)
@@ -300,10 +305,23 @@ export default function SobrePage() {
                 </Link>{" "}
                 ({FPSI_AUTHORSHIP.orgName}). Código aberto sob licença {FPSI_AUTHORSHIP.license}.
               </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph sx={{ mb: 1.5 }}>
-                Fontes legais (LGPD, PPSI 2.0, ANPD) e frameworks de referência (CIS, NIST, ISO, AIGP/IAPP e correlatos)
-                estão devidamente creditados — com disclaimer de que o FPSI não é produto oficial desses órgãos.
+              <Typography variant="body2" color="text.secondary" paragraph sx={{ mb: 1 }}>
+                Fontes legais (LGPD, PPSI 2.0, ANPD) e padrões de referência (CIS, NIST, ISO, AIGP/IAPP e correlatos)
+                estão creditados — o FPSI não é produto oficial desses órgãos.
               </Typography>
+              <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 1.5 }}>
+                {CREDIT_LICENSING.map((line) => (
+                  <Typography
+                    key={line.slice(0, 40)}
+                    component="li"
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5 }}
+                  >
+                    {line}
+                  </Typography>
+                ))}
+              </Box>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                 <Button variant="outlined" size="small" onClick={() => setCreditosOpen(true)}>
                   Ver créditos completos

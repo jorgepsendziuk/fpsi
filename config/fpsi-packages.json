@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "packages": {
+    "publico": true,
+    "ppsi-2.0": true,
+    "governanca-ia": true,
+    "framework": true
+  },
+  "updatedAt": null
+}

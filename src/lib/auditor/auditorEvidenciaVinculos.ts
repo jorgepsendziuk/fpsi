@@ -99,7 +99,7 @@ export function vinculoGenerico(
 
 const EIXOS_PPSI = [1, 2, 3, 4];
 
-/** Garante iMC₀ / iSeg / iPriv / iAIGP mesmo quando a view não devolve os quatro. */
+/** Garante iBase / iSeg / iPriv / iAIGP mesmo quando a view não devolve os quatro. */
 export function completarDiagnosticosEixos(
   rows: AuditorDiagnostico[],
   nomeById?: Map<number, string>

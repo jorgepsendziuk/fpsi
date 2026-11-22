@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { FPSI_POSITIONING_ANCHOR } from "@/lib/credits/fpsiCredits";
 
 export const SITE_ORIGIN = "https://www.fpsi.com.br";
 
-const defaultTitle = "FPSI — Framework de Privacidade e Segurança da Informação";
-const defaultDescription =
-  "Quem lida com dados pessoais precisa de um programa de privacidade e segurança. O FPSI ajuda a montar e acompanhar diagnóstico, evidências e conformidade LGPD com base no PPSI 2.0.";
+const defaultTitle = "FPSI — Ferramenta de Privacidade e Segurança da Informação";
+const defaultDescription = FPSI_POSITIONING_ANCHOR;
 
 const ogImage = {
   url: "/og-home.png",
   width: 1200,
   height: 630,
-  alt: "FPSI — privacidade e segurança da informação (PPSI 2.0)",
+  alt: "FPSI — Ferramenta de Privacidade e Segurança da Informação",
   type: "image/png",
 } as const;
 

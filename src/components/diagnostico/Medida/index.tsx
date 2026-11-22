@@ -33,6 +33,7 @@ import 'dayjs/locale/pt-br';
 // Utils
 import dayjs from 'dayjs';
 import { respostas, respostasimnao, status_medida, status_plano_acao } from '../../../lib/utils/utils';
+import { getRespostaColor as nimRespostaColor } from '@/lib/utils/ppsiScoring';
 
 // Types
 import { Medida as MedidaType, Controle, Responsavel, TextFieldsState, MedidaTextField, ProgramaMedida } from '../../../lib/types/types';
@@ -125,24 +126,7 @@ const MedidaComponent: React.FC<MedidaProps> = ({
   };
 
   // Obter cor baseada na resposta
-  const getRespostaColor = (respostaId: number) => {
-    // Para diagnóstico 1 (sim/não) - usando respostasimnao
-    if (controle.diagnostico === 1) {
-      // respostasimnao: { id: 1, label: "Sim" }, { id: 2, label: "Não" }
-      return respostaId === 1 ? '#4CAF50' : respostaId === 2 ? '#FF5252' : '#9E9E9E';
-    }
-    
-    // Para outros diagnósticos (escala 1-6) - usando respostas
-    switch (respostaId) {
-      case 1: return '#4CAF50'; // Verde - Adota totalmente
-      case 2: return '#8BC34A'; // Verde claro - Adota em menor parte
-      case 3: return '#FFC107'; // Amarelo - Adota parcialmente  
-      case 4: return '#FF9800'; // Laranja - Há plano aprovado
-      case 5: return '#FF5722'; // Vermelho claro - Não adota
-      case 6: return '#9E9E9E'; // Cinza - Não se aplica
-      default: return '#9E9E9E';
-    }
-  };
+  const getRespostaColor = (respostaId: number) => nimRespostaColor(respostaId, controle.diagnostico);
 
   // Preparar array de respostas
   const respostasArray = controle.diagnostico === 1 ? respostasimnao : respostas;

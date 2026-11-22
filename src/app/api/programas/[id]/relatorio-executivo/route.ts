@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireProgramaAccess } from "@/lib/authz/requireProgramaAccess";
 import { isGapMedida, scorePrioridade } from "@/lib/planos/prioridadeScore";
+import { fetchMedidaIdsForProgramaCatalog } from "@/lib/packages/programaCatalogScope";
 
 async function buildSnapshot(supabase: SupabaseClient, programaId: number) {
   const { data: programa } = await supabase
     .from("programa")
-    .select("id, nome, empresa, unidade")
+    .select("id, nome, empresa, unidade, setor, perfil_escopo, escopo")
     .eq("id", programaId)
     .maybeSingle();
+
+  const allowedMedidaIds = new Set(
+    await fetchMedidaIdsForProgramaCatalog(supabase, programa ?? {})
+  );
 
   const { data: pmRows } = await supabase
     .from("programa_medida")
@@ -17,7 +22,7 @@ async function buildSnapshot(supabase: SupabaseClient, programaId: number) {
     )
     .eq("programa", programaId);
 
-  const rows = pmRows || [];
+  const rows = (pmRows || []).filter((r) => allowedMedidaIds.has(r.medida));
   const medidaIds = Array.from(new Set(rows.map((r) => r.medida)));
   const { data: medidas } = medidaIds.length
     ? await supabase

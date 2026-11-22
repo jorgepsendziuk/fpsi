@@ -1,3 +1,7 @@
+import {
+  isPublicoEnabled,
+  isPublicoMarketingPath,
+} from "@/lib/packages/installedPackages";
 import { updateSession } from "@/utils/supabase/middleware";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -45,6 +49,18 @@ function hasSupabaseAuthCookie(request: NextRequest): boolean {
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  if (!isPublicoEnabled() && isPublicoMarketingPath(path)) {
+    if (path === "/") {
+      const login = request.nextUrl.clone();
+      login.pathname = "/login";
+      return NextResponse.redirect(login);
+    }
+    const login = request.nextUrl.clone();
+    login.pathname = "/login";
+    login.searchParams.set("reason", "publico-disabled");
+    return NextResponse.redirect(login);
+  }
 
   // Confirmação de e-mail / magic link do Supabase cai em Site URL (?code=...).
   const authCode = request.nextUrl.searchParams.get("code");

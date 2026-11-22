@@ -22,9 +22,9 @@ export function classificarRespostaPanorama(
     return "atencao";
   }
 
-  if (n === 1 || n === 2) return "registrado";
-  if (n === 3) return "atencao";
-  if (n === 4 || n === 5) return "lacuna";
+  if (n === 4 || n === 5) return "registrado";
+  if (n === 2 || n === 3) return "atencao";
+  if (n === 1) return "lacuna";
   return "nao_avaliado";
 }
 

@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { ContentPackIndicatorRow } from "@/components/content-packs/ContentPackIndicatorRow";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import PoliticaStylePrintHeader from "@/components/diagnostico/relatorio/PoliticaStylePrintHeader";
 import { useProgramaIdFromParam } from "@/hooks/useProgramaIdFromParam";
@@ -161,7 +162,17 @@ export default function RelatorioExecutivoPage() {
           title="Relatório Técnico Executivo"
           description="Achados, evidências, riscos e plano priorizado para tomada de decisão"
         />
-        <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2, mt: 1 }} flexWrap="wrap" useFlexGap>
+          <ContentPackIndicatorRow
+            programa={{
+              setor:
+                programa && typeof (programa as { setor?: unknown }).setor === "number"
+                  ? (programa as { setor: number }).setor
+                  : undefined,
+              escopo: (programa as { escopo?: unknown } | null)?.escopo,
+            }}
+            showGovernancaIa
+          />
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}

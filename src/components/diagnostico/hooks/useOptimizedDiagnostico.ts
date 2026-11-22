@@ -242,8 +242,8 @@ export const useOptimizedDiagnostico = (programaId: number) => {
         if (controle.diagnostico === 1) {
           peso = resposta.resposta === 1 ? 1 : 0;
         } else {
-          const pesos = { 1: 1, 2: 0.75, 3: 0.5, 4: 0.25, 5: 0 };
-          peso = pesos[resposta.resposta as keyof typeof pesos] || 0;
+          const pesos: Record<number, number> = { 1: 0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1 };
+          peso = pesos[resposta.resposta as number] ?? 0;
         }
         somaRespostas += peso;
       }
@@ -253,27 +253,20 @@ export const useOptimizedDiagnostico = (programaId: number) => {
       return { score: 0, label: 'Sem medidas', color: '#9E9E9E' };
     }
 
-    // Aplicar fórmula oficial
-    const baseIndex = somaRespostas / totalMedidas;
-    const inccMultiplier = 1 + ((controle.nivel || 0) * 1 / 5);
-    const finalScore = (baseIndex / 2) * inccMultiplier;
+    const finalScore = somaRespostas / totalMedidas;
 
-    // Determinar label e cor
     let label = 'Inicial';
-    let color = '#FF5252';
-    
+    let color = '#C62828';
+
     if (finalScore >= 0.9) {
       label = 'Aprimorado';
       color = '#2E7D32';
-    } else if (finalScore >= 0.7) {
-      label = 'Em Aprimoramento';
-      color = '#4CAF50';
-    } else if (finalScore >= 0.5) {
-      label = 'Intermediário';
-      color = '#FFC107';
+    } else if (finalScore >= 0.6) {
+      label = 'Em aprimoramento';
+      color = '#388E3C';
     } else if (finalScore >= 0.3) {
-      label = 'Básico';
-      color = '#FF9800';
+      label = 'Intermediário';
+      color = '#F9A825';
     }
 
     return { score: finalScore, label, color };
@@ -287,38 +280,47 @@ export const useOptimizedDiagnostico = (programaId: number) => {
       return { score: 0, label: 'Sem controles', color: '#9E9E9E' };
     }
 
-    let totalScore = 0;
-    let controlesComDados = 0;
+    let somaPesos = 0;
+    let totalMedidas = 0;
 
-    controles.forEach(controle => {
-      const maturity = getControleMaturidade(controle);
-      if (maturity.score > 0) {
-        totalScore += maturity.score;
-        controlesComDados++;
-      }
+    controles.forEach((controle) => {
+      const respostasControle = Object.entries(state.respostasPorChave)
+        .filter(([key]) => key.includes(`-${controle.id}-${programaId}`))
+        .map(([, resposta]) => resposta);
+
+      respostasControle.forEach((resposta) => {
+        if (resposta.resposta === 6) return;
+        totalMedidas++;
+        if (resposta.resposta == null) return;
+        let peso = 0;
+        if (diagnosticoId === 1) {
+          peso = resposta.resposta === 1 ? 1 : 0;
+        } else {
+          const pesos: Record<number, number> = { 1: 0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1 };
+          peso = pesos[resposta.resposta as number] ?? 0;
+        }
+        somaPesos += peso;
+      });
     });
 
-    const averageScore = controlesComDados > 0 ? totalScore / controlesComDados : 0;
-    
+    const averageScore = totalMedidas > 0 ? somaPesos / totalMedidas : 0;
+
     let label = 'Inicial';
-    let color = '#FF5252';
-    
+    let color = '#C62828';
+
     if (averageScore >= 0.9) {
       label = 'Aprimorado';
       color = '#2E7D32';
-    } else if (averageScore >= 0.7) {
-      label = 'Em Aprimoramento';
-      color = '#4CAF50';
-    } else if (averageScore >= 0.5) {
-      label = 'Intermediário';
-      color = '#FFC107';
+    } else if (averageScore >= 0.6) {
+      label = 'Em aprimoramento';
+      color = '#388E3C';
     } else if (averageScore >= 0.3) {
-      label = 'Básico';
-      color = '#FF9800';
+      label = 'Intermediário';
+      color = '#F9A825';
     }
 
     return { score: averageScore, label, color };
-  }, [state.controlesPorDiagnostico, getControleMaturidade]);
+  }, [state.controlesPorDiagnostico, state.respostasPorChave, programaId]);
 
   // Construir árvore de navegação otimizada
   const treeData = useMemo((): TreeNode[] => {

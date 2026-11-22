@@ -1,0 +1,14 @@
+{
+  "id": "framework",
+  "nome": "Framework",
+  "versao": "2.0.0",
+  "descricao": "Catálogo enxuto FPSI para empresas privadas (17 controles, 102 medidas; CSI, CPDP, ETIR). Distinto do PPSI 2.0 integral.",
+  "origem": "proprio",
+  "titular": "FPSI",
+  "licenca": "MIT",
+  "url_fonte": null,
+  "scoring_profile": "framework-v2",
+  "ferramenta_min": "0.1.0",
+  "schema_versao": "2",
+  "pack_tipo": "conteudo"
+}

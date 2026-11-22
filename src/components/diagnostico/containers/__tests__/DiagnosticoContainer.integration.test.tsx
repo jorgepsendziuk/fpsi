@@ -137,12 +137,6 @@ describe('DiagnosticoContainer Integration', () => {
     expect(calculateSumOfResponsesForDiagnostico).toHaveBeenCalledWith(1, mockProps.state);
     expect(getMaturityLabel).toHaveBeenCalledWith(50);
     
-    // Simula mudança de INCC
-    const inccInput = screen.getByLabelText('INCC');
-    fireEvent.change(inccInput, { target: { value: '75' } });
-    
-    // Verifica se o cálculo é atualizado
-    expect(calculateSumOfResponsesForDiagnostico).toHaveBeenCalledTimes(2);
   });
 
   it('should handle error propagation', async () => {

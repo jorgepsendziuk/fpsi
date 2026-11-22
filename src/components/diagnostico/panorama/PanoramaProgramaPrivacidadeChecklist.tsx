@@ -9,6 +9,8 @@ import {
   type PanoramaProgramaPrivacidadeQuesito,
 } from "@/lib/panorama/panoramaProgramaPrivacidadeQuesitos";
 import { PanoramaAccordionSection } from "@/components/diagnostico/panorama/PanoramaAccordionSection";
+import { PanoramaSectionFormalSubtitle } from "@/components/diagnostico/panorama/PanoramaSectionFormalSubtitle";
+import { getPanoramaSectionMeta } from "@/lib/panorama/panoramaSectionMeta";
 
 function MarcadorSimNao({ comObs }: { comObs: boolean }) {
   return (
@@ -173,19 +175,29 @@ export default function PanoramaProgramaPrivacidadeChecklist() {
     itens: PANORAMA_PROGRAMA_PRIVACIDADE_QUESITOS.filter((q) => q.grupo === grupo),
   })).filter((g) => g.itens.length > 0);
 
+  const checklistMeta = getPanoramaSectionMeta("panorama-sec-checklist-inicio");
+
   return (
     <PanoramaAccordionSection
       sectionId="panorama-sec-checklist-inicio"
       className="panorama-text-left panorama-checklist-programa"
       accent="checklist"
-      title="Quesitos para validar o início do programa"
+      title={checklistMeta?.titulo ?? "Quesitos para validar o início do programa"}
       titleIcon={<PlaylistAddCheckOutlinedIcon fontSize="inherit" />}
       subtitle={
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontSize: { print: "7.5pt" }, lineHeight: 1.35 }}>
-          Checklist alinhado à LGPD e às orientações da ANPD. Confirme o que já existe na organização em relação a este panorama.
-        </Typography>
+        checklistMeta ? (
+          <PanoramaSectionFormalSubtitle subtitulo={checklistMeta.subtitulo} />
+        ) : undefined
       }
     >
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ mb: { xs: 1.5, print: 0.75 }, lineHeight: 1.45, fontSize: { print: "8pt" } }}
+      >
+        Confirme o que já existe na organização em relação a este panorama. Itens alinhados à LGPD e às orientações da
+        ANPD.
+      </Typography>
       <Stack spacing={{ xs: 2, print: 1 }} className="panorama-checklist-grupos">
         {porGrupo.map(({ grupo, itens }) => (
           <Box key={grupo}>

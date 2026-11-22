@@ -56,8 +56,10 @@ export function PanoramaAccordionSection({
           overflow: "hidden",
           p: { xs: 0, print: 0 },
           mb: { xs: 2.5, print: 2 },
-          breakInside: "avoid",
+          breakInside: "auto",
           scrollMarginTop: { xs: 72, md: 80 },
+          WebkitPrintColorAdjust: "exact",
+          printColorAdjust: "exact",
           ...(accent
             ? {
                 bgcolor: pal.tint,
@@ -85,10 +87,10 @@ export function PanoramaAccordionSection({
               lineHeight: 0,
               fontSize: { xs: 88, md: 112, print: 72 },
               color: pal.main,
-              opacity: pal.watermark,
+              opacity: 0.12,
               pointerEvents: "none",
               "& .MuiSvgIcon-root": { fontSize: "inherit" },
-              "@media print": { opacity: pal.watermarkPrint, fontSize: 64 },
+              "@media print": { opacity: 0.1, fontSize: 64 },
             };
           }}
         >

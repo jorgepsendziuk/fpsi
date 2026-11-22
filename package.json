@@ -21,6 +21,8 @@
     "db:dump": "supabase db dump -f database/supabase_dump_$(date +%Y%m%d_%H%M).sql",
     "db:debug": "node --env-file=.env.local scripts/debug-maturidade.mjs",
     "db:debug:keys": "node --env-file=.env.local scripts/debug-maturidade.mjs keys",
+    "install:fpsi": "node --env-file=.env.local scripts/install-fpsi.mjs",
+    "test": "vitest run",
     "refine": "refine"
   },
   "dependencies": {

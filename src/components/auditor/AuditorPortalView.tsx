@@ -530,7 +530,7 @@ export function AuditorPortalView({ data, token }: { data: AuditorPortalPayload;
                 Maturidade por diagnóstico
               </Typography>
               <Typography variant="body2" sx={{ color: landing.muted }}>
-                A média resume os quatro eixos PPSI (iMC₀, iSeg, iPriv, iAIGP). Cada card é o índice daquele
+                A média resume os quatro eixos PPSI (iBase, iSeg, iPriv, iAIGP). Cada card é o índice daquele
                 diagnóstico — não um percentual.
               </Typography>
             </Box>

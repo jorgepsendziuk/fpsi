@@ -594,6 +594,18 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
   
   // First, ensure programa_controle records exist for this program
   await ensureProgramaControleRecords(programaId);
+
+  const { data: progRow } = await supabaseBrowserClient
+    .from("programa")
+    .select("setor, escopo")
+    .eq("id", programaId)
+    .maybeSingle();
+  const { operationalPackIdForPrograma, governancaIaPackId } = await import(
+    "@/lib/packages/programaContentPack"
+  );
+  const operationalPackId = operationalPackIdForPrograma(progRow ?? undefined);
+  const packFilter =
+    diagnosticoId === 4 ? governancaIaPackId() : operationalPackId;
   
   // Debug: Check if controles exist for this diagnostico first
   const { data: allControlesForDiag } = await supabaseBrowserClient
@@ -616,23 +628,26 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
     `)
     .eq("diagnostico", diagnosticoId)
     .eq("programa_controle.programa", programaId)
+    .eq("pack_id", packFilter)
     .order("id", { ascending: true });
   
   if (error) {
     console.error(`fetchControles error:`, error);
     throw error;
   }
+
+  const dataFiltered = data;
   
-  console.log(`fetchControles: Raw data from Supabase:`, data?.length || 0);
+  console.log(`fetchControles: Raw data from Supabase:`, dataFiltered?.length || 0);
   console.log(`fetchControles: Full data:`, data);
   
-  if (!data || data.length === 0) {
+  if (!dataFiltered || dataFiltered.length === 0) {
     console.log(`fetchControles: No controles found for diagnostico ${diagnosticoId}, programa ${programaId}`);
     return [];
   }
   
   // Flatten the data structure to maintain compatibility
-  const flattenedData = data?.map(controle => {
+  const flattenedData = dataFiltered?.map(controle => {
     console.log(`Processing controle ${controle.id}, programa_controle:`, controle.programa_controle);
     return {
       ...controle,
@@ -654,12 +669,17 @@ export const fetchControles = async (diagnosticoId: number, programaId: number):
 
 export const fetchMedidas = async (controleId: number, programaId: number): Promise<any[]> => {
   console.log(`fetchMedidas: Fetching medidas for controle ${controleId}, programa ${programaId}`);
-  
+
+  const prog = await getProgramaRowForCatalog(programaId);
+  const { resolveCatalogPackIds } = await import("@/lib/packages/programaCatalogScope");
+  const packIds = resolveCatalogPackIds(prog ?? undefined);
+
   // First fetch the static measure data
   const { data: medidasData, error: medidasError } = await supabaseBrowserClient
     .from("medida")
     .select("*")
     .eq("id_controle", controleId)
+    .in("pack_id", packIds)
     .order("id_medida", { ascending: true });
 
   if (medidasError) {
@@ -898,6 +918,8 @@ export const fetchMedidasStructure = async (
 export const fetchAllProgramaMedidas = async (programaId: number) => {
   await ensureProgramaMedidaRecords(programaId);
 
+  const allowedMedidaIds = new Set(await getMedidaIdsForProgramaCatalog(programaId));
+
   const { data, error } = await supabaseBrowserClient
     .from("programa_medida")
     .select("*")
@@ -908,7 +930,10 @@ export const fetchAllProgramaMedidas = async (programaId: number) => {
     throw error;
   }
 
-  const medidaIds = (data || []).map((pm: { medida: number }) => pm.medida);
+  const scopedRows = (data || []).filter((pm: { medida: number }) =>
+    allowedMedidaIds.has(pm.medida)
+  );
+  const medidaIds = scopedRows.map((pm: { medida: number }) => pm.medida);
   if (medidaIds.length === 0) return {} as { [key: string]: any };
 
   const { data: medidasData } = await supabaseBrowserClient
@@ -917,7 +942,7 @@ export const fetchAllProgramaMedidas = async (programaId: number) => {
     .in("id", medidaIds);
 
   const programaMedidasMap: { [key: string]: any } = {};
-  (data || []).forEach((programaMedida: any) => {
+  scopedRows.forEach((programaMedida: any) => {
     const medida = (medidasData || []).find((m: { id: number }) => m.id === programaMedida.medida);
     if (medida) {
       const key = `${programaMedida.medida}-${(medida as { id_controle: number }).id_controle}-${programaId}`;
@@ -931,17 +956,15 @@ export const fetchAllProgramaMedidas = async (programaId: number) => {
 export const ensureProgramaMedidaRecords = async (programaId: number) => {
 
   console.log(`ensureProgramaMedidaRecords: Checking programa ${programaId}`);
-  
-  // Get all medidas in the system
-  const { data: allMedidas } = await supabaseBrowserClient
-    .from("medida")
-    .select("id");
-    
-  if (!allMedidas || allMedidas.length === 0) {
-    console.log(`ensureProgramaMedidaRecords: No medidas found in system`);
+
+  await ensureProgramaControleRecords(programaId);
+
+  const catalogMedidaIds = await getMedidaIdsForProgramaCatalog(programaId);
+  if (catalogMedidaIds.length === 0) {
+    console.log(`ensureProgramaMedidaRecords: No medidas in catalog for programa`);
     return { data: null, error: null };
   }
-  
+
   // Check which programa_medida records already exist for this program
   const { data: existingRecords } = await supabaseBrowserClient
     .from("programa_medida")
@@ -949,7 +972,9 @@ export const ensureProgramaMedidaRecords = async (programaId: number) => {
     .eq("programa", programaId);
   
   const existingMedidaIds = new Set(existingRecords?.map(r => r.medida) || []);
-  const missingMedidas = allMedidas.filter(m => !existingMedidaIds.has(m.id));
+  const missingMedidas = catalogMedidaIds
+    .filter((id) => !existingMedidaIds.has(id))
+    .map((id) => ({ id }));
   
   if (missingMedidas.length === 0) {
     console.log(`ensureProgramaMedidaRecords: All programa_medida records already exist`);
@@ -1059,6 +1084,8 @@ export type CreateProgramaPayload = {
   atividade_principal_organizacao?: string | null;
   /** Preset de escopo na criação (default: essencial para setor 2, completo para setor 1) */
   perfil_escopo?: "essencial" | "completo" | "com_ia";
+  /** Empresa privada: framework (default) ou PPSI 2.0 explícito */
+  operational_pack_id?: "framework" | "ppsi-2.0";
   /** Vincular programa a uma empresa já cadastrada */
   empresa_id?: number | null;
   /** Ou criar nova empresa e vincular (ignorado se empresa_id for informado) */
@@ -1249,6 +1276,9 @@ export const createPrograma = async (payload: CreateProgramaPayload) => {
     payload.perfil_escopo ??
     (payload.setor === 1 ? "completo" : "essencial");
   const escopoBuilt = buildEscopoFromPreset(defaultPreset);
+  if (payload.setor === 2 && payload.operational_pack_id) {
+    escopoBuilt.escopo.operational_pack_id = payload.operational_pack_id;
+  }
 
   const insertPayload: Record<string, unknown> = {
     nome: payload.nome || null,
@@ -1393,24 +1423,41 @@ export const uploadProgramaLogo = async (
   return { success: true };
 };
 
+async function getProgramaRowForCatalog(programaId: number) {
+  const { data: prog } = await supabaseBrowserClient
+    .from("programa")
+    .select("setor, perfil_escopo, escopo")
+    .eq("id", programaId)
+    .maybeSingle();
+  return prog;
+}
+
+async function getControleIdsForProgramaCatalog(programaId: number): Promise<number[]> {
+  const prog = await getProgramaRowForCatalog(programaId);
+  const { fetchControleIdsForProgramaCatalog } = await import(
+    "@/lib/packages/programaCatalogScope"
+  );
+  return fetchControleIdsForProgramaCatalog(supabaseBrowserClient, prog ?? {});
+}
+
+async function getMedidaIdsForProgramaCatalog(programaId: number): Promise<number[]> {
+  const prog = await getProgramaRowForCatalog(programaId);
+  const { fetchMedidaIdsForProgramaCatalog } = await import(
+    "@/lib/packages/programaCatalogScope"
+  );
+  return fetchMedidaIdsForProgramaCatalog(supabaseBrowserClient, prog ?? {});
+}
+
 export const createProgramaControlesForProgram = async (programaId: number) => {
+  const controleIds = await getControleIdsForProgramaCatalog(programaId);
+  if (controleIds.length === 0) return { data: null, error: null };
 
-  // Get all existing controles
-  const { data: controles } = await supabaseBrowserClient
-    .from("controle")
-    .select("id");
-
-  if (!controles || controles.length === 0) return { data: null, error: null };
-
-  // Create programa_controle records for all controles
-  const programaControles = controles.map(controle => ({
+  const programaControles = controleIds.map((controleId) => ({
     programa: programaId,
-    controle: controle.id
+    controle: controleId,
   }));
 
-  return await supabaseBrowserClient
-    .from("programa_controle")
-    .insert(programaControles);
+  return await supabaseBrowserClient.from("programa_controle").insert(programaControles);
 };
 
 // New function to ensure programa_controle records exist
@@ -1425,12 +1472,11 @@ export const ensureProgramaControleRecords = async (programaId: number) => {
 
   const existingControleIds = new Set(existingRecords?.map((r) => r.controle) || []);
 
-  const { data: allControles } = await supabaseBrowserClient
-    .from("controle")
-    .select("id");
+  const allowedIds = await getControleIdsForProgramaCatalog(programaId);
+  const allControles = allowedIds.map((id) => ({ id }));
 
-  if (!allControles || allControles.length === 0) {
-    console.log(`ensureProgramaControleRecords: No controles found in system`);
+  if (allControles.length === 0) {
+    console.log(`ensureProgramaControleRecords: No controles for programa catalog`);
     return { data: existingRecords, error: null };
   }
 

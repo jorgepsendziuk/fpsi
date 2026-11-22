@@ -24,7 +24,7 @@ export const PPSI_FRAMEWORKS: PpsiFrameworkRef[] = [
     label: "PPSI 2.0",
     title: "PPSI 2.0 — Programa de Privacidade e Segurança da Informação",
     summary:
-      "Metodologia pública do Governo Federal (SGD) para maturidade em privacidade e segurança da informação. Organiza controles e medidas em três eixos — Estrutura, Segurança da Informação e Privacidade — com indicadores (iMC, iPriv) e guias complementares. O FPSI usa o PPSI 2.0 como espinha dorsal do diagnóstico e do plano de trabalho.",
+      "Metodologia pública do Governo Federal (SGD) para maturidade em privacidade e segurança da informação. Organiza controles e medidas em três eixos — segmento base, Segurança da Informação e Privacidade — com indicadores iBase, iSeg e iPriv (IN 4/2026). O FPSI usa o PPSI 2.0 como espinha dorsal do diagnóstico e do plano de trabalho.",
     bullets: [
       "Controles de estruturação (papéis, instrumentos, políticas PGSI/PGP)",
       "Controles CIS adaptados ao setor público (ativos, software, dados, contas…)",
@@ -101,7 +101,7 @@ export const PPSI_FRAMEWORKS: PpsiFrameworkRef[] = [
       "Referências técnicas (SP 800-*) em várias medidas",
     ],
     usoNoFpsi:
-      "Ao ler normas de referência nas medidas, links NIST abrem a fonte oficial. O iMC do diagnóstico resume maturidade alinhada a essa cultura de melhoria.",
+      "Ao ler normas de referência nas medidas, links NIST abrem a fonte oficial. Os indicadores iBase, iSeg e iPriv resumem a maturidade por segmento.",
     links: [
       { label: "NIST Cybersecurity Framework", url: "https://www.nist.gov/cyberframework" },
       {

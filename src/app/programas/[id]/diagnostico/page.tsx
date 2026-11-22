@@ -71,12 +71,12 @@ import {
   getDiagnosticoTreeLabel,
   getMedidaTreeLabel,
 } from "../../../../lib/utils/diagnosticoTreeLabels";
+import { ContentPackIndicatorRow } from "@/components/content-packs/ContentPackIndicatorRow";
 import { PageHeroHeader } from "@/components/common/PageHeroHeader";
 import { getDiagnosticoTheme } from "../../../../lib/utils/diagnosticoThemes";
 import {
   GrupoImpleFilter,
   isDiagnosticoSeguranca,
-  matchesGrupoFilter,
 } from "../../../../lib/utils/grupoImplementacao";
 import {
   isDiagnosticoAtivo,
@@ -88,6 +88,11 @@ import {
   whitelistIdMedidaParaPreset,
 } from "@/lib/programa/perfilEscopo";
 import { sortMedidasByIdMedida } from "../../../../lib/utils/medidaSort";
+import { operationalPackIdForPrograma } from "@/lib/packages/programaContentPack";
+import {
+  medidaMatchesGiFilterForPack,
+  packUsesPpsiGiClassification,
+} from "@/lib/packages/programaCatalogScope";
 
 const DRAWER_WIDTH = 380;
 
@@ -142,13 +147,18 @@ export default function DiagnosticoPage() {
     };
   }, [programa]);
 
+  const operationalPackId = useMemo(
+    () => (programa ? operationalPackIdForPrograma(programa) : "framework"),
+    [programa]
+  );
+
   const matchGiMedida = useCallback(
     (grupo_imple: string | undefined | null, id_medida?: string | null) =>
-      matchesGrupoFilter(grupo_imple, grupoImpleFilter, {
+      medidaMatchesGiFilterForPack(operationalPackId, grupo_imple, grupoImpleFilter, {
         idMedida: id_medida,
         whitelistIdMedida: giWhitelist,
       }),
-    [grupoImpleFilter, giWhitelist]
+    [grupoImpleFilter, giWhitelist, operationalPackId]
   );
 
   const diagnosticosAtivos = useMemo(() => {
@@ -174,6 +184,10 @@ export default function DiagnosticoPage() {
 
   useEffect(() => {
     if (!programa) return;
+    const pack = operationalPackIdForPrograma(programa);
+    if (!packUsesPpsiGiClassification(pack)) {
+      return;
+    }
     const { giAlvo } = resolveProgramaEscopo(programa);
     if (giAlvo) {
       setGrupoImpleFilter((prev) => (prev === "all" ? (giAlvo as GrupoImpleFilter) : prev));
@@ -739,7 +753,7 @@ export default function DiagnosticoPage() {
       });
 
       // Invalidar cache de maturidade
-      invalidateCache('controle', controleId);
+      invalidateCache();
 
       // Atualizar programaMedidas local (inclui updated_at do banco)
       const key = `${medidaId}-${controleId}-${programaId}`;
@@ -1182,8 +1196,7 @@ export default function DiagnosticoPage() {
             }
             
             // Invalidar cache e recarregar dados
-            invalidateCache('controle', controleId);
-            invalidateCache('diagnostico', diagnostico.id);
+            invalidateCache();
           }
         } catch (error) {
           console.error('Erro ao atualizar INCC:', error);
@@ -1313,6 +1326,12 @@ export default function DiagnosticoPage() {
                 </>
               }
             />
+            <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
+              <ContentPackIndicatorRow
+                programa={{ setor: programa?.setor, escopo: programa?.escopo ?? programaEscopo }}
+                showGovernancaIa={programaEscopo ? isDiagnosticoAtivo(programaEscopo, 4) : false}
+              />
+            </Box>
         </Box>
         </Paper>
 

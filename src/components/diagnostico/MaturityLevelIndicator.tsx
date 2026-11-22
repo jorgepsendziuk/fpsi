@@ -15,7 +15,7 @@ interface MaturityLevelIndicatorProps {
   controleNome?: string;
 }
 
-/** Indicador único: pontos de nível (1–5) + índice iMC + rótulo — sem duplicar informação. */
+/** Indicador único: pontos de nível + índice do eixo (iBase/iSeg/iPriv) + rótulo. */
 export function MaturityLevelIndicator({
   score,
   label,

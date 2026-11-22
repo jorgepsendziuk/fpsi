@@ -1,10 +1,10 @@
-# FPSI — Framework de Privacidade e Segurança da Informação
+# FPSI — Ferramenta de Privacidade e Segurança da Informação
 
-**Implante e gerencie, em um único ambiente, o Programa de Privacidade e Segurança da Informação da sua organização.**
+**Implante e gerencie, em um único ambiente, o programa de privacidade e segurança da informação da sua organização.**
 
-Diagnóstico de maturidade, plano de trabalho, políticas, mapeamento de dados, ROPA, atendimento aos titulares, evidências, indicadores e assistência por IA — alinhados à **LGPD**, ao **PPSI 2.0** do Governo Federal e a práticas de **governança de IA (AIGP)**.
+O FPSI integra, em uma única plataforma, diferentes referenciais de privacidade, segurança da informação e governança de IA, incluindo **LGPD**, **PPSI 2.0**, **ISO/IEC 27701**, **NIST AI RMF** e **ISO/IEC 42001**.
 
-Alternativa em **software livre** à ferramenta oficial em planilha Excel: multi-usuário, sem dependência de software proprietário e adaptável à realidade de cada organização.
+Diagnóstico de maturidade, plano de trabalho, políticas, mapeamento de dados, ROPA, atendimento aos titulares, evidências, indicadores e assistência por IA — em software web colaborativo, multiusuário e adaptável à realidade de cada organização.
 
 **Produção:** [fpsi.com.br](https://fpsi.com.br) (canônico: `www.fpsi.com.br`) · **Demo:** [fpsi.com.br/demo/login](https://fpsi.com.br/demo/login)
 
@@ -41,9 +41,14 @@ Há também uma camada visual opcional — o **Escritório de governança** — 
 
 ## Origem do projeto
 
-O projeto nasceu de uma pesquisa com profissionais da área (incl. formação CDPO/BR), que identificou a eficiência da ferramenta oficial em Excel para validação de medidas e nível de maturidade, mas também suas limitações: acessibilidade, trabalho distribuído e dependência de software proprietário. Esta implementação usa tecnologias modernas para oferecer um software de referência em **modelo open source**, permitindo colaboração da comunidade, implantação em órgãos públicos e empresas, e até oferta como PaaS (Privacy as a Service).
+O projeto nasceu de uma pesquisa com profissionais da área (incl. formação CDPO/BR), que identificou a utilidade da metodologia do PPSI e da ferramenta oficial em Excel, e também limitações práticas: acessibilidade, trabalho distribuído e dependência de software proprietário. O FPSI usa tecnologias modernas para oferecer uma plataforma colaborativa em **modelo open source (MIT)**, permitindo evolução com a comunidade, implantação em órgãos públicos e empresas, e adaptação por consultoria.
 
 **Documentação da pesquisa e do contexto regulatório:** [docs/essentials/CONTEXTO_PESQUISA_ORIGEM.md](docs/essentials/CONTEXTO_PESQUISA_ORIGEM.md)
+
+## Licenças
+
+- **Código e documentação técnica deste repositório:** MIT (ver [LICENSE](LICENSE)).
+- **Textos e catálogo derivados do Guia/planilha PPSI 2.0 (SGD/MGI):** conteúdo de terceiros sob **CC BY-NC-ND 4.0**, com atribuição ao governo federal. O software MIT não redistribui esses textos sob licença mais permissiva.
 
 ## Implantação rápida
 
@@ -60,6 +65,8 @@ cp .env.example .env.local   # preencher chaves do Supabase
 supabase login
 supabase link --project-ref SEU_PROJECT_REF
 supabase db push             # schema base + todas as migrações (incl. catálogo PPSI 2.0)
+
+npm run install:fpsi         # pacotes padrão (site + PPSI + IA + framework); ver flags -public -ia -ppsi
 
 npm run dev                  # http://localhost:3000 — assistente: /setup
 ```
@@ -109,7 +116,3 @@ Backups e dumps: [database/README_DUMP.md](database/README_DUMP.md)
 - **Identidade:** Supabase Auth (`auth.users`, sessão em cookies). Login por e-mail/senha ou OAuth.
 - **Papéis por programa:** `admin`, `coordenador`, `analista`, `consultor`, `auditor` — via `programa_users`, com permissões granulares (ver, editar, aprovar, publicar, etc.).
 - **Convites:** fluxo de aceite em `/auth/aceitar-convite`.
-
-## Licença
-
-Código aberto. Consulte o repositório e a pasta `docs/` para mais informações.

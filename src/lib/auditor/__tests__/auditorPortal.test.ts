@@ -63,13 +63,13 @@ describe("vinculos e eixos de maturidade", () => {
     expect(v.rotulo).toContain("Medida 1.2.3");
     expect(v.rotulo).toContain("controle 1.2");
     expect(v.contexto).toContain("Governança");
-    expect(v.norma).toMatch(/iMC/);
+    expect(v.norma).toMatch(/iBase/);
   });
 
   it("completa os quatro eixos mesmo sem scores", () => {
     const eixos = completarDiagnosticosEixos([]);
     expect(eixos.map((d) => d.diagnosticoId)).toEqual([1, 2, 3, 4]);
-    expect(eixos[0].indice).toMatch(/iMC/);
+    expect(eixos[0].indice).toMatch(/iBase/);
     expect(eixos[0].score).toBeNull();
   });
 });

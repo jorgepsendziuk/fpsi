@@ -49,6 +49,27 @@ Isso aplica, em ordem:
 
 **Projeto vazio:** use só `db push`. Não importe dumps antigos antes das migrações.
 
+### Pacotes (após migrações)
+
+O padrão instala **todos** os módulos (como hoje):
+
+```bash
+npm run install:fpsi
+```
+
+Omite só o que for indicado (não remove dados já gravados):
+
+| Flag | Omite |
+|------|--------|
+| `-public` | Site institucional (portal do titular permanece na Ferramenta) |
+| `-ia` | Registro do pacote Governança de IA na configuração |
+| `-framework` | Encaixe do Framework |
+| `-ppsi` | Registro do pacote PPSI na configuração (catálogo já em migração permanece) |
+
+Exemplo on-premise enxuto: `npm run install:fpsi -- -public`
+
+Configuração: `config/fpsi-packages.json`. Leitura no `/setup` e em `GET /api/packages/installed`.
+
 **Projeto legado** (schema criado fora das migrações): compare com [SCHEMA_COMPARISON.md](./SCHEMA_COMPARISON.md) antes de `db push`. Se o remoto já tinha migrações aplicadas antes da baseline `20240101000000`, o CLI pode pedir:
 
 ```bash

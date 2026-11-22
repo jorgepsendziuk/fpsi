@@ -1,0 +1,19 @@
+{
+  "id": "publico",
+  "nome": "Público",
+  "versao": "1.0.0",
+  "descricao": "Site institucional: landing, sobre, artigo, divulgação e páginas de marketing",
+  "origem": "proprio",
+  "titular": "FPSI",
+  "licenca": "MIT",
+  "pack_tipo": "superficie",
+  "rotas": [
+    "/",
+    "/sobre",
+    "/artigo",
+    "/gestao",
+    "/privacidade",
+    "/divulgacao",
+    "/linkedin"
+  ]
+}

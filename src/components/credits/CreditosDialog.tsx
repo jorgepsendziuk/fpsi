@@ -21,6 +21,8 @@ import {
   CREDIT_DISCLAIMER,
   CREDIT_FONTES_LEGAIS,
   CREDIT_FRAMEWORKS,
+  CREDIT_LICENSING,
+  FPSI_POSITIONING_ANCHOR,
   FPSI_AUTHORSHIP,
   JORGE_GITHUB_URL,
   JORGE_LINKEDIN_URL,
@@ -276,10 +278,14 @@ export function CreditosDialog({ open, onClose, variant = "light" }: Props) {
           </Box>
         </Box>
 
+        <Typography variant="body2" sx={{ mt: 2.5, lineHeight: 1.55, color: muted }}>
+          {FPSI_POSITIONING_ANCHOR}
+        </Typography>
+
         <Typography
           variant="body2"
           sx={{
-            mt: 2.5,
+            mt: 2,
             p: 1.75,
             borderRadius: 1.5,
             lineHeight: 1.55,
@@ -290,6 +296,27 @@ export function CreditosDialog({ open, onClose, variant = "light" }: Props) {
           }}
         >
           {CREDIT_DISCLAIMER}
+        </Typography>
+
+        <SectionHeading>Licenças e conteúdo de terceiros</SectionHeading>
+        <Box component="ul" sx={{ m: 0, pl: 2.25, color: muted }}>
+          {CREDIT_LICENSING.map((line) => (
+            <Typography key={line.slice(0, 48)} component="li" variant="body2" sx={{ mb: 0.75, lineHeight: 1.5 }}>
+              {line}
+            </Typography>
+          ))}
+        </Box>
+        <Typography variant="caption" display="block" sx={{ color: muted, lineHeight: 1.45 }}>
+          CC BY-NC-ND 4.0:{" "}
+          <Link
+            href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.pt"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            color={dark ? "#90CAF9" : "primary"}
+          >
+            creativecommons.org/licenses/by-nc-nd/4.0
+          </Link>
         </Typography>
 
         <SectionHeading>Fontes legais e institucionais</SectionHeading>

@@ -1,5 +1,12 @@
 # Documentação de Arquitetura - FPSI
 
+## 0. Modularização (Ferramenta vs pacotes)
+
+- **Ferramenta (núcleo):** auth, programas, diagnóstico, evidências, ROPA/RIPD, **portal do titular** (`/[slug]`), APIs. Obrigatória.
+- **Pacote `publico`:** site institucional (`/`, `/sobre`, …). Opcional via `npm run install:fpsi -- -public`.
+- **Pacotes de conteúdo:** `ppsi-2.0` (terceiro), `governanca-ia` e `framework` (próprios FPSI). Metadados em `content_pack` e arquivos em `content-packs/`.
+- **Instalação padrão:** `npm run install:fpsi` habilita todos (comportamento atual). Flags `-public`, `-ia`, `-framework`, `-ppsi` só omitem pacotes em instalação nova; não apagam respostas existentes.
+
 ## 1. Diagrama de Contexto
 
 O FPSI é uma ferramenta web que permite às organizações gerenciar e avaliar sua conformidade com a LGPD através de diagnósticos de maturidade e gestão de controles de segurança.

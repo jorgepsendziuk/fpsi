@@ -1,49 +1,54 @@
 import { State, Controle, Medida, Resposta, ProgramaMedida, ProgramaControle } from "../types/types";
+import { calculateNacFromMedidas } from "./ppsiScoring";
 
+/** Faixas dos indicadores iBase / iSeg / iPriv (IN 4/2026, Tabela 6). */
 export const maturidade = [
-  { id: 1, min: 0, max: 0.29, label: "Inicial" },
-  { id: 2, min: 0.3, max: 0.49, label: "Básico" },
-  { id: 3, min: 0.5, max: 0.69, label: "Intermediário" },
-  { id: 4, min: 0.7, max: 0.89, label: "Em Aprimoramento" },
-  { id: 5, min: 0.9, max: 1, label: "Aprimorado" },
+  { id: 1, min: 0, max: 0.299999, label: "Inicial" },
+  { id: 2, min: 0.3, max: 0.599999, label: "Intermediário" },
+  { id: 3, min: 0.6, max: 0.899999, label: "Em aprimoramento" },
+  { id: 4, min: 0.9, max: 1, label: "Aprimorado" },
 ];
 
+/** Níveis de implementação da medida (NIM) — Anexo II, Tabela 3 (gradual). IDs 1–5 preservados no banco. */
 export const respostas = [
-  { 
-    id: 1, 
-    peso: 1, 
-    label: "Adota em maior parte ou totalmente",
-    descricao: "Há decisão formal ou plano aprovado, e a medida na organização é implementada integralmente em mais de 50% ou em todos os: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
+  {
+    id: 1,
+    peso: 0,
+    label: "1 — Não adota ou há decisão formal",
+    descricao:
+      "A medida é aplicável, mas não é implementada ou existe apenas um planejamento ou decisão formal para implementá-la.",
   },
-  { 
-    id: 2, 
-    peso: 0.75, 
-    label: "Adota em menor parte",
-    descricao: "Há decisão formal ou plano aprovado, e a medida na organização é implementada integralmente em menos de 50% dos: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
+  {
+    id: 2,
+    peso: 0.25,
+    label: "2 — Inicial",
+    descricao: "A implementação da medida atende menos de 40% do seu propósito.",
   },
-  { 
-    id: 3, 
-    peso: 0.5, 
-    label: "Adota parcialmente",
-    descricao: "Há decisão formal ou plano aprovado, e a medida na organização é implementada parcialmente em mais de 50% ou em todos os: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
+  {
+    id: 3,
+    peso: 0.5,
+    label: "3 — Intermediário",
+    descricao: "A implementação da medida atende entre 40% e 80% do seu propósito.",
   },
-  { 
-    id: 4, 
-    peso: 0.25, 
-    label: "Há decisão formal ou plano aprovado para implementar",
-    descricao: "Há decisão formal ou plano aprovado, porém não há na organização implementação ou está parcialmente implementado em menos de 50% dos: ativos no caso de medida de segurança da informação; ou processos/serviços no caso de medida de privacidade."
+  {
+    id: 4,
+    peso: 0.75,
+    label: "4 — Completo",
+    descricao: "A implementação da medida atende mais de 80% do seu propósito.",
   },
-  { 
-    id: 5, 
-    peso: 0, 
-    label: "A organização não adota essa medida",
-    descricao: "Não há qualquer decisão formal ou plano aprovado, tampouco implementação da medida."
+  {
+    id: 5,
+    peso: 1,
+    label: "5 — Aprimorado",
+    descricao:
+      "A implementação atende mais de 80% do propósito, com monitoramento e revisão sistemáticos, com base em métricas quantitativas.",
   },
-  { 
-    id: 6, 
-    peso: null, 
-    label: "Não se aplica",
-    descricao: "A medida não se aplica em nenhum ativo no caso de medida de segurança da informação ou processo/serviço no caso de medida de privacidade, por entendimento dos gestores ou considerando alguma particularidade do contexto de atuação da organização. A não aplicabilidade deverá seguir de uma motivação baseada em uma análise de riscos."
+  {
+    id: 6,
+    peso: null,
+    label: "0 — Não se aplica",
+    descricao:
+      "A medida não se aplica. Registre a justificativa com base em análise de riscos, conforme orientação do PPSI 2.0.",
   },
 ];
 
@@ -56,9 +61,21 @@ export const incc = [
   { id: 6, nivel: 5, indice: 100, label: "O controle atinge seu objetivo, é bem definido, suas medidas são implementadas continuamente por meio de um processo e seu desempenho é mensurado quantitativamente por meio de indicadores." },
 ];
 
+/** NIM binário — Anexo II, Tabela 4 (segmento base). */
 export const respostasimnao = [
-  { id: 1, peso: 1, label: "Sim" },
-  { id: 2, peso: 0, label: "Não" },
+  {
+    id: 1,
+    peso: 1,
+    label: "Sim",
+    descricao: "Medida integralmente implementada.",
+  },
+  {
+    id: 2,
+    peso: 0,
+    label: "Não",
+    descricao:
+      "A medida é aplicável, mas não é implementada ou existe apenas planejamento ou decisão formal para implementá-la.",
+  },
 ];
 
 export const setor = [
@@ -137,22 +154,17 @@ export const calculateTotalPointsForMedidas = (programaMedidas: ProgramaMedida[]
   }, 0);
 };
 
-export const calculateMaturityIndexForControle = (controle: Controle, programaControle: ProgramaControle, programaMedidas: ProgramaMedida[]): string => {
-  const sumOfResponses = calculateSumOfResponses(programaMedidas, controle.diagnostico);
-  
-  // ✅ CORREÇÃO: Usar total de medidas (incluindo não respondidas), excluindo apenas "Não se aplica"
-  const totalMedidas = programaMedidas.filter((pm) => {
-    // Excluir apenas medidas com resposta "Não se aplica" (id: 6)
-    if (pm.resposta === 6) return false;
-    return true; // Incluir todas as outras (respondidas e não respondidas)
-  }).length;
-  
-  if (totalMedidas === 0) return "0";
-
-  const baseIndex = sumOfResponses / totalMedidas;
-  const inccMultiplier = 1 + (((incc.find((incc) => incc.id === programaControle.nivel)?.nivel || 0)) * 1 / 5);
-  
-  return ((baseIndex / 2) * inccMultiplier).toFixed(2);
+export const calculateMaturityIndexForControle = (
+  controle: Controle,
+  _programaControle: ProgramaControle,
+  programaMedidas: ProgramaMedida[]
+): string => {
+  const { nac } = calculateNacFromMedidas(
+    programaMedidas,
+    controle.diagnostico,
+    (pm) => pm.resposta
+  );
+  return nac.toFixed(2);
 };
 
 export const getMaturityLabel = (indice: number): string => {

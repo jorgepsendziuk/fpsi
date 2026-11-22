@@ -134,7 +134,7 @@ function KpiMaturityCard({
             fontSize: compact ? "0.75rem" : "0.8125rem",
           }}
         >
-          {row.fmt ? `Nível ${row.fmt.levelId} · índice iMC` : "Índice iMC"}
+          {row.fmt ? `Nível ${row.fmt.levelId} · indicador` : "Indicador PPSI"}
         </Typography>
       )}
     </CardContent>

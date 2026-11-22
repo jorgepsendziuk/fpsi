@@ -1,6 +1,6 @@
 /** Índices oficiais por eixo (alinhado aos cards da visão geral). */
 export const DIAGNOSTICO_INDICE_LABELS: Record<number, string> = {
-  1: "iMC₀",
+  1: "iBase",
   2: "iSeg",
   3: "iPriv",
   4: "iAIGP",

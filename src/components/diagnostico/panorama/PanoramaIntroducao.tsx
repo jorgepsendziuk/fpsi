@@ -1,30 +1,17 @@
 "use client";
 
 import React from "react";
-import { Box, Paper, Stack, Typography, alpha } from "@mui/material";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import BalanceOutlinedIcon from "@mui/icons-material/BalanceOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
-import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
-
-const GLOSSARIO_PRIVACIDADE: { termo: string; definicao: string }[] = [
-  { termo: "Titular", definicao: "Pessoa a quem os dados se referem." },
-  { termo: "Dado pessoal", definicao: "Informação que identifica ou pode identificar uma pessoa." },
-  {
-    termo: "Dado sensível",
-    definicao:
-      "Origem racial, saúde, religião, opinião política, biométricos etc. — proteção reforçada (art. 11).",
-  },
-  { termo: "Controlador", definicao: "Quem define finalidade e meios do tratamento." },
-  { termo: "Operador", definicao: "Quem trata dados por conta do controlador." },
-  { termo: "Encarregado (DPO)", definicao: "Canal com titulares e ANPD (art. 41)." },
-  { termo: "Tratamento", definicao: "Qualquer uso de dado pessoal (coletar, usar, guardar…)." },
-  { termo: "Base legal", definicao: "Hipótese da LGPD que autoriza o tratamento." },
-  { termo: "Direitos do titular", definicao: "Pedidos do art. 18 (acesso, correção, eliminação, etc.)." },
-];
+import {
+  panoramaFoldOneCardClass,
+  panoramaFoldOneCardSx,
+} from "@/lib/panorama/panoramaFoldOneCards";
 
 const BLOCOS = [
   {
@@ -58,7 +45,7 @@ const REFERENCIAS = [
   {
     Icon: ShieldOutlinedIcon,
     titulo: "FPSI",
-    texto: "Framework open source de Privacidade e Segurança da Informação.",
+    texto: "Ferramenta que integra referenciais de privacidade, segurança e governança de IA.",
   },
 ] as const;
 
@@ -87,7 +74,18 @@ function IntroBloco({
       direction="row"
       spacing={{ xs: 0.85, print: 0.35 }}
       alignItems="flex-start"
-      sx={{ flex: 1, minWidth: 0 }}
+      className="panorama-intro-bloco-interno"
+      sx={{
+        width: "100%",
+        minWidth: 0,
+        height: "100%",
+        boxSizing: "border-box",
+        p: { xs: 0.75, md: 0.85, print: 0 },
+        borderRadius: 1,
+        bgcolor: { xs: "rgba(255,255,255,0.55)", print: "transparent" },
+        border: { xs: 1, print: 0 },
+        borderColor: { xs: "rgba(0,0,0,0.06)", print: "transparent" },
+      }}
     >
       <Box
         sx={{
@@ -98,8 +96,8 @@ function IntroBloco({
           height: iconBox,
           borderRadius: 0.75,
           flexShrink: 0,
-          bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
-          color: "primary.main",
+          bgcolor: "grey.100",
+          color: "text.secondary",
           "@media print": { bgcolor: "transparent", border: "1px solid #ccc" },
         }}
       >
@@ -136,42 +134,41 @@ export default function PanoramaIntroducao() {
   return (
     <Paper
       variant="outlined"
-      className="panorama-intro panorama-text-left"
-      sx={{
-        p: { xs: 1.5, md: 1.75, print: 0.4 },
-        mb: { xs: 2, print: 0.25 },
-        bgcolor: (t) => alpha(t.palette.primary.main, 0.03),
-        borderColor: (t) => alpha(t.palette.primary.main, 0.18),
-        breakInside: "avoid",
-        textAlign: "left",
-        "@media print": {
-          borderColor: "#ccc",
+      className={`panorama-intro panorama-text-left ${panoramaFoldOneCardClass("intro")}`}
+      sx={[
+        panoramaFoldOneCardSx("intro"),
+        {
+          p: { xs: 1.5, md: 1.75, print: 0 },
+          mb: { xs: 0, print: 0 },
+          breakInside: "avoid",
+          textAlign: "left",
         },
-      }}
+      ]}
     >
-      <Stack
-        spacing={{ xs: 1.25, print: 0.35 }}
-        direction={{ xs: "column", md: "row" }}
+      <Box
+        className="panorama-intro-blocos"
         sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+          gap: { xs: 1.25, md: 1, print: 0.5 },
+          alignItems: "stretch",
           "@media print": {
-            flexDirection: "row",
-            gap: "4px",
-            "& > *": { flex: "1 1 0", minWidth: 0 },
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
           },
         }}
       >
         {BLOCOS.map((bloco) => (
           <IntroBloco key={bloco.titulo} {...bloco} />
         ))}
-      </Stack>
+      </Box>
 
       <Box
         sx={{
-          mt: { xs: 1.25, print: 0.25 },
-          pt: { xs: 1, print: 0.25 },
+          mt: { xs: 1.25, print: 0.35 },
+          pt: { xs: 1, print: 0.35 },
           borderTop: 1,
-          borderColor: (t) => alpha(t.palette.primary.main, 0.12),
-          "@media print": { borderColor: "#ddd" },
+          borderColor: "divider",
+          "@media print": { borderColor: "rgba(0,0,0,0.1)" },
         }}
       >
         <Typography
@@ -188,97 +185,20 @@ export default function PanoramaIntroducao() {
         >
           Contexto normativo e de referência
         </Typography>
-        <Stack
-          spacing={{ xs: 1, print: 0.2 }}
-          direction={{ xs: "column", md: "row" }}
+        <Box
           className="panorama-intro-referencias"
           sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+            gap: { xs: 1, md: 0.85, print: 0.35 },
+            alignItems: "stretch",
             "@media print": {
-              flexDirection: "row",
-              gap: "3px",
-              "& > *": { flex: "1 1 0", minWidth: 0 },
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
             },
           }}
         >
           {REFERENCIAS.map((ref) => (
             <IntroBloco key={ref.titulo} {...ref} compact />
-          ))}
-        </Stack>
-      </Box>
-
-      <Box
-        className="panorama-intro-glossario"
-        sx={{
-          mt: { xs: 1.25, print: 0.25 },
-          pt: { xs: 1, print: 0.25 },
-          borderTop: 1,
-          borderColor: (t) => alpha(t.palette.primary.main, 0.12),
-          "@media print": { borderColor: "#ddd" },
-        }}
-      >
-        <Stack
-          direction="row"
-          spacing={{ xs: 0.5, print: 0.35 }}
-          alignItems="center"
-          sx={{ mb: { xs: 0.75, print: 0.15 } }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: { xs: 22, print: 16 },
-              height: { xs: 22, print: 16 },
-              borderRadius: 0.5,
-              flexShrink: 0,
-              bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
-              color: "primary.main",
-              "@media print": { bgcolor: "transparent", border: "1px solid #ccc" },
-            }}
-          >
-            <MenuBookOutlinedIcon sx={{ fontSize: { xs: 14, print: 11 } }} aria-hidden />
-          </Box>
-          <Typography
-            variant="caption"
-            fontWeight={800}
-            color="text.secondary"
-            sx={{
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              fontSize: { xs: "0.7rem", print: "6pt" },
-            }}
-          >
-            Glossário simplificado
-          </Typography>
-        </Stack>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              md: "1fr 1fr",
-              print: "1fr 1fr 1fr",
-            },
-            columnGap: { xs: 0, md: 1.5, print: 0.75 },
-            rowGap: { xs: 0.45, print: 0.15 },
-          }}
-        >
-          {GLOSSARIO_PRIVACIDADE.map((item) => (
-            <Typography
-              key={item.termo}
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                lineHeight: { xs: 1.35, print: 1.1 },
-                fontSize: { xs: "0.76rem", print: "6pt" },
-              }}
-            >
-              <Box component="span" fontWeight={700} color="text.primary">
-                {item.termo}
-              </Box>
-              {" — "}
-              {item.definicao}
-            </Typography>
           ))}
         </Box>
       </Box>

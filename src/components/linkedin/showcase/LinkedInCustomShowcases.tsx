@@ -165,7 +165,7 @@ export function LinkedInNormasShowcase() {
       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
         <Box sx={{ flex: 1, height: 8, borderRadius: 1, bgcolor: "action.hover" }} />
         <Typography sx={{ fontFamily: ff, fontWeight: 700, fontSize: "0.85rem", color: "#43A047" }}>
-          INCC 0.85
+          NAC 0,85
         </Typography>
       </Box>
     </Box>

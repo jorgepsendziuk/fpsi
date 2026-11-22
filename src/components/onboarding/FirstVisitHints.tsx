@@ -22,8 +22,35 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
+import { useOnboardingHintsControlOptional } from "@/components/onboarding/onboardingHintsContext";
 
 const STORAGE_KEY = "fpsi-onboarding-hints-v1";
+
+/** Desligar dicas flutuantes (ex.: `NEXT_PUBLIC_ONBOARDING_HINTS=0` no .env.local). */
+export const ONBOARDING_HINTS_ENABLED =
+  process.env.NEXT_PUBLIC_ONBOARDING_HINTS !== "0";
+
+function useModalBlocksHints(): boolean {
+  const [blocked, setBlocked] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      const openDialog = document.querySelector('[role="dialog"][aria-modal="true"]');
+      setBlocked(Boolean(openDialog));
+    };
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["aria-hidden", "aria-modal", "class", "role"],
+    });
+    return () => obs.disconnect();
+  }, []);
+
+  return blocked;
+}
 
 export type HintId =
   | "nav-geral"
@@ -117,14 +144,20 @@ function HintBubble({
   hint,
   onDismiss,
   onDismissAll,
+  forcePanelOpen = false,
 }: {
   hint: HintDef;
   onDismiss: () => void;
   onDismissAll: () => void;
+  forcePanelOpen?: boolean;
 }) {
   const theme = useTheme();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(forcePanelOpen);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    setOpen(forcePanelOpen);
+  }, [forcePanelOpen]);
 
   const updatePos = useCallback(() => {
     const el = document.querySelector(hint.anchor) as HTMLElement | null;
@@ -164,7 +197,7 @@ function HintBubble({
           position: "fixed",
           top: pos.top,
           left: pos.left,
-          zIndex: theme.zIndex.tooltip + 2,
+          zIndex: theme.zIndex.drawer,
           pointerEvents: "auto",
         }}
       >
@@ -181,7 +214,7 @@ function HintBubble({
             bgcolor: alpha(theme.palette.primary.main, 0.35),
             cursor: "pointer",
             p: 0,
-            animation: `${pulse} 2.2s ease-out infinite`,
+            animation: open ? "none" : `${pulse} 2.2s ease-out infinite`,
             "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.55) },
           }}
         />
@@ -235,8 +268,16 @@ export type FirstVisitHintsProps = {
 };
 
 export function FirstVisitHints({ forceShow = false }: FirstVisitHintsProps) {
+  const hintsControl = useOnboardingHintsControlOptional();
+  const manualShowAll = hintsControl?.manualShowAll ?? false;
+  const modalBlocks = useModalBlocksHints();
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<StoredState>({ dismissedAll: false, dismissed: [] });
+  const [manualHidden, setManualHidden] = useState<HintId[]>([]);
+
+  useEffect(() => {
+    if (manualShowAll) setManualHidden([]);
+  }, [manualShowAll]);
 
   useEffect(() => {
     const stored = readStored();
@@ -269,11 +310,16 @@ export function FirstVisitHints({ forceShow = false }: FirstVisitHintsProps) {
     const next = { dismissedAll: true, dismissed: HINTS.map((h) => h.id) };
     writeStored(next);
     setState(next);
-  }, []);
+    hintsControl?.setManualShowAll(false);
+  }, [hintsControl]);
 
-  if (!ready || state.dismissedAll) return null;
+  if (!ONBOARDING_HINTS_ENABLED || !ready || modalBlocks) return null;
 
-  const visible = HINTS.filter((h) => !state.dismissed.includes(h.id));
+  if (!manualShowAll && state.dismissedAll) return null;
+
+  const visible = manualShowAll
+    ? HINTS.filter((h) => !manualHidden.includes(h.id))
+    : HINTS.filter((h) => !state.dismissed.includes(h.id));
   if (visible.length === 0) return null;
 
   return (
@@ -282,8 +328,15 @@ export function FirstVisitHints({ forceShow = false }: FirstVisitHintsProps) {
         <HintBubble
           key={hint.id}
           hint={hint}
-          onDismiss={() => dismissOne(hint.id)}
+          onDismiss={() => {
+            if (manualShowAll) {
+              setManualHidden((prev) => (prev.includes(hint.id) ? prev : [...prev, hint.id]));
+            } else {
+              dismissOne(hint.id);
+            }
+          }}
           onDismissAll={dismissAll}
+          forcePanelOpen={manualShowAll}
         />
       ))}
     </>

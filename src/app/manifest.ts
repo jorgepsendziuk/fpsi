@@ -2,9 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FPSI - Framework de Privacidade e Segurança da Informação",
+    name: "FPSI — Ferramenta de Privacidade e Segurança da Informação",
     short_name: "FPSI",
-    description: "Sistema de diagnóstico de privacidade e segurança da informação para organizações",
+    description:
+      "Plataforma que integra referenciais de privacidade, segurança da informação e governança de IA (LGPD, PPSI 2.0 e correlatos).",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

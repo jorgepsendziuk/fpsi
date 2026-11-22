@@ -46,7 +46,7 @@ type Step = "form" | "validating" | "ready";
 const BENEFITS = [
   {
     icon: <AssignmentOutlined fontSize="small" />,
-    title: "Diagnóstico PPSI 2.0",
+    title: "Diagnóstico de maturidade",
     text: "Avalie maturidade em privacidade, segurança e governança — com evidências e plano de trabalho.",
   },
   {

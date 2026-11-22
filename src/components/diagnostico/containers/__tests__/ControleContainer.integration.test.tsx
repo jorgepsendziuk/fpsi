@@ -114,7 +114,7 @@ describe('ControleContainer Integration', () => {
     });
   });
 
-  it('should handle medida and INCC integration', async () => {
+  it('should handle medida and NAC display', async () => {
     render(<ControleContainer diagnostico={mockDiagnostico} programaId={0} {...mockProps} />);
     
     // Simula interação com medida
@@ -125,11 +125,6 @@ describe('ControleContainer Integration', () => {
       expect(mockProps.handleMedidaFetch).toHaveBeenCalledWith(1, 1);
     });
     
-    // Simula interação com INCC
-    const inccInput = screen.getByLabelText('INCC');
-    fireEvent.change(inccInput, { target: { value: '75' } });
-    
-    expect(mockProps.handleINCCChange).toHaveBeenCalledWith(1, 1, 75);
   });
 
   it('should handle maturity calculation integration', () => {
@@ -139,12 +134,6 @@ describe('ControleContainer Integration', () => {
     expect(calculateMaturityIndex).toHaveBeenCalledWith(1, mockProps.state);
     expect(getMaturityLabel).toHaveBeenCalledWith(50);
     
-    // Simula mudança de INCC
-    const inccInput = screen.getByLabelText('INCC');
-    fireEvent.change(inccInput, { target: { value: '75' } });
-    
-    // Verifica se o cálculo é atualizado
-    expect(calculateMaturityIndex).toHaveBeenCalledTimes(2);
   });
 
   it('should handle error propagation', async () => {

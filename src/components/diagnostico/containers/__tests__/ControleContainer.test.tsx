@@ -66,13 +66,9 @@ describe('ControleContainer', () => {
     expect(screen.getByText('Medida Teste')).toBeInTheDocument();
   });
 
-  it('should handle INCC change', () => {
+  it('exibe NAC no cabeçalho do controle', () => {
     render(<ControleContainer {...mockProps} />);
-    
-    const inccInput = screen.getByLabelText('INCC');
-    fireEvent.change(inccInput, { target: { value: '75' } });
-    
-    expect(mockProps.handleINCCChange).toHaveBeenCalledWith(1, 1, 75);
+    expect(screen.getByText(/NAC/i)).toBeInTheDocument();
   });
 
   it('should handle medida fetch', async () => {

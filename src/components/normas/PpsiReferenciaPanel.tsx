@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SecurityIcon from "@mui/icons-material/Security";
+import { ContentPackAttribution } from "@/components/content-packs/ContentPackAttribution";
 import {
   PPSI_FRAMEWORKS,
   findPpsiFrameworkById,
@@ -112,6 +113,8 @@ export function PpsiReferenciaPanel({ initialId = null, embedded = false }: Ppsi
   const selected = findPpsiFrameworkById(selectedId) ?? frameworks[0];
 
   return (
+  <>
+      {!embedded ? <ContentPackAttribution packId="ppsi-2.0" /> : null}
     <Box
       sx={{
         display: "flex",
@@ -182,5 +185,6 @@ export function PpsiReferenciaPanel({ initialId = null, embedded = false }: Ppsi
         </Typography>
       </Box>
     </Box>
+  </>
   );
 }

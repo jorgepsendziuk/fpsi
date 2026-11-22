@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Box, Container, Paper, Typography } from "@mui/material";
 import PsychologyIcon from "@mui/icons-material/Psychology";
+import { ContentPackAttribution } from "@/components/content-packs/ContentPackAttribution";
 import { AigpReferenciaPanel } from "@/components/normas/AigpReferenciaPanel";
 
 function AigpReferenciaContent() {
@@ -24,6 +25,7 @@ function AigpReferenciaContent() {
           </Typography>
         </Box>
       </Box>
+      <ContentPackAttribution packId="governanca-ia" />
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", borderRadius: 2, overflow: "hidden" }}>
         <AigpReferenciaPanel initialId={initialId} />
       </Paper>

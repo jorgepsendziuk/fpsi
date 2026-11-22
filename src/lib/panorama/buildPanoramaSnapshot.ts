@@ -6,6 +6,10 @@ import {
   getDiagnosticoTreeLabel,
 } from "@/lib/utils/diagnosticoTreeLabels";
 import {
+  resolvePanoramaConsultorPrograma,
+  type PanoramaConsultorPrograma,
+} from "@/lib/panorama/panoramaConsultorPrograma";
+import {
   sanitizePanoramaEncarregadoText,
   sanitizePanoramaResponsavelNome,
 } from "@/lib/panorama/sanitizePanoramaEncarregado";
@@ -91,6 +95,7 @@ export type PanoramaSnapshot = {
   }>;
   /** Índice “já entregue” para a seção inicial do panorama (âncoras = ids das seções no relatório). */
   indiceEntregas: PanoramaIndiceEntrega[];
+  consultorPrograma: PanoramaConsultorPrograma;
 };
 
 export type PanoramaIndiceEntrega = {
@@ -493,6 +498,8 @@ export async function buildPanoramaSnapshot(
     linksEvidencia: evidCount.count ?? 0,
   };
 
+  const consultorPrograma = await resolvePanoramaConsultorPrograma(supabase, programaId);
+
   const indiceEntregas = buildIndiceEntregas({
     existencias: existenciasBlock,
     mapeamentoNomes,
@@ -517,5 +524,6 @@ export async function buildPanoramaSnapshot(
     exposicao,
     planos,
     sistemasInventario,
+    consultorPrograma,
   };
 }

@@ -32,11 +32,10 @@ import { useThemeColors } from '../hooks/useThemeColors';
 const getMaturityColor = (score: string | number): string => {
   const numericScore = typeof score === 'string' ? parseFloat(score) : score;
   
-  if (numericScore <= 0.29) return '#FF0000'; // Vermelho - Inicial
-  if (numericScore <= 0.49) return '#FF8C00'; // Laranja - Básico
-  if (numericScore <= 0.69) return '#FFD700'; // Amarelo - Intermediário
-  if (numericScore <= 0.89) return '#7CFC00'; // Verde claro - Em Aprimoramento
-  return '#008000'; // Verde - Aprimorado
+  if (numericScore < 0.3) return '#C62828'; // Inicial (Tabela 6)
+  if (numericScore < 0.6) return '#F9A825'; // Intermediário
+  if (numericScore < 0.9) return '#388E3C'; // Em aprimoramento
+  return '#2E7D32'; // Aprimorado
 };
 
 /**
@@ -146,24 +145,20 @@ const DiagnosticoComponent: React.FC<DiagnosticoComponentProps> = ({
                   <Box sx={{ p: 1 }}>
                     <Typography variant="subtitle2">Níveis de Maturidade:</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FF0000', mr: 1 }} />
-                      <Typography variant="caption">0.00-0.29: Inicial</Typography>
+                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#C62828', mr: 1 }} />
+                      <Typography variant="caption">&lt; 0,30: Inicial</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FF8C00', mr: 1 }} />
-                      <Typography variant="caption">0.30-0.49: Básico</Typography>
+                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#F9A825', mr: 1 }} />
+                      <Typography variant="caption">0,30–0,60: Intermediário</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FFD700', mr: 1 }} />
-                      <Typography variant="caption">0.50-0.69: Intermediário</Typography>
+                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#388E3C', mr: 1 }} />
+                      <Typography variant="caption">0,60–0,90: Em aprimoramento</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#7CFC00', mr: 1 }} />
-                      <Typography variant="caption">0.70-0.89: Em Aprimoramento</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#008000', mr: 1 }} />
-                      <Typography variant="caption">0.90-1.00: Aprimorado</Typography>
+                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#2E7D32', mr: 1 }} />
+                      <Typography variant="caption">≥ 0,90: Aprimorado</Typography>
                     </Box>
                   </Box>
                 }
