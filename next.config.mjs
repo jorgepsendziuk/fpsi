@@ -22,6 +22,7 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig = {
+  output: "standalone",
   ...(devDistDir ? { distDir: devDistDir } : {}),
   turbopack: {},
   /** Dev: cache em memória evita corrupção/ENOENT no disco (ex.: pasta em iCloud/Dropbox). */

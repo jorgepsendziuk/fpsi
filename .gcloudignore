@@ -1,0 +1,22 @@
+.gcloudignore
+.git
+.gitignore
+.next
+node_modules
+.cursor
+.env*.local
+# manter contexto menor (não excluir .npmrc)
+node_modules/
+.next/
+.git/
+database/
+supabase/migrations_archive/
+content-packs/**/*.png
+**/*.pdf
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.integration.test.tsx
+agent-transcripts
+supabase/.branches
+supabase/.temp

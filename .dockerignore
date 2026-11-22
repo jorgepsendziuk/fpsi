@@ -1,0 +1,14 @@
+.next
+node_modules
+.git
+.cursor
+.env*.local
+*.md
+docs
+supabase/.branches
+supabase/.temp
+agent-transcripts
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.integration.test.tsx
