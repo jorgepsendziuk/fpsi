@@ -76,6 +76,16 @@ SECRET_FLAGS=(
 if gcloud secrets describe fpsi-openai-api-key --project="$PROJECT" &>/dev/null; then
   SECRET_FLAGS+=("OPENAI_API_KEY=fpsi-openai-api-key:latest")
 fi
+for pair in \
+  "GOOGLE_CLIENT_ID=fpsi-google-client-id" \
+  "GOOGLE_CLIENT_SECRET=fpsi-google-client-secret" \
+  "FPSI_SESSION_SECRET=fpsi-session-secret"; do
+  key="${pair%%=*}"
+  sec="${pair#*=}"
+  if gcloud secrets describe "$sec" --project="$PROJECT" &>/dev/null; then
+    SECRET_FLAGS+=("${key}=${sec}:latest")
+  fi
+done
 
 echo "==> Cloud Run deploy (min-instances=0)"
 gcloud run deploy "$SERVICE" \

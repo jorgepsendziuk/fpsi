@@ -134,28 +134,8 @@ export default function Register() {
       /* ignore */
     }
     try {
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent("/dashboard")}`;
-      const { data, error: oauthError } = await supabaseBrowserClient.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo },
-      });
-      if (oauthError) {
-        setError(
-          oauthError.message ||
-            "Não foi possível iniciar o cadastro com Google. Verifique se o provedor está ativo no Supabase."
-        );
-        setOauthLoading(false);
-        setSkipAuthRedirect(false);
-        return;
-      }
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-      setError("Erro ao iniciar cadastro com Google.");
-      setOauthLoading(false);
-      setSkipAuthRedirect(false);
+      window.location.href = `/api/auth/google?next=${encodeURIComponent("/dashboard")}`;
+      return;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao conectar com Google.";
       setError(msg);

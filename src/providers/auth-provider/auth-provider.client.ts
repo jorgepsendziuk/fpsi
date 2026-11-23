@@ -16,28 +16,15 @@ export const authProviderClient: AuthProvider = {
   login: async ({ email, password, providerName }) => {
     // Login social (OAuth)
     if (providerName) {
-      const origin = getPublicOrigin();
-      const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
-      const nextPath = redirect ? (redirect.startsWith("/") ? redirect : `/${redirect}`) : "/dashboard";
-      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-      const { data, error } =
-        await supabaseBrowserClient.auth.signInWithOAuth({
-          provider: providerName as "google" | "github" | "azure" | "facebook",
-          options: {
-            redirectTo,
-          },
-        });
-
-      if (error) {
-        return { success: false, error };
-      }
-      if (data?.url) {
-        window.location.href = data.url;
+      if (providerName === "google") {
+        const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
+        const nextPath = redirect ? (redirect.startsWith("/") ? redirect : `/${redirect}`) : "/dashboard";
+        window.location.href = `/api/auth/google?next=${encodeURIComponent(nextPath)}`;
         return { success: true };
       }
       return {
         success: false,
-        error: { name: "OAuthError", message: "Erro ao iniciar login social" },
+        error: { name: "OAuthError", message: "Provedor não suportado" },
       };
     }
 
@@ -191,23 +178,28 @@ export const authProviderClient: AuthProvider = {
     const { data, error } = await supabaseBrowserClient.auth.getUser();
     const { user } = data;
 
-    if (error) {
-      return {
-        authenticated: false,
-        redirectTo: "/",
-        logout: true,
-      };
-    }
-
     if (user) {
       return {
         authenticated: true,
       };
     }
 
+    try {
+      const res = await fetch("/api/auth/session", { credentials: "include" });
+      if (res.ok) {
+        const body = (await res.json()) as { authenticated?: boolean };
+        if (body.authenticated) {
+          return { authenticated: true };
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
     return {
       authenticated: false,
       redirectTo: "/",
+      logout: Boolean(error),
     };
   },
   // Permissões reais vêm de programa_users via useUserPermissions(programaId) e GET /api/users.
@@ -223,6 +215,25 @@ export const authProviderClient: AuthProvider = {
         ...data.user,
         name: data.user.email,
       };
+    }
+
+    try {
+      const res = await fetch("/api/auth/session", { credentials: "include" });
+      if (res.ok) {
+        const body = (await res.json()) as {
+          authenticated?: boolean;
+          user?: { id: string; email: string; name: string | null };
+        };
+        if (body.authenticated && body.user) {
+          return {
+            id: body.user.id,
+            email: body.user.email,
+            name: body.user.name ?? body.user.email,
+          };
+        }
+      }
+    } catch {
+      /* ignore */
     }
 
     return null;
