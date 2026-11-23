@@ -9,17 +9,34 @@ import { MainAppShell } from "@/components/layout/MainAppShell";
 
 type IUser = { id: number; name: string; email: string; avatar: string };
 
+const publicShellSx = {
+  minHeight: "100dvh",
+  height: "100dvh",
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
+  bgcolor: "#fff",
+  "@media print": {
+    height: "auto",
+    minHeight: 0,
+    overflow: "visible",
+  },
+} as const;
+
 const documentBoxSx = {
   flex: 1,
   minHeight: 0,
   display: "flex",
   flexDirection: "column",
-  overflow: "auto",
-  overscrollBehavior: "contain",
+  overflowY: "auto",
+  overflowX: "hidden",
+  WebkitOverflowScrolling: "touch",
+  overscrollBehavior: "y",
   bgcolor: "#fff",
   "@media print": {
     overflow: "visible",
     height: "auto",
+    minHeight: "auto",
   },
 } as const;
 
@@ -61,18 +78,24 @@ function PanoramaPublicTopBar() {
 export function PanoramaPageChrome({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading } = useGetIdentity<IUser>();
 
-  const inner = (
-    <>
-      {!isLoading && !user ? <PanoramaPublicTopBar /> : null}
-      <Box sx={documentBoxSx} className="panorama-page-chrome">
-        {children}
-      </Box>
-    </>
+  const documentArea = (
+    <Box sx={documentBoxSx} className="panorama-page-chrome">
+      {children}
+    </Box>
   );
 
   if (isLoading || !user) {
-    return inner;
+    return (
+      <Box sx={publicShellSx}>
+        {!isLoading && !user ? <PanoramaPublicTopBar /> : null}
+        {documentArea}
+      </Box>
+    );
   }
 
-  return <MainAppShell>{inner}</MainAppShell>;
+  return (
+    <MainAppShell>
+      {documentArea}
+    </MainAppShell>
+  );
 }

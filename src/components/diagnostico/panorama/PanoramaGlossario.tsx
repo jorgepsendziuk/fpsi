@@ -32,7 +32,7 @@ export default function PanoramaGlossario() {
             print: "1fr 1fr 1fr",
           },
           columnGap: { xs: 1.5, md: 2, print: 1 },
-          rowGap: { xs: 0.75, md: 0.85, print: 0.35 },
+          rowGap: { xs: 0.75, md: 0.85, print: 0.28 },
         }}
       >
         {GLOSSARIO_PRIVACIDADE.map((item) => (
@@ -41,8 +41,8 @@ export default function PanoramaGlossario() {
             variant="body2"
             color="text.secondary"
             sx={{
-              lineHeight: { xs: 1.45, print: 1.3 },
-              fontSize: { xs: "0.86rem", print: "8pt" },
+              lineHeight: { xs: 1.45, print: 1.22 },
+              fontSize: { xs: "0.86rem", print: "7.25pt" },
             }}
           >
             <Box component="span" fontWeight={700} color="text.primary">

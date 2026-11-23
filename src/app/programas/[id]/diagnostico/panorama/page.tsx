@@ -512,7 +512,27 @@ export default function PanoramaInicialPage() {
               padding: "10px 12px !important",
             },
             "#panorama-fold-two .panorama-glossario": {
-              marginTop: "0 !important",
+              marginTop: "4px !important",
+            },
+            "#panorama-fold-two #panorama-sec-resumo-diagnostico, #panorama-fold-two #panorama-sec-glossario": {
+              breakBefore: "auto",
+              pageBreakBefore: "auto",
+              breakAfter: "auto",
+              pageBreakAfter: "auto",
+            },
+            "#panorama-fold-two #panorama-sec-resumo-diagnostico .panorama-resumo-linhas": {
+              rowGap: "2px !important",
+            },
+            "#panorama-fold-two #panorama-sec-glossario.panorama-section-shell": {
+              breakInside: "auto",
+              pageBreakInside: "auto",
+            },
+            "#panorama-fold-two .panorama-glossario .MuiTypography-subtitle2, #panorama-fold-two .panorama-glossario .MuiAccordionSummary-content .MuiTypography-root":
+              {
+                fontSize: "8.5pt !important",
+              },
+            "#panorama-fold-two .panorama-glossario .panorama-section-formal-subtitle": {
+              fontSize: "7.5pt !important",
             },
             "#panorama-print-root .panorama-indice-section": {
               padding: "8px 10px !important",
@@ -531,12 +551,16 @@ export default function PanoramaInicialPage() {
             "#panorama-print-root .panorama-checklist-grupos": {
               gap: "6px !important",
             },
-            ".panorama-section-accordion .MuiCollapse-root": {
-              height: "auto !important",
-              visibility: "visible !important",
-            },
-            ".panorama-section-accordion .MuiCollapse-wrapper, .panorama-section-accordion .MuiCollapse-wrapperInner": {
-              height: "auto !important",
+            ".panorama-section-accordion .MuiCollapse-root, .panorama-section-accordion .MuiCollapse-wrapper, .panorama-section-accordion .MuiCollapse-wrapperInner":
+              {
+                display: "block !important",
+                height: "auto !important",
+                minHeight: "0 !important",
+                overflow: "visible !important",
+                visibility: "visible !important",
+              },
+            ".panorama-section-accordion .MuiAccordionDetails-root": {
+              display: "block !important",
             },
             ".panorama-section-accordion .MuiAccordionSummary-root": {
               minHeight: "unset !important",
@@ -545,10 +569,11 @@ export default function PanoramaInicialPage() {
               breakBefore: "page",
               pageBreakBefore: "always",
             },
-            "#panorama-fold-two #panorama-sec-resumo-diagnostico.panorama-section-shell": {
-              breakBefore: "auto",
-              pageBreakBefore: "auto",
-            },
+            "#panorama-fold-two #panorama-sec-resumo-diagnostico.panorama-section-shell, #panorama-fold-two #panorama-sec-glossario.panorama-section-shell":
+              {
+                breakBefore: "auto",
+                pageBreakBefore: "auto",
+              },
           },
         }}
       />

@@ -108,6 +108,18 @@ export function PanoramaAccordionSection({
           backgroundImage: "none",
           "&:before": { display: "none" },
           "&.Mui-expanded": { margin: 0 },
+          "@media print": {
+            "& .MuiCollapse-root, & .MuiCollapse-wrapper, & .MuiCollapse-wrapperInner": {
+              display: "block !important",
+              height: "auto !important",
+              minHeight: "0 !important",
+              overflow: "visible !important",
+              visibility: "visible !important",
+            },
+            "& .MuiAccordionDetails-root": {
+              display: "block !important",
+            },
+          },
         }}
       >
         <AccordionSummary

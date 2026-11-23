@@ -9,9 +9,4 @@ export const GLOSSARIO_PRIVACIDADE: { termo: string; definicao: string }[] = [
   { termo: "Tratamento", definicao: "Qualquer operação com dado pessoal." },
   { termo: "Base legal", definicao: "Fundamento que autoriza o tratamento na LGPD." },
   { termo: "PPSI", definicao: "Modelo federal de maturidade em privacidade e segurança." },
-  {
-    termo: "FPSI",
-    definicao:
-      "Ferramenta de Privacidade e Segurança da Informação: plataforma que integra referenciais (LGPD, PPSI 2.0, ISO/IEC 27701, NIST AI RMF, ISO/IEC 42001 e correlatos) para diagnóstico e governança.",
-  },
 ];
