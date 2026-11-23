@@ -23,6 +23,14 @@ describe("programaContentPack", () => {
       })
     ).toBe("ppsi-2.0");
   });
+  it("órgão público pode usar Framework FPSI quando explícito no escopo", () => {
+    expect(
+      operationalPackIdForPrograma({
+        setor: 1,
+        escopo: { v: 1, operational_pack_id: "framework" },
+      })
+    ).toBe("framework");
+  });
   it("governança IA pack", () => {
     expect(governancaIaPackId()).toBe("governanca-ia");
   });

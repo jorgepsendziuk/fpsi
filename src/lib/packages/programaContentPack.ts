@@ -21,9 +21,9 @@ function readEscopoOperationalPackId(escopo: unknown): OperationalContentPackId 
 export function operationalPackIdForPrograma(
   programa: ProgramaPackContext | null | undefined
 ): OperationalContentPackId {
-  if (programa?.setor === 1) return "ppsi-2.0";
   const fromEscopo = readEscopoOperationalPackId(programa?.escopo);
   if (fromEscopo) return fromEscopo;
+  if (programa?.setor === 1) return "ppsi-2.0";
   return "framework";
 }
 

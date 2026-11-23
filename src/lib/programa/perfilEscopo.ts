@@ -382,6 +382,7 @@ export const NAV_ITEM_MODULO_MAP: Record<string, ModuloKey | null> = {
   diag: "diagnostico",
   "diag-relatorio": "diagnostico",
   "diag-rte": "diagnostico",
+  panorama: "diagnostico",
   plano: "planos-acao",
   ativos: "ativos",
   politicas: "politicas",

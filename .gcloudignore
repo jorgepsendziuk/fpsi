@@ -1,22 +1,41 @@
+# Cloud Build upload context — manter pequeno (não excluir .npmrc)
 .gcloudignore
 .git
 .gitignore
-.next
-node_modules
-.cursor
-.env*.local
-# manter contexto menor (não excluir .npmrc)
-node_modules/
-.next/
 .git/
+node_modules
+node_modules/
+.cursor
+.cursor/
+.env*.local
+.vercel
+.vercel/
+.vscode
+.vscode/
+
+# Next.js build artifacts (incl. pastas duplicadas tipo ".next 2")
+.next
+.next/
+.next 2
+.next 2/
+
+# Artefatos locais / caches
+var/
+var/folders/
+**/.DS_Store
+
+# Dumps e arquivos pesados não necessários na imagem
 database/
 supabase/migrations_archive/
 content-packs/**/*.png
 **/*.pdf
-**/__tests__
+
+# Testes e tooling
+**/__tests__/
 **/*.test.ts
 **/*.test.tsx
 **/*.integration.test.tsx
-agent-transcripts
+agent-transcripts/
+
 supabase/.branches
 supabase/.temp

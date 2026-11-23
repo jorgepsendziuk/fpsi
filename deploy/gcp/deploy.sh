@@ -49,7 +49,8 @@ CB_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 RUN_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
 for name in fpsi-next-public-supabase-url fpsi-next-public-supabase-anon-key fpsi-next-public-app-url \
-  fpsi-supabase-service-role-key fpsi-openai-api-key; do
+  fpsi-supabase-service-role-key fpsi-openai-api-key \
+  fpsi-google-client-id fpsi-google-client-secret fpsi-session-secret; do
   if gcloud secrets describe "$name" --project="$PROJECT" &>/dev/null; then
     gcloud secrets add-iam-policy-binding "$name" --project="$PROJECT" \
       --member="serviceAccount:${CB_SA}" --role="roles/secretmanager.secretAccessor" --quiet &>/dev/null || true

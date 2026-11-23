@@ -237,20 +237,19 @@ export function buildProgramaNavSections(
           collapseGroup: "diagnostico",
         },
         {
-          id: "diag-panorama",
-          label: "Panorama inicial",
-          path: `${base}/diagnostico/panorama`,
-          icon: <VisibilityIcon sx={subIcon} />,
-          isSubItem: true,
-          collapseGroup: "diagnostico",
-        },
-        {
           id: "diag-rte",
           label: "Relatório Técnico Executivo",
           path: `${base}/diagnostico/relatorio-executivo`,
           icon: <DescriptionIcon sx={subIcon} />,
           isSubItem: true,
           collapseGroup: "diagnostico",
+        },
+
+        {
+          id: "panorama",
+          label: "Panorama inicial",
+          path: `${base}/panorama`,
+          icon: <VisibilityIcon sx={iconSx} />,
         },
 
         {

@@ -117,22 +117,24 @@ export async function issueFpsiSessionFromGoogle(
 
   try {
     const admin = createSupabaseAdminClient();
-    const { data: existingProfile } = await admin
-      .from("profiles")
-      .select("user_id")
-      .eq("email", user.email)
-      .maybeSingle();
-    if (existingProfile?.user_id) {
-      user.id = existingProfile.user_id;
-      await admin.from("profiles").upsert(
-        {
-          user_id: existingProfile.user_id,
-          email: user.email,
-          verified: true,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
+    if (admin) {
+      const { data: existingProfile } = await admin
+        .from("profiles")
+        .select("user_id")
+        .eq("email", user.email)
+        .maybeSingle();
+      if (existingProfile?.user_id) {
+        user.id = existingProfile.user_id;
+        await admin.from("profiles").upsert(
+          {
+            user_id: existingProfile.user_id,
+            email: user.email,
+            verified: true,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+      }
     }
   } catch {
     /* banco ainda via Supabase; falha não impede login com sessão FPSI */

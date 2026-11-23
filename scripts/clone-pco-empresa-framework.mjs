@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Clona o programa PCO (PPSI) para pco-empresa (catálogo framework v2),
+ * Clona o programa PCO (PPSI) para pco-2 (catálogo framework v2),
  * copiando respostas/justificativas por alinhamento de controle + ordem da medida.
  */
 import { createClient } from "@supabase/supabase-js";
@@ -17,7 +17,7 @@ const get = (k) => {
 const sup = createClient(get("NEXT_PUBLIC_SUPABASE_URL"), get("SUPABASE_SERVICE_ROLE_KEY"));
 
 const SOURCE_SLUG = "pco";
-const TARGET_SLUG = "pco-empresa";
+const TARGET_SLUG = "pco-2";
 const TARGET_NOME = "PCO — framework empresa (comparativo)";
 
 async function loadMedidaRankMap(packId) {

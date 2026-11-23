@@ -541,6 +541,14 @@ export default function PanoramaInicialPage() {
             ".panorama-section-accordion .MuiAccordionSummary-root": {
               minHeight: "unset !important",
             },
+            "#panorama-print-root .panorama-section-shell": {
+              breakBefore: "page",
+              pageBreakBefore: "always",
+            },
+            "#panorama-fold-two #panorama-sec-resumo-diagnostico.panorama-section-shell": {
+              breakBefore: "auto",
+              pageBreakBefore: "auto",
+            },
           },
         }}
       />

@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const state = url.searchParams.get("state");
   const jar = await cookies();
   const expectedState = jar.get(OAUTH_STATE_COOKIE)?.value;
-  const next = safeNextPath(jar.get(OAUTH_NEXT_COOKIE)?.value);
+  const next = safeNextPath(jar.get(OAUTH_NEXT_COOKIE)?.value ?? null);
 
   jar.delete(OAUTH_STATE_COOKIE);
   jar.delete(OAUTH_NEXT_COOKIE);
