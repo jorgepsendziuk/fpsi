@@ -16,6 +16,8 @@ ARG NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+# Cloud Build: evita falha intermitente do next/font ao buscar Google Fonts na rede.
+ENV NEXT_FONT_GOOGLE_MOCKED_RESPONSES=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
